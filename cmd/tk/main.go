@@ -2,17 +2,15 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
-	jsonnet "github.com/google/go-jsonnet"
 	"github.com/spf13/cobra"
 
 	"github.com/sh0rez/tanka/pkg/jpath"
-	"github.com/sh0rez/tanka/pkg/native"
+	"github.com/sh0rez/tanka/pkg/sonnet"
 )
 
 var Version = "dev"
@@ -68,35 +66,20 @@ func evalCmd() *cobra.Command {
 		Use:   "eval",
 	}
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		pwd, err := os.Getwd()
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		jPath, baseDir, _ := jpath.Resolve(pwd)
-		importer := jsonnet.FileImporter{
-			JPaths: jPath,
-		}
-
-		vm := jsonnet.MakeVM()
-		vm.Importer(&importer)
-		for _, f := range native.Funcs() {
-			vm.NativeFunction(f)
-		}
-
-		jsonnetFile := filepath.Join(baseDir, "main.jsonnet")
-		jsonnetBytes, err := ioutil.ReadFile(jsonnetFile)
+		_, baseDir, _ := jpath.Resolve(pwd)
+		json, err := sonnet.EvaluateFile(filepath.Join(baseDir, "main.jsonnet"))
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		jsonStr, err := vm.EvaluateSnippet(jsonnetFile, string(jsonnetBytes))
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Print(jsonStr)
+		fmt.Print(json)
+		return nil
 	}
 
 	return cmd
