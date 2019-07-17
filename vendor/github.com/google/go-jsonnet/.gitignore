@@ -1,0 +1,9 @@
+*~
+coverage.out
+.*.swp
+/tests_path.source
+/linter/jsonnet-lint/jsonnet-lint
+/jsonnet
+/dumpstdlibast
+*.so
+*.prof
