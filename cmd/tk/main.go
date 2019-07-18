@@ -2,15 +2,15 @@ package main
 
 import (
 	"log"
+	"os"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/sh0rez/tanka/pkg/config/v1alpha1"
 	"github.com/sh0rez/tanka/pkg/provider"
 	"github.com/sh0rez/tanka/pkg/provider/kubernetes"
-
-	"github.com/mitchellh/mapstructure"
 )
 
 var Version = "dev"
@@ -57,6 +57,7 @@ func main() {
 	// jsonnet commands
 	rootCmd.AddCommand(
 		evalCmd(),
+		initCmd(),
 		fmtCmd(),
 		debugCmd(),
 	)
@@ -77,7 +78,10 @@ func main() {
 	if err := viper.ReadInConfig(); err != nil {
 		// just run fine without config. Provider features won't work (apply, show, diff)
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			log.Fatalln(rootCmd.Execute())
+			if err := rootCmd.Execute(); err != nil {
+				log.Fatalln("Ouch:", err)
+			}
+			os.Exit(1)
 		}
 
 		log.Fatalln(err)

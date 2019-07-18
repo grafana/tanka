@@ -26,17 +26,21 @@ func providerListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "print all available providers",
 		Run: func(cmd *cobra.Command, args []string) {
-			keys := make([]string, len(providers))
-
-			i := 0
-			for k := range providers {
-				keys[i] = k
-				i++
-			}
-			log.Println("Available providers:", keys)
+			log.Println("Available providers:", listProviders())
 		},
 	}
 	return cmd
+}
+
+func listProviders() []string {
+	keys := make([]string, len(providers))
+
+	i := 0
+	for k := range providers {
+		keys[i] = k
+		i++
+	}
+	return keys
 }
 
 func applyCmd() *cobra.Command {
