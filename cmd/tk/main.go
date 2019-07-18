@@ -86,26 +86,26 @@ func main() {
 			os.Exit(1)
 		}
 
-		log.Fatalln(err)
+		log.Fatalln("Reading config:", err)
 	}
 	checkDeprecated()
 
 	if err := viper.Unmarshal(&config); err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Parsing config:", err)
 	}
 
 	// Provider
 	var err error
 	prov, provName, err = setupProvider()
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("Setting up provider:", err)
 	}
 
 	rootCmd.AddCommand(providerCmd())
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln(rootCmd.Execute())
+		log.Fatalln("Ouch:", rootCmd.Execute())
 	}
 }
 
