@@ -20,4 +20,6 @@ type Provider interface {
 	Cmd() *cobra.Command
 }
 
+// EmptyConstructor defines a function interface that creates uninitialized Providers,
+// ready to be unmarshalled from Config
 type EmptyConstructor func() Provider

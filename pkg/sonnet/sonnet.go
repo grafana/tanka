@@ -9,6 +9,7 @@ import (
 	"github.com/sh0rez/tanka/pkg/native"
 )
 
+// EvaluateFile opens the file, reads it into memory and evaluates it afterwards (`Evaluate()`)
 func EvaluateFile(jsonnetFile string) (string, error) {
 	bytes, err := ioutil.ReadFile(jsonnetFile)
 	if err != nil {
@@ -19,6 +20,7 @@ func EvaluateFile(jsonnetFile string) (string, error) {
 	return Evaluate(string(bytes), jpath)
 }
 
+// Evaluate renders the given jssonet into a string
 func Evaluate(sonnet string, jpath []string) (string, error) {
 	importer := jsonnet.FileImporter{
 		JPaths: jpath,
