@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Kubernetes provider connects tanka to the Kubernetes orchestrator
 type Kubernetes struct {
 	apiServer string
 	namespace string
