@@ -67,26 +67,26 @@ func showCmd() *cobra.Command {
 		Use:   "show",
 		Short: "[Requires Provider] print the jsonnet in the target state format",
 	}
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+	cmd.Run = func(cmd *cobra.Command, args []string) {
 		var rawDict map[string]interface{}
 		raw, err := eval()
 		if err != nil {
-			return err
+			log.Fatalln("evaluating jsonnet:", err)
 		}
 		if err := json.Unmarshal([]byte(raw), &rawDict); err != nil {
-			return err
+			log.Fatalln("parsing jsonnet response", err)
 		}
 
-		state, err := prov.Show(rawDict)
+		state, err := prov.Format(rawDict)
 		if err != nil {
-			return err
+			log.Fatalln("invoking provider:", err)
 		}
-		out, err := json.Marshal(state)
+
+		pretty, err := prov.Show(state)
 		if err != nil {
-			return err
+			log.Fatalln("pretty printing state:", err)
 		}
-		fmt.Println(out)
-		return nil
+		fmt.Println(pretty)
 	}
 	return cmd
 }
