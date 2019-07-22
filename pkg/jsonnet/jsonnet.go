@@ -1,4 +1,4 @@
-package sonnet
+package jsonnet
 
 import (
 	"io/ioutil"

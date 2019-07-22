@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/sh0rez/tanka/pkg/jpath"
-	"github.com/sh0rez/tanka/pkg/sonnet"
+	"github.com/sh0rez/tanka/pkg/jsonnet"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +44,7 @@ func eval() (string, error) {
 	}
 
 	_, baseDir, _ := jpath.Resolve(pwd)
-	json, err := sonnet.EvaluateFile(filepath.Join(baseDir, "main.jsonnet"))
+	json, err := jsonnet.EvaluateFile(filepath.Join(baseDir, "main.jsonnet"))
 	if err != nil {
 		return "", err
 	}
