@@ -122,9 +122,9 @@ func setupProvider() (provider.Provider, string, error) {
 }
 
 func checkDeprecated() {
-	for old, new := range deprecated {
+	for old, use := range deprecated {
 		if viper.IsSet(old) {
-			log.Printf("Warning: `%s` is deprecated, use `%s` instead.", old, new)
+			log.Printf("Warning: `%s` is deprecated, use `%s` instead.", old, use)
 		}
 	}
 }
