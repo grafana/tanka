@@ -73,12 +73,12 @@ func showCmd() *cobra.Command {
 			log.Fatalln("evaluating jsonnet:", err)
 		}
 
-		state, err := prov.Format(rawDict)
+		state, err := prov.Reconcile(raw)
 		if err != nil {
 			log.Fatalln("invoking provider:", err)
 		}
 
-		pretty, err := prov.Show(state)
+		pretty, err := prov.Fmt(state)
 		if err != nil {
 			log.Fatalln("pretty printing state:", err)
 		}
