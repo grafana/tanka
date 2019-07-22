@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -49,4 +50,17 @@ func eval() (string, error) {
 		return "", err
 	}
 	return json, nil
+}
+
+func evalDict() (map[string]interface{}, error) {
+	var rawDict map[string]interface{}
+
+	raw, err := eval()
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal([]byte(raw), &rawDict); err != nil {
+		return nil, err
+	}
+	return rawDict, nil
 }
