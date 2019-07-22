@@ -14,6 +14,8 @@ type Kubernetes struct {
 	Namespace string
 }
 
+var client = Kubectl{}
+
 // Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 // shall return it reconciled as a state object of the target system
 func (k *Kubernetes) Reconcile(raw map[string]interface{}) (state interface{}, err error) {
@@ -53,11 +55,13 @@ func (k *Kubernetes) Apply(desired interface{}) error {
 	panic("not implemented")
 }
 
-// State shall return the current state of the target system.
-// It receives the desired state object generated using `Format()`.
-// This is used for diffing afterwards.
-func (k *Kubernetes) State(desired interface{}) (real map[string]interface{}, err error) {
-	panic("not implemented")
+// Diff takes the desired state and returns the differences from the cluster
+func (k *Kubernetes) Diff(state interface{}) (string, error) {
+	yaml, err := k.Fmt(state)
+	if err != nil {
+		return "", err
+	}
+	return client.Diff(yaml)
 }
 
 // Cmd shall return a command to be available under `tk provider`

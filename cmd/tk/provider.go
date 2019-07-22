@@ -1,11 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/alecthomas/chroma/quick"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func providerCmd() *cobra.Command {
@@ -58,7 +60,30 @@ func diffCmd() *cobra.Command {
 		Use:   "diff",
 		Short: "[Requires Provider] print differences between the configuration and the target",
 	}
-	cmd.Run = func(cmd *cobra.Command, args []string) {}
+	cmd.Run = func(cmd *cobra.Command, args []string) {
+		raw, err := evalDict()
+		if err != nil {
+			log.Fatalln("evaluating jsonnet:", err)
+		}
+
+		desired, err := prov.Reconcile(raw)
+		if err != nil {
+			log.Fatalln("reconciling:", err)
+		}
+
+		changes, err := prov.Diff(desired)
+		if err != nil {
+			log.Fatalln("diffing:", err)
+		}
+
+		if terminal.IsTerminal(int(os.Stdout.Fd())) {
+			if err := quick.Highlight(os.Stdout, changes, "diff", "terminal", "vim"); err != nil {
+				log.Fatalln("highlighting:", err)
+			}
+		} else {
+			fmt.Println(changes)
+		}
+	}
 	return cmd
 }
 
