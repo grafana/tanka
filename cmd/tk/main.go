@@ -13,6 +13,8 @@ import (
 	"github.com/sh0rez/tanka/pkg/provider/kubernetes"
 )
 
+// Version is the current version of the tk command.
+// To be overwritten at build time
 var Version = "dev"
 
 var (
