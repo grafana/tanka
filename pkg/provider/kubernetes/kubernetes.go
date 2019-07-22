@@ -14,9 +14,9 @@ type Kubernetes struct {
 	Namespace string
 }
 
-// Format receives the raw evaluated jsonnet as a marshaled json dict and
+// Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 // shall return it reconciled as a state object of the target system
-func (k *Kubernetes) Format(raw map[string]interface{}) (state interface{}, err error) {
+func (k *Kubernetes) Reconcile(raw map[string]interface{}) (state interface{}, err error) {
 	docs := flattenManifest(raw)
 	for _, d := range docs {
 		m := objx.New(d)
@@ -43,12 +43,12 @@ func flattenManifest(deep map[string]interface{}) []map[string]interface{} {
 	return flat
 }
 
-// Show receives the state and reformats it to YAML Documents
-func (k *Kubernetes) Show(state interface{}) (string, error) {
+// Fmt receives the state and reformats it to YAML Documents
+func (k *Kubernetes) Fmt(state interface{}) (string, error) {
 	return util.ShowYAMLDocs(state.([]map[string]interface{}))
 }
 
-// Apply receives a state object generated using `Format()` and may apply it to the target system
+// Apply receives a state object generated using `Reconcile()` and may apply it to the target system
 func (k *Kubernetes) Apply(desired interface{}) error {
 	panic("not implemented")
 }
