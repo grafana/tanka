@@ -9,15 +9,14 @@ type Provider interface {
 	// `state` must be one of {`map[string]interface`, `[]map[string]interface`}
 	Reconcile(raw map[string]interface{}) (state interface{}, err error)
 
+	// Diff receives the state object generated using `Reconcile()`
+	// and may return the differences to the current state.
+	Diff(state interface{}) (string, error)
 
 	// Apply receives a state object generated using `Reconcile()`
 	// and may apply it to the target system
 	Apply(desired interface{}) error
 
-	// State shall return the current state of the target system.
-	// It receives the desired state object generated using `Format()`.
-	// This is used for diffing afterwards.
-	State(desired interface{}) (real map[string]interface{}, err error)
 	// Fmt receives the state object generated using `Reconcile()`
 	// and may pretty-print it into the string.
 	Fmt(state interface{}) (string, error)
