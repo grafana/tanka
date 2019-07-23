@@ -18,6 +18,7 @@ var client = Kubectl{}
 
 // Init makes the provider ready to be used
 func (k *Kubernetes) Init() error {
+	return client.setupContext(k.APIServer, k.Namespace)
 }
 
 // Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
