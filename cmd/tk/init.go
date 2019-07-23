@@ -59,7 +59,7 @@ func initCmd() *cobra.Command {
 			}
 		}
 
-		spec, err := json.Marshal(&cfg)
+		spec, err := json.MarshalIndent(&cfg, "", "  ")
 		if err != nil {
 			log.Fatalln("Error creating spec.json:", err)
 		}
