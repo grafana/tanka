@@ -100,6 +100,9 @@ func main() {
 	if err != nil {
 		log.Fatalln("Setting up provider:", err)
 	}
+	if err := prov.Init(); err != nil {
+		log.Fatalln("initializing provider:", err)
+	}
 
 	rootCmd.AddCommand(providerCmd())
 

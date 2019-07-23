@@ -4,6 +4,10 @@ import "github.com/spf13/cobra"
 
 // Provider describes methods for functionality more advanced than evaluating jsonnet
 type Provider interface {
+	// Init may be used to do some setup related tasks.
+	// Called before any other requests to the provider are made
+	Init() error
+
 	// Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 	// shall return it reconciled as a state object of the target system
 	// `state` must be one of {`map[string]interface`, `[]map[string]interface`}

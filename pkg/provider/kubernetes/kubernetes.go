@@ -16,6 +16,10 @@ type Kubernetes struct {
 
 var client = Kubectl{}
 
+// Init makes the provider ready to be used
+func (k *Kubernetes) Init() error {
+}
+
 // Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 // shall return it reconciled as a state object of the target system
 func (k *Kubernetes) Reconcile(raw map[string]interface{}) (state interface{}, err error) {
