@@ -30,7 +30,7 @@ var (
 // however, they still work and are aliased internally
 var deprecated = map[string]string{
 	"namespace": "spec.kubernetes.namespace",
-	"server":    "spec.kubernetes.server",
+	"server":    "spec.kubernetes.apiServer",
 	"team":      "metadata.labels.team",
 }
 
@@ -96,7 +96,7 @@ func main() {
 
 	// Provider
 	var err error
-	prov, provName, err = setupProvider()
+	prov, provName, err = setupProvider(config)
 	if err != nil {
 		log.Fatalln("Setting up provider:", err)
 	}
@@ -109,7 +109,7 @@ func main() {
 	}
 }
 
-func setupProvider() (provider.Provider, string, error) {
+func setupProvider(config *v1alpha1.Config) (provider.Provider, string, error) {
 	for name, construct := range providers {
 		if cfg, ok := config.Spec[name]; ok {
 			pro := construct()
