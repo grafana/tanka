@@ -10,8 +10,8 @@ import (
 
 // Kubernetes provider bridges tanka to the Kubernetse orchestrator.
 type Kubernetes struct {
-	APIServer string
-	Namespace string
+	APIServer string `mapstructure:"apiserver"`
+	Namespace string `mapstructure:"namespace"`
 }
 
 var client = Kubectl{}
