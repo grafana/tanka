@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net"
-	"net/url"
 	"os"
 	"os/exec"
 
@@ -18,7 +16,8 @@ type Kubectl struct {
 	context string
 }
 
-func (k Kubectl) setupContext(apiServer, namespace string) error {
+// setupContext uses `kubectl config view` to obtain the KUBECONFIG and extracts the correct context from it
+func (k Kubectl) setupContext(apiServer string) error {
 	cmd := exec.Command("kubectl", "config", "view", "-o", "json")
 	cfgJSON := bytes.Buffer{}
 	cmd.Stdout = &cfgJSON
@@ -31,35 +30,34 @@ func (k Kubectl) setupContext(apiServer, namespace string) error {
 	}
 
 	var err error
-	k.context, err = contextFromKubeconfig(cfg, apiServer, namespace)
+	k.context, err = contextFromKubeconfig(cfg, apiServer)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func contextFromKubeconfig(kubeconfig map[string]interface{}, apiServer, namespace string) (string, error) {
+// contextFromKubeconfig searches a kubeconfig for a context of a cluster that matches the apiServer
+func contextFromKubeconfig(kubeconfig map[string]interface{}, apiServer string) (string, error) {
 	cfg := objx.New(kubeconfig)
 
 	// find the correct cluster
 	cluster := objx.New(funk.Find(cfg.Get("clusters").MustMSISlice(), func(x map[string]interface{}) bool {
-		c := objx.New(x)
-		u, err := url.Parse(c.Get("cluster.server").MustStr())
-		if err != nil {
-			panic(err)
-		}
-		host, _, err := net.SplitHostPort(u.Host)
-		if err != nil {
-			panic(err)
-		}
+		host := objx.New(x).Get("cluster.server").MustStr()
 		return host == apiServer
 	}))
+	if !(len(cluster) > 0) { // empty map means no result
+		return "", fmt.Errorf("no cluster that matches the apiServer `%s` was found. Please check your $KUBECONFIG", apiServer)
+	}
 
 	// find a context that uses the cluster
 	context := objx.New(funk.Find(cfg.Get("contexts").MustMSISlice(), func(x map[string]interface{}) bool {
 		c := objx.New(x)
 		return c.Get("context.cluster").MustStr() == cluster.Get("name").MustStr()
 	}))
+	if !(len(context) > 0) {
+		return "", fmt.Errorf("no context that matches the cluster `%s` was found. Please check your $KUBECONFIG", cluster.Get("name").MustStr())
+	}
 
 	return context.Get("name").MustStr(), nil
 }
