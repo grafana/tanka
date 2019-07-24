@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/Masterminds/semver"
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
 )
@@ -15,6 +16,24 @@ import (
 type Kubectl struct {
 	context   string
 	APIServer string
+}
+
+// Version returns the version of kubectl and the Kubernetes api server
+func (k Kubectl) Version() (client, server semver.Version, err error) {
+	zero := *semver.MustParse("0.0.0")
+	cmd := exec.Command("kubectl", "version",
+		"-o", "json",
+		"--context", k.context,
+	)
+	var buf bytes.Buffer
+	cmd.Stdout = &buf
+	if err := cmd.Run(); err != nil {
+		return zero, zero, err
+	}
+	vs := objx.MustFromJSON(buf.String())
+	client = *semver.MustParse(vs.Get("clientVersion.gitVersion").MustStr())
+	server = *semver.MustParse(vs.Get("serverVersion.gitVersion").MustStr())
+	return client, server, nil
 }
 
 // setupContext uses `kubectl config view` to obtain the KUBECONFIG and extracts the correct context from it
@@ -94,6 +113,15 @@ func (k Kubectl) Diff(yaml string) (string, error) {
 	if err := k.setupContext(); err != nil {
 		return "", err
 	}
+
+	client, server, err := k.Version()
+	if !client.GreaterThan(semver.MustParse("1.13.0")) || !server.GreaterThan(semver.MustParse("1.13.0")) {
+		return "", fmt.Errorf("The kubernetes diff feature requires at least version 1.13 on both, kubectl (is `%s`) and server (is `%s`)", client.String(), server.String())
+	}
+	if err != nil {
+		return "", err
+	}
+
 	argv := []string{"diff",
 		"--context", k.context,
 		"-f", "-",
