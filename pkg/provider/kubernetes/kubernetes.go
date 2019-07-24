@@ -57,8 +57,12 @@ func (k *Kubernetes) Fmt(state interface{}) (string, error) {
 }
 
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
-func (k *Kubernetes) Apply(desired interface{}) error {
-	panic("not implemented")
+func (k *Kubernetes) Apply(state interface{}) error {
+	yaml, err := k.Fmt(state)
+	if err != nil {
+		return err
+	}
+	return client.Apply(yaml)
 }
 
 // Diff takes the desired state and returns the differences from the cluster
