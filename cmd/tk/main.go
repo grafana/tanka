@@ -2,13 +2,13 @@ package main
 
 import (
 	"log"
-	"os"
+	"path/filepath"
 
-	"github.com/sh0rez/tanka/pkg/kubernetes"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/sh0rez/tanka/pkg/config/v1alpha1"
+	"github.com/sh0rez/tanka/pkg/kubernetes"
 )
 
 // Version is the current version of the tk command.
@@ -34,8 +34,45 @@ func main() {
 		Short:            "tanka <3 jsonnet",
 		Version:          Version,
 		TraverseChildren: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.Help()
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			// Configuration parsing. Note this is using return to abort actions
+			viper.SetConfigName("spec")
+
+			// no args = no command that has a baseDir passed, abort
+			if len(args) == 0 {
+				return
+			}
+
+			// if the first arg is not a dir, abort
+			pwd, err := filepath.Abs(args[0])
+			if err != nil {
+				return
+			}
+			viper.AddConfigPath(pwd)
+
+			// handle deprecated ksonnet spec
+			for old, new := range deprecated {
+				viper.RegisterAlias(new, old)
+			}
+
+			// read it
+			if err := viper.ReadInConfig(); err != nil {
+				// just run fine without config. Provider features won't work (apply, show, diff)
+				if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+					return
+				}
+
+				log.Fatalln(err)
+			}
+			checkDeprecated()
+
+			if err := viper.Unmarshal(&config); err != nil {
+				log.Fatalln(err)
+			}
+
+			// Kubernetes
+			kube = kubernetes.New(config.Spec)
+
 		},
 	}
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "")
@@ -54,42 +91,11 @@ func main() {
 	rootCmd.AddCommand(
 		evalCmd(),
 		initCmd(),
-		fmtCmd(),
 		debugCmd(),
 	)
 
 	// other commands
 	rootCmd.AddCommand(completionCommand(rootCmd))
-
-	// Configuration
-	viper.SetConfigName("spec")
-	viper.AddConfigPath(".")
-
-	// handle deprecated ksonnet spec
-	for old, new := range deprecated {
-		viper.RegisterAlias(new, old)
-	}
-
-	// Configuration
-	if err := viper.ReadInConfig(); err != nil {
-		// just run fine without config. Apply and Diff won't work
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			if err := rootCmd.Execute(); err != nil {
-				log.Fatalln("Ouch:", err)
-			}
-			os.Exit(1)
-		}
-
-		log.Fatalln("Reading config:", err)
-	}
-	checkDeprecated()
-
-	if err := viper.Unmarshal(&config); err != nil {
-		log.Fatalln("Parsing config:", err)
-	}
-
-	// Kubernetes
-	kube = kubernetes.New(config.Spec)
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {

@@ -7,7 +7,6 @@ require (
 	github.com/alecthomas/chroma v0.6.6
 	github.com/fatih/color v1.7.0
 	github.com/google/go-jsonnet v0.13.0
-	github.com/mitchellh/mapstructure v1.1.2
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0

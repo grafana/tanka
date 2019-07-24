@@ -3,48 +3,42 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"log"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/sh0rez/tanka/pkg/jpath"
 	"github.com/sh0rez/tanka/pkg/jsonnet"
 	"github.com/spf13/cobra"
 )
 
-func fmtCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Short: "format .jsonnet and .libsonnet files",
-		Use:   "fmt",
-	}
-	cmd.Run = func(cmd *cobra.Command, args []string) {}
-	return cmd
-}
-
 func evalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Short: "evaluate the jsonnet to json",
-		Use:   "eval",
+		Use:   "eval [directory]",
+		Args:  cobra.ExactArgs(1),
 	}
 
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		json, err := eval()
+	cmd.Run = func(cmd *cobra.Command, args []string) {
+		json, err := eval(args[0])
 		if err != nil {
-			return err
+			log.Fatalln("evaluating:", err)
 		}
 		fmt.Print(json)
-		return nil
 	}
 
 	return cmd
 }
 
-func eval() (string, error) {
-	pwd, err := os.Getwd()
+func eval(workdir string) (string, error) {
+	pwd, err := filepath.Abs(workdir)
 	if err != nil {
 		return "", err
 	}
-
-	_, baseDir, _ := jpath.Resolve(pwd)
+	_, baseDir, _, err := jpath.Resolve(pwd)
+	if err != nil {
+		return "", errors.Wrap(err, "resolving jpath")
+	}
 	json, err := jsonnet.EvaluateFile(filepath.Join(baseDir, "main.jsonnet"))
 	if err != nil {
 		return "", err
@@ -52,10 +46,10 @@ func eval() (string, error) {
 	return json, nil
 }
 
-func evalDict() (map[string]interface{}, error) {
+func evalDict(workdir string) (map[string]interface{}, error) {
 	var rawDict map[string]interface{}
 
-	raw, err := eval()
+	raw, err := eval(workdir)
 	if err != nil {
 		return nil, err
 	}

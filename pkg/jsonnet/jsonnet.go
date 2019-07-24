@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	jsonnet "github.com/google/go-jsonnet"
+	"github.com/pkg/errors"
 	"github.com/sh0rez/tanka/pkg/jpath"
 	"github.com/sh0rez/tanka/pkg/native"
 )
@@ -16,7 +17,10 @@ func EvaluateFile(jsonnetFile string) (string, error) {
 		return "", err
 	}
 
-	jpath, _, _ := jpath.Resolve(filepath.Dir(jsonnetFile))
+	jpath, _, _, err := jpath.Resolve(filepath.Dir(jsonnetFile))
+	if err != nil {
+		return "", errors.Wrap(err, "resolving jpath")
+	}
 	return Evaluate(string(bytes), jpath)
 }
 
