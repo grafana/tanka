@@ -28,12 +28,27 @@ var deprecated = map[string]string{
 	"team":      "metadata.labels.team",
 }
 
+// baseDirComplete is used to dynamically complete possible environments
+const baseDirComplete = `__tk_custom_func()
+{
+  case ${last_command} in
+	tk_eval | tk_debug_jpath | tk_apply | tk_show | tk_diff)
+	  COMPREPLY=( $( compgen -W "$(tk completion base-dirs)" -- "$cur" ) )
+	  return
+	  ;;
+	*)
+	  ;;
+  esac
+}
+`
+
 func main() {
 	rootCmd := &cobra.Command{
-		Use:              "tk",
-		Short:            "tanka <3 jsonnet",
-		Version:          Version,
-		TraverseChildren: true,
+		Use:                    "tk",
+		Short:                  "tanka <3 jsonnet",
+		Version:                Version,
+		TraverseChildren:       true,
+		BashCompletionFunction: baseDirComplete,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			// Configuration parsing. Note this is using return to abort actions
 			viper.SetConfigName("spec")

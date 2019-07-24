@@ -15,6 +15,7 @@ func initCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Create the directory structure",
+		Args:  cobra.NoArgs,
 	}
 	force := cmd.Flags().BoolP("force", "f", false, "ignore the working directory not being empty")
 	cmd.Run = func(cmd *cobra.Command, args []string) {

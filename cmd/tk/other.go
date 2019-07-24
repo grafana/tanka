@@ -2,30 +2,64 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 func completionCommand(rootCmd *cobra.Command) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use: "completion bash|zsh",
 		Example: `
   eval "$(tk completion bash)"
   eval "$(tk completion zsh)"
 		`,
-		Short: `create bash/zsh auto-completion.`,
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Short:     `create bash/zsh auto-completion.`,
+		Args:      cobra.ExactArgs(1),
+		ValidArgs: []string{"bash", "zsh"},
+		Run: func(cmd *cobra.Command, args []string) {
 			switch shell := strings.ToLower(args[0]); shell {
 			case "bash":
-				return rootCmd.GenBashCompletion(os.Stdout)
+				if err := rootCmd.GenBashCompletion(os.Stdout); err != nil {
+					log.Fatalln(err)
+				}
 			case "zsh":
-				return rootCmd.GenZshCompletion(os.Stdout)
-			default:
-				return fmt.Errorf("unknown shell %q. Only bash and zsh are supported", shell)
+				if err := rootCmd.GenZshCompletion(os.Stdout); err != nil {
+					log.Fatalln(err)
+				}
 			}
 		},
 	}
+	cmd.AddCommand(baseDirsCommand())
+	return cmd
+}
+
+func baseDirsCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:    "base-dirs",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			dirs := findBaseDirs()
+			fmt.Println(strings.Join(dirs, " "))
+		},
+	}
+}
+
+// findBaseDirs searches for possible environments
+func findBaseDirs() (dirs []string) {
+	if _, err := os.Stat("jsonnetfile.json"); os.IsNotExist(err) {
+		return
+	}
+	if err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if _, err := os.Stat(filepath.Join(path, "main.jsonnet")); err == nil {
+			dirs = append(dirs, path)
+		}
+		return nil
+	}); err != nil {
+		log.Fatalln(err)
+	}
+	return dirs
 }
