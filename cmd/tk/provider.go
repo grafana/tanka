@@ -51,6 +51,19 @@ func applyCmd() *cobra.Command {
 		Short: "[Requires Provider] apply the configuration to the target",
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
+		raw, err := evalDict()
+		if err != nil {
+			log.Fatalln("evaluating jsonnet:", err)
+		}
+
+		desired, err := prov.Reconcile(raw)
+		if err != nil {
+			log.Fatalln("reconciling:", err)
+		}
+
+		if err := prov.Apply(desired); err != nil {
+			log.Fatalln("applying:", err)
+		}
 	}
 	return cmd
 }

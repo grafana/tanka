@@ -107,6 +107,32 @@ func (k Kubectl) Get(namespace, kind, name string) (map[string]interface{}, erro
 	return obj, nil
 }
 
+// Apply applies the given yaml to the cluster
+func (k Kubectl) Apply(yaml string) error {
+	if err := k.setupContext(); err != nil {
+		return err
+	}
+	argv := []string{"apply",
+		"--context", k.context,
+		"-f", "-",
+	}
+	cmd := exec.Command("kubectl", argv...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		fmt.Fprintln(stdin, yaml)
+		stdin.Close()
+	}()
+
+	return cmd.Run()
+}
+
 // Diff takes a desired state as yaml and returns the differences
 // to the system in common diff format
 func (k Kubectl) Diff(yaml string) (string, error) {
