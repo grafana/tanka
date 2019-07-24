@@ -13,11 +13,12 @@ import (
 
 // Kubectl uses the `kubectl` command to operate on a Kubernetes cluster
 type Kubectl struct {
-	context string
+	context   string
+	APIServer string
 }
 
 // setupContext uses `kubectl config view` to obtain the KUBECONFIG and extracts the correct context from it
-func (k Kubectl) setupContext(apiServer string) error {
+func (k Kubectl) setupContext() error {
 	cmd := exec.Command("kubectl", "config", "view", "-o", "json")
 	cfgJSON := bytes.Buffer{}
 	cmd.Stdout = &cfgJSON
@@ -30,7 +31,7 @@ func (k Kubectl) setupContext(apiServer string) error {
 	}
 
 	var err error
-	k.context, err = contextFromKubeconfig(cfg, apiServer)
+	k.context, err = contextFromKubeconfig(cfg, k.APIServer)
 	if err != nil {
 		return err
 	}
@@ -64,6 +65,9 @@ func contextFromKubeconfig(kubeconfig map[string]interface{}, apiServer string) 
 
 // Get retrieves an Kubernetes object from the API
 func (k Kubectl) Get(namespace, kind, name string) (map[string]interface{}, error) {
+	if err := k.setupContext(); err != nil {
+		return nil, err
+	}
 	argv := []string{"get",
 		"-o", "json",
 		"-n", namespace,
@@ -87,6 +91,9 @@ func (k Kubectl) Get(namespace, kind, name string) (map[string]interface{}, erro
 // Diff takes a desired state as yaml and returns the differences
 // to the system in common diff format
 func (k Kubectl) Diff(yaml string) (string, error) {
+	if err := k.setupContext(); err != nil {
+		return "", err
+	}
 	argv := []string{"diff",
 		"--context", k.context,
 		"-f", "-",
