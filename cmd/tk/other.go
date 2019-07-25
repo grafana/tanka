@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sh0rez/tanka/pkg/jpath"
 	"github.com/spf13/cobra"
 )
 
@@ -50,9 +51,15 @@ func baseDirsCommand() *cobra.Command {
 
 // findBaseDirs searches for possible environments
 func findBaseDirs() (dirs []string) {
-	if _, err := os.Stat("jsonnetfile.json"); os.IsNotExist(err) {
+	pwd, err := os.Getwd()
+	if err != nil {
 		return
 	}
+	_, _, _, err = jpath.Resolve(pwd)
+	if err == jpath.ErrorNoRoot {
+		return
+	}
+
 	if err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if _, err := os.Stat(filepath.Join(path, "main.jsonnet")); err == nil {
 			dirs = append(dirs, path)
