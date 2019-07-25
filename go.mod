@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/Masterminds/semver v1.4.2
 	github.com/alecthomas/chroma v0.6.6
+	github.com/fatih/color v1.7.0
 	github.com/google/go-jsonnet v0.13.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/spf13/cobra v0.0.5

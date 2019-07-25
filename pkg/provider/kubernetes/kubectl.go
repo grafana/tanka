@@ -1,20 +1,28 @@
 package kubernetes
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 
 	"github.com/Masterminds/semver"
+	"github.com/fatih/color"
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
 )
 
+var (
+	alert = color.New(color.FgRed, color.Bold).SprintFunc()
+)
+
 // Kubectl uses the `kubectl` command to operate on a Kubernetes cluster
 type Kubectl struct {
-	context   string
+	context   objx.Map
+	cluster   objx.Map
 	APIServer string
 }
 
@@ -23,7 +31,7 @@ func (k Kubectl) Version() (client, server semver.Version, err error) {
 	zero := *semver.MustParse("0.0.0")
 	cmd := exec.Command("kubectl", "version",
 		"-o", "json",
-		"--context", k.context,
+		"--context", k.context.Get("name").MustStr(),
 	)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
@@ -37,7 +45,7 @@ func (k Kubectl) Version() (client, server semver.Version, err error) {
 }
 
 // setupContext uses `kubectl config view` to obtain the KUBECONFIG and extracts the correct context from it
-func (k Kubectl) setupContext() error {
+func (k *Kubectl) setupContext() error {
 	cmd := exec.Command("kubectl", "config", "view", "-o", "json")
 	cfgJSON := bytes.Buffer{}
 	cmd.Stdout = &cfgJSON
@@ -50,7 +58,7 @@ func (k Kubectl) setupContext() error {
 	}
 
 	var err error
-	k.context, err = contextFromKubeconfig(cfg, k.APIServer)
+	k.cluster, k.context, err = contextFromKubeconfig(cfg, k.APIServer)
 	if err != nil {
 		return err
 	}
@@ -58,28 +66,28 @@ func (k Kubectl) setupContext() error {
 }
 
 // contextFromKubeconfig searches a kubeconfig for a context of a cluster that matches the apiServer
-func contextFromKubeconfig(kubeconfig map[string]interface{}, apiServer string) (string, error) {
+func contextFromKubeconfig(kubeconfig map[string]interface{}, apiServer string) (cluster, context objx.Map, err error) {
 	cfg := objx.New(kubeconfig)
 
 	// find the correct cluster
-	cluster := objx.New(funk.Find(cfg.Get("clusters").MustMSISlice(), func(x map[string]interface{}) bool {
+	cluster = objx.New(funk.Find(cfg.Get("clusters").MustMSISlice(), func(x map[string]interface{}) bool {
 		host := objx.New(x).Get("cluster.server").MustStr()
 		return host == apiServer
 	}))
 	if !(len(cluster) > 0) { // empty map means no result
-		return "", fmt.Errorf("no cluster that matches the apiServer `%s` was found. Please check your $KUBECONFIG", apiServer)
+		return nil, nil, fmt.Errorf("no cluster that matches the apiServer `%s` was found. Please check your $KUBECONFIG", apiServer)
 	}
 
 	// find a context that uses the cluster
-	context := objx.New(funk.Find(cfg.Get("contexts").MustMSISlice(), func(x map[string]interface{}) bool {
+	context = objx.New(funk.Find(cfg.Get("contexts").MustMSISlice(), func(x map[string]interface{}) bool {
 		c := objx.New(x)
 		return c.Get("context.cluster").MustStr() == cluster.Get("name").MustStr()
 	}))
 	if !(len(context) > 0) {
-		return "", fmt.Errorf("no context that matches the cluster `%s` was found. Please check your $KUBECONFIG", cluster.Get("name").MustStr())
+		return nil, nil, fmt.Errorf("no context that matches the cluster `%s` was found. Please check your $KUBECONFIG", cluster.Get("name").MustStr())
 	}
 
-	return context.Get("name").MustStr(), nil
+	return cluster, context, nil
 }
 
 // Get retrieves an Kubernetes object from the API
@@ -90,7 +98,7 @@ func (k Kubectl) Get(namespace, kind, name string) (map[string]interface{}, erro
 	argv := []string{"get",
 		"-o", "json",
 		"-n", namespace,
-		"--context", k.context,
+		"--context", k.context.Get("name").MustStr(),
 		kind, name,
 	}
 	cmd := exec.Command("kubectl", argv...)
@@ -112,8 +120,24 @@ func (k Kubectl) Apply(yaml string) error {
 	if err := k.setupContext(); err != nil {
 		return err
 	}
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf(`!!! Applying to cluster '%s' at '%s' using context '%s'.
+!!! Please type 'yes' to perform: `,
+		alert(k.cluster.Get("name").MustStr()),
+		alert(k.cluster.Get("cluster.server").MustStr()),
+		alert(k.context.Get("name").MustStr()),
+	)
+	approve, err := reader.ReadString('\n')
+	if err != nil {
+		return err
+	}
+	if approve != "yes\n" {
+		return errors.New("aborted by user")
+	}
+
 	argv := []string{"apply",
-		"--context", k.context,
+		"--context", k.context.Get("name").MustStr(),
 		"-f", "-",
 	}
 	cmd := exec.Command("kubectl", argv...)
@@ -149,7 +173,7 @@ func (k Kubectl) Diff(yaml string) (string, error) {
 	}
 
 	argv := []string{"diff",
-		"--context", k.context,
+		"--context", k.context.Get("name").MustStr(),
 		"-f", "-",
 	}
 	cmd := exec.Command("kubectl", argv...)
