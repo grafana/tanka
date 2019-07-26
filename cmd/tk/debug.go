@@ -23,6 +23,9 @@ func jpathCmd() *cobra.Command {
 		Short: "print information about the jpath",
 		Use:   "jpath [directory]",
 		Args:  cobra.ExactArgs(1),
+		Annotations: map[string]string{
+			"args": "baseDir",
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			pwd, err := filepath.Abs(args[0])
 			if err != nil {

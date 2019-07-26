@@ -15,6 +15,9 @@ func applyCmd() *cobra.Command {
 		Use:   "apply [directory]",
 		Short: "apply the configuration to the cluster",
 		Args:  cobra.ExactArgs(1),
+		Annotations: map[string]string{
+			"args": "baseDir",
+		},
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		raw, err := evalDict(args[0])
@@ -39,6 +42,9 @@ func diffCmd() *cobra.Command {
 		Use:   "diff [directory]",
 		Short: "differences between the configuration and the cluster",
 		Args:  cobra.ExactArgs(1),
+		Annotations: map[string]string{
+			"args": "baseDir",
+		},
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		raw, err := evalDict(args[0])
@@ -72,6 +78,9 @@ func showCmd() *cobra.Command {
 		Use:   "show [directory]",
 		Short: "jsonnet as yaml",
 		Args:  cobra.ExactArgs(1),
+		Annotations: map[string]string{
+			"args": "baseDir",
+		},
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		raw, err := evalDict(args[0])
