@@ -1,70 +1,91 @@
-# tanka, a configuration utility
-While `json` and it's superset `yaml` are great configuration languages for
-machines, they are [not really good for humans](https://youtu.be/FjdS21McgpE).
+# tanka, advanced Kubernetes configuration
+**Author**: @sh0rez  
+**Date**: 26.07.2019
 
-Especially in complex environments like Kubernetes, these soon become verbose,
-hard to maintain and complex to understand and eventually harmfully duplicated.
+## Motivation
+`json` and it's superset `yaml` are great configuration languages for
+machines, but they are [not really good for humans](https://youtu.be/FjdS21McgpE).
+
+But the Kubernetes ecosystem seems to have settled to configuring all kinds of
+workloads using exactly these. While they provide a low entry barrier, it is
+challenging to model advanced requirements, for example deploying the same
+application to multiple clusters or to different environments.
+
+This usually leads to duplication on two level: The obvious one is the
+application level. Once an app needs to redeployed to another environment
+(`dev`, `prod`, etc.), it usually shares most of the configuration, except for
+some edge-cases (secrets, etc). `kubectl` does not really provide a utility to
+fully address this.
+
+Even more duplication happens on the systems level. Today, multiple applications
+are usually composed into a larger picture.  
+But deploying common building blocks as `postgresql` or `nginx` requires the
+same code (`Deployment`, `Service`, etc) that nearly everyone attempting to use
+these will write.
+
+While maintaining the same code for `dev` and `prod` might go well, it becomes
+unconquerable once it comes to multi-region (5+) deployments or even more
+versatile use-cases.
 
 #### Existing solutions
-String-templating these (`envsubst`, `helm`, etc.) fall short because the
-template does not really have any sense of the overall structure.  
-Using full programming languages to generate the configuration feels heavy and
-is likely to become overwhelming because of the many different ways a problem
-could be approached (think of many lines of probably untested code that somehow
-mutates dicts).
+Historically, this problem has been approached using string-templating (`helm`).
+While `helm` allows code-reuse using `values.yml`, a chart is only able to provide what
+has been thought of during writing. Even worse, charts are maintained inside of
+the `helm/charts` repository, which makes quick or even domain-specific edits
+hard. It is impossible to easily address edge-cases.
 
 A solution to this problem is called [jsonnet](https://jsonnet.org): It is
 basically `json` but with variables, conditionals, arithmetic, functions,
-imports, and error propagation and especially very clever **deep-merging**.
+**imports**, and error propagation and especially very clever **deep-merging**.
 
 #### Prior art
 Especially [ksonnet](https://ksonnet.io) had a big impact on this idea.
-While `ksonnet` really proved to be working out,
-it was based on a conceptual model consisting of components, prototypes,
-environments and much more. While this was fair considering the generator
-approach they took, it did not experience much adoption afterwards, possibly
-because of the added layer of complexity.
+While `ksonnet` really proved the idea to be working, is was based on the
+concept of components, building blocks consisting of prototypes and parameters,
+which may be composed into applications or modules which in turn may be applied
+to multiple environments.
 
-To face this, tanka chooses a much simpler model. It does not handle
-dependency resolution of external libraries and it leaves code reuse to the
-`import` feature of jsonnet.
+We believe such a concept overcomplicates the immediate goal of reducing
+duplication while allowing edge-cases. Code-reuse and composability is
+adequately provided by the native `import` feature of `jsonnet`. Sharing code
+beyond application boundaries is already enabled by `jsonnet-bundler`.
+
+While it is possible to mimic environments with native `jsonnet`, it falls short
+when it comes to actually applying it to the correct cluster. The raw `json`
+being returned by the compiler needs reconciling and it must be made sure it is
+applied to the correct cluster.
 
 This leaves us effectively with **`jsonnet`** and **[Environments](#environments)**
 
 ## Code Reuse
-When configuration becomes more sophisticated, it inevitably results in
-some degree of duplication.
-
-Especially deploying one and the same application to multiple environments
-(think `dev` and `prod`, multi-regions, etc.), more or less the same code is
-required for each and every of these, just set up a little differently.
-
-Today applications are usually considered building-blocks to compose a larger
-system. However, these building blocks need configuration as well, which leads
-to another layer of duplication beyond domain boundaries.
-
-By using [`jsonnet`](https://jsonnet.org) as the underlying data templating language, tanka solves both
-of these:
+By using [`jsonnet`](https://jsonnet.org) as the underlying data templating
+language, tanka dynamic reusing of code, just like real programming languages do:
 
 ### Imports
 `jsonnet` is able to
 [import](https://jsonnet.org/learning/tutorial.html#imports) other jsonnet
-snippets into the current scope, which allows to refactor commonly used code
-into shared libraries in turn.
+snippets into the current scope, which in turn allows to refactor commonly used code
+into shared libraries.
 
 ### Bundle
-Once a `jsonnet` library becomes required to tackle code-reuse beyond project or
+Once a library becomes general enough to be used beyond project or
 even domain boundaries, it is a common practice in programming languages to have
 shared dependencies.
 
-In the `jsonnet` world, this is provided by [`jsonnet-bundler`](https://github.com/jsonnet-bundler/jsonnet-bundler), which maintains a
+In the `jsonnet` world, this is provided by
+[`jsonnet-bundler`](https://github.com/jsonnet-bundler/jsonnet-bundler), which maintains a
 `vendor` folder (the bundle) with all required libraries ready to be imported,
-much like older versions of `go` used to (>1.11).  
+much like older versions of `go` used to (>1.11) do.  
 This procedure integrates smoothly with tanka, because `vendor` is on the [`JPATH`](#jpath).
 
 ### `JPATH`
-To wrap this all up, tanka sets up the `jsonnet` dependency resolution in a
-special way:
+To enable a predictable developer experience, tanka uses clear rules to define
+how importing works.
+
+Imports are relative to the `JPATH`. The earlier a directory appears in the
+`JPATH`, the higher it's precedence is.
+
+To set it up, tanka makes use of the following directoies:
 
 | Name             | Identifier         | Description                                                                                                                           |
 |------------------|--------------------|---------------------------------------------------------------------------------------------------------------------------------------|
@@ -87,8 +108,6 @@ The final `JPATH` looks like the following:
 <rootDir>/vendor
 ```
 
-Imports are relative to the `JPATH`. The earlier a directory appears in the
-`JPATH`, the higher it's precedence is.
 
 ### Directory structure
 In a simple setup, it is fair to have the same `rootDir` and `baseDir`:
@@ -114,10 +133,39 @@ into subdirectories:
 └── vendor/
 ```
 
-While latter one is the structure suggested by `tk init`, it is perfectly fine to
+While latter structure is the one suggested by `tk init`, it is perfectly fine to
 use another if it fits the use-case better. The folder does not need to be named
 `environments`, either.
 
+## Edge Cases
+During development of `jsonnet` libraries, e.g. for applications like `mysql`,
+it is impossible to think of every edge-case in before.
+
+But thanks to the power of `jsonnet`, this is not a problem. Imagine the output
+of the library being the following:
+```jsonnet
+local out = {
+  apiVersion: "v1",
+  kind: "namespace",
+  metadata: {
+    name: "production"
+  }
+};
+```
+
+When you wanted to label the namespace, but the library did not provide
+functions for it, you could use deep-merging:
+```jsonnet
+out + {
+  metadata+: {
+    labels: {
+      foo: "bar"
+    }
+  }
+}
+```
+
+Note the special `+:` to enable deep merging.
 ## Environments
 The only core concept of tanka is an `Environment`. It describes a single
 context that can be configured. Such a context might be `dev` and `prod`
@@ -131,51 +179,27 @@ However, an environment may receive additional configuration, by adding a file
 called `spec.json` alongside the `main.jsonnet`:
 ```json
 {
-  "api_version": "tanka.dev/v1alpha1",
+  "apiVersion": "tanka.dev/v1alpha1",
   "kind": "Environment",
   "metadata": {
-    "name": "auto"
+    "name": "auto",
     "labels": {}
   },
-  "spec": {}
+  "spec": {
+    "apiServer": "https://localhost:6443",
+    "namespace": "default"
+  }
 }
 ```
+
 | Field             | Description                                                         |
 |-------------------|---------------------------------------------------------------------|
-| `api_version`     | marks the version of the API, to allow schema changes once required |
+| `apiVersion`     | marks the version of the API, to allow schema changes once required |
 | `kind`            | not used yet, added for completeness                                |
 | `metadata.name`   | automatically set to the directory name                             |
-| `metadata.labels` | use to add descriptive `key:value` pairs. Not evaluated             |
-| `spec`            | [Provider](#providers) configuration                                 |
+| `metadata.labels` | descriptive `key:value` pairs                                      |
+| `spec.apiServer`  | The Kubernetes endpoint to use                                      |
+| `spec.namespace`  | All objects will be forced into this namespace                      |
 
 The environment object is accessible from within `jsonnet`.
 
-## `show`, `diff`, `apply`, (repeat)
-This is the main workflow of tanka: Once changes to the configuration are done,
-`tk show` is used to validate that jsonnet has been correctly translated into
-the target format (`json`, `yaml`, etc.)
-
-Once this is the case, `tk diff` is used to obtain a detailed overview of how
-the desired state diverts from the current state of the system and which actions
-will be taken.
-
-When the output of `diff` is satisfying, the desired state can become reality using
-`tk apply`.
-
-## Providers
-Because there are a variety of systems out there that are configured using
-json compatible interfaces and may have special needs, tanka is unable to
-fulfill these by it's own.
-
-While `tk eval` uses emits the raw output of the jsonnet compiler, the more
-sophisticated commands `show`, `diff` and `apply` are actually fulfilled by a
-so-called provider, (pluggable) pieces of logic which handle platform specific
-actions.
-
-This is best shown using an example, the *Kubernetes* provider:
-
-| Action  | Description                                                                                                                                                                                                        |
-|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `show`  | Once the `jsonnet` is evaluated, the provider has to reconcile it for the target system. The `jsonnet` output is a deeply nested dict of Kubernetes objects, while `kubectl` requires multi-document yaml strings. |
-| `diff`  | The same reconciling happens, but instead of printing the output, it is passed to `kubectl diff -f -`. The actual `diff` is printed afterwards.                                                                    |
-| `apply` | After reconciling, the output is passed to `kubectl apply -f -`                                                                                                                                                    |
