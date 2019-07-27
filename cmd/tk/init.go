@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 
 	"github.com/sh0rez/tanka/pkg/config/v1alpha1"
+	"github.com/sh0rez/tanka/pkg/kubernetes"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,6 @@ func initCmd() *cobra.Command {
 		Short: "Create the directory structure",
 	}
 	force := cmd.Flags().BoolP("force", "f", false, "ignore the working directory not being empty")
-	provider := cmd.Flags().StringP("provider", "p", "", fmt.Sprintf("one of %s", listProviders()))
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		files, err := ioutil.ReadDir(".")
 		if err != nil {
@@ -51,12 +50,7 @@ func initCmd() *cobra.Command {
 		cfg := v1alpha1.Config{
 			APIVersion: "tanka.dev/v1alpha1",
 			Kind:       "Environment",
-		}
-		if *provider != "" {
-			cfg.Spec = map[string]interface{}{}
-			cfg.Spec["provider"] = map[string]interface{}{
-				*provider: map[string]interface{}{},
-			}
+			Spec:       kubernetes.Kubernetes{},
 		}
 
 		spec, err := json.MarshalIndent(&cfg, "", "  ")

@@ -4,13 +4,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/mitchellh/mapstructure"
+	"github.com/sh0rez/tanka/pkg/kubernetes"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/sh0rez/tanka/pkg/config/v1alpha1"
-	"github.com/sh0rez/tanka/pkg/provider"
-	"github.com/sh0rez/tanka/pkg/provider/kubernetes"
 )
 
 // Version is the current version of the tk command.
@@ -18,19 +16,15 @@ import (
 var Version = "dev"
 
 var (
-	config    = &v1alpha1.Config{}
-	prov      provider.Provider
-	provName  string
-	providers = map[string]provider.EmptyConstructor{
-		"kubernetes": func() provider.Provider { return &kubernetes.Kubernetes{} },
-	}
+	config = &v1alpha1.Config{}
+	kube   *kubernetes.Kubernetes
 )
 
 // list of deprecated config keys and their alternatives
 // however, they still work and are aliased internally
 var deprecated = map[string]string{
-	"namespace": "spec.kubernetes.namespace",
-	"server":    "spec.kubernetes.apiServer",
+	"namespace": "spec.namespace",
+	"server":    "spec.apiServer",
 	"team":      "metadata.labels.team",
 }
 
@@ -49,7 +43,7 @@ func main() {
 	// Subcommands
 	cobra.EnableCommandSorting = false
 
-	// provider commands
+	// workflow commands
 	rootCmd.AddCommand(
 		applyCmd(),
 		showCmd(),
@@ -78,7 +72,7 @@ func main() {
 
 	// Configuration
 	if err := viper.ReadInConfig(); err != nil {
-		// just run fine without config. Provider features won't work (apply, show, diff)
+		// just run fine without config. Apply and Diff won't work
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			if err := rootCmd.Execute(); err != nil {
 				log.Fatalln("Ouch:", err)
@@ -94,38 +88,17 @@ func main() {
 		log.Fatalln("Parsing config:", err)
 	}
 
-	// Provider
-	var err error
-	prov, provName, err = setupProvider(config)
-	if err != nil {
-		log.Fatalln("Setting up provider:", err)
+	// Kubernetes
+	kube = &config.Spec
+	if err := kube.Init(); err != nil {
+		log.Fatalln("initializing:", err)
 	}
-	if err := prov.Init(); err != nil {
-		log.Fatalln("initializing provider:", err)
-	}
-
-	rootCmd.AddCommand(providerCmd())
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln("Ouch:", rootCmd.Execute())
 	}
 }
-
-func setupProvider(config *v1alpha1.Config) (provider.Provider, string, error) {
-	for name, construct := range providers {
-		if cfg, ok := config.Spec[name]; ok {
-			pro := construct()
-			if err := mapstructure.Decode(cfg, &pro); err != nil {
-				return nil, "", err
-			}
-			return pro, name, nil
-		}
-	}
-
-	return nil, "none", nil
-}
-
 func checkDeprecated() {
 	for old, use := range deprecated {
 		if viper.IsSet(old) {
