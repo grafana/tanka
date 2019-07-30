@@ -36,7 +36,7 @@ hard. It is impossible to easily address edge-cases.
 
 A solution to this problem is called [jsonnet](https://jsonnet.org): It is
 basically `json` but with variables, conditionals, arithmetic, functions,
-**imports**, and error propagation and especially very clever **deep-merging**.
+**imports**, and error propagation and especially very clever [**deep-merging**](#edge-cases).
 
 #### Prior art
 Especially [ksonnet](https://ksonnet.io) had a big impact on this idea.
@@ -46,7 +46,10 @@ which may be composed into applications or modules which in turn may be applied
 to multiple environments.
 
 We believe such a concept overcomplicates the immediate goal of reducing
-duplication while allowing edge-cases. Code-reuse and composability is
+duplication while allowing edge-cases, because it handles these on a higher
+conceptual level, instead of reusing the native capabilities of jsonnet.
+
+Code-reuse and composability is
 adequately provided by the native `import` feature of `jsonnet`. Sharing code
 beyond application boundaries is already enabled by `jsonnet-bundler`.
 
@@ -166,6 +169,21 @@ out + {
 ```
 
 Note the special `+:` to enable deep merging.
+
+This would result in the second dict being recursively merged on top of the first one:
+```jsonnet
+{
+  apiVersion: "v1",
+  kind: "namespace",
+  metadata: {
+    name: "production",
+    labels: {
+      foo: "bar"
+    }
+  }
+}
+```
+
 ## Environments
 The only core concept of tanka is an `Environment`. It describes a single
 context that can be configured. Such a context might be `dev` and `prod`
