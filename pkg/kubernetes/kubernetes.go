@@ -29,14 +29,16 @@ func (k *Kubernetes) Init() error {
 // shall return it reconciled as a state object of the target system
 func (k *Kubernetes) Reconcile(raw map[string]interface{}) (state []Manifest, err error) {
 	docs, err := walkJSON(raw, "")
+	out := make([]Manifest, 0, len(docs))
 	if err != nil {
 		return nil, errors.Wrap(err, "flattening manifests")
 	}
 	for _, d := range docs {
 		m := objx.New(d)
 		m.Set("metadata.namespace", k.Namespace)
+		out = append(out, Manifest(m))
 	}
-	return docs, nil
+	return out, nil
 }
 
 // Fmt receives the state and reformats it to YAML Documents
