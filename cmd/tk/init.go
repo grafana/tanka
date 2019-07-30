@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/sh0rez/tanka/pkg/config/v1alpha1"
-	"github.com/sh0rez/tanka/pkg/kubernetes"
 	"github.com/spf13/cobra"
 )
 
@@ -50,7 +49,7 @@ func initCmd() *cobra.Command {
 		cfg := v1alpha1.Config{
 			APIVersion: "tanka.dev/v1alpha1",
 			Kind:       "Environment",
-			Spec:       kubernetes.Kubernetes{},
+			Spec:       v1alpha1.Spec{},
 		}
 
 		spec, err := json.MarshalIndent(&cfg, "", "  ")
