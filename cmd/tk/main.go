@@ -89,10 +89,7 @@ func main() {
 	}
 
 	// Kubernetes
-	kube = &config.Spec
-	if err := kube.Init(); err != nil {
-		log.Fatalln("initializing:", err)
-	}
+	kube = kubernetes.New(config.Spec)
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
