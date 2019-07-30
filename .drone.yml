@@ -1,0 +1,167 @@
+kind: pipeline
+name: check
+steps:
+- commands:
+  - go mod download
+  image: golang:1.12
+  name: download
+  volumes:
+  - name: gopath
+    path: /go
+- commands:
+  - make lint
+  depends_on:
+  - download
+  image: golang:1.12
+  name: lint
+  volumes:
+  - name: gopath
+    path: /go
+- commands:
+  - make test
+  depends_on:
+  - download
+  image: golang:1.12
+  name: test
+  volumes:
+  - name: gopath
+    path: /go
+volumes:
+- name: gopath
+  temp: {}
+---
+depends_on:
+- check
+kind: pipeline
+name: docker-amd64
+platform:
+  arch: amd64
+  os: linux
+steps:
+- commands:
+  - make static
+  image: golang:1.12
+  name: static
+  volumes:
+  - name: gopath
+    path: /go
+- image: plugins/docker
+  name: container
+  settings:
+    auto_tag: true
+    auto_tag_suffix: amd64
+    password:
+      from_secret: docker_password
+    repo: shorez/tanka
+    username:
+      from_secret: docker_username
+trigger:
+  branch:
+  - master
+  - docker
+  event:
+  - push
+  - tag
+volumes:
+- name: gopath
+  temp: {}
+---
+depends_on:
+- check
+kind: pipeline
+name: docker-arm
+platform:
+  arch: arm
+  os: linux
+steps:
+- commands:
+  - make static
+  image: golang:1.12
+  name: static
+  volumes:
+  - name: gopath
+    path: /go
+- image: plugins/docker
+  name: container
+  settings:
+    auto_tag: true
+    auto_tag_suffix: arm
+    password:
+      from_secret: docker_password
+    repo: shorez/tanka
+    username:
+      from_secret: docker_username
+trigger:
+  branch:
+  - master
+  - docker
+  event:
+  - push
+  - tag
+volumes:
+- name: gopath
+  temp: {}
+---
+depends_on:
+- check
+kind: pipeline
+name: docker-arm64
+platform:
+  arch: arm64
+  os: linux
+steps:
+- commands:
+  - make static
+  image: golang:1.12
+  name: static
+  volumes:
+  - name: gopath
+    path: /go
+- image: plugins/docker
+  name: container
+  settings:
+    auto_tag: true
+    auto_tag_suffix: arm64
+    password:
+      from_secret: docker_password
+    repo: shorez/tanka
+    username:
+      from_secret: docker_username
+trigger:
+  branch:
+  - master
+  - docker
+  event:
+  - push
+  - tag
+volumes:
+- name: gopath
+  temp: {}
+---
+depends_on:
+- docker-amd64
+- docker-arm
+- docker-arm64
+kind: pipeline
+name: manifest
+steps:
+- image: plugins/manifest
+  name: manifest
+  settings:
+    auto_tag: true
+    ignore_missing: true
+    password:
+      from_secret: docker_password
+    spec: .docker-manifest.tmpl
+    username:
+      from_secret: docker_username
+trigger:
+  branch:
+  - master
+  - docker
+  event:
+  - push
+  - tag
+volumes:
+- name: gopath
+  temp: {}
