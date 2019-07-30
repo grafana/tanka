@@ -4,13 +4,17 @@ local volumes = [{ name: 'gopath', temp: {} }];
 local mounts = [{ name: 'gopath', path: '/go' }];
 
 local constraints = {
-  onlyTagOrMaster: {
-    trigger: {
-      branch: ['master', 'docker'],
-      event: ['push', 'tag'],
-    },
-  },
-  always: {}
+  onlyTagOrMaster: { trigger: {
+    ref: [
+      'refs/heads/master',
+      'refs/heads/docker',
+      'refs/tags/v*',
+    ],
+  } },
+  onlyTags: { trigger: {
+    event: ['tag'],
+  } },
+  always: {},
 };
 
 local go(name, commands) = {
@@ -22,10 +26,14 @@ local go(name, commands) = {
 
 local make(target) = go(target, ['make ' + target]);
 
-local docker(arch) = {
+local pipeline(name) = {
   kind: 'pipeline',
-  name: 'docker-' + arch,
+  name: name,
   volumes: volumes,
+  steps: [],
+};
+
+local docker(arch) = pipeline('docker-' + arch) {
   platform: {
     os: 'linux',
     arch: arch,
@@ -46,21 +54,30 @@ local docker(arch) = {
   ],
 };
 
-local pipeline(name) = {
-  kind: 'pipeline',
-  name: name,
-  volumes: volumes,
-  steps: [],
-};
-
 local drone = [
   pipeline('check') {
     steps: [
       go('download', ['go mod download']),
-      make('lint') { depends_on: ['download'] } + constraints.always,
-      make('test') { depends_on: ['download'] } + constraints.always,
+      make('lint') { depends_on: ['download'] },
+      make('test') { depends_on: ['download'] },
     ],
-  },
+  } + constraints.always,
+
+  pipeline('release') {
+    steps: [
+      make('cross'),
+      {
+        name: 'publish',
+        image: 'plugins/github-release',
+        settings: {
+          title: '${DRONE_TAG}',
+          note: importstr 'release-note.md',
+          api_key: { from_secret: 'GITHUB_TOKEN' },
+          files: 'dist/*',
+        },
+      },
+    ],
+  } + { depends_on: ['check'] } + constraints.onlyTags,
 
   docker('amd64') { depends_on: ['check'] } + constraints.onlyTagOrMaster,
   docker('arm') { depends_on: ['check'] } + constraints.onlyTagOrMaster,
@@ -73,7 +90,7 @@ local drone = [
       settings: {
         auto_tag: true,
         ignore_missing: true,
-        spec: '.docker-manifest.tmpl',
+        spec: '.drone/docker-manifest.tmpl',
         username: { from_secret: 'docker_username' },
         password: { from_secret: 'docker_password' },
       },

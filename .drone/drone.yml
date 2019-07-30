@@ -33,6 +33,70 @@ volumes:
 depends_on:
 - check
 kind: pipeline
+name: release
+steps:
+- commands:
+  - make cross
+  image: golang:1.12
+  name: cross
+  volumes:
+  - name: gopath
+    path: /go
+- image: plugins/github-release
+  name: publish
+  settings:
+    api_key:
+      from_secret: GITHUB_TOKEN
+    files: dist/*
+    note: 'This is release ${DRONE_VERSION} of Tanka (`tk`). Check out the [CHANGELOG](CHANGELOG.md)
+      for detailed release notes.
+
+      ## Install instructions
+
+
+      #### Binary:
+
+      ```bash
+
+      # download the binary (adapt os and arch as needed)
+
+      $ curl -fSL -o "/usr/local/bin/tk" "https://github.com/sh0rez/tanka/releases/download/${DRONE_TAG}/img-linux-amd64"
+
+
+      # make it executable
+
+      $ chmod a+x "/usr/local/bin/tk"
+
+
+      # have fun :)
+
+      $ tk --help
+
+      ```
+
+
+      #### Docker container:
+
+      https://hub.docker.com/r/shorez/tanka
+
+      ```bash
+
+      $ docker pull shorez/tanka:${DRONE_TAG}
+
+      ```
+
+      '
+    title: ${DRONE_TAG}
+trigger:
+  event:
+  - tag
+volumes:
+- name: gopath
+  temp: {}
+---
+depends_on:
+- check
+kind: pipeline
 name: docker-amd64
 platform:
   arch: amd64
@@ -56,12 +120,10 @@ steps:
     username:
       from_secret: docker_username
 trigger:
-  branch:
-  - master
-  - docker
-  event:
-  - push
-  - tag
+  ref:
+  - refs/heads/master
+  - refs/heads/docker
+  - refs/tags/v*
 volumes:
 - name: gopath
   temp: {}
@@ -92,12 +154,10 @@ steps:
     username:
       from_secret: docker_username
 trigger:
-  branch:
-  - master
-  - docker
-  event:
-  - push
-  - tag
+  ref:
+  - refs/heads/master
+  - refs/heads/docker
+  - refs/tags/v*
 volumes:
 - name: gopath
   temp: {}
@@ -128,12 +188,10 @@ steps:
     username:
       from_secret: docker_username
 trigger:
-  branch:
-  - master
-  - docker
-  event:
-  - push
-  - tag
+  ref:
+  - refs/heads/master
+  - refs/heads/docker
+  - refs/tags/v*
 volumes:
 - name: gopath
   temp: {}
@@ -152,16 +210,14 @@ steps:
     ignore_missing: true
     password:
       from_secret: docker_password
-    spec: .docker-manifest.tmpl
+    spec: .drone/docker-manifest.tmpl
     username:
       from_secret: docker_username
 trigger:
-  branch:
-  - master
-  - docker
-  event:
-  - push
-  - tag
+  ref:
+  - refs/heads/master
+  - refs/heads/docker
+  - refs/tags/v*
 volumes:
 - name: gopath
   temp: {}
