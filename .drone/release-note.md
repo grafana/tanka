@@ -1,4 +1,4 @@
-This is release ${DRONE_VERSION} of Tanka (`tk`). Check out the [CHANGELOG](CHANGELOG.md) for detailed release notes.
+This is release ${DRONE_TAG} of Tanka (`tk`). Check out the [CHANGELOG](CHANGELOG.md) for detailed release notes.
 ## Install instructions
 
 #### Binary:
