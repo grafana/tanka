@@ -16,7 +16,7 @@ func applyCmd() *cobra.Command {
 		Short: "apply the configuration to the cluster",
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		raw, err := evalDict()
+		raw, err := evalDict(cmd.Flag("file").Value.String())
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
@@ -39,7 +39,7 @@ func diffCmd() *cobra.Command {
 		Short: "differences between the configuration and the cluster",
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		raw, err := evalDict()
+		raw, err := evalDict(cmd.Flag("file").Value.String())
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
@@ -71,7 +71,7 @@ func showCmd() *cobra.Command {
 		Short: "jsonnet as yaml",
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		raw, err := evalDict()
+		raw, err := evalDict(cmd.Flag("file").Value.String())
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}

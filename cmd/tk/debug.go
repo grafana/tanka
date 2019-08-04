@@ -27,8 +27,9 @@ func jpathCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			path, base, root := jpath.Resolve(pwd)
-			fmt.Println("main:", filepath.Join(base, "main.jsonnet"))
+			filename := cmd.Flag("file").Value.String()
+			path, base, root := jpath.Resolve(pwd, filename)
+			fmt.Println("main:", filepath.Join(base, filename))
 			fmt.Println("rootDir:", root)
 			fmt.Println("baseDir:", base)
 			fmt.Println("jpath:", path)

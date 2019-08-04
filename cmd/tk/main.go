@@ -39,6 +39,7 @@ func main() {
 		},
 	}
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "")
+	rootCmd.PersistentFlags().StringP("file", "f", "main.jsonnet", "file to use as the entrypoint")
 
 	// Subcommands
 	cobra.EnableCommandSorting = false

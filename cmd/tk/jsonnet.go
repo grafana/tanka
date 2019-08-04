@@ -27,7 +27,7 @@ func evalCmd() *cobra.Command {
 	}
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		json, err := eval()
+		json, err := eval(cmd.Flag("file").Value.String())
 		if err != nil {
 			return err
 		}
@@ -38,24 +38,24 @@ func evalCmd() *cobra.Command {
 	return cmd
 }
 
-func eval() (string, error) {
+func eval(filename string) (string, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 
-	_, baseDir, _ := jpath.Resolve(pwd)
-	json, err := jsonnet.EvaluateFile(filepath.Join(baseDir, "main.jsonnet"))
+	_, baseDir, _ := jpath.Resolve(pwd, filename)
+	json, err := jsonnet.EvaluateFile(filepath.Join(baseDir, filename))
 	if err != nil {
 		return "", err
 	}
 	return json, nil
 }
 
-func evalDict() (map[string]interface{}, error) {
+func evalDict(filename string) (map[string]interface{}, error) {
 	var rawDict map[string]interface{}
 
-	raw, err := eval()
+	raw, err := eval(filename)
 	if err != nil {
 		return nil, err
 	}

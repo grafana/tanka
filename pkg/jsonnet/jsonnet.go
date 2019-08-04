@@ -16,12 +16,14 @@ func EvaluateFile(jsonnetFile string) (string, error) {
 		return "", err
 	}
 
-	jpath, _, _ := jpath.Resolve(filepath.Dir(jsonnetFile))
-	return Evaluate(string(bytes), jpath)
+	filename := filepath.Base(jsonnetFile)
+	jpath, _, _ := jpath.Resolve(filepath.Dir(jsonnetFile), filename)
+
+	return Evaluate(string(bytes), filename, jpath)
 }
 
 // Evaluate renders the given jssonet into a string
-func Evaluate(sonnet string, jpath []string) (string, error) {
+func Evaluate(sonnet string, filename string, jpath []string) (string, error) {
 	importer := jsonnet.FileImporter{
 		JPaths: jpath,
 	}
@@ -32,5 +34,5 @@ func Evaluate(sonnet string, jpath []string) (string, error) {
 		vm.NativeFunction(nf)
 	}
 
-	return vm.EvaluateSnippet("main.jsonnet", sonnet)
+	return vm.EvaluateSnippet(filename, sonnet)
 }
