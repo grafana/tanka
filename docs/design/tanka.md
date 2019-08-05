@@ -100,7 +100,10 @@ To set it up, tanka makes use of the following directoies:
 
 To resolve the `JPATH`, tanka first traverses the directory tree *upwards*, to
 find a `jsonnetfile.json`, which marks the `rootDir`. Reaching `/` without a
-match will result in an error.
+match will result in an error.  
+This is required to be able to resolve the `JPATH` regardless of how deep one is
+inside of the directory tree. Think of it as a root marker, like git has its `.git` folder.  
+Even if `jb` is not used, it barely harms to have an unused file with `{}` in it around.
 
 Same applies for the `baseDir`, the tree is traversed *upwards* for a
 `main.jsonnet`.
