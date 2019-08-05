@@ -11,7 +11,7 @@ workloads using exactly these. While they provide a low entry barrier, it is
 challenging to model advanced requirements, for example deploying the same
 application to multiple clusters or to different environments.
 
-This usually leads to duplication on two level: The obvious one is the
+This usually leads to duplication on two levels: The obvious one is the
 application level. Once an app needs to redeployed to another environment
 (`dev`, `prod`, etc.), it usually shares most of the configuration, except for
 some edge-cases (secrets, etc). `kubectl` does not really provide a utility to
@@ -62,7 +62,7 @@ This leaves us effectively with **`jsonnet`** and **[Environments](#environments
 
 ## Code Reuse
 By using [`jsonnet`](https://jsonnet.org) as the underlying data templating
-language, tanka dynamic reusing of code, just like real programming languages do:
+language, tanka supports dynamic reusing of code, just like real programming languages do:
 
 ### Imports
 `jsonnet` is able to
