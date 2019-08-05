@@ -94,7 +94,8 @@ To set it up, tanka makes use of the following directoies:
 |------------------|--------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | `rootDir`        | `jsonnetfile.json` | Every file in the tree of this folder is considered part of the project. Much like `git` has the one directory with the `.git` folder |
 | `rootDir/vendor` |                    | Populated with shared dependencies by `jsonnet-bundler`                                                                               |
-| `baseDir/lib`    |                    | Code that is only re-used in-tree may be put here                                                                                     |
+| `baseDir/units`  |                    | Code that directly outputs Kubernetes objects (mixins, etc.)
+| `baseDir/lib`    |                    | Local helper utilities and other shared code
 | `baseDir`        | `main.jsonnet`     | Environment specific code can be put here. The special `main.jsonnet` is the entry point for the evaluation                           |
 
 To resolve the `JPATH`, tanka first traverses the directory tree *upwards*, to
@@ -107,6 +108,7 @@ Same applies for the `baseDir`, the tree is traversed *upwards* for a
 The final `JPATH` looks like the following:
 ```
 <baseDir>
+<rootDir>/units
 <rootDir>/lib
 <rootDir>/vendor
 ```
@@ -119,6 +121,7 @@ In a simple setup, it is fair to have the same `rootDir` and `baseDir`:
 ├── jsonnetfile.json
 ├── lib/
 ├── main.jsonnet
+├── units/
 └── vendor/
 ```
 
@@ -133,6 +136,7 @@ into subdirectories:
 │       └── main.jsonnet
 ├── jsonnetfile.json
 ├── lib/
+├── units/
 └── vendor/
 ```
 
