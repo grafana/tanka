@@ -9,10 +9,10 @@ import (
 
 var (
 	// ErrorNoRoot means no rootDir was found in the parents
-	ErrorNoRoot = errors.New("no rootDir was found")
+	ErrorNoRoot = errors.New("could not locate a jsonnetfile.json in the parent directories, which is required to identify the project root")
 
 	// ErrorNoBase means no baseDir was found in the parents
-	ErrorNoBase = errors.New("no baseDir was found")
+	ErrorNoBase = errors.New("could not locate a main.jsonnet in the parent directories, which is required as the entrypoint for the evaluation")
 )
 
 // ErrorFileNotFound means that the searched file was not found
