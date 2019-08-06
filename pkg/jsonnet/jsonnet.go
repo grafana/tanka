@@ -47,7 +47,10 @@ func VisitImportsFile(jsonnetFile string, v ImportVisitor) error {
 		return err
 	}
 
-	jpath, _, _ := jpath.Resolve(filepath.Dir(jsonnetFile))
+	jpath, _, _, err := jpath.Resolve(filepath.Dir(jsonnetFile))
+	if err != nil {
+		return err
+	}
 	return VisitImports(string(bytes), jpath, v)
 }
 

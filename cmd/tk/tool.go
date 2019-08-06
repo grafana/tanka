@@ -35,7 +35,10 @@ func jpathCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			path, base, root := jpath.Resolve(pwd)
+			path, base, root, err := jpath.Resolve(pwd)
+			if err != nil {
+				log.Fatalln("Resolving JPATH:", err)
+			}
 			fmt.Println("main:", filepath.Join(base, "main.jsonnet"))
 			fmt.Println("rootDir:", root)
 			fmt.Println("baseDir:", base)
@@ -74,6 +77,9 @@ func importsCmd() *cobra.Command {
 			if err != nil {
 				log.Fatalln("resolving imports:", err)
 			}
+
+			// include main.jsonnet as well
+			deps = append(deps, f)
 
 			if modFiles != nil {
 				for _, m := range modFiles {
