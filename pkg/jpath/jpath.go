@@ -14,22 +14,22 @@ import (
 // It then constructs a jPath with the base directory, vendor/ and lib/.
 // This results in predictable imports, as it doesn't matter whether the user called
 // called the command further down tree or not. A little bit like git.
-func Resolve(workdir string) (path []string, base, root string) {
-	root, err := findParentFile("jsonnetfile.json", workdir, "/")
+func Resolve(workdir string) (path []string, base, root string, err error) {
+	root, err = findParentFile("jsonnetfile.json", workdir, "/")
 	if err != nil {
-		panic(err)
+		return nil, "", "", err
 	}
 
 	base, err = findParentFile("main.jsonnet", workdir, root)
 	if err != nil {
-		panic(err)
+		return nil, "", "", err
 	}
 
 	return []string{
 		base,
 		filepath.Join(root, "vendor"),
 		filepath.Join(root, "lib"),
-	}, base, root
+	}, base, root, nil
 }
 
 // findParentFile traverses the parent directory tree for the given `file`,

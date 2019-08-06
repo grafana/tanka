@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"log"
 	"path/filepath"
 
 	"github.com/sh0rez/tanka/pkg/jpath"
@@ -21,18 +21,21 @@ func debugCmd() *cobra.Command {
 func jpathCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Short: "print information about the jpath",
-		Use:   "jpath",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			pwd, err := os.Getwd()
+		Use:   "jpath [directory]",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			pwd, err := filepath.Abs(args[0])
 			if err != nil {
-				return err
+				log.Fatalln(err)
 			}
-			path, base, root := jpath.Resolve(pwd)
+			path, base, root, err := jpath.Resolve(pwd)
+			if err != nil {
+				log.Fatalln("resolving jpath:", err)
+			}
 			fmt.Println("main:", filepath.Join(base, "main.jsonnet"))
 			fmt.Println("rootDir:", root)
 			fmt.Println("baseDir:", base)
 			fmt.Println("jpath:", path)
-			return nil
 		},
 	}
 	return cmd

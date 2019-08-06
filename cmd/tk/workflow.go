@@ -12,11 +12,12 @@ import (
 
 func applyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "apply",
+		Use:   "apply [directory]",
 		Short: "apply the configuration to the cluster",
+		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		raw, err := evalDict()
+		raw, err := evalDict(args[0])
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
@@ -35,11 +36,12 @@ func applyCmd() *cobra.Command {
 
 func diffCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "diff",
+		Use:   "diff [directory]",
 		Short: "differences between the configuration and the cluster",
+		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		raw, err := evalDict()
+		raw, err := evalDict(args[0])
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
@@ -67,11 +69,12 @@ func diffCmd() *cobra.Command {
 
 func showCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show",
+		Use:   "show [directory]",
 		Short: "jsonnet as yaml",
+		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		raw, err := evalDict()
+		raw, err := evalDict(args[0])
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
