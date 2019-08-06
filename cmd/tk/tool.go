@@ -57,15 +57,11 @@ func importsCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			var modFiles []string
 			if cmd.Flag("check").Changed {
-				argv := []string{"diff-tree", "--no-commit-id", "--name-only", "-r", cmd.Flag("check").Value.String()}
-				c := exec.Command("git", argv...)
-				c.Stderr = os.Stderr
-				var buf bytes.Buffer
-				c.Stdout = &buf
-				if err := c.Run(); err != nil {
-					log.Fatalln("Invoking git:", err)
+				var err error
+				modFiles, err = gitChangedFiles(cmd.Flag("check").Value.String())
+				if err != nil {
+					log.Fatalln("invoking git:", err)
 				}
-				modFiles = strings.Split(buf.String(), "\n")
 			}
 
 			f, err := filepath.Abs(args[0])
@@ -81,11 +77,20 @@ func importsCmd() *cobra.Command {
 			// include main.jsonnet as well
 			deps = append(deps, f)
 
+			root, err := gitRoot()
+			if err != nil {
+				log.Fatalln("invoking git:", err)
+			}
 			if modFiles != nil {
 				for _, m := range modFiles {
-					for _, d := range deps {
-						if m == d {
-							fmt.Printf("Rebuild required. File `%s` imports `%s`, which has been changed in `%s`.\n", args[0], d, cmd.Flag("check").Value.String())
+					mod := filepath.Join(root, m)
+					if err != nil {
+						log.Fatalln(err)
+					}
+
+					for _, dep := range deps {
+						if mod == dep {
+							fmt.Printf("Rebuild required. File `%s` imports `%s`, which has been changed in `%s`.\n", args[0], dep, cmd.Flag("check").Value.String())
 							os.Exit(16)
 						}
 					}
@@ -105,4 +110,28 @@ func importsCmd() *cobra.Command {
 	cmd.Flags().StringP("check", "c", "", "git commit hash to check against")
 
 	return cmd
+}
+
+func gitRoot() (string, error) {
+	s, err := git("rev-parse", "--show-toplevel")
+	return strings.TrimRight(s, "\n"), err
+}
+
+func gitChangedFiles(sha string) ([]string, error) {
+	f, err := git("diff-tree", "--no-commit-id", "--name-only", "-r", sha)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(f, "\n"), nil
+}
+
+func git(argv ...string) (string, error) {
+	cmd := exec.Command("git", argv...)
+	cmd.Stderr = os.Stderr
+	var buf bytes.Buffer
+	cmd.Stdout = &buf
+	if err := cmd.Run(); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
