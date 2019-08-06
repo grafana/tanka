@@ -17,6 +17,9 @@ func evalCmd() *cobra.Command {
 		Short: "evaluate the jsonnet to json",
 		Use:   "eval [directory]",
 		Args:  cobra.ExactArgs(1),
+		Annotations: map[string]string{
+			"args": "baseDir",
+		},
 	}
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {

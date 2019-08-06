@@ -1,12 +1,15 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"path/filepath"
 
+	"github.com/posener/complete"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/sh0rez/tanka/pkg/cmp"
 	"github.com/sh0rez/tanka/pkg/config/v1alpha1"
 	"github.com/sh0rez/tanka/pkg/kubernetes"
 )
@@ -34,40 +37,14 @@ func main() {
 		Short:            "tanka <3 jsonnet",
 		Version:          Version,
 		TraverseChildren: true,
+		// Configuration
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			// Configuration parsing. Note this is using return to abort actions
-			viper.SetConfigName("spec")
-
-			// no args = no command that has a baseDir passed, abort
 			if len(args) == 0 {
 				return
 			}
-
-			// if the first arg is not a dir, abort
-			pwd, err := filepath.Abs(args[0])
-			if err != nil {
+			config = setupConfiguration(args[0])
+			if config == nil {
 				return
-			}
-			viper.AddConfigPath(pwd)
-
-			// handle deprecated ksonnet spec
-			for old, new := range deprecated {
-				viper.RegisterAlias(new, old)
-			}
-
-			// read it
-			if err := viper.ReadInConfig(); err != nil {
-				// just run fine without config. Provider features won't work (apply, show, diff)
-				if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-					return
-				}
-
-				log.Fatalln(err)
-			}
-			checkDeprecated()
-
-			if err := viper.Unmarshal(&config); err != nil {
-				log.Fatalln(err)
 			}
 
 			// Kubernetes
@@ -94,14 +71,66 @@ func main() {
 		debugCmd(),
 	)
 
-	// other commands
-	rootCmd.AddCommand(completionCommand(rootCmd))
+	// completion
+	cmp.Handlers.Add("baseDir", complete.PredictFunc(
+		func(complete.Args) []string {
+			return findBaseDirs()
+		},
+	))
+
+	c := complete.New("tk", cmp.Create(rootCmd))
+	c.InstallName = "install-completion"
+	c.UninstallName = "uninstall-completion"
+	fs := &flag.FlagSet{}
+	c.AddFlags(fs)
+	rootCmd.Flags().AddGoFlagSet(fs)
+
+	rootCmd.Run = func(cmd *cobra.Command, args []string) {
+		if c.Complete() {
+			return
+		}
+		_ = cmd.Help()
+	}
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln("Ouch:", rootCmd.Execute())
 	}
 }
+
+func setupConfiguration(baseDir string) *v1alpha1.Config {
+	viper.SetConfigName("spec")
+
+	// if the baseDir arg is not a dir, abort
+	pwd, err := filepath.Abs(baseDir)
+	if err != nil {
+		return nil
+	}
+	viper.AddConfigPath(pwd)
+
+	// handle deprecated ksonnet spec
+	for old, new := range deprecated {
+		viper.RegisterAlias(new, old)
+	}
+
+	// read it
+	if err := viper.ReadInConfig(); err != nil {
+		// just run fine without config. Provider features won't work (apply, show, diff)
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			return nil
+		}
+
+		log.Fatalln(err)
+	}
+	checkDeprecated()
+
+	var config v1alpha1.Config
+	if err := viper.Unmarshal(&config); err != nil {
+		log.Fatalln(err)
+	}
+	return &config
+}
+
 func checkDeprecated() {
 	for old, use := range deprecated {
 		if viper.IsSet(old) {

@@ -1,31 +1,31 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
-	"strings"
+	"path/filepath"
 
-	"github.com/spf13/cobra"
+	"github.com/sh0rez/tanka/pkg/jpath"
 )
 
-func completionCommand(rootCmd *cobra.Command) *cobra.Command {
-	return &cobra.Command{
-		Use: "completion bash|zsh",
-		Example: `
-  eval "$(tk completion bash)"
-  eval "$(tk completion zsh)"
-		`,
-		Short: `create bash/zsh auto-completion.`,
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			switch shell := strings.ToLower(args[0]); shell {
-			case "bash":
-				return rootCmd.GenBashCompletion(os.Stdout)
-			case "zsh":
-				return rootCmd.GenZshCompletion(os.Stdout)
-			default:
-				return fmt.Errorf("unknown shell %q. Only bash and zsh are supported", shell)
-			}
-		},
+// findBaseDirs searches for possible environments
+func findBaseDirs() (dirs []string) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return
 	}
+	_, _, _, err = jpath.Resolve(pwd)
+	if err == jpath.ErrorNoRoot {
+		return
+	}
+
+	if err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		if _, err := os.Stat(filepath.Join(path, "main.jsonnet")); err == nil {
+			dirs = append(dirs, path)
+		}
+		return nil
+	}); err != nil {
+		log.Fatalln(err)
+	}
+	return dirs
 }
