@@ -4,10 +4,11 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	jsonnet "github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
 	"github.com/sh0rez/tanka/pkg/jpath"
 	"github.com/sh0rez/tanka/pkg/native"
+
+	jsonnet "github.com/sh0rez/go-jsonnet"
 )
 
 // EvaluateFile opens the file, reads it into memory and evaluates it afterwards (`Evaluate()`)
@@ -66,7 +67,9 @@ func VisitImports(sonnet string, jpath []string, v ImportVisitor) error {
 		vm.NativeFunction(nf)
 	}
 
-	if _, err := vm.EvaluateSnippet("main.jsonnet", sonnet); err != nil {
+	// This method does not exist in google/go-jsonnet. It has been patched in sh0rez/go-jsonnet.
+	// Basically it aborts the evaluation after the imports are done. This is much faster (7s vs 0.5s)
+	if err := vm.EvaluateSnippetWithoutManifestation("main.jsonnet", sonnet); err != nil {
 		return err
 	}
 	return nil
