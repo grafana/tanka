@@ -51,7 +51,8 @@ conceptual level, instead of reusing the native capabilities of jsonnet.
 
 Code-reuse and composability is
 adequately provided by the native `import` feature of `jsonnet`. Sharing code
-beyond application boundaries is already enabled by `jsonnet-bundler`.
+beyond application boundaries is already enabled by 
+[`jsonnet-bundler`](https://github.com/jsonnet-bundler/jsonnet-bundler).
 
 While it is possible to mimic environments with native `jsonnet`, it falls short
 when it comes to actually applying it to the correct cluster. The raw `json`
