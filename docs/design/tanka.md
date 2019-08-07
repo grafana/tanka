@@ -216,12 +216,18 @@ called `spec.json` alongside the `main.jsonnet`:
 
 | Field             | Description                                                         |
 |-------------------|---------------------------------------------------------------------|
-| `apiVersion`     | marks the version of the API, to allow schema changes once required |
+| `apiVersion`      | marks the version of the API, to allow schema changes once required |
 | `kind`            | not used yet, added for completeness                                |
 | `metadata.name`   | automatically set to the directory name                             |
-| `metadata.labels` | descriptive `key:value` pairs                                      |
+| `metadata.labels` | descriptive `key:value` pairs                                       |
 | `spec.apiServer`  | The Kubernetes endpoint to use                                      |
 | `spec.namespace`  | All objects will be forced into this namespace                      |
 
 The environment object is accessible from within `jsonnet`.
 
+## Workflow
+The anticipated workflow is a three step process:
+
+1. **Iterating:** During the actual development phase, one quickly switches between the editor with the jsonnet inside and `tk show`, which renders the Kubernetes manifests in `yaml` form on screen, to verify it all looks as expected.
+2. **Verification**: `tk diff` allows to quickly check whether the changes to be done are correct.
+3. **Applying**: Finally, `tk apply` invokes `kubectl` to apply the changes to the cluster.
