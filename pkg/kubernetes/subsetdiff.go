@@ -93,6 +93,12 @@ func subset(should, is map[string]interface{}) map[string]interface{} {
 	if should["namespace"] != nil {
 		is["namespace"] = should["namespace"]
 	}
+
+	// just ignore the apiVersion for now, too much bloat
+	if should["apiVersion"] != nil && is["apiVersion"] != nil {
+		is["apiVersion"] = should["apiVersion"]
+	}
+
 	for k, v := range is {
 		if should[k] == nil {
 			delete(is, k)
