@@ -99,6 +99,9 @@ func TestSubset(t *testing.T) {
 								"bam": "bloo",
 								"boo": "boar",
 							},
+							map[string]interface{}{
+								"a": "b",
+							},
 						},
 					},
 				},
@@ -111,6 +114,9 @@ func TestSubset(t *testing.T) {
 							"foobam",
 							map[string]interface{}{
 								"bam": "bloo",
+							},
+							map[string]interface{}{
+								"a": "b",
 							},
 						},
 					},
