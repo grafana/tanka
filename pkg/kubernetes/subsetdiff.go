@@ -17,7 +17,6 @@ type difference struct {
 }
 
 func (k Kubectl) SubsetDiff(y string) (string, error) {
-	//          is     should
 	docs := map[string]difference{}
 	d := yaml.NewDecoder(strings.NewReader(y))
 	for {
