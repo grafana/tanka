@@ -68,7 +68,7 @@ func main() {
 	rootCmd.AddCommand(
 		evalCmd(),
 		initCmd(),
-		debugCmd(),
+		toolCmd(),
 	)
 
 	// completion
