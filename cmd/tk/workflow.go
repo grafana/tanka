@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/alecthomas/chroma/quick"
+	"github.com/posener/complete"
+	"github.com/sh0rez/tanka/pkg/cmp"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -38,18 +40,26 @@ func applyCmd() *cobra.Command {
 }
 
 func diffCmd() *cobra.Command {
+	// completion
+	cmp.Handlers.Add("diffStrategy", complete.PredictSet("native", "subset"))
+
 	cmd := &cobra.Command{
 		Use:   "diff [directory]",
 		Short: "differences between the configuration and the cluster",
 		Args:  cobra.ExactArgs(1),
 		Annotations: map[string]string{
-			"args": "baseDir",
+			"args":                "baseDir",
+			"flags/diff-strategy": "diffStrategy",
 		},
 	}
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		raw, err := evalDict(args[0])
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
+		}
+
+		if kube.Spec.DiffStrategy == "" {
+			kube.Spec.DiffStrategy = cmd.Flag("diff-strategy").Value.String()
 		}
 
 		desired, err := kube.Reconcile(raw)
@@ -70,6 +80,7 @@ func diffCmd() *cobra.Command {
 			fmt.Println(changes)
 		}
 	}
+	cmd.Flags().String("diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
 	return cmd
 }
 
