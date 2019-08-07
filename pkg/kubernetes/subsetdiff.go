@@ -13,14 +13,20 @@ import (
 )
 
 type difference struct {
+	name         string
 	live, merged string
 }
 
 func (k Kubectl) SubsetDiff(y string) (string, error) {
-	docs := map[string]difference{}
+	docs := []difference{}
 	d := yaml.NewDecoder(strings.NewReader(y))
-	for {
 
+	rs := 0
+	errs := make(chan error)
+	defer close(errs)
+	results := make(chan difference)
+
+	for {
 		// jsonnet output -> desired state
 		var rawShould map[interface{}]interface{}
 		err := d.Decode(&rawShould)
@@ -32,57 +38,98 @@ func (k Kubectl) SubsetDiff(y string) (string, error) {
 			return "", errors.Wrap(err, "decoding yaml")
 		}
 
-		// filename
-		m := objx.New(util.CleanupInterfaceMap(rawShould))
-		name := strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
-			m.Get("apiVersion").MustStr(),
-			m.Get("kind").MustStr(),
-			m.Get("metadata.namespace").MustStr(),
-			m.Get("metadata.name").MustStr(),
-		), "/", "-", -1)
+		rs++
+		go subsetDiff(k, rawShould, results, errs)
 
-		// kubectl output -> current state
-		rawIs, err := k.Get(
-			m.Get("metadata.namespace").MustStr(),
-			m.Get("kind").MustStr(),
-			m.Get("metadata.name").MustStr(),
-		)
-		if err != nil {
-			if _, ok := err.(ErrorNotFound); ok {
-				rawIs = map[string]interface{}{}
-			} else {
-				return "", errors.Wrap(err, "getting state from cluster")
+	}
+
+	for rs > 0 {
+		select {
+		case d := <-results:
+			docs = append(docs, d)
+			rs--
+		case err := <-errs:
+			return "", errors.Wrap(err, "calculating subset")
+		}
+	}
+	close(results)
+
+	diffs := make(chan string)
+	defer close(diffs)
+	for _, d := range docs {
+		rs++
+		go func(d difference, r chan string, e chan error) {
+			s, err := diff(d.name, d.live, d.merged)
+			if err != nil {
+				e <- err
+				return
 			}
-		}
-
-		should, err := yaml.Marshal(rawShould)
-		if err != nil {
-			return "", err
-		}
-
-		is, err := yaml.Marshal(subset(m, rawIs))
-		if err != nil {
-			return "", err
-		}
-		if string(is) == "{}\n" {
-			is = []byte("")
-		}
-		docs[name] = difference{string(is), string(should)}
+			r <- s
+		}(d, diffs, errs)
 	}
 
 	s := ""
-	for k, v := range docs {
-		d, err := diff(k, v.live, v.merged)
-		if err != nil {
+	for rs > 0 {
+		select {
+		case d := <-diffs:
+			if d != "" {
+				d += "\n"
+			}
+			s += d
+			rs--
+		case err := <-errs:
 			return "", errors.Wrap(err, "invoking diff")
 		}
-		if d != "" {
-			d += "\n"
-		}
-		s += d
 	}
 
 	return s, nil
+}
+
+func subsetDiff(k Kubectl, rawShould map[interface{}]interface{}, r chan difference, e chan error) {
+	// filename
+	m := objx.New(util.CleanupInterfaceMap(rawShould))
+	name := strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
+		m.Get("apiVersion").MustStr(),
+		m.Get("kind").MustStr(),
+		m.Get("metadata.namespace").MustStr(),
+		m.Get("metadata.name").MustStr(),
+	), "/", "-", -1)
+
+	// kubectl output -> current state
+	rawIs, err := k.Get(
+		m.Get("metadata.namespace").MustStr(),
+		m.Get("kind").MustStr(),
+		m.Get("metadata.name").MustStr(),
+	)
+	if err != nil {
+		if _, ok := err.(ErrorNotFound); ok {
+			rawIs = map[string]interface{}{}
+		} else {
+			e <- errors.Wrap(err, "getting state from cluster")
+			return
+		}
+	}
+
+	should, err := yaml.Marshal(rawShould)
+	if err != nil {
+		e <- err
+		return
+	}
+
+	is, err := yaml.Marshal(subset(m, rawIs))
+	if err != nil {
+		e <- err
+		return
+	}
+	if string(is) == "{}\n" {
+		is = []byte("")
+	}
+
+	r <- difference{
+		name:   name,
+		live:   string(is),
+		merged: string(should),
+	}
 }
 
 // subset removes all keys from is, that are not present in should.
