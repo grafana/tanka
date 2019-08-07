@@ -23,7 +23,6 @@ func (k Kubectl) SubsetDiff(y string) (string, error) {
 
 	rs := 0
 	errs := make(chan error)
-	defer close(errs)
 	results := make(chan difference)
 
 	for {
@@ -53,33 +52,18 @@ func (k Kubectl) SubsetDiff(y string) (string, error) {
 		}
 	}
 	close(results)
-
-	diffs := make(chan string)
-	defer close(diffs)
-	for _, d := range docs {
-		rs++
-		go func(d difference, r chan string, e chan error) {
-			s, err := diff(d.name, d.live, d.merged)
-			if err != nil {
-				e <- err
-				return
-			}
-			r <- s
-		}(d, diffs, errs)
-	}
+	close(errs)
 
 	s := ""
-	for rs > 0 {
-		select {
-		case d := <-diffs:
-			if d != "" {
-				d += "\n"
-			}
-			s += d
-			rs--
-		case err := <-errs:
+	for _, d := range docs {
+		sd, err := diff(d.name, d.live, d.merged)
+		if err != nil {
 			return "", errors.Wrap(err, "invoking diff")
 		}
+		if sd != "" {
+			sd += "\n"
+		}
+		s += sd
 	}
 
 	return s, nil
