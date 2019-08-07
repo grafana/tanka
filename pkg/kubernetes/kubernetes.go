@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"bytes"
 
+	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
 	yaml "gopkg.in/yaml.v2"
@@ -13,13 +14,24 @@ import (
 // Kubernetes bridges tanka to the Kubernetse orchestrator.
 type Kubernetes struct {
 	client Kubectl
-	spec   v1alpha1.Spec
+	Spec   v1alpha1.Spec
+
+	// Diffing
+	differs map[string]Differ // List of diff strategies
 }
+
+type Differ func(yaml string) (string, error)
 
 // New creates a new Kubernetes
 func New(s v1alpha1.Spec) *Kubernetes {
-	k := Kubernetes{spec: s}
-	k.client.APIServer = k.spec.APIServer
+	k := Kubernetes{
+		Spec: s,
+	}
+	k.client.APIServer = k.Spec.APIServer
+	k.differs = map[string]Differ{
+		"native": k.client.Diff,
+		"subset": k.client.SubsetDiff,
+	}
 	return &k
 }
 
@@ -36,7 +48,7 @@ func (k *Kubernetes) Reconcile(raw map[string]interface{}) (state []Manifest, er
 	}
 	for _, d := range docs {
 		m := objx.New(d)
-		m.Set("metadata.namespace", k.spec.Namespace)
+		m.Set("metadata.namespace", k.Spec.Namespace)
 		out = append(out, Manifest(m))
 	}
 	return out, nil
@@ -71,5 +83,15 @@ func (k *Kubernetes) Diff(state []Manifest) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return k.client.Diff(yaml)
+
+	if k.Spec.DiffStrategy == "" {
+		k.Spec.DiffStrategy = "native"
+		if _, server, err := k.client.Version(); err == nil {
+			if !server.GreaterThan(semver.MustParse("0.13.0")) {
+				k.Spec.DiffStrategy = "subset"
+			}
+		}
+	}
+
+	return k.differs[k.Spec.DiffStrategy](yaml)
 }

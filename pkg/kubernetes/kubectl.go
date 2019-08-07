@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/fatih/color"
@@ -29,6 +30,9 @@ type Kubectl struct {
 // Version returns the version of kubectl and the Kubernetes api server
 func (k Kubectl) Version() (client, server semver.Version, err error) {
 	zero := *semver.MustParse("0.0.0")
+	if err := k.setupContext(); err != nil {
+		return zero, zero, err
+	}
 	cmd := exec.Command("kubectl", "version",
 		"-o", "json",
 		"--context", k.context.Get("name").MustStr(),
@@ -46,6 +50,10 @@ func (k Kubectl) Version() (client, server semver.Version, err error) {
 
 // setupContext uses `kubectl config view` to obtain the KUBECONFIG and extracts the correct context from it
 func (k *Kubectl) setupContext() error {
+	if k.context != nil {
+		return nil
+	}
+
 	cmd := exec.Command("kubectl", "config", "view", "-o", "json")
 	cfgJSON := bytes.Buffer{}
 	cmd.Stdout = &cfgJSON
@@ -102,14 +110,18 @@ func (k Kubectl) Get(namespace, kind, name string) (map[string]interface{}, erro
 		kind, name,
 	}
 	cmd := exec.Command("kubectl", argv...)
-	raw := bytes.Buffer{}
-	cmd.Stdout = &raw
-	cmd.Stderr = os.Stderr
+	var sout, serr bytes.Buffer
+	cmd.Stdout = &sout
+	cmd.Stderr = &serr
 	if err := cmd.Run(); err != nil {
+		if strings.HasPrefix(serr.String(), "Error from server (NotFound)") {
+			return nil, ErrorNotFound{name}
+		}
+		fmt.Println(serr.String())
 		return nil, err
 	}
 	var obj map[string]interface{}
-	if err := json.Unmarshal(raw.Bytes(), &obj); err != nil {
+	if err := json.Unmarshal(sout.Bytes(), &obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
@@ -161,14 +173,6 @@ func (k Kubectl) Apply(yaml string) error {
 // to the system in common diff format
 func (k Kubectl) Diff(yaml string) (string, error) {
 	if err := k.setupContext(); err != nil {
-		return "", err
-	}
-
-	client, server, err := k.Version()
-	if !client.GreaterThan(semver.MustParse("1.13.0")) || !server.GreaterThan(semver.MustParse("1.13.0")) {
-		return "", fmt.Errorf("The kubernetes diff feature requires at least version 1.13 on both, kubectl (is `%s`) and server (is `%s`)", client.String(), server.String())
-	}
-	if err != nil {
 		return "", err
 	}
 
