@@ -21,9 +21,9 @@ func (k Kubectl) SubsetDiff(y string) (string, error) {
 	docs := []difference{}
 	d := yaml.NewDecoder(strings.NewReader(y))
 
-	rs := 0
-	errs := make(chan error)
-	results := make(chan difference)
+	routines := 0
+	errCh := make(chan error)
+	resultCh := make(chan difference)
 
 	for {
 		// jsonnet output -> desired state
@@ -37,36 +37,40 @@ func (k Kubectl) SubsetDiff(y string) (string, error) {
 			return "", errors.Wrap(err, "decoding yaml")
 		}
 
-		rs++
-		go subsetDiff(k, rawShould, results, errs)
+		routines++
+		go subsetDiff(k, rawShould, resultCh, errCh)
 
 	}
 
-	for rs > 0 {
+	var lastErr error
+	for i := 0; i < routines; i++ {
 		select {
-		case d := <-results:
+		case d := <-resultCh:
 			docs = append(docs, d)
-			rs--
-		case err := <-errs:
-			return "", errors.Wrap(err, "calculating subset")
+		case err := <-errCh:
+			lastErr = err
 		}
 	}
-	close(results)
-	close(errs)
+	close(resultCh)
+	close(errCh)
 
-	s := ""
+	if lastErr != nil {
+		return "", errors.Wrap(lastErr, "calculating subset")
+	}
+
+	diffs := ""
 	for _, d := range docs {
-		sd, err := diff(d.name, d.live, d.merged)
+		diffStr, err := diff(d.name, d.live, d.merged)
 		if err != nil {
 			return "", errors.Wrap(err, "invoking diff")
 		}
-		if sd != "" {
-			sd += "\n"
+		if diffStr != "" {
+			diffStr += "\n"
 		}
-		s += sd
+		diffs += diffStr
 	}
 
-	return s, nil
+	return diffs, nil
 }
 
 func subsetDiff(k Kubectl, rawShould map[interface{}]interface{}, r chan difference, e chan error) {
