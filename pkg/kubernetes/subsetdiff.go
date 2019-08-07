@@ -119,15 +119,23 @@ func subset(should, is map[string]interface{}) map[string]interface{} {
 		case []interface{}:
 			for i := range b {
 				if a, ok := should[k].([]interface{}); ok {
-					aa, ok := a[i].(map[string]interface{})
+					if i >= len(a) {
+						// slice in config shorter than in live. Abort, as there are no entries to diff anymore
+						break
+					}
+
+					// value not a dict, no recursion needed
+					cShould, ok := a[i].(map[string]interface{})
 					if !ok {
 						continue
 					}
-					bb, ok := b[i].(map[string]interface{})
+
+					// value not a dict, no recursion needed
+					cIs, ok := b[i].(map[string]interface{})
 					if !ok {
 						continue
 					}
-					b[i] = subset(aa, bb)
+					b[i] = subset(cShould, cIs)
 				}
 			}
 		}
