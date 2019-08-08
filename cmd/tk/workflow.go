@@ -19,7 +19,7 @@ type workflowFlagVars struct {
 
 func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
-	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects")
+	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects (Format: <type>/<name>)")
 	return &v
 }
 
