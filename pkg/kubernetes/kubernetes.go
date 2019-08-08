@@ -103,7 +103,7 @@ func (k *Kubernetes) Diff(state []Manifest) (string, error) {
 	if k.Spec.DiffStrategy == "" {
 		k.Spec.DiffStrategy = "native"
 		if _, server, err := k.client.Version(); err == nil {
-			if !server.GreaterThan(semver.MustParse("1.13.0")) {
+			if server.LessThan(semver.MustParse("1.13.0")) {
 				k.Spec.DiffStrategy = "subset"
 			}
 		}
