@@ -74,7 +74,7 @@ func (k *Kubernetes) Apply(state []Manifest) error {
 	if err != nil {
 		return err
 	}
-	return k.client.Apply(yaml)
+	return k.client.Apply(yaml, k.Spec.Namespace)
 }
 
 // Diff takes the desired state and returns the differences from the cluster
