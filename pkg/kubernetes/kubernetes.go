@@ -2,10 +2,13 @@ package kubernetes
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
+	funk "github.com/thoas/go-funk"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/grafana/tanka/pkg/config/v1alpha1"
@@ -40,7 +43,7 @@ type Manifest map[string]interface{}
 
 // Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 // shall return it reconciled as a state object of the target system
-func (k *Kubernetes) Reconcile(raw map[string]interface{}) (state []Manifest, err error) {
+func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...string) (state []Manifest, err error) {
 	docs, err := walkJSON(raw, "")
 	out := make([]Manifest, 0, len(docs))
 	if err != nil {
@@ -51,6 +54,19 @@ func (k *Kubernetes) Reconcile(raw map[string]interface{}) (state []Manifest, er
 		m.Set("metadata.namespace", k.Spec.Namespace)
 		out = append(out, Manifest(m))
 	}
+
+	if len(objectspecs) > 0 {
+		out = funk.Filter(out, func(i interface{}) bool {
+			p := objectspec(i.(Manifest))
+			for _, o := range objectspecs {
+				if strings.EqualFold(p, o) {
+					return true
+				}
+			}
+			return false
+		}).([]Manifest)
+	}
+
 	return out, nil
 }
 
@@ -94,4 +110,11 @@ func (k *Kubernetes) Diff(state []Manifest) (string, error) {
 	}
 
 	return k.differs[k.Spec.DiffStrategy](yaml)
+}
+
+func objectspec(m Manifest) string {
+	return fmt.Sprintf("%s/%s",
+		m["kind"],
+		m["metadata"].(map[string]interface{})["name"],
+	)
 }
