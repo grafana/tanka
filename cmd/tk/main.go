@@ -32,6 +32,7 @@ var deprecated = map[string]string{
 }
 
 func main() {
+	log.SetFlags(0)
 	rootCmd := &cobra.Command{
 		Use:              "tk",
 		Short:            "tanka <3 jsonnet",
