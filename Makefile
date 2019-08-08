@@ -25,7 +25,7 @@ cross: $(GOX)
 
 # Docker container
 container: static
-	docker build -t shorez/tanka .
+	docker build -t grafana/tanka .
 
 # CI
 drone:

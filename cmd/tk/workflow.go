@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/alecthomas/chroma/quick"
+	"github.com/grafana/tanka/pkg/cmp"
 	"github.com/posener/complete"
-	"github.com/sh0rez/tanka/pkg/cmp"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )
