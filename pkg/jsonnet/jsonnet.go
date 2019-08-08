@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/grafana/tanka/pkg/jpath"
+	"github.com/grafana/tanka/pkg/native"
 	"github.com/pkg/errors"
-	"github.com/sh0rez/tanka/pkg/jpath"
-	"github.com/sh0rez/tanka/pkg/native"
 
 	jsonnet "github.com/sh0rez/go-jsonnet"
 )

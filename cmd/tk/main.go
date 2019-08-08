@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/sh0rez/tanka/pkg/cmp"
-	"github.com/sh0rez/tanka/pkg/config/v1alpha1"
-	"github.com/sh0rez/tanka/pkg/kubernetes"
+	"github.com/grafana/tanka/pkg/cmp"
+	"github.com/grafana/tanka/pkg/config/v1alpha1"
+	"github.com/grafana/tanka/pkg/kubernetes"
 )
 
 // Version is the current version of the tk command.

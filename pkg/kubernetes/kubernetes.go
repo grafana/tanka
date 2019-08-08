@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/objx"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/sh0rez/tanka/pkg/config/v1alpha1"
+	"github.com/grafana/tanka/pkg/config/v1alpha1"
 )
 
 // Kubernetes bridges tanka to the Kubernetse orchestrator.

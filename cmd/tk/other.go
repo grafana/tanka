@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/sh0rez/tanka/pkg/jpath"
+	"github.com/grafana/tanka/pkg/jpath"
 )
 
 // findBaseDirs searches for possible environments

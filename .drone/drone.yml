@@ -48,7 +48,7 @@ steps:
     api_key:
       from_secret: GITHUB_TOKEN
     files: dist/*
-    note: 'This is release ${DRONE_VERSION} of Tanka (`tk`). Check out the [CHANGELOG](CHANGELOG.md)
+    note: 'This is release ${DRONE_TAG} of Tanka (`tk`). Check out the [CHANGELOG](CHANGELOG.md)
       for detailed release notes.
 
       ## Install instructions
@@ -77,11 +77,11 @@ steps:
 
       #### Docker container:
 
-      https://hub.docker.com/r/shorez/tanka
+      https://hub.docker.com/r/grafana/tanka
 
       ```bash
 
-      $ docker pull shorez/tanka:${DRONE_TAG}
+      $ docker pull grafana/tanka:${DRONE_TAG}
 
       ```
 
@@ -116,7 +116,7 @@ steps:
     auto_tag_suffix: amd64
     password:
       from_secret: docker_password
-    repo: shorez/tanka
+    repo: grafana/tanka
     username:
       from_secret: docker_username
 trigger:
@@ -150,7 +150,7 @@ steps:
     auto_tag_suffix: arm
     password:
       from_secret: docker_password
-    repo: shorez/tanka
+    repo: grafana/tanka
     username:
       from_secret: docker_username
 trigger:
@@ -184,7 +184,7 @@ steps:
     auto_tag_suffix: arm64
     password:
       from_secret: docker_password
-    repo: shorez/tanka
+    repo: grafana/tanka
     username:
       from_secret: docker_username
 trigger:
