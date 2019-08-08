@@ -9,8 +9,19 @@ import (
 	"github.com/grafana/tanka/pkg/cmp"
 	"github.com/posener/complete"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"golang.org/x/crypto/ssh/terminal"
 )
+
+type workflowFlagVars struct {
+	targets []string
+}
+
+func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
+	v := workflowFlagVars{}
+	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects")
+	return &v
+}
 
 func applyCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -21,13 +32,14 @@ func applyCmd() *cobra.Command {
 			"args": "baseDir",
 		},
 	}
+	vars := workflowFlags(cmd.Flags())
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		raw, err := evalDict(args[0])
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
 
-		desired, err := kube.Reconcile(raw)
+		desired, err := kube.Reconcile(raw, vars.targets...)
 		if err != nil {
 			log.Fatalln("Reconciling:", err)
 		}
@@ -52,6 +64,7 @@ func diffCmd() *cobra.Command {
 			"flags/diff-strategy": "diffStrategy",
 		},
 	}
+	vars := workflowFlags(cmd.Flags())
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		raw, err := evalDict(args[0])
 		if err != nil {
@@ -62,7 +75,7 @@ func diffCmd() *cobra.Command {
 			kube.Spec.DiffStrategy = cmd.Flag("diff-strategy").Value.String()
 		}
 
-		desired, err := kube.Reconcile(raw)
+		desired, err := kube.Reconcile(raw, vars.targets...)
 		if err != nil {
 			log.Fatalln("Reconciling:", err)
 		}
@@ -93,13 +106,14 @@ func showCmd() *cobra.Command {
 			"args": "baseDir",
 		},
 	}
+	vars := workflowFlags(cmd.Flags())
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		raw, err := evalDict(args[0])
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
 
-		state, err := kube.Reconcile(raw)
+		state, err := kube.Reconcile(raw, vars.targets...)
 		if err != nil {
 			log.Fatalln("Reconciling:", err)
 		}
