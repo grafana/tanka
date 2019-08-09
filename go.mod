@@ -1,4 +1,4 @@
-module github.com/sh0rez/tanka
+module github.com/grafana/tanka
 
 go 1.12
 

@@ -128,14 +128,15 @@ func (k Kubectl) Get(namespace, kind, name string) (map[string]interface{}, erro
 }
 
 // Apply applies the given yaml to the cluster
-func (k Kubectl) Apply(yaml string) error {
+func (k Kubectl) Apply(yaml, namespace string) error {
 	if err := k.setupContext(); err != nil {
 		return err
 	}
 
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf(`!!! Applying to cluster '%s' at '%s' using context '%s'.
-!!! Please type 'yes' to perform: `,
+	fmt.Printf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.
+Please type 'yes' to perform: `,
+		alert(namespace),
 		alert(k.cluster.Get("name").MustStr()),
 		alert(k.cluster.Get("cluster.server").MustStr()),
 		alert(k.context.Get("name").MustStr()),

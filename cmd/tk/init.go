@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/sh0rez/tanka/pkg/config/v1alpha1"
+	"github.com/grafana/tanka/pkg/config/v1alpha1"
 	"github.com/spf13/cobra"
 )
 

@@ -14,7 +14,7 @@ $ tk --help
 ```
 
 #### Docker container:
-https://hub.docker.com/r/shorez/tanka
+https://hub.docker.com/r/grafana/tanka
 ```bash
-$ docker pull shorez/tanka:${DRONE_TAG}
+$ docker pull grafana/tanka:${DRONE_TAG}
 ```

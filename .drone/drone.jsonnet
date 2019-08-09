@@ -44,7 +44,7 @@ local docker(arch) = pipeline('docker-' + arch) {
       name: 'container',
       image: 'plugins/docker',
       settings: {
-        repo: 'shorez/tanka',
+        repo: 'grafana/tanka',
         auto_tag: true,
         auto_tag_suffix: arch,
         username: { from_secret: 'docker_username' },

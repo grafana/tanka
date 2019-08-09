@@ -2,13 +2,16 @@ package kubernetes
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
+	funk "github.com/thoas/go-funk"
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/sh0rez/tanka/pkg/config/v1alpha1"
+	"github.com/grafana/tanka/pkg/config/v1alpha1"
 )
 
 // Kubernetes bridges tanka to the Kubernetse orchestrator.
@@ -40,7 +43,7 @@ type Manifest map[string]interface{}
 
 // Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 // shall return it reconciled as a state object of the target system
-func (k *Kubernetes) Reconcile(raw map[string]interface{}) (state []Manifest, err error) {
+func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...string) (state []Manifest, err error) {
 	docs, err := walkJSON(raw, "")
 	out := make([]Manifest, 0, len(docs))
 	if err != nil {
@@ -51,6 +54,19 @@ func (k *Kubernetes) Reconcile(raw map[string]interface{}) (state []Manifest, er
 		m.Set("metadata.namespace", k.Spec.Namespace)
 		out = append(out, Manifest(m))
 	}
+
+	if len(objectspecs) > 0 {
+		out = funk.Filter(out, func(i interface{}) bool {
+			p := objectspec(i.(Manifest))
+			for _, o := range objectspecs {
+				if strings.EqualFold(p, o) {
+					return true
+				}
+			}
+			return false
+		}).([]Manifest)
+	}
+
 	return out, nil
 }
 
@@ -74,7 +90,7 @@ func (k *Kubernetes) Apply(state []Manifest) error {
 	if err != nil {
 		return err
 	}
-	return k.client.Apply(yaml)
+	return k.client.Apply(yaml, k.Spec.Namespace)
 }
 
 // Diff takes the desired state and returns the differences from the cluster
@@ -87,11 +103,18 @@ func (k *Kubernetes) Diff(state []Manifest) (string, error) {
 	if k.Spec.DiffStrategy == "" {
 		k.Spec.DiffStrategy = "native"
 		if _, server, err := k.client.Version(); err == nil {
-			if !server.GreaterThan(semver.MustParse("1.13.0")) {
+			if server.LessThan(semver.MustParse("1.13.0")) {
 				k.Spec.DiffStrategy = "subset"
 			}
 		}
 	}
 
 	return k.differs[k.Spec.DiffStrategy](yaml)
+}
+
+func objectspec(m Manifest) string {
+	return fmt.Sprintf("%s/%s",
+		m["kind"],
+		m["metadata"].(map[string]interface{})["name"],
+	)
 }
