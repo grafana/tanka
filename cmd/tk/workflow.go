@@ -5,10 +5,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/grafana/tanka/pkg/cmp"
 	"github.com/posener/complete"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/grafana/tanka/pkg/cmp"
+	"github.com/grafana/tanka/pkg/kubernetes"
 )
 
 type workflowFlagVars struct {
@@ -40,6 +42,10 @@ func applyCmd() *cobra.Command {
 		desired, err := kube.Reconcile(raw, vars.targets...)
 		if err != nil {
 			log.Fatalln("Reconciling:", err)
+		}
+
+		if !diff(desired, false) {
+			log.Println("Warning: There are no differences. Your apply may not do anything at all.")
 		}
 
 		if err := kube.Apply(desired); err != nil {
@@ -78,28 +84,41 @@ func diffCmd() *cobra.Command {
 			log.Fatalln("Reconciling:", err)
 		}
 
-		changes, err := kube.Diff(desired)
-		if err != nil {
-			log.Fatalln("Diffing:", err)
-		}
-
-		if changes == nil {
-			return
-		}
-
-		if interactive {
-			pageln(highlight("diff", *changes))
-		} else {
-			fmt.Println(*changes)
-		}
-
-		if changes != nil {
+		if diff(desired, interactive) {
 			os.Exit(16)
 		}
+		log.Println("No differences.")
 	}
 
 	cmd.Flags().String("diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
 	return cmd
+}
+
+// computes the diff, prints to screen.
+// set `pager` to false to disable the pager.
+// When non-interactive, no paging happens anyways.
+func diff(state []kubernetes.Manifest, pager bool) (changed bool) {
+	changes, err := kube.Diff(state)
+	if err != nil {
+		log.Fatalln("Diffing:", err)
+	}
+
+	if changes == nil {
+		return false
+	}
+
+	if interactive {
+		h := highlight("diff", *changes)
+		if pager {
+			pageln(h)
+		} else {
+			fmt.Println(h)
+		}
+	} else {
+		fmt.Println(*changes)
+	}
+
+	return true
 }
 
 func showCmd() *cobra.Command {
