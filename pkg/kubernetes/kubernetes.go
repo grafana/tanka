@@ -105,12 +105,12 @@ func (k *Kubernetes) Fmt(state []Manifest) (string, error) {
 }
 
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
-func (k *Kubernetes) Apply(state []Manifest) error {
+func (k *Kubernetes) Apply(state []Manifest, opts ApplyOpts) error {
 	yaml, err := k.Fmt(state)
 	if err != nil {
 		return err
 	}
-	return k.client.Apply(yaml, k.Spec.Namespace)
+	return k.client.Apply(yaml, k.Spec.Namespace, opts)
 }
 
 // Diff takes the desired state and returns the differences from the cluster

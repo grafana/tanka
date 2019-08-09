@@ -33,6 +33,8 @@ func applyCmd() *cobra.Command {
 		},
 	}
 	vars := workflowFlags(cmd.Flags())
+	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
+	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		raw, err := evalDict(args[0])
 		if err != nil {
@@ -48,7 +50,10 @@ func applyCmd() *cobra.Command {
 			log.Println("Warning: There are no differences. Your apply may not do anything at all.")
 		}
 
-		if err := kube.Apply(desired); err != nil {
+		if err := kube.Apply(desired, kubernetes.ApplyOpts{
+			Force:       *force,
+			AutoApprove: *autoApprove,
+		}); err != nil {
 			log.Fatalln("Applying:", err)
 		}
 	}
