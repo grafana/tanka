@@ -24,7 +24,7 @@ type Kubernetes struct {
 	differs map[string]Differ // List of diff strategies
 }
 
-type Differ func(yaml string) (string, error)
+type Differ func(yaml string) (*string, error)
 
 // New creates a new Kubernetes
 func New(s v1alpha1.Spec) *Kubernetes {
@@ -114,10 +114,10 @@ func (k *Kubernetes) Apply(state []Manifest) error {
 }
 
 // Diff takes the desired state and returns the differences from the cluster
-func (k *Kubernetes) Diff(state []Manifest) (string, error) {
+func (k *Kubernetes) Diff(state []Manifest) (*string, error) {
 	yaml, err := k.Fmt(state)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if k.Spec.DiffStrategy == "" {

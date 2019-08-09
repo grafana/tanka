@@ -172,9 +172,9 @@ Please type 'yes' to perform: `,
 
 // Diff takes a desired state as yaml and returns the differences
 // to the system in common diff format
-func (k Kubectl) Diff(yaml string) (string, error) {
+func (k Kubectl) Diff(yaml string) (*string, error) {
 	if err := k.setupContext(); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	argv := []string{"diff",
@@ -187,7 +187,7 @@ func (k Kubectl) Diff(yaml string) (string, error) {
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	go func() {
@@ -199,11 +199,13 @@ func (k Kubectl) Diff(yaml string) (string, error) {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			// kubectl uses this to tell us that there is a diff
 			if exitError.ExitCode() == 1 {
-				return raw.String(), nil
+				s := raw.String()
+				return &s, nil
 			}
 		}
-		return "", err
+		return nil, err
 	}
 
-	return raw.String(), nil
+	// no diff -> nil
+	return nil, nil
 }

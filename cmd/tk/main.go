@@ -3,11 +3,13 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/posener/complete"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/grafana/tanka/pkg/cmp"
 	"github.com/grafana/tanka/pkg/config/v1alpha1"
@@ -18,9 +20,16 @@ import (
 // To be overwritten at build time
 var Version = "dev"
 
+// primary handlers
 var (
 	config = &v1alpha1.Config{}
 	kube   *kubernetes.Kubernetes
+)
+
+// describing variables
+var (
+	verbose     = false
+	interactive = terminal.IsTerminal(int(os.Stdout.Fd()))
 )
 
 // list of deprecated config keys and their alternatives
@@ -53,7 +62,7 @@ func main() {
 
 		},
 	}
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 
 	// Subcommands
 	cobra.EnableCommandSorting = false

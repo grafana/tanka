@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"path/filepath"
 
@@ -27,7 +26,7 @@ func evalCmd() *cobra.Command {
 		if err != nil {
 			log.Fatalln("evaluating:", err)
 		}
-		fmt.Print(json)
+		pageln(json)
 	}
 
 	return cmd

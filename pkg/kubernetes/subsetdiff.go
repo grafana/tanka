@@ -17,7 +17,7 @@ type difference struct {
 	live, merged string
 }
 
-func (k Kubectl) SubsetDiff(y string) (string, error) {
+func (k Kubectl) SubsetDiff(y string) (*string, error) {
 	docs := []difference{}
 	d := yaml.NewDecoder(strings.NewReader(y))
 
@@ -34,7 +34,7 @@ func (k Kubectl) SubsetDiff(y string) (string, error) {
 		}
 
 		if err != nil {
-			return "", errors.Wrap(err, "decoding yaml")
+			return nil, errors.Wrap(err, "decoding yaml")
 		}
 
 		routines++
@@ -55,19 +55,22 @@ func (k Kubectl) SubsetDiff(y string) (string, error) {
 	close(errCh)
 
 	if lastErr != nil {
-		return "", errors.Wrap(lastErr, "calculating subset")
+		return nil, errors.Wrap(lastErr, "calculating subset")
 	}
 
-	diffs := ""
+	var diffs *string
 	for _, d := range docs {
 		diffStr, err := diff(d.name, d.live, d.merged)
 		if err != nil {
-			return "", errors.Wrap(err, "invoking diff")
+			return nil, errors.Wrap(err, "invoking diff")
 		}
 		if diffStr != "" {
 			diffStr += "\n"
 		}
-		diffs += diffStr
+		if diffs == nil {
+			*diffs = ""
+		}
+		*diffs += diffStr
 	}
 
 	return diffs, nil
