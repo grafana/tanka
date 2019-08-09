@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/Masterminds/semver"
@@ -41,6 +42,18 @@ func New(s v1alpha1.Spec) *Kubernetes {
 // Manifest describes a single Kubernetes manifest
 type Manifest map[string]interface{}
 
+func (m Manifest) Kind() string {
+	return m["kind"].(string)
+}
+
+func (m Manifest) Name() string {
+	return m["metadata"].(map[string]interface{})["name"].(string)
+}
+
+func (m Manifest) Namespace() string {
+	return m["metadata"].(map[string]interface{})["namespace"].(string)
+}
+
 // Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 // shall return it reconciled as a state object of the target system
 func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...string) (state []Manifest, err error) {
@@ -66,6 +79,13 @@ func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...string
 			return false
 		}).([]Manifest)
 	}
+
+	sort.SliceStable(out, func(i int, j int) bool {
+		if out[i].Kind() != out[j].Kind() {
+			return out[i].Kind() < out[j].Kind()
+		}
+		return out[i].Name() < out[j].Name()
+	})
 
 	return out, nil
 }
@@ -114,7 +134,7 @@ func (k *Kubernetes) Diff(state []Manifest) (string, error) {
 
 func objectspec(m Manifest) string {
 	return fmt.Sprintf("%s/%s",
-		m["kind"],
-		m["metadata"].(map[string]interface{})["name"],
+		m.Kind(),
+		m.Name(),
 	)
 }
