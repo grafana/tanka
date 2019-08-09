@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/grafana/tanka/pkg/cmp"
 	"github.com/posener/complete"
@@ -82,11 +83,19 @@ func diffCmd() *cobra.Command {
 			log.Fatalln("Diffing:", err)
 		}
 
-		if interactive {
-			pageln(highlight("diff", changes))
+		if changes == nil {
 			return
 		}
-		fmt.Println(changes)
+
+		if interactive {
+			pageln(highlight("diff", *changes))
+		} else {
+			fmt.Println(*changes)
+		}
+
+		if changes != nil {
+			os.Exit(16)
+		}
 	}
 
 	cmd.Flags().String("diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
