@@ -81,10 +81,10 @@ func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...string
 	}
 
 	sort.SliceStable(out, func(i int, j int) bool {
-		if out[i].Kind() == out[j].Kind() {
-			return out[i].Name() < out[j].Name()
+		if out[i].Kind() != out[j].Kind() {
+			return out[i].Kind() < out[j].Kind()
 		}
-		return out[i].Kind() < out[j].Kind()
+		return out[i].Name() < out[j].Name()
 	})
 
 	return out, nil
