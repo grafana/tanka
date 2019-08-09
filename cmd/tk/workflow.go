@@ -3,14 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
-	"github.com/alecthomas/chroma/quick"
 	"github.com/grafana/tanka/pkg/cmp"
 	"github.com/posener/complete"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 type workflowFlagVars struct {
@@ -85,14 +82,13 @@ func diffCmd() *cobra.Command {
 			log.Fatalln("Diffing:", err)
 		}
 
-		if terminal.IsTerminal(int(os.Stdout.Fd())) {
-			if err := quick.Highlight(os.Stdout, changes, "diff", "terminal", "vim"); err != nil {
-				log.Fatalln("Highlighting:", err)
-			}
-		} else {
-			fmt.Println(changes)
+		if interactive {
+			pageln(highlight("diff", changes))
+			return
 		}
+		fmt.Println(changes)
 	}
+
 	cmd.Flags().String("diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
 	return cmd
 }
@@ -122,7 +118,8 @@ func showCmd() *cobra.Command {
 		if err != nil {
 			log.Fatalln("Pretty printing state:", err)
 		}
-		fmt.Println(pretty)
+
+		pageln(pretty)
 	}
 	return cmd
 }
