@@ -104,7 +104,7 @@ func main() {
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln("Ouch:", rootCmd.Execute())
+		log.Fatalln("Ouch:", err)
 	}
 }
 
