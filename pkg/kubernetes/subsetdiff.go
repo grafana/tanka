@@ -58,7 +58,7 @@ func (k Kubectl) SubsetDiff(y string) (*string, error) {
 		return nil, errors.Wrap(lastErr, "calculating subset")
 	}
 
-	var diffs *string
+	var diffs string
 	for _, d := range docs {
 		diffStr, err := diff(d.name, d.live, d.merged)
 		if err != nil {
@@ -67,13 +67,10 @@ func (k Kubectl) SubsetDiff(y string) (*string, error) {
 		if diffStr != "" {
 			diffStr += "\n"
 		}
-		if diffs == nil {
-			*diffs = ""
-		}
-		*diffs += diffStr
+		diffs += diffStr
 	}
 
-	return diffs, nil
+	return &diffs, nil
 }
 
 func subsetDiff(k Kubectl, rawShould map[interface{}]interface{}, r chan difference, e chan error) {
