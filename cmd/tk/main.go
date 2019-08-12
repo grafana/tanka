@@ -135,8 +135,9 @@ func setupConfiguration(baseDir string) *v1alpha1.Config {
 		}
 	}
 
-	// disabled for now
-	// checkDeprecated()
+	if verbose {
+		checkDeprecated()
+	}
 
 	var config v1alpha1.Config
 	if err := viper.Unmarshal(&config); err != nil {
