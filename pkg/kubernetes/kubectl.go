@@ -127,32 +127,44 @@ func (k Kubectl) Get(namespace, kind, name string) (map[string]interface{}, erro
 	return obj, nil
 }
 
+// ApplyOpts allow to specify additional parameter for apply operations
+type ApplyOpts struct {
+	Force       bool
+	AutoApprove bool
+}
+
 // Apply applies the given yaml to the cluster
-func (k Kubectl) Apply(yaml, namespace string) error {
+func (k Kubectl) Apply(yaml, namespace string, opts ApplyOpts) error {
 	if err := k.setupContext(); err != nil {
 		return err
 	}
 
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.
+	if !opts.AutoApprove {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Printf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.
 Please type 'yes' to perform: `,
-		alert(namespace),
-		alert(k.cluster.Get("name").MustStr()),
-		alert(k.cluster.Get("cluster.server").MustStr()),
-		alert(k.context.Get("name").MustStr()),
-	)
-	approve, err := reader.ReadString('\n')
-	if err != nil {
-		return err
-	}
-	if approve != "yes\n" {
-		return errors.New("aborted by user")
+			alert(namespace),
+			alert(k.cluster.Get("name").MustStr()),
+			alert(k.cluster.Get("cluster.server").MustStr()),
+			alert(k.context.Get("name").MustStr()),
+		)
+		approve, err := reader.ReadString('\n')
+		if err != nil {
+			return err
+		}
+		if approve != "yes\n" {
+			return errors.New("aborted by user")
+		}
 	}
 
 	argv := []string{"apply",
 		"--context", k.context.Get("name").MustStr(),
 		"-f", "-",
 	}
+	if !opts.Force {
+		argv = append(argv, "--force")
+	}
+
 	cmd := exec.Command("kubectl", argv...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
