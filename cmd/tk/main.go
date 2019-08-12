@@ -118,11 +118,6 @@ func setupConfiguration(baseDir string) *v1alpha1.Config {
 	}
 	viper.AddConfigPath(pwd)
 
-	// handle deprecated ksonnet spec
-	for old, new := range deprecated {
-		viper.RegisterAlias(new, old)
-	}
-
 	// read it
 	if err := viper.ReadInConfig(); err != nil {
 		// just run fine without config. Provider features won't work (apply, show, diff)
@@ -132,7 +127,16 @@ func setupConfiguration(baseDir string) *v1alpha1.Config {
 
 		log.Fatalln(err)
 	}
-	checkDeprecated()
+
+	// handle deprecated ksonnet spec
+	for old, new := range deprecated {
+		if viper.IsSet(old) && !viper.IsSet(new) {
+			viper.Set(new, viper.Get(old))
+		}
+	}
+
+	// disabled for now
+	// checkDeprecated()
 
 	var config v1alpha1.Config
 	if err := viper.Unmarshal(&config); err != nil {
