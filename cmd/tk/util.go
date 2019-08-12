@@ -22,12 +22,17 @@ func pageln(i ...interface{}) {
 
 	// get system pager, fallback to `more`
 	pager := os.Getenv("PAGER")
+	var args []string
 	if pager == "" {
-		pager = "more"
+		// --raw-control-chars  Honors colors from diff.
+		// --quit-if-one-screen Closer to the git experience.
+		// --no-init            Don't clear the screen when exiting.
+		pager = "less"
+		args = []string{"--raw-control-chars", "--quit-if-one-screen", "--no-init"}
 	}
 
 	// invoke pager
-	cmd := exec.Command(pager)
+	cmd := exec.Command(pager, args...)
 	cmd.Stdin = strings.NewReader(fmt.Sprintln(i...))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
