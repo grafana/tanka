@@ -1,4 +1,4 @@
-.PHONY: lint test static cross
+.PHONY: lint test static install uninstall cross
 VERSION := $(shell git describe --tags --dirty --always)
 BIN_DIR := $(GOPATH)/bin
 GOX := $(BIN_DIR)/gox
@@ -17,6 +17,12 @@ dev:
 LDFLAGS := '-s -w -extldflags "-static" -X main.Version=${VERSION}'
 static:
 	CGO_ENABLED=0 GOOS=linux go build -ldflags=${LDFLAGS} ./cmd/tk
+
+install:
+	CGO_ENABLED=0 go install -ldflags=${LDFLAGS} ./cmd/tk
+
+uninstall:
+	go clean -i ./cmd/tk
 
 $(GOX):
 	go get -u github.com/mitchellh/gox
