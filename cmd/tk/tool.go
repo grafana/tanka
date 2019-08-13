@@ -50,18 +50,21 @@ func jpathCmd() *cobra.Command {
 }
 
 func importsCmd() *cobra.Command {
+	var modFiles []string
+
 	cmd := &cobra.Command{
 		Use:   "imports [file]",
 		Short: "list all transitive imports of a file",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			var modFiles []string
+			var newModFiles []string
 			if cmd.Flag("check").Changed {
 				var err error
-				modFiles, err = gitChangedFiles(cmd.Flag("check").Value.String())
+				newModFiles, err = gitChangedFiles(cmd.Flag("check").Value.String())
 				if err != nil {
 					log.Fatalln("invoking git:", err)
 				}
+				modFiles = append(modFiles, newModFiles...)
 			}
 
 			f, err := filepath.Abs(args[0])
@@ -108,6 +111,7 @@ func importsCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("check", "c", "", "git commit hash to check against")
+	cmd.Flags().StringSliceVarP(&modFiles, "check-files", "f", []string{}, "files to check for inclusion in imports")
 
 	return cmd
 }
