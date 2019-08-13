@@ -39,7 +39,7 @@ basically `json` but with variables, conditionals, arithmetic, functions,
 **imports**, and error propagation and especially very clever [**deep-merging**](#edge-cases).
 
 #### Prior art
-Especially [ksonnet](https://ksonnet.io) had a big impact on this idea.
+Especially [`ksonnet`](https://ksonnet.io) had a big impact on this idea.
 While `ksonnet` really proved the idea to be working, is was based on the
 concept of components, building blocks consisting of prototypes and parameters,
 which may be composed into applications or modules which in turn may be applied
@@ -79,7 +79,7 @@ shared dependencies.
 In the `jsonnet` world, this is provided by
 [`jsonnet-bundler`](https://github.com/jsonnet-bundler/jsonnet-bundler), which maintains a
 `vendor` folder (the bundle) with all required libraries ready to be imported,
-much like older versions of `go` used to (>1.11) do.  
+much like older versions of `go` used to (<1.11) do.  
 This procedure integrates smoothly with tanka, because `vendor` is on the [`JPATH`](#jpath).
 
 ### `JPATH`
@@ -87,9 +87,9 @@ To enable a predictable developer experience, tanka uses clear rules to define
 how importing works.
 
 Imports are relative to the `JPATH`. The earlier a directory appears in the
-`JPATH`, the higher it's precedence is.
+`JPATH`, the higher its precedence is.
 
-To set it up, tanka makes use of the following directoies:
+To set it up, tanka makes use of the following directories:
 
 | Name             | Identifier         | Description                                                                                                                           |
 |------------------|--------------------|---------------------------------------------------------------------------------------------------------------------------------------|
@@ -140,13 +140,13 @@ into subdirectories:
 └── vendor/
 ```
 
-While latter structure is the one suggested by `tk init`, it is perfectly fine to
-use another if it fits the use-case better. The folder does not need to be named
-`environments`, either.
+While the latter structure is the one suggested by `tk init`, it is perfectly
+fine to use another if it fits the use-case better. The folder does not need to
+be named `environments`, either.
 
 ## Edge Cases
 During development of `jsonnet` libraries, e.g. for applications like `mysql`,
-it is impossible to think of every edge-case in before.
+it is impossible to think of every edge-case in advance.
 
 But thanks to the power of `jsonnet`, this is not a problem. Imagine the output
 of the library being the following:
