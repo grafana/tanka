@@ -136,7 +136,13 @@ func showCmd() *cobra.Command {
 		},
 	}
 	vars := workflowFlags(cmd.Flags())
+	canRedirect := cmd.Flags().Bool("dangerous-allow-redirect", false, "allow redirecting output to a file or a pipe.")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
+		if !interactive && !*canRedirect {
+			fmt.Fprintln(os.Stderr, "Redirection of the output of tk show is discouraged and disabled by default. Run tk show --dangerous-allow-redirect to enable.")
+			return
+		}
+
 		raw, err := evalDict(args[0])
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
