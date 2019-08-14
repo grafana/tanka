@@ -136,14 +136,10 @@ func showCmd() *cobra.Command {
 		},
 	}
 	vars := workflowFlags(cmd.Flags())
+	canRedirect := cmd.Flags().Bool("dangerous-allow-redirect", false, "allow redirecting output to a file or a pipe.")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		fi, err := os.Stdout.Stat()
-		if err != nil {
-			log.Fatalln("stdout pipe detection:", err)
-		}
-
-		if fi.Mode()&os.ModeCharDevice == 0 {
-			fmt.Fprintf(os.Stderr, "⚠️  Do not pipe the output of tk show. Use tk apply instead ⚠️\n")
+		if !interactive && !*canRedirect {
+			fmt.Fprintln(os.Stderr, "Redirection of the output of tk show is discouraged and disabled by default. Run tk show --dangerous-allow-redirect to enable.")
 			return
 		}
 
