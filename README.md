@@ -6,7 +6,7 @@ leverages [Jsonnet](https://jsonnet.org) to allow highly dynamic configuration.
 - **:repeat: `ksonnet` drop-in replacement**: Tanka aims to provide the same
   workflow as `ksonnet`: `show`, `diff` and `apply` are just where you expect
   them.
-- **:nut_and_bolt: integrates with the ecosystem**: Tanka does re-invent the
+- **:nut_and_bolt: integrates with the ecosystem**: Tanka doesn't re-invent the
   wheel. It rather makes heavy use of what is already there:
   [`jsonnet-bundler`](https://github.com/jsonnet-bundler/jsonnet-bundler) for
   package management and
