@@ -8,8 +8,8 @@
 ![GitHub release](https://img.shields.io/github/release/grafana/tanka)
 ![License](https://img.shields.io/github/license/grafana/tanka)
 
-Tanka is a configuration utility for [Kubernetes](https://kubernetes.io/). It
-uses the [Jsonnet](https://jsonnet.org) language to allow flexible, reusable and
+Tanka is a composable configuration utility for [Kubernetes](https://kubernetes.io/). It
+leverages the [Jsonnet](https://jsonnet.org) language to realize flexible, reusable and
 concise configuration.
 
 - **:repeat: `ksonnet` drop-in replacement**: Tanka aims to provide the same
