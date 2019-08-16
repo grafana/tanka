@@ -10,8 +10,8 @@ repo_url: https://github.com/grafana/tanka
 theme:
   name: "material"
   language: "en"
-  logo:
-    icon: settings
+  logo: img/tk_black.png
+  favicon: img/tk_black.png
   palette:
     primary: white
     accent: deep_purple
