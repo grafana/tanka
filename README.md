@@ -1,5 +1,13 @@
 # Overview
 
+![Tanka Banner](docs/banner.png)
+
+[![Build Status](https://cloud.drone.io/api/badges/grafana/tanka/status.svg)](https://cloud.drone.io/grafana/tanka)
+![Golang](https://img.shields.io/badge/language-Go-blue)
+![GitHub contributors](https://img.shields.io/github/contributors/grafana/tanka)
+![GitHub release](https://img.shields.io/github/release/grafana/tanka)
+![License](https://img.shields.io/github/license/grafana/tanka)
+
 Tanka is a configuration utility for [Kubernetes](https://kubernetes.io/). It
 leverages [Jsonnet](https://jsonnet.org) to allow highly dynamic configuration.
 
