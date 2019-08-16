@@ -10,6 +10,8 @@ repo_url: https://github.com/grafana/tanka
 theme:
   name: "material"
   language: "en"
+  logo:
+    icon: settings
   palette:
     primary: white
     accent: deep_purple
@@ -37,6 +39,7 @@ markdown_extensions:
   - pymdownx.tasklist
   - pymdownx.tilde
 plugins:
+  - search:
   - exclude:
       glob:
         - design/*

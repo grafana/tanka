@@ -11,7 +11,8 @@ an environment by definition is equivalent to a [`baseDir`](directory-structure.
 
 ## Configuration
 To correctly deal with an environment, Tanka needs some additional information
-about it.
+about it. These are specified in a file called `spec.json` which is placed next to
+`main.jsonnet`.
 
 ```json
 {
