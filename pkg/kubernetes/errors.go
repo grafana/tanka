@@ -9,3 +9,11 @@ type ErrorNotFound struct {
 func (e ErrorNotFound) Error() string {
 	return fmt.Sprintf(`error from server (NotFound): secrets "%s" not found`, e.resource)
 }
+
+type ErrorMissingConfig struct {
+	verb string
+}
+
+func (e ErrorMissingConfig) Error() string {
+	return fmt.Sprintf("%s requires additional configuration. Refer to https://tanka.dev/environments for that.", e.verb)
+}

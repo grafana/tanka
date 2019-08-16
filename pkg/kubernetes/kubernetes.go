@@ -64,7 +64,9 @@ func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...string
 	}
 	for _, d := range docs {
 		m := objx.New(d)
-		m.Set("metadata.namespace", k.Spec.Namespace)
+		if k != nil {
+			m.Set("metadata.namespace", k.Spec.Namespace)
+		}
 		out = append(out, Manifest(m))
 	}
 
@@ -106,6 +108,10 @@ func (k *Kubernetes) Fmt(state []Manifest) (string, error) {
 
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
 func (k *Kubernetes) Apply(state []Manifest, opts ApplyOpts) error {
+	if k == nil {
+		return ErrorMissingConfig{"apply"}
+	}
+
 	yaml, err := k.Fmt(state)
 	if err != nil {
 		return err
@@ -115,6 +121,9 @@ func (k *Kubernetes) Apply(state []Manifest, opts ApplyOpts) error {
 
 // Diff takes the desired state and returns the differences from the cluster
 func (k *Kubernetes) Diff(state []Manifest) (*string, error) {
+	if k == nil {
+		return nil, ErrorMissingConfig{"diff"}
+	}
 	yaml, err := k.Fmt(state)
 	if err != nil {
 		return nil, err
