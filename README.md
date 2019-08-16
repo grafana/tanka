@@ -9,7 +9,8 @@
 ![License](https://img.shields.io/github/license/grafana/tanka)
 
 Tanka is a configuration utility for [Kubernetes](https://kubernetes.io/). It
-leverages [Jsonnet](https://jsonnet.org) to allow highly dynamic configuration.
+uses the [Jsonnet](https://jsonnet.org) language to allow flexible, reusable and
+concise configuration.
 
 - **:repeat: `ksonnet` drop-in replacement**: Tanka aims to provide the same
   workflow as `ksonnet`: `show`, `diff` and `apply` are just where you expect
@@ -21,9 +22,9 @@ leverages [Jsonnet](https://jsonnet.org) to allow highly dynamic configuration.
   [`kubectl`](https://kubernetes.io/docs/reference/kubectl/overview/) for
   communicating with Kubernetes clusters.
 - **:hammer: powerful:** Being a `jsonnet`-compatibility layer for Kubernetes,
-  it removes the limitations of static configuration languages.
-- **:rocket: used in production**: We already use Tanka internally at
-  Grafana for all of our Kubernetes configuration needs.
+  it removes the limitations of static (or template-based) configuration languages.
+- **:rocket: used in production**: We use Tanka internally at
+  Grafana Labs for all of our Kubernetes configuration needs.
 - **:heart: fully open-source**: This is an open-source project. It is free as
   in beer and as in speech and this will never change.
 
@@ -117,6 +118,8 @@ Congratulations! You have successfully set up your first application using Tanka
 
 - https://jsonnet.org/, the official Jsonnet documentation provides lots of
   examples on how to use the language.
+- https://github.com/grafana/jsonnet-libs: Grafana Labs' Jsonnet libraries are a
+  rich set of configuration examples compatible with Tanka.
 
 ## License
 Licensed Apache 2.0, see [LICENSE](LICENSE).
