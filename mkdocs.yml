@@ -32,7 +32,6 @@ markdown_extensions:
       permalink: true
   - pymdownx.details
   - pymdownx.emoji
-  - pymdownx.inlinehilite
   - pymdownx.magiclink
   - pymdownx.smartsymbols
   - pymdownx.superfences
