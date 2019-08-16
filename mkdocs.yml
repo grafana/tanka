@@ -1,8 +1,9 @@
 site_name: Tanka
 site_description: >
-  Tanka is an advanced Kubernetes configuration utility that
-  leverages jsonnet for highly dynamic configuration.
+  Composable configuration utility for Kubernetes, leveraging the Jsonnet
+  language for flexible, reusable and concise configuration
 site_author: Grafana
+site_url: https://tanka.dev
 
 repo_name: grafana/tanka
 repo_url: https://github.com/grafana/tanka
@@ -16,10 +17,14 @@ theme:
     primary: white
     accent: deep_purple
 
+copyright: "Sponsored by Grafana Labs"
+
 extra:
   social:
     - type: "github"
       link: https://github.com/grafana
+    - type: "globe"
+      link: https://grafana.com
     - type: "twitter"
       link: https://twitter.com/grafana
 
