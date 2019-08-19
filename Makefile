@@ -36,9 +36,3 @@ container: static
 # CI
 drone:
 	jsonnet .drone/drone.jsonnet  | jq .drone -r | yq -y . > .drone/drone.yml
-
-changelog:
-	standard-version --skip.commit --skip.tag --preMajor
-
-release:
-	standard-version --skip.changelog --preMajor
