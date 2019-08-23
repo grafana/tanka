@@ -196,6 +196,7 @@ func (k Kubectl) Diff(yaml string) (*string, error) {
 	cmd := exec.Command("kubectl", argv...)
 	raw := bytes.Buffer{}
 	cmd.Stdout = &raw
+	cmd.Stderr = os.Stderr
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
