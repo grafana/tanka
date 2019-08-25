@@ -37,7 +37,7 @@ func applyCmd() *cobra.Command {
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if kube == nil {
-			log.Fatalln(kubernetes.ErrorMissingConfig{"apply"})
+			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "apply"})
 		}
 
 		raw, err := evalDict(args[0])
@@ -80,7 +80,7 @@ func diffCmd() *cobra.Command {
 	vars := workflowFlags(cmd.Flags())
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if kube == nil {
-			log.Fatalln(kubernetes.ErrorMissingConfig{"diff"})
+			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "diff"})
 		}
 
 		raw, err := evalDict(args[0])
