@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/Masterminds/semver"
@@ -39,6 +40,7 @@ func (k Kubectl) Version() (client, server semver.Version, err error) {
 	)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		return zero, zero, err
 	}
@@ -57,6 +59,7 @@ func (k *Kubectl) setupContext() error {
 	cmd := exec.Command("kubectl", "config", "view", "-o", "json")
 	cfgJSON := bytes.Buffer{}
 	cmd.Stdout = &cfgJSON
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		return err
 	}
@@ -115,9 +118,9 @@ func (k Kubectl) Get(namespace, kind, name string) (map[string]interface{}, erro
 	cmd.Stderr = &serr
 	if err := cmd.Run(); err != nil {
 		if strings.HasPrefix(serr.String(), "Error from server (NotFound)") {
-			return nil, ErrorNotFound{name}
+			return nil, ErrorNotFound{kind, name}
 		}
-		fmt.Println(serr.String())
+		fmt.Print(serr.String())
 		return nil, err
 	}
 	var obj map[string]interface{}
@@ -196,6 +199,7 @@ func (k Kubectl) Diff(yaml string) (*string, error) {
 	cmd := exec.Command("kubectl", argv...)
 	raw := bytes.Buffer{}
 	cmd.Stdout = &raw
+	cmd.Stderr = FilteredErr{regexp.MustCompile(`exit status \d`)}
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {

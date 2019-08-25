@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 )
 
 func diff(name, is, should string) (string, error) {
@@ -43,4 +44,17 @@ func diff(name, is, should string) (string, error) {
 	}
 
 	return out, nil
+}
+
+// FilteredErr is a filtered Stderr. If one of the regular expressions match, the current input is discarded.
+type FilteredErr []*regexp.Regexp
+
+func (r FilteredErr) Write(p []byte) (n int, err error) {
+	for _, re := range r {
+		if re.Match(p) {
+			// silently discard
+			return len(p), nil
+		}
+	}
+	return os.Stderr.Write(p)
 }
