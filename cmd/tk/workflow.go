@@ -36,6 +36,10 @@ func applyCmd() *cobra.Command {
 	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
+		if kube == nil {
+			log.Fatalln(kubernetes.ErrorMissingConfig{"apply"})
+		}
+
 		raw, err := evalDict(args[0])
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
@@ -75,6 +79,10 @@ func diffCmd() *cobra.Command {
 	}
 	vars := workflowFlags(cmd.Flags())
 	cmd.Run = func(cmd *cobra.Command, args []string) {
+		if kube == nil {
+			log.Fatalln(kubernetes.ErrorMissingConfig{"diff"})
+		}
+
 		raw, err := evalDict(args[0])
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
