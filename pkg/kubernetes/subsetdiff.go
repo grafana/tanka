@@ -69,6 +69,7 @@ func (k Kubectl) SubsetDiff(y string) (*string, error) {
 		}
 		diffs += diffStr
 	}
+	diffs = strings.TrimSuffix(diffs, "\n")
 
 	return &diffs, nil
 }

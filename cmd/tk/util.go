@@ -16,14 +16,14 @@ import (
 func pageln(i ...interface{}) {
 	// no paging in non-interactive mode
 	if !interactive {
-		fmt.Println(i...)
+		fmt.Print(i...)
 		return
 	}
 
-	// get system pager, fallback to `more`
+	// get system pager, fallback to `less`
 	pager := os.Getenv("PAGER")
 	var args []string
-	if pager == "" {
+	if pager == "" || pager == "less" {
 		// --raw-control-chars  Honors colors from diff.
 		// --quit-if-one-screen Closer to the git experience.
 		// --no-init            Don't clear the screen when exiting.
@@ -33,13 +33,13 @@ func pageln(i ...interface{}) {
 
 	// invoke pager
 	cmd := exec.Command(pager, args...)
-	cmd.Stdin = strings.NewReader(fmt.Sprintln(i...))
+	cmd.Stdin = strings.NewReader(fmt.Sprint(i...))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	// if this fails, just print it
 	if err := cmd.Run(); err != nil {
-		fmt.Println(i...)
+		fmt.Print(i...)
 	}
 }
 
