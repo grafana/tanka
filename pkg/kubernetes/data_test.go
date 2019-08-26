@@ -70,6 +70,42 @@ var testDataRegular = testData{
 	},
 }
 
+// testDataFlat is a flat manifest that does not need reconciliation
+var testDataFlat = testData{
+	deep: map[string]interface{}{
+		"apiVersion": "apps/v1",
+		"kind":       "Deployment",
+		"metadata": map[string]interface{}{
+			"name": "nginx",
+		},
+		"spec": map[string]interface{}{
+			"containers": []interface{}{
+				map[string]interface{}{
+					"name":  "nginx",
+					"image": "nginx",
+				},
+			},
+		},
+	},
+	flat: []map[string]interface{}{
+		{
+			"apiVersion": "apps/v1",
+			"kind":       "Deployment",
+			"metadata": map[string]interface{}{
+				"name": "nginx",
+			},
+			"spec": map[string]interface{}{
+				"containers": []interface{}{
+					map[string]interface{}{
+						"name":  "nginx",
+						"image": "nginx",
+					},
+				},
+			},
+		},
+	},
+}
+
 // testDataPrimitive is an invalid manifest, because it ends with a primitive
 // without including required fields
 var testDataPrimitive = testData{
