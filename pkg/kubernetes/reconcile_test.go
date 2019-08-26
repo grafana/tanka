@@ -15,20 +15,20 @@ func TestWalkJSON(t *testing.T) {
 	}{
 		{
 			name: "regular",
-			data: testDataRegular,
+			data: testDataRegular(),
 		},
 		{
 			name: "flat",
-			data: testDataFlat,
+			data: testDataFlat(),
 		},
 		{
 			name: "primitive",
-			data: testDataPrimitive,
+			data: testDataPrimitive(),
 			err:  ErrorPrimitiveReached{path: ".nginx.service", key: "note", primitive: "invalid because apiVersion and kind are missing"},
 		},
 		{
 			name: "deep",
-			data: testDataDeep,
+			data: testDataDeep(),
 		},
 	}
 
