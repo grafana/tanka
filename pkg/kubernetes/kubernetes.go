@@ -65,7 +65,7 @@ func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...*regex
 	}
 	for _, d := range docs {
 		m := objx.New(d)
-		if k != nil {
+		if k != nil && !m.Has("metadata.namespace") {
 			m.Set("metadata.namespace", k.Spec.Namespace)
 		}
 		out = append(out, Manifest(m))

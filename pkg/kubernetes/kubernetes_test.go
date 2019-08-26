@@ -45,6 +45,22 @@ func TestReconcile(t *testing.T) {
 				}(),
 			},
 		},
+		{
+			name: "custom-namespace",
+			k:    &Kubernetes{Spec: v1alpha1.Spec{Namespace: "tanka"}},
+			data: testData{
+				deep: func() map[string]interface{} {
+					d := objx.New(testDataFlat().deep)
+					d.Set("metadata.namespace", "custom")
+					return d
+				}(),
+				flat: func() []map[string]interface{} {
+					f := objx.New(testDataFlat().flat.([]map[string]interface{})[0])
+					f.Set("metadata.namespace", "custom")
+					return []map[string]interface{}{f}
+				}(),
+			},
+		},
 	}
 
 	for _, c := range tests {

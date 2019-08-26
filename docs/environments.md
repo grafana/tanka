@@ -36,7 +36,7 @@ about it. These are specified in a file called `spec.json` which is placed next 
 | `metadata.name`      | *automatically set to the directory name*        |
 | `metadata.labels`    | descriptive `key:value` pairs                    |
 | **`spec.apiServer`** | The Kubernetes endpoint to use                   |
-| **`spec.namespace`** | All objects will be created in this namespace    |
+| **`spec.namespace`** | Default namespace used if not set in jsonnet     |
 
 Everything written in **bold** is required, the other fields may be omitted.
 
