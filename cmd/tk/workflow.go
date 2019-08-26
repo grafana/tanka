@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/posener/complete"
 	"github.com/spf13/cobra"
@@ -41,7 +43,7 @@ func applyCmd() *cobra.Command {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
 
-		desired, err := kube.Reconcile(raw, vars.targets...)
+		desired, err := kube.Reconcile(raw, stringsToRegexps(vars.targets)...)
 		if err != nil {
 			log.Fatalln("Reconciling:", err)
 		}
@@ -84,7 +86,7 @@ func diffCmd() *cobra.Command {
 			kube.Spec.DiffStrategy = cmd.Flag("diff-strategy").Value.String()
 		}
 
-		desired, err := kube.Reconcile(raw, vars.targets...)
+		desired, err := kube.Reconcile(raw, stringsToRegexps(vars.targets)...)
 		if err != nil {
 			log.Fatalln("Reconciling:", err)
 		}
@@ -148,7 +150,7 @@ func showCmd() *cobra.Command {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
 
-		state, err := kube.Reconcile(raw, vars.targets...)
+		state, err := kube.Reconcile(raw, stringsToRegexps(vars.targets)...)
 		if err != nil {
 			log.Fatalln("Reconciling:", err)
 		}
@@ -161,4 +163,19 @@ func showCmd() *cobra.Command {
 		pageln(pretty)
 	}
 	return cmd
+}
+
+// stringsToRegexps compiles each string to a regular expression
+func stringsToRegexps(strs []string) (exps []*regexp.Regexp) {
+	exps = make([]*regexp.Regexp, 0, len(strs))
+	for _, raw := range strs {
+		// surround the regular expression with start and end markers
+		s := fmt.Sprintf(`^%s$`, raw)
+		exp, err := regexp.Compile(s)
+		if err != nil {
+			log.Fatalf("%s.\nSee https://tanka.dev/targets/#regular-expressions for details on regular expressions.", strings.Title(err.Error()))
+		}
+		exps = append(exps, exp)
+	}
+	return exps
 }

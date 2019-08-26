@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -56,7 +57,7 @@ func (m Manifest) Namespace() string {
 
 // Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 // shall return it reconciled as a state object of the target system
-func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...string) (state []Manifest, err error) {
+func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...*regexp.Regexp) (state []Manifest, err error) {
 	docs, err := walkJSON(raw, "")
 	out := make([]Manifest, 0, len(docs))
 	if err != nil {
@@ -74,7 +75,7 @@ func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...string
 		out = funk.Filter(out, func(i interface{}) bool {
 			p := objectspec(i.(Manifest))
 			for _, o := range objectspecs {
-				if strings.EqualFold(p, o) {
+				if o.MatchString(strings.ToLower(p)) {
 					return true
 				}
 			}

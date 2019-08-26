@@ -24,3 +24,47 @@ multiple objects match this pattern, all of them are used.
 
 The `--target` / `-t` flag can be specified multiple times, to work with
 multiple objects.
+
+
+## Regular Expressions
+The argument passed to the `--target` flag is interpreted as a
+[RE2](https://golang.org/s/re2syntax) regular expression.
+
+This allows you to use all sorts of wildcards and other advanced matching
+functionality to select Kubernetes objects:
+
+```bash
+# show all deployments
+$ tk show . -t 'deployment/.*'
+
+# show all objects named "loki"
+$ tk show . -t '.*/loki'
+```
+
+### Gotchas
+When using regular expressions, there are some things to watch out for:
+
+#### Line Anchors
+Tanka automatically surrounds your regular expression with line anchors:
+```text
+^<your expression>$
+```
+For example, `--target 'deployment/.*'` becomes `^deployment/.*$`.
+
+#### Quoting
+Regular expressions may consist of characters that have special meanings in
+shell. Always make sure to properly quote your regular expression using **single
+quotes**.
+
+```zsh
+# shell attempts to match the wildcard itself:
+zsh-5.4.2$ tk show . -t deployment/.*
+zsh: no matches found: deployment/.*
+
+# properly quoted:
+zsh-5.4.2$ tk show . -t 'deployment/.*'
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+# ...
+```
