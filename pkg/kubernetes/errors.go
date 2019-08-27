@@ -12,9 +12,9 @@ func (e ErrorNotFound) Error() string {
 }
 
 type ErrorMissingConfig struct {
-	verb string
+	Verb string
 }
 
 func (e ErrorMissingConfig) Error() string {
-	return fmt.Sprintf("%s requires additional configuration. Refer to https://tanka.dev/environments for that.", e.verb)
+	return fmt.Sprintf("%s requires additional configuration. Refer to https://tanka.dev/environments for that.", e.Verb)
 }
