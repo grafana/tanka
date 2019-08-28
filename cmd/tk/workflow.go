@@ -52,7 +52,7 @@ func applyCmd() *cobra.Command {
 			log.Fatalln("Reconciling:", err)
 		}
 
-		if !diff(desired, false) {
+		if !diff(desired, false, kubernetes.DiffOpts{}) {
 			log.Println("Warning: There are no differences. Your apply may not do anything at all.")
 		}
 
@@ -79,7 +79,14 @@ func diffCmd() *cobra.Command {
 			"flags/diff-strategy": "diffStrategy",
 		},
 	}
-	vars := workflowFlags(cmd.Flags())
+
+	// flags
+	var (
+		vars         = workflowFlags(cmd.Flags())
+		diffStrategy = cmd.Flags().String("diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
+		summarize    = cmd.Flags().BoolP("summarize", "s", false, "quick summary of the differences, hides file contents")
+	)
+
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if kube == nil {
 			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "diff"})
@@ -91,7 +98,7 @@ func diffCmd() *cobra.Command {
 		}
 
 		if kube.Spec.DiffStrategy == "" {
-			kube.Spec.DiffStrategy = cmd.Flag("diff-strategy").Value.String()
+			kube.Spec.DiffStrategy = *diffStrategy
 		}
 
 		desired, err := kube.Reconcile(raw, stringsToRegexps(vars.targets)...)
@@ -99,21 +106,20 @@ func diffCmd() *cobra.Command {
 			log.Fatalln("Reconciling:", err)
 		}
 
-		if diff(desired, interactive) {
+		if diff(desired, interactive, kubernetes.DiffOpts{Summarize: *summarize}) {
 			os.Exit(16)
 		}
 		log.Println("No differences.")
 	}
 
-	cmd.Flags().String("diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
 	return cmd
 }
 
 // computes the diff, prints to screen.
 // set `pager` to false to disable the pager.
 // When non-interactive, no paging happens anyways.
-func diff(state []kubernetes.Manifest, pager bool) (changed bool) {
-	changes, err := kube.Diff(state)
+func diff(state []kubernetes.Manifest, pager bool, opts kubernetes.DiffOpts) (changed bool) {
+	changes, err := kube.Diff(state, opts)
 	if err != nil {
 		log.Fatalln("Diffing:", err)
 	}
