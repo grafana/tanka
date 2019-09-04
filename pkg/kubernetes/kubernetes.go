@@ -120,8 +120,13 @@ func (k *Kubernetes) Apply(state []Manifest, opts ApplyOpts) error {
 	return k.client.Apply(yaml, k.Spec.Namespace, opts)
 }
 
+// DiffOpts allow to specify additional parameters for diff operations
+type DiffOpts struct {
+	Summarize bool
+}
+
 // Diff takes the desired state and returns the differences from the cluster
-func (k *Kubernetes) Diff(state []Manifest) (*string, error) {
+func (k *Kubernetes) Diff(state []Manifest, opts DiffOpts) (*string, error) {
 	if k == nil {
 		return nil, ErrorMissingConfig{"diff"}
 	}
@@ -139,7 +144,19 @@ func (k *Kubernetes) Diff(state []Manifest) (*string, error) {
 		}
 	}
 
-	return k.differs[k.Spec.DiffStrategy](yaml)
+	d, err := k.differs[k.Spec.DiffStrategy](yaml)
+	switch {
+	case err != nil:
+		return nil, err
+	case d == nil:
+		return nil, nil
+	}
+
+	if opts.Summarize {
+		return diffstat(*d)
+	}
+
+	return d, nil
 }
 
 func objectspec(m Manifest) string {

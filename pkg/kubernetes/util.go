@@ -8,8 +8,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
+// diff computes the differences between the strings `is` and `should` using the
+// UNIX `diff(1)` utility.
 func diff(name, is, should string) (string, error) {
 	dir, err := ioutil.TempDir("", "diff")
 	if err != nil {
@@ -44,6 +47,22 @@ func diff(name, is, should string) (string, error) {
 	}
 
 	return out, nil
+}
+
+// diffstat uses `diffstat(1)` utility to summarize a `diff(1)` output
+func diffstat(d string) (*string, error) {
+	cmd := exec.Command("diffstat", "-C")
+	buf := bytes.Buffer{}
+	cmd.Stdout = &buf
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = strings.NewReader(d)
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("invoking diffstat(1): %s", err.Error())
+	}
+
+	out := buf.String()
+	return &out, nil
 }
 
 // FilteredErr is a filtered Stderr. If one of the regular expressions match, the current input is discarded.
