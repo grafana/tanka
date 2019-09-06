@@ -221,7 +221,7 @@ called `spec.json` alongside the `main.jsonnet`:
 | `metadata.name`   | automatically set to the directory name                             |
 | `metadata.labels` | descriptive `key:value` pairs                                       |
 | `spec.apiServer`  | The Kubernetes endpoint to use                                      |
-| `spec.namespace`  | All objects will be forced into this namespace                      |
+| `spec.namespace`  | Default namespace used if not set in jsonnet                        |
 
 The environment object is accessible from within `jsonnet`.
 

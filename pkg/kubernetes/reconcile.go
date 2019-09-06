@@ -21,7 +21,12 @@ func (e ErrorPrimitiveReached) Error() string {
 
 // walkJSON traverses deeply nested kubernetes manifest and extracts them into a flat []dict.
 func walkJSON(deep map[string]interface{}, path string) ([]map[string]interface{}, error) {
-	flat := []map[string]interface{}{}
+	r := objx.New(deep)
+	if r.Has("apiVersion") && r.Has("kind") {
+		return []map[string]interface{}{deep}, nil
+	}
+
+	flat := make([]map[string]interface{}, 0)
 
 	for n, d := range deep {
 		if n == "__ksonnet" {
