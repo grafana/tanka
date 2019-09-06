@@ -27,7 +27,7 @@ uninstall:
 $(GOX):
 	go get -u github.com/mitchellh/gox
 cross: $(GOX)
-	CGO_ENABLED=0 gox -output="dist/{{.Dir}}_{{.OS}}_{{.Arch}}" -ldflags=${LDFLAGS} -arch="amd64 arm64 arm" -os="linux" -osarch="darwin/amd64" ./cmd/tk
+	CGO_ENABLED=0 gox -output="dist/{{.Dir}}-{{.OS}}-{{.Arch}}" -ldflags=${LDFLAGS} -arch="amd64 arm64 arm" -os="linux" -osarch="darwin/amd64" ./cmd/tk
 
 # Docker container
 container: static
