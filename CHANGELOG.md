@@ -1,6 +1,33 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+## 0.4.0 (2019-09-06)
+After nearly a month, the next feature packed release of Tanka is ready!
+Highlights include the new documentation website https://tanka.dev, regular
+expression support for targets, diff histograms and several bug-fixes.
+
+### Features
+* **cli**: `tk show` now aborts by default, when invoked in a non-interactive
+  session. Use `--dangerous-allow-redirect` to disable this safe-guard
+  ([#47](https://github.com/grafana/tanka/issues/47)).
+* **kubernetes**: Regexp Targets: It is now possible to use regular expressions
+  when specifying the targets using `--target` / `-t`. Use it to easily select
+  multiple objects at once: https://tanka.dev/targets/#regular-expressions
+  ([#64](https://github.com/grafana/tanka/issues/64)).
+* **kubernetes**: Diff histogram: Tanka now allows to summarize the differences
+  between the live configuration and the local one, by using the unix
+  `diffstat(1)` utility. Gain a sneek peek at a change using `tk diff -s .`!
+  ([#67](https://github.com/grafana/tanka/issues/67))
+
+### Bug Fixes
+* **kubernetes**: Tanka does not fail anymore, when the configuration file
+  `spec.json` is missing from an Environment. While you cannot apply or diff,
+  the show operation works totally fine
+  ([#56](https://github.com/grafana/tanka/issues/56),
+  [#63](https://github.com/grafana/tanka/issues/63)).
+* **kubernetes**: Errors from `kubectl` are now correctly passed to the user
+  ([#61](https://github.com/grafana/tanka/issues/61)).
+* **cli**: `tk diff` does not output useless empty lines (`\n`) anymore
+  ([#62](https://github.com/grafana/tanka/issues/62)).
 
 ## 0.3.0 (2019-08-13)
 
