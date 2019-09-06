@@ -60,7 +60,7 @@ steps:
 
       # download the binary (adapt os and arch as needed)
 
-      $ curl -fSL -o "/usr/local/bin/tk" "https://github.com/sh0rez/tanka/releases/download/${DRONE_TAG}/img-linux-amd64"
+      $ curl -fSL -o "/usr/local/bin/tk" "https://github.com/sh0rez/tanka/releases/download/${DRONE_TAG}/tk-linux-amd64"
 
 
       # make it executable
