@@ -161,6 +161,13 @@ func testDataDeep() testData {
 										"name": "frontend",
 									},
 								},
+								"deployment": map[string]interface{}{
+									"kind":       "Deployment",
+									"apiVersion": "apps/v1",
+									"metadata": map[string]interface{}{
+										"name": "frontend",
+									},
+								},
 							},
 						},
 					},
@@ -185,6 +192,13 @@ func testDataDeep() testData {
 			{
 				"kind":       "Service",
 				"apiVersion": "v1",
+				"metadata": map[string]interface{}{
+					"name": "frontend",
+				},
+			},
+			{
+				"kind":       "Deployment",
+				"apiVersion": "apps/v1",
 				"metadata": map[string]interface{}{
 					"name": "frontend",
 				},

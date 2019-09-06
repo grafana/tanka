@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/grafana/tanka/pkg/config/v1alpha1"
@@ -15,7 +16,7 @@ func TestReconcile(t *testing.T) {
 		k    *Kubernetes
 
 		data    testData
-		targets []string
+		targets []*regexp.Regexp
 		err     error
 	}{
 		{
@@ -31,7 +32,21 @@ func TestReconcile(t *testing.T) {
 					testDataDeep().flat.([]map[string]interface{})[1], // service/frontend
 				},
 			},
-			targets: []string{"deployment/nginx", "service/frontend"},
+			targets: []*regexp.Regexp{
+				regexp.MustCompile("deployment/nginx"),
+				regexp.MustCompile("service/frontend"),
+			},
+		},
+		{
+			name: "targets-regex",
+			data: testData{
+				deep: testDataDeep().deep,
+				flat: []map[string]interface{}{
+					testDataDeep().flat.([]map[string]interface{})[2], // deployment/frontend
+					testDataDeep().flat.([]map[string]interface{})[0], // deployment/nginx
+				},
+			},
+			targets: []*regexp.Regexp{regexp.MustCompile("deployment/.*")},
 		},
 		{
 			name: "force-namespace",
