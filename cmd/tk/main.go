@@ -125,7 +125,7 @@ func setupConfiguration(baseDir string) *v1alpha1.Config {
 			return nil
 		}
 
-		log.Fatalln(err)
+		log.Fatalf("Reading spec.json: %s", err)
 	}
 
 	// handle deprecated ksonnet spec
@@ -141,7 +141,7 @@ func setupConfiguration(baseDir string) *v1alpha1.Config {
 
 	var config v1alpha1.Config
 	if err := viper.Unmarshal(&config); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("Parsing spec.json: %s", err)
 	}
 	return &config
 }
