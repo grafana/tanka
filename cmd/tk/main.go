@@ -74,6 +74,10 @@ func main() {
 		diffCmd(),
 	)
 
+	rootCmd.AddCommand(
+		envCmd(),
+	)
+
 	// jsonnet commands
 	rootCmd.AddCommand(
 		evalCmd(),
@@ -139,11 +143,12 @@ func setupConfiguration(baseDir string) *v1alpha1.Config {
 		checkDeprecated()
 	}
 
-	var config v1alpha1.Config
-	if err := viper.Unmarshal(&config); err != nil {
+	var config = v1alpha1.New()
+	if err := viper.Unmarshal(config); err != nil {
 		log.Fatalf("Parsing spec.json: %s", err)
 	}
-	return &config
+	config.Metadata.Name = filepath.Base(baseDir)
+	return config
 }
 
 func checkDeprecated() {

@@ -1,5 +1,14 @@
 package v1alpha1
 
+// New creates a new Config object with internal values already set
+func New() *Config {
+	c := Config{}
+	c.APIVersion = "tanka.dev/v1alpha1"
+	c.Kind = "Environment"
+
+	return &c
+}
+
 // Config holds the configuration variables for config version v1alpha1
 // ApiVersion and Kind are currently unused, this may change in the future.
 type Config struct {
@@ -11,12 +20,13 @@ type Config struct {
 
 // Metadata is meant for humans and not parsed
 type Metadata struct {
-	Labels map[string]interface{} `json:"labels"`
+	Name   string                 `json:"name"`
+	Labels map[string]interface{} `json:"labels,omitempty"`
 }
 
 // Spec defines Kubernetes properties
 type Spec struct {
 	APIServer    string `json:"apiServer"`
 	Namespace    string `json:"namespace"`
-	DiffStrategy string `json:"diffStrategy"`
+	DiffStrategy string `json:"diffStrategy,omitempty"`
 }
