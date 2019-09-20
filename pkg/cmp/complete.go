@@ -36,6 +36,10 @@ func (h CompletionHandlers) Has(k string) bool {
 // Handlers are global Handlers to be used in annotations
 var Handlers = CompletionHandlers{}
 
+func init() {
+	Handlers["dirs"] = complete.PredictDirs("*")
+}
+
 // Create parses a *cobra.Command into a complete.Command
 func Create(root *cobra.Command) complete.Command {
 	rootCmp := complete.Command{}

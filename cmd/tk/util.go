@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -49,4 +51,18 @@ func highlight(lang, s string) string {
 		log.Fatalln("Highlighting:", err)
 	}
 	return buf.String()
+}
+
+// writeJSON writes the given object to the path as a JSON file
+func writeJSON(i interface{}, path string) error {
+	out, err := json.MarshalIndent(i, "", "  ")
+	if err != nil {
+		return fmt.Errorf("Marshalling: %s", err)
+	}
+
+	if err := ioutil.WriteFile(path, append(out, '\n'), 0644); err != nil {
+		return fmt.Errorf("Writing %s: %s", path, err)
+	}
+
+	return nil
 }

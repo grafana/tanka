@@ -27,7 +27,7 @@ func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 
 func applyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "apply [directory]",
+		Use:   "apply [path]",
 		Short: "apply the configuration to the cluster",
 		Args:  cobra.ExactArgs(1),
 		Annotations: map[string]string{
@@ -71,7 +71,7 @@ func diffCmd() *cobra.Command {
 	cmp.Handlers.Add("diffStrategy", complete.PredictSet("native", "subset"))
 
 	cmd := &cobra.Command{
-		Use:   "diff [directory]",
+		Use:   "diff [path]",
 		Short: "differences between the configuration and the cluster",
 		Args:  cobra.ExactArgs(1),
 		Annotations: map[string]string{
@@ -144,7 +144,7 @@ func diff(state []kubernetes.Manifest, pager bool, opts kubernetes.DiffOpts) (ch
 
 func showCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show [directory]",
+		Use:   "show [path]",
 		Short: "jsonnet as yaml",
 		Args:  cobra.ExactArgs(1),
 		Annotations: map[string]string{
