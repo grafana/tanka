@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 (2019-09-20)
+This version adds a set of commands to manipulate environments (`tk env add, rm,
+set, list`) ([#73](https://github.com/grafana/tanka/pull/73)). The commands are
+mostly `ks env` compatible, allowing `tk env` be used as a drop-in replacement
+in scripts.
+
+Furthermore, an error message has been improved, to make sure users can
+differentiate between parse issues in `.jsonnet` and `spec.json`
+([#71](https://github.com/grafana/tanka/pull/71)).
+
 ## 0.4.0 (2019-09-06)
 After nearly a month, the next feature packed release of Tanka is ready!
 Highlights include the new documentation website https://tanka.dev, regular
