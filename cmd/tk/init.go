@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -39,28 +39,12 @@ func initCmd() *cobra.Command {
 			log.Fatalln("Error creating `vendor/` folder:", err)
 		}
 
-		if err := os.MkdirAll("environments/default", os.ModePerm); err != nil {
-			log.Fatalln("Error creating environments folder")
+		cfg := v1alpha1.New()
+		if err := addEnv("environments/default", cfg); err != nil {
+			log.Fatalln(err)
 		}
 
-		if err := writeNewFile("environments/default/main.jsonnet", "{}"); err != nil {
-			log.Fatalln("Error creating `main.jsonnet`:", err)
-		}
-
-		cfg := v1alpha1.Config{
-			APIVersion: "tanka.dev/v1alpha1",
-			Kind:       "Environment",
-			Spec:       v1alpha1.Spec{},
-		}
-
-		spec, err := json.MarshalIndent(&cfg, "", "  ")
-		if err != nil {
-			log.Fatalln("Error creating spec.json:", err)
-		}
-
-		if err := writeNewFile("environments/default/spec.json", string(spec)); err != nil {
-			log.Fatalln("Error creating `environments/default/spec.json`:", err)
-		}
+		fmt.Println("Directory structure set up! Remember to configure the API endpoint:\n`tk env set environments/default --server=127.0.0.1:6443`")
 
 	}
 	return cmd

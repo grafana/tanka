@@ -3,8 +3,13 @@ package v1alpha1
 // New creates a new Config object with internal values already set
 func New() *Config {
 	c := Config{}
+
+	// constants
 	c.APIVersion = "tanka.dev/v1alpha1"
 	c.Kind = "Environment"
+
+	// default namespace
+	c.Spec.Namespace = "default"
 
 	return &c
 }
@@ -20,7 +25,7 @@ type Config struct {
 
 // Metadata is meant for humans and not parsed
 type Metadata struct {
-	Name   string                 `json:"name"`
+	Name   string                 `json:"name,omitempty"`
 	Labels map[string]interface{} `json:"labels,omitempty"`
 }
 

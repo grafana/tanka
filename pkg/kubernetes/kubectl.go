@@ -1,10 +1,8 @@
 package kubernetes
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -15,6 +13,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
+
+	"github.com/grafana/tanka/pkg/util"
 )
 
 var (
@@ -143,20 +143,16 @@ func (k Kubectl) Apply(yaml, namespace string, opts ApplyOpts) error {
 	}
 
 	if !opts.AutoApprove {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Printf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.
-Please type 'yes' to perform: `,
-			alert(namespace),
-			alert(k.cluster.Get("name").MustStr()),
-			alert(k.cluster.Get("cluster.server").MustStr()),
-			alert(k.context.Get("name").MustStr()),
-		)
-		approve, err := reader.ReadString('\n')
-		if err != nil {
+		if err := util.Confirm(
+			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
+				alert(namespace),
+				alert(k.cluster.Get("name").MustStr()),
+				alert(k.cluster.Get("cluster.server").MustStr()),
+				alert(k.context.Get("name").MustStr()),
+			),
+			"yes",
+		); err != nil {
 			return err
-		}
-		if approve != "yes\n" {
-			return errors.New("aborted by user")
 		}
 	}
 
