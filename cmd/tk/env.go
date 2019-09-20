@@ -119,7 +119,7 @@ func addEnv(dir string, cfg *v1alpha1.Config) error {
 				return fmt.Errorf("Directory %s already exists.", path)
 			}
 			// we have another error
-			return fmt.Errorf("Creating directory:", err)
+			return fmt.Errorf("Creating directory: %s", err)
 		}
 	}
 
