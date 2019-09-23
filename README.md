@@ -55,7 +55,7 @@ $ tk init
 ```
 
 ### Deploying an application
-As an example, Promtail is being deployed using Tanka now.
+As an example, [Promtail](https://github.com/grafana/loki/blob/master/docs/promtail/README.md) is being deployed using Tanka now.
 
 After you initialized the directory structure, install the required libraries
 using `jb`:
