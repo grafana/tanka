@@ -105,7 +105,7 @@ func envAddCmd() *cobra.Command {
 
 // used by initCmd() as well
 func addEnv(dir string, cfg *v1alpha1.Config) error {
-	path, err := filepath.Abs(dir)
+	path, err := filepath.Abs(filepath.Join("environments/", dir))
 	if err != nil {
 		log.Fatalln(err)
 	}
