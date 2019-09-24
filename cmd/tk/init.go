@@ -40,7 +40,7 @@ func initCmd() *cobra.Command {
 		}
 
 		cfg := v1alpha1.New()
-		if err := addEnv("environments/default", cfg); err != nil {
+		if err := addEnv("default", cfg); err != nil {
 			log.Fatalln(err)
 		}
 
