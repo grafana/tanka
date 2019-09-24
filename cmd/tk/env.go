@@ -64,6 +64,10 @@ func envSetCmd() *cobra.Command {
 
 		viper.Reset()
 		cfg := setupConfiguration(path)
+		if cfg == nil {
+			fmt.Printf("failed to get config from `%s`\n", path)
+			os.Exit(1)
+		}
 		if tmp.Spec.APIServer != "" && tmp.Spec.APIServer != cfg.Spec.APIServer {
 			fmt.Printf("updated spec.apiServer (`%s -> `%s`)\n", cfg.Spec.APIServer, tmp.Spec.APIServer)
 			cfg.Spec.APIServer = tmp.Spec.APIServer
