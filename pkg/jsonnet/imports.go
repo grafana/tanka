@@ -9,31 +9,22 @@ import (
 	"github.com/google/go-jsonnet/parser"
 	"github.com/grafana/tanka/pkg/jpath"
 	"github.com/grafana/tanka/pkg/native"
+	"github.com/pkg/errors"
 )
 
-// ImportVisitor is a function that is invoked on every found import and is
-// passed `who` imported `what`.
-type ImportVisitor func(who, what string) error
-
-// VisitImportsFile wraps VisitImports to load the Jsonnet from a file
-func VisitImportsFile(jsonnetFile string, v ImportVisitor) error {
-	bytes, err := ioutil.ReadFile(jsonnetFile)
+// TransitiveImports returns all recursive imports of a file
+func TransitiveImports(filename string) ([]string, error) {
+	sonnet, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return err
+		return nil, errors.Wrap(err, "opening file")
 	}
 
-	jpath, _, _, err := jpath.Resolve(filepath.Dir(jsonnetFile))
+	jpath, _, _, err := jpath.Resolve(filepath.Dir(filename))
 	if err != nil {
-		return err
+		return nil, errors.Wrap(err, "resolving JPATH")
 	}
-	return VisitImports(string(bytes), jpath, v)
-}
-
-// VisitImports calls the ImportVisitor for every recursive import of the Jsonnet.
-func VisitImports(sonnet string, jpath []string, v ImportVisitor) error {
-	importer := TraceImporter{
-		JPaths:  jpath,
-		Visitor: v,
+	importer := jsonnet.FileImporter{
+		JPaths: jpath,
 	}
 
 	vm := jsonnet.MakeVM()
@@ -42,37 +33,52 @@ func VisitImports(sonnet string, jpath []string, v ImportVisitor) error {
 		vm.NativeFunction(nf)
 	}
 
-	node, err := jsonnet.SnippetToAST("main.jsonnet", sonnet)
+	node, err := jsonnet.SnippetToAST("main.jsonnet", string(sonnet))
 	if err != nil {
-		return err
+		return nil, errors.Wrap(err, "creating Jsonnet AST")
 	}
 
-	return importRecursive(vm, node, "main.jsonnet")
+	imports := make([]string, 0, 0)
+	err = importRecursive(&imports, vm, node, "main.jsonnet")
+
+	return uniqueStringSlice(imports), err
 }
 
-// importRecursive takes a Jsonnet VM and recursively imports the AST.
-// This is especially useful in combination with the TraceImporter below.
-func importRecursive(vm *jsonnet.VM, node ast.Node, currentPath string) error {
+// importRecursive takes a Jsonnet VM and recursively imports the AST. Every
+// found import is added to the `list` string slice, which will ultimately
+// contain all recursive imports
+func importRecursive(list *[]string, vm *jsonnet.VM, node ast.Node, currentPath string) error {
 	switch node := node.(type) {
+	// we have an `import`
 	case *ast.Import:
 		p := node.File.Value
+
 		contents, foundAt, err := vm.ImportAST(currentPath, p)
 		if err != nil {
+			return errors.Wrap(err, "importing jsonnet")
+		}
+
+		*list = append(*list, foundAt)
+
+		if err := importRecursive(list, vm, contents, foundAt); err != nil {
 			return err
 		}
 
-		if err := importRecursive(vm, contents, foundAt); err != nil {
-			return err
-		}
+	// we have an `importstr`
 	case *ast.ImportStr:
 		p := node.File.Value
-		_, err := vm.ResolveImport(currentPath, p)
+
+		foundAt, err := vm.ResolveImport(currentPath, p)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "importing string")
 		}
+
+		*list = append(*list, foundAt)
+
+	// neither `import` nor `importstr`, probably object or similar: try children
 	default:
 		for _, child := range parser.Children(node) {
-			if err := importRecursive(vm, child, currentPath); err != nil {
+			if err := importRecursive(list, vm, child, currentPath); err != nil {
 				return err
 			}
 		}
@@ -80,24 +86,16 @@ func importRecursive(vm *jsonnet.VM, node ast.Node, currentPath string) error {
 	return nil
 }
 
-// TraceImporter wraps a jsonnet.FileImporter but also records every import to
-// the ImportVisitor.
-type TraceImporter struct {
-	JPaths   []string
-	Visitor  ImportVisitor
-	importer *jsonnet.FileImporter
-}
-
-func (t *TraceImporter) Import(importedFrom, importedPath string) (contents jsonnet.Contents, foundAt string, err error) {
-	if t.importer == nil {
-		t.importer = &jsonnet.FileImporter{
-			JPaths: t.JPaths,
+func uniqueStringSlice(s []string) []string {
+	seen := make(map[string]struct{}, len(s))
+	j := 0
+	for _, v := range s {
+		if _, ok := seen[v]; ok {
+			continue
 		}
+		seen[v] = struct{}{}
+		s[j] = v
+		j++
 	}
-
-	contents, foundAt, err = t.importer.Import(importedFrom, importedPath)
-	if err := t.Visitor(importedFrom, foundAt); err != nil {
-		return jsonnet.Contents{}, "", err
-	}
-	return
+	return s[:j]
 }
