@@ -221,3 +221,54 @@ func (k Kubectl) Diff(yaml string) (*string, error) {
 	// no diff -> nil
 	return nil, nil
 }
+
+// DeleteOpts allow to specify additional parameter for delete operations
+type DeleteOpts struct {
+	Force       bool
+	AutoApprove bool
+}
+
+// Delete applies the given yaml to the cluster
+func (k Kubectl) Delete(yaml, namespace string, opts DeleteOpts) error {
+	if err := k.setupContext(); err != nil {
+		return err
+	}
+
+	if !opts.AutoApprove {
+		if err := util.Confirm(
+			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
+				alert(namespace),
+				alert(k.cluster.Get("name").MustStr()),
+				alert(k.cluster.Get("cluster.server").MustStr()),
+				alert(k.context.Get("name").MustStr()),
+			),
+			"yes",
+		); err != nil {
+			return err
+		}
+	}
+
+	argv := []string{"delete",
+		"--context", k.context.Get("name").MustStr(),
+		"-f", "-",
+	}
+	if !opts.Force {
+		argv = append(argv, "--force")
+	}
+
+	cmd := exec.Command("kubectl", argv...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		fmt.Fprintln(stdin, yaml)
+		stdin.Close()
+	}()
+
+	return cmd.Run()
+}

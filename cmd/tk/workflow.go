@@ -193,3 +193,40 @@ func stringsToRegexps(strs []string) (exps []*regexp.Regexp) {
 	}
 	return exps
 }
+
+func deleteCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delete [path]",
+		Short: "delete the configuration to the cluster",
+		Args:  cobra.ExactArgs(1),
+		Annotations: map[string]string{
+			"args": "baseDir",
+		},
+	}
+	vars := workflowFlags(cmd.Flags())
+	force := cmd.Flags().Bool("force", false, "force deleteing (kubectl delete --force)")
+	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	cmd.Run = func(cmd *cobra.Command, args []string) {
+		if kube == nil {
+			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "delete"})
+		}
+
+		raw, err := evalDict(args[0])
+		if err != nil {
+			log.Fatalln("Evaluating jsonnet:", err)
+		}
+
+		desired, err := kube.Reconcile(raw, stringsToRegexps(vars.targets)...)
+		if err != nil {
+			log.Fatalln("Reconciling:", err)
+		}
+
+		if err := kube.Delete(desired, kubernetes.DeleteOpts{
+			Force:       *force,
+			AutoApprove: *autoApprove,
+		}); err != nil {
+			log.Fatalln("Deleting:", err)
+		}
+	}
+	return cmd
+}

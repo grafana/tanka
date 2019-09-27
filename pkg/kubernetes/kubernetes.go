@@ -165,3 +165,16 @@ func objectspec(m Manifest) string {
 		m.Name(),
 	)
 }
+
+// Delete receives a state object generated using `Reconcile()` and may delete it to the target system
+func (k *Kubernetes) Delete(state []Manifest, opts DeleteOpts) error {
+	if k == nil {
+		return ErrorMissingConfig{"delete"}
+	}
+
+	yaml, err := k.Fmt(state)
+	if err != nil {
+		return err
+	}
+	return k.client.Delete(yaml, k.Spec.Namespace, opts)
+}
