@@ -6,10 +6,11 @@ import (
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
-	"github.com/google/go-jsonnet/parser"
+	"github.com/google/go-jsonnet/toolutils"
+	"github.com/pkg/errors"
+
 	"github.com/grafana/tanka/pkg/jpath"
 	"github.com/grafana/tanka/pkg/native"
-	"github.com/pkg/errors"
 )
 
 // TransitiveImports returns all recursive imports of a file
@@ -77,7 +78,7 @@ func importRecursive(list *[]string, vm *jsonnet.VM, node ast.Node, currentPath 
 
 	// neither `import` nor `importstr`, probably object or similar: try children
 	default:
-		for _, child := range parser.Children(node) {
+		for _, child := range toolutils.Children(node) {
 			if err := importRecursive(list, vm, child, currentPath); err != nil {
 				return err
 			}

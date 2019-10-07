@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/semver v1.4.2
 	github.com/alecthomas/chroma v0.6.6
 	github.com/fatih/color v1.7.0
-	github.com/google/go-jsonnet v0.14.1-0.20190924111122-dc5c94ac78f0
+	github.com/google/go-jsonnet v0.14.1-0.20191006203837-42cb19ef24fb
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/posener/complete v1.2.1
@@ -21,5 +21,3 @@ require (
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )
-
-replace github.com/google/go-jsonnet v0.14.1-0.20190924111122-dc5c94ac78f0 => github.com/sh0rez/go-jsonnet v0.13.1-0.20190926190918-c4e27aa523e7
