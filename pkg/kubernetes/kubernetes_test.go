@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/grafana/tanka/pkg/config/v1alpha1"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/objx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
