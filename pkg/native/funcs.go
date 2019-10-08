@@ -7,10 +7,9 @@ import (
 	"regexp"
 	"strings"
 
+	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
 	yaml "gopkg.in/yaml.v2"
-
-	jsonnet "github.com/sh0rez/go-jsonnet"
 )
 
 // Funcs returns a slice of native Go functions that shall be available
