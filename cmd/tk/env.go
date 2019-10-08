@@ -64,6 +64,9 @@ func envSetCmd() *cobra.Command {
 
 		viper.Reset()
 		cfg := setupConfiguration(path)
+		if cfg == nil {
+			log.Fatalf("Failed to load an environment at `%s`.\nMake sure it exists and is properly configured. See https://tanka.dev/environments/ for details.", path)
+		}
 		if tmp.Spec.APIServer != "" && tmp.Spec.APIServer != cfg.Spec.APIServer {
 			fmt.Printf("updated spec.apiServer (`%s -> `%s`)\n", cfg.Spec.APIServer, tmp.Spec.APIServer)
 			cfg.Spec.APIServer = tmp.Spec.APIServer
