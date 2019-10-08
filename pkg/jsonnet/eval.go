@@ -7,8 +7,8 @@ import (
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
 
-	"github.com/grafana/tanka/pkg/jpath"
-	"github.com/grafana/tanka/pkg/native"
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
+	"github.com/grafana/tanka/pkg/jsonnet/native"
 )
 
 // EvaluateFile opens the file, reads it into memory and evaluates it afterwards (`Evaluate()`)

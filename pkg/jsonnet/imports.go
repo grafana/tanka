@@ -9,8 +9,8 @@ import (
 	"github.com/google/go-jsonnet/toolutils"
 	"github.com/pkg/errors"
 
-	"github.com/grafana/tanka/pkg/jpath"
-	"github.com/grafana/tanka/pkg/native"
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
+	"github.com/grafana/tanka/pkg/jsonnet/native"
 )
 
 // TransitiveImports returns all recursive imports of a file

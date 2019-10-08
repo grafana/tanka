@@ -5,8 +5,8 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/grafana/tanka/pkg/jpath"
 	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
