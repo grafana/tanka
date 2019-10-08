@@ -11,6 +11,8 @@ func New() *Config {
 	// default namespace
 	c.Spec.Namespace = "default"
 
+	c.Metadata.Labels = make(map[string]string)
+
 	return &c
 }
 
@@ -25,8 +27,8 @@ type Config struct {
 
 // Metadata is meant for humans and not parsed
 type Metadata struct {
-	Name   string                 `json:"name,omitempty"`
-	Labels map[string]interface{} `json:"labels,omitempty"`
+	Name   string            `json:"name,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // Spec defines Kubernetes properties
