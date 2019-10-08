@@ -1,5 +1,5 @@
 path: tree/master
-source: pkg/native/funcs.go
+source: pkg/jsonnet/native/funcs.go
 
 # Native Functions
 

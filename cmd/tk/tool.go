@@ -12,8 +12,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/grafana/tanka/pkg/jpath"
 	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 )
 
 func toolCmd() *cobra.Command {
