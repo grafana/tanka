@@ -42,7 +42,7 @@ func ParseDir(baseDir string) (*v1alpha1.Config, error) {
 
 	v := viper.New()
 	v.SetConfigName("spec")
-	v.AddConfigPath(fi.Name())
+	v.AddConfigPath(baseDir)
 
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
