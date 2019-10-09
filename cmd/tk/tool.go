@@ -19,7 +19,7 @@ import (
 func toolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Short: "handy utilities for working with jsonnet",
-		Use:   "tool",
+		Use:   "tool [command]",
 	}
 	cmd.AddCommand(jpathCmd())
 	cmd.AddCommand(importsCmd())
@@ -51,7 +51,7 @@ func jpathCmd() *cobra.Command {
 
 func importsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "imports [file]",
+		Use:   "imports <file>",
 		Short: "list all transitive imports of a file",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
