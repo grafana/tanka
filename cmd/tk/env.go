@@ -89,7 +89,7 @@ func envSetCmd() *cobra.Command {
 
 func envAddCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add [path]",
+		Use:   "add <path>",
 		Short: "create a new environment",
 		Args:  cobra.ExactArgs(1),
 		Annotations: map[string]string{
@@ -144,7 +144,7 @@ func addEnv(dir string, cfg *v1alpha1.Config) error {
 
 func envRemoveCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "remove [path]",
+		Use:     "remove <path>",
 		Aliases: []string{"rm"},
 		Short:   "delete an environment",
 		Annotations: map[string]string{
