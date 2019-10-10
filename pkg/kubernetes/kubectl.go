@@ -228,7 +228,7 @@ type DeleteOpts struct {
 	AutoApprove bool
 }
 
-// Delete applies the given yaml to the cluster
+// Delete removes the given yaml to the cluster
 func (k Kubectl) Delete(yaml, namespace string, opts DeleteOpts) error {
 	if err := k.setupContext(); err != nil {
 		return err

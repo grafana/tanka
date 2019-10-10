@@ -166,7 +166,7 @@ func objectspec(m Manifest) string {
 	)
 }
 
-// Delete receives a state object generated using `Reconcile()` and may delete it to the target system
+// Delete receives a state object generated using `Reconcile()` and deletes from the cluster
 func (k *Kubernetes) Delete(state []Manifest, opts DeleteOpts) error {
 	if k == nil {
 		return ErrorMissingConfig{"delete"}
