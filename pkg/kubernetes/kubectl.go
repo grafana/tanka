@@ -130,14 +130,14 @@ func (k Kubectl) Get(namespace, kind, name string) (map[string]interface{}, erro
 	return obj, nil
 }
 
-// ApplyOpts allow to specify additional parameter for apply operations
-type ApplyOpts struct {
+// ApplyDeleteOpts allow to specify additional parameter for apply/delete operations
+type ApplyDeleteOpts struct {
 	Force       bool
 	AutoApprove bool
 }
 
 // Apply applies the given yaml to the cluster
-func (k Kubectl) Apply(yaml, namespace string, opts ApplyOpts) error {
+func (k Kubectl) Apply(yaml, namespace string, opts ApplyDeleteOpts) error {
 	if err := k.setupContext(); err != nil {
 		return err
 	}
@@ -222,14 +222,8 @@ func (k Kubectl) Diff(yaml string) (*string, error) {
 	return nil, nil
 }
 
-// DeleteOpts allow to specify additional parameter for delete operations
-type DeleteOpts struct {
-	Force       bool
-	AutoApprove bool
-}
-
 // Delete removes the given yaml to the cluster
-func (k Kubectl) Delete(yaml, namespace string, opts DeleteOpts) error {
+func (k Kubectl) Delete(yaml, namespace string, opts ApplyDeleteOpts) error {
 	if err := k.setupContext(); err != nil {
 		return err
 	}

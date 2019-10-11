@@ -25,6 +25,16 @@ func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	return &v
 }
 
+func applyDeleteFlags(fs *pflag.FlagSet) kubernetes.ApplyDeleteOpts {
+	force := fs.Bool("force", false, "force operating (add --force for kubelet)")
+	autoApprove := fs.Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+
+	return kubernetes.ApplyDeleteOpts{
+		Force:       *force,
+		AutoApprove: *autoApprove,
+	}
+}
+
 func applyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "apply [path]",
@@ -35,8 +45,6 @@ func applyCmd() *cobra.Command {
 		},
 	}
 	vars := workflowFlags(cmd.Flags())
-	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
-	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if kube == nil {
 			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "apply"})
@@ -56,10 +64,7 @@ func applyCmd() *cobra.Command {
 			log.Println("Warning: There are no differences. Your apply may not do anything at all.")
 		}
 
-		if err := kube.Apply(desired, kubernetes.ApplyOpts{
-			Force:       *force,
-			AutoApprove: *autoApprove,
-		}); err != nil {
+		if err := kube.Apply(desired, applyDeleteFlags(cmd.Flags())); err != nil {
 			log.Fatalln("Applying:", err)
 		}
 	}
@@ -204,8 +209,6 @@ func deleteCmd() *cobra.Command {
 		},
 	}
 	vars := workflowFlags(cmd.Flags())
-	force := cmd.Flags().Bool("force", false, "force deleteing (kubectl delete --force)")
-	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if kube == nil {
 			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "delete"})
@@ -221,10 +224,7 @@ func deleteCmd() *cobra.Command {
 			log.Fatalln("Reconciling:", err)
 		}
 
-		if err := kube.Delete(desired, kubernetes.DeleteOpts{
-			Force:       *force,
-			AutoApprove: *autoApprove,
-		}); err != nil {
+		if err := kube.Delete(desired, applyDeleteFlags(cmd.Flags())); err != nil {
 			log.Fatalln("Deleting:", err)
 		}
 	}
