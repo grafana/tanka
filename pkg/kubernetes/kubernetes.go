@@ -108,7 +108,7 @@ func (k *Kubernetes) Fmt(state []Manifest) (string, error) {
 }
 
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
-func (k *Kubernetes) Apply(state []Manifest, opts ApplyOpts) error {
+func (k *Kubernetes) Apply(state []Manifest, opts ApplyDeleteOpts) error {
 	if k == nil {
 		return ErrorMissingConfig{"apply"}
 	}
@@ -167,7 +167,7 @@ func objectspec(m Manifest) string {
 }
 
 // Delete receives a state object generated using `Reconcile()` and deletes from the cluster
-func (k *Kubernetes) Delete(state []Manifest, opts DeleteOpts) error {
+func (k *Kubernetes) Delete(state []Manifest, opts ApplyDeleteOpts) error {
 	if k == nil {
 		return ErrorMissingConfig{"delete"}
 	}
