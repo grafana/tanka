@@ -202,7 +202,7 @@ func stringsToRegexps(strs []string) (exps []*regexp.Regexp) {
 
 func deleteCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete [path]",
+		Use:   "delete <path>",
 		Short: "delete configuration from the cluster",
 		Args:  cobra.ExactArgs(1),
 		Annotations: map[string]string{
