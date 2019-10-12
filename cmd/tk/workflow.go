@@ -45,6 +45,7 @@ func applyCmd() *cobra.Command {
 		},
 	}
 	vars := workflowFlags(cmd.Flags())
+	applyFlags := applyDeleteFlags(cmd.Flags())
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if kube == nil {
 			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "apply"})
@@ -64,7 +65,7 @@ func applyCmd() *cobra.Command {
 			log.Println("Warning: There are no differences. Your apply may not do anything at all.")
 		}
 
-		if err := kube.Apply(desired, applyDeleteFlags(cmd.Flags())); err != nil {
+		if err := kube.Apply(desired, applyFlags); err != nil {
 			log.Fatalln("Applying:", err)
 		}
 	}
@@ -209,6 +210,7 @@ func deleteCmd() *cobra.Command {
 		},
 	}
 	vars := workflowFlags(cmd.Flags())
+	deleteFlags := applyDeleteFlags(cmd.Flags())
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if kube == nil {
 			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "delete"})
@@ -224,7 +226,7 @@ func deleteCmd() *cobra.Command {
 			log.Fatalln("Reconciling:", err)
 		}
 
-		if err := kube.Delete(desired, applyDeleteFlags(cmd.Flags())); err != nil {
+		if err := kube.Delete(desired, deleteFlags); err != nil {
 			log.Fatalln("Deleting:", err)
 		}
 	}
