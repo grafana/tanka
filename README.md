@@ -61,8 +61,7 @@ After you initialized the directory structure, install the required libraries
 using `jb`:
 ```bash
 # Ksonnet kubernetes libraries
-$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.3/k.libsonnet
-$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.3/k8s.libsonnet
+$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.3
 
 # Promtail library
 $ jb install github.com/grafana/loki/production/ksonnet/promtail
