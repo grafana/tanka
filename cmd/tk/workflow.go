@@ -15,6 +15,14 @@ import (
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
+// special exit codes for tk diff
+const (
+	// no changes
+	ExitStatusClean = 0
+	// differences between the local config and the cluster
+	ExitStatusDiff = 16
+)
+
 type workflowFlagVars struct {
 	targets []string
 }
@@ -83,7 +91,7 @@ func diffCmd() *cobra.Command {
 
 		if changes == nil {
 			log.Println("No differences.")
-			return
+			os.Exit(ExitStatusClean)
 		}
 
 		if interactive {
@@ -93,7 +101,7 @@ func diffCmd() *cobra.Command {
 			fmt.Println(*changes)
 		}
 
-		os.Exit(16)
+		os.Exit(ExitStatusDiff)
 	}
 
 	return cmd
