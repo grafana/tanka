@@ -12,7 +12,6 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/grafana/tanka/pkg/cli/cmp"
-	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
@@ -20,12 +19,6 @@ import (
 // Version is the current version of the tk command.
 // To be overwritten at build time
 var Version = "dev"
-
-// primary handlers
-var (
-	config = &v1alpha1.Config{}
-	kube   *kubernetes.Kubernetes
-)
 
 // describing variables
 var (
@@ -48,20 +41,6 @@ func main() {
 		Short:            "tanka <3 jsonnet",
 		Version:          Version,
 		TraverseChildren: true,
-		// Configuration
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 {
-				return
-			}
-			config = setupConfiguration(args[0])
-			if config == nil {
-				return
-			}
-
-			// Kubernetes
-			kube = kubernetes.New(config.Spec)
-
-		},
 	}
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 
