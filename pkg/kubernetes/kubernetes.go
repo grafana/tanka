@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
