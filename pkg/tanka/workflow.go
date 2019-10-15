@@ -9,6 +9,12 @@ import (
 	"github.com/grafana/tanka/pkg/kubernetes"
 )
 
+// Apply parses the environment at the given directory (a `baseDir`) and applies
+// the evaluated jsonnet to the Kubernetes cluster defined in the environments
+// `spec.json`.
+// NOTE: This function prints on screen in default configuration.
+// Use the `WithWarnWriter` modifier to change that. The `WithApply*` modifiers
+// may be used to further influence the behavior.
 func Apply(baseDir string, mods ...Modifier) error {
 	opts := parseModifiers(mods)
 
@@ -34,6 +40,12 @@ func Apply(baseDir string, mods ...Modifier) error {
 	return kube.Apply(rec, opts.apply)
 }
 
+// Diff parses the environment at the given directory (a `baseDir`) and returns
+// the differences from the live cluster state in `diff(1)` format. If the
+// `WithDiffSummarize` modifier is used, a histogram created using `diffstat(1)`
+// is returned instead.
+// The cluster information is retrieved from the environments `spec.json`.
+// NOTE: This function requires on `diff(1)`, `kubectl(1)` and perhaps `diffstat(1)`
 func Diff(baseDir string, mods ...Modifier) (*string, error) {
 	opts := parseModifiers(mods)
 
@@ -45,6 +57,8 @@ func Diff(baseDir string, mods ...Modifier) (*string, error) {
 	return kube.Diff(rec, opts.diff)
 }
 
+// Show parses the environment at the given directory (a `baseDir`) and returns
+// the evaluated jsonnet in yaml form
 func Show(baseDir string, mods ...Modifier) (string, error) {
 	opts := parseModifiers(mods)
 

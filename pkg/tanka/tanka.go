@@ -1,3 +1,7 @@
+// The tanka package allows to use most of Tankas features available on the
+// command line programmatically as a Golang library. Keep in mind that the API
+// is still experimental and may change without and signs of warnings while
+// Tanka is still in alpha. Nevertheless, we try to avoid breaking changes.
 package tanka
 
 import (
@@ -7,6 +11,7 @@ import (
 	"github.com/grafana/tanka/pkg/kubernetes"
 )
 
+// parseModifiers parses all modifiers into an options struct
 func parseModifiers(mods []Modifier) *options {
 	o := &options{}
 	for _, mod := range mods {
@@ -16,14 +21,19 @@ func parseModifiers(mods []Modifier) *options {
 }
 
 type options struct {
+	// io.Writer to write warnings and notices to
 	wWarn io.Writer
 
+	// target regular expressions to limit the working set
 	targets []*regexp.Regexp
 
-	diff  kubernetes.DiffOpts
+	// additional options for diff
+	diff kubernetes.DiffOpts
+	// additional options for apply
 	apply kubernetes.ApplyOpts
 }
 
+// Modifiers allow to
 type Modifier func(*options)
 
 // WithWarnWriter allows to provide a custom io.Writer that all warnings are
