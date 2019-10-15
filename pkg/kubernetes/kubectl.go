@@ -222,7 +222,7 @@ func (k Kubectl) Diff(yaml string) (*string, error) {
 	return nil, nil
 }
 
-// Delete removes the given yaml to the cluster
+// Delete removes the given yaml from the cluster
 func (k Kubectl) Delete(yaml, namespace string, opts ApplyDeleteOpts) error {
 	if err := k.setupContext(); err != nil {
 		return err
@@ -230,7 +230,7 @@ func (k Kubectl) Delete(yaml, namespace string, opts ApplyDeleteOpts) error {
 
 	if !opts.AutoApprove {
 		if err := util.Confirm(
-			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
+			fmt.Sprintf(`Deleting from namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
 				alert(namespace),
 				alert(k.cluster.Get("name").MustStr()),
 				alert(k.cluster.Get("cluster.server").MustStr()),

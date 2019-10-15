@@ -26,7 +26,7 @@ func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 }
 
 func applyDeleteFlags(fs *pflag.FlagSet) kubernetes.ApplyDeleteOpts {
-	force := fs.Bool("force", false, "force operating (add --force for kubelet)")
+	force := fs.Bool("force", false, "force operating (kubectl --force)")
 	autoApprove := fs.Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 
 	return kubernetes.ApplyDeleteOpts{
