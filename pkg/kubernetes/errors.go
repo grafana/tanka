@@ -15,5 +15,5 @@ func (e ErrorNotFound) Error() string {
 }
 
 var (
-	ErrorMissingConfig = errors.New("This operation requires additional configuration. Refer to https://tanka.dev/environments for instructions.")
+	ErrorMissingConfig = errors.New("This operation requires additional configuration. Refer to https://tanka.dev/environments for instructions")
 )

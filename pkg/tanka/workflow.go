@@ -9,7 +9,7 @@ import (
 	"github.com/grafana/tanka/pkg/kubernetes"
 )
 
-func Apply(baseDir string, mods ...modifier) error {
+func Apply(baseDir string, mods ...Modifier) error {
 	opts := parseModifiers(mods)
 
 	rec, kube, err := parse(baseDir, opts)
@@ -34,7 +34,7 @@ func Apply(baseDir string, mods ...modifier) error {
 	return kube.Apply(rec, opts.apply)
 }
 
-func Diff(baseDir string, mods ...modifier) (*string, error) {
+func Diff(baseDir string, mods ...Modifier) (*string, error) {
 	opts := parseModifiers(mods)
 
 	rec, kube, err := parse(baseDir, opts)
@@ -45,7 +45,7 @@ func Diff(baseDir string, mods ...modifier) (*string, error) {
 	return kube.Diff(rec, opts.diff)
 }
 
-func Show(baseDir string, mods ...modifier) (string, error) {
+func Show(baseDir string, mods ...Modifier) (string, error) {
 	opts := parseModifiers(mods)
 
 	rec, kube, err := parse(baseDir, opts)

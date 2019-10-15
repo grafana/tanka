@@ -37,7 +37,6 @@ func (k Kubectl) SubsetDiff(y string) (*string, error) {
 
 		routines++
 		go subsetDiff(k, rawShould, resultCh, errCh)
-
 	}
 
 	var lastErr error

@@ -49,7 +49,7 @@ func parseEnv(baseDir string, opts *options) (*kubernetes.Kubernetes, error) {
 			fmt.Fprint(opts.wWarn, err)
 		// some other error
 		default:
-			errors.Wrap(err, "reading spec.json")
+			return nil, errors.Wrap(err, "reading spec.json")
 		}
 	}
 

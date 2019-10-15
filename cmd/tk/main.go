@@ -26,14 +26,6 @@ var (
 	interactive = terminal.IsTerminal(int(os.Stdout.Fd()))
 )
 
-// list of deprecated config keys and their alternatives
-// however, they still work and are aliased internally
-var deprecated = map[string]string{
-	"namespace": "spec.namespace",
-	"server":    "spec.apiServer",
-	"team":      "metadata.labels.team",
-}
-
 func main() {
 	log.SetFlags(0)
 	rootCmd := &cobra.Command{

@@ -39,7 +39,7 @@ func TransitiveImports(filename string) ([]string, error) {
 		return nil, errors.Wrap(err, "creating Jsonnet AST")
 	}
 
-	imports := make([]string, 0, 0)
+	imports := make([]string, 0)
 	err = importRecursive(&imports, vm, node, "main.jsonnet")
 
 	return uniqueStringSlice(imports), err

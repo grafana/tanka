@@ -57,11 +57,11 @@ func highlight(lang, s string) string {
 func writeJSON(i interface{}, path string) error {
 	out, err := json.MarshalIndent(i, "", "  ")
 	if err != nil {
-		return fmt.Errorf("Marshalling: %s", err)
+		return fmt.Errorf("marshalling: %s", err)
 	}
 
 	if err := ioutil.WriteFile(path, append(out, '\n'), 0644); err != nil {
-		return fmt.Errorf("Writing %s: %s", path, err)
+		return fmt.Errorf("writing %s: %s", path, err)
 	}
 
 	return nil

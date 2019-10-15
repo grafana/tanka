@@ -7,7 +7,7 @@ import (
 	"github.com/grafana/tanka/pkg/kubernetes"
 )
 
-func parseModifiers(mods []modifier) *options {
+func parseModifiers(mods []Modifier) *options {
 	o := &options{}
 	for _, mod := range mods {
 		mod(o)
@@ -24,11 +24,11 @@ type options struct {
 	apply kubernetes.ApplyOpts
 }
 
-type modifier func(*options)
+type Modifier func(*options)
 
 // WithWarnWriter allows to provide a custom io.Writer that all warnings are
 // written to
-func WithWarnWriter(w io.Writer) modifier {
+func WithWarnWriter(w io.Writer) Modifier {
 	return func(opts *options) {
 		opts.wWarn = w
 	}
@@ -36,7 +36,7 @@ func WithWarnWriter(w io.Writer) modifier {
 
 // WithTargets allows to submit regular expressions to limit the working set of
 // objects (https://tanka.dev/targets/).
-func WithTargets(t ...*regexp.Regexp) modifier {
+func WithTargets(t ...*regexp.Regexp) Modifier {
 	return func(opts *options) {
 		opts.targets = t
 	}
@@ -44,7 +44,7 @@ func WithTargets(t ...*regexp.Regexp) modifier {
 
 // WithDiffStrategy allows to set the used diff strategy.
 // An empty string is ignored.
-func WithDiffStrategy(ds string) modifier {
+func WithDiffStrategy(ds string) Modifier {
 	return func(opts *options) {
 		if ds != "" {
 			opts.diff.Strategy = ds
@@ -54,21 +54,21 @@ func WithDiffStrategy(ds string) modifier {
 
 // WithDiffSummarize enables summary mode, which invokes `diffstat(1)` on the
 // set of changes to create an overview
-func WithDiffSummarize(b bool) modifier {
+func WithDiffSummarize(b bool) Modifier {
 	return func(opts *options) {
 		opts.diff.Summarize = b
 	}
 }
 
 // WithApplyForce allows to invoke `kubectl apply` with the `--force` flag
-func WithApplyForce(b bool) modifier {
+func WithApplyForce(b bool) Modifier {
 	return func(opts *options) {
 		opts.apply.Force = b
 	}
 }
 
 // WithApplyAutoApprove allows to skip the interactive approval
-func WithApplyAutoApprove(b bool) modifier {
+func WithApplyAutoApprove(b bool) Modifier {
 	return func(opts *options) {
 		opts.apply.AutoApprove = b
 	}
