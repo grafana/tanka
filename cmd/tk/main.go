@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/grafana/tanka/pkg/cmp"
+	"github.com/grafana/tanka/pkg/cli/cmp"
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"

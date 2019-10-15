@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
-	"github.com/grafana/tanka/pkg/util"
 )
 
 func envCmd() *cobra.Command {
@@ -156,7 +156,7 @@ func envRemoveCmd() *cobra.Command {
 				if err != nil {
 					log.Fatalln("parsing environments name:", err)
 				}
-				if err := util.Confirm(fmt.Sprintf("Permanently removing the environment located at '%s'.", path), "yes"); err != nil {
+				if err := cli.Confirm(fmt.Sprintf("Permanently removing the environment located at '%s'.", path), "yes"); err != nil {
 					log.Fatalln(err)
 				}
 				if err := os.RemoveAll(path); err != nil {
