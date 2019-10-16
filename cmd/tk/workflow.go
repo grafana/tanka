@@ -25,14 +25,9 @@ func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	return &v
 }
 
-func applyDeleteFlags(fs *pflag.FlagSet) kubernetes.ApplyDeleteOpts {
-	force := fs.Bool("force", false, "force operating (kubectl --force)")
-	autoApprove := fs.Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
-
-	return kubernetes.ApplyDeleteOpts{
-		Force:       *force,
-		AutoApprove: *autoApprove,
-	}
+func applyDeleteFlags(fs *pflag.FlagSet, opts *kubernetes.ApplyDeleteOpts) {
+	fs.BoolVar(&opts.Force, "force", false, "force operating (kubectl --force)")
+	fs.BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 }
 
 func applyCmd() *cobra.Command {
@@ -45,7 +40,8 @@ func applyCmd() *cobra.Command {
 		},
 	}
 	vars := workflowFlags(cmd.Flags())
-	applyFlags := applyDeleteFlags(cmd.Flags())
+	applyFlags := kubernetes.ApplyDeleteOpts{}
+	applyDeleteFlags(cmd.Flags(), &applyFlags)
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if kube == nil {
 			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "apply"})
@@ -210,7 +206,8 @@ func deleteCmd() *cobra.Command {
 		},
 	}
 	vars := workflowFlags(cmd.Flags())
-	deleteFlags := applyDeleteFlags(cmd.Flags())
+	deleteFlags := kubernetes.ApplyDeleteOpts{}
+	applyDeleteFlags(cmd.Flags(), &deleteFlags)
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if kube == nil {
 			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "delete"})
