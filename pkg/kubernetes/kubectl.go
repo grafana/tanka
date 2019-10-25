@@ -221,3 +221,80 @@ func (k Kubectl) Diff(yaml string) (*string, error) {
 	// no diff -> nil
 	return nil, nil
 }
+
+// DeleteOpts encapsulates parameters for Delete method
+type DeleteOpts struct {
+	Namespace string
+	Kind      string
+	Name      string
+}
+
+// Delete takes a list of resources and deletes them
+func (k Kubectl) Delete(opts DeleteOpts) error {
+	if err := k.setupContext(); err != nil {
+		return err
+	}
+
+	argv := []string{"delete",
+		"--context", k.context.Get("name").MustStr(),
+		"-n", opts.Namespace,
+		opts.Kind,
+		opts.Name,
+	}
+
+	cmd := exec.Command("kubectl", argv...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
+}
+
+// APIResources lists the types of resource the K8s API manages
+func (k Kubectl) APIResources() ([]string, error) {
+	fmt.Println("Getting api resources")
+	if err := k.setupContext(); err != nil {
+		return nil, err
+	}
+
+	argv := []string{"api-resources",
+		"--verbs=list", "--namespaced", "-o", "name",
+	}
+
+	cmd := exec.Command("kubectl", argv...)
+	raw := bytes.Buffer{}
+	cmd.Stdout = &raw
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+	s := strings.TrimSpace(raw.String())
+	return strings.Split(s, "\n"), nil
+}
+
+// GetFilteredResourceNames lists resources that match a particular label, and are of a specific type
+func (k Kubectl) GetFilteredResourceNames(namespace, kind, label string) ([]string, error) {
+	if err := k.setupContext(); err != nil {
+		return nil, err
+	}
+
+	argv := []string{"get", "-n", namespace, "--show-kind", "--ignore-not-found", kind,
+		"-o", "name", "-l", label,
+	}
+
+	cmd := exec.Command("kubectl", argv...)
+	raw := bytes.Buffer{}
+	cmd.Stdout = &raw
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+	s := strings.TrimSpace(raw.String())
+	if len(s) == 0 {
+		return []string{}, nil
+	}
+	return strings.Split(s, "\n"), nil
+}

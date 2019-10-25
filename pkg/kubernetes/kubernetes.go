@@ -57,7 +57,10 @@ func (m Manifest) Namespace() string {
 
 // Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 // shall return it reconciled as a state object of the target system
-func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...*regexp.Regexp) (state []Manifest, err error) {
+func (k *Kubernetes) Reconcile(raw map[string]interface{}, environment string, objectspecs ...*regexp.Regexp) (state []Manifest, err error) {
+
+	environmentLabel := getEnvironmentLabel(environment)
+
 	docs, err := walkJSON(raw, "")
 	out := make([]Manifest, 0, len(docs))
 	if err != nil {
@@ -67,6 +70,9 @@ func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...*regex
 		m := objx.New(d)
 		if k != nil && !m.Has("metadata.namespace") {
 			m.Set("metadata.namespace", k.Spec.Namespace)
+		}
+		if k != nil && !m.Has("metadata.labels.tanka/origin") {
+			m.Set("metadata.labels.tanka/origin", environmentLabel)
 		}
 		out = append(out, Manifest(m))
 	}
@@ -159,9 +165,91 @@ func (k *Kubernetes) Diff(state []Manifest, opts DiffOpts) (*string, error) {
 	return d, nil
 }
 
+// ReconcileDeletionsOpts allows to specify additional parameters for reconcile deletions operation
+type ReconcileDeletionsOpts struct {
+	Environment string
+}
+
+// ReconcileDeletions identifies Kubernetes resources that need deleting
+func (k *Kubernetes) ReconcileDeletions(state []Manifest, opts ReconcileDeletionsOpts) ([]string, error) {
+
+	environmentLabel := getEnvironmentLabel(opts.Environment)
+
+	apiResources, err := k.client.APIResources()
+	if err != nil {
+		return nil, err
+	}
+
+	stateMap := map[string]bool{}
+	namespaces := map[string]bool{}
+	for _, resource := range state {
+		resourceCode := strings.ToLower(resource.Namespace() + "/" + resource.Kind() + "/" + resource.Name())
+		stateMap[resourceCode] = true
+		namespaces[resource.Namespace()] = true
+	}
+
+	reLong := regexp.MustCompile("(.+?)\\.(.+)/(.+)")
+	reShort := regexp.MustCompile("(.+)/(.+)")
+
+	resourcesForDeletion := []string{}
+
+	for namespace := range namespaces {
+		fmt.Printf("NS:%s ", namespace)
+		for _, kind := range apiResources {
+			label := "tanka/origin=" + environmentLabel
+			fmt.Printf("%s ", kind)
+			kindResources, err := k.client.GetFilteredResourceNames(namespace, kind, label)
+			if err != nil {
+				return nil, err
+			}
+			for _, resource := range kindResources {
+				var resourceCode string
+				if strings.Contains(resource, ".") {
+					parts := reLong.FindStringSubmatch(resource)
+					resourceCode = namespace + "/" + parts[1] + "/" + parts[3]
+				} else {
+					parts := reShort.FindStringSubmatch(resource)
+					resourceCode = namespace + "/" + parts[1] + "/" + parts[2]
+				}
+				if _, ok := stateMap[resourceCode]; !ok {
+					resourcesForDeletion = append(resourcesForDeletion, resourceCode)
+
+				}
+			}
+		}
+	}
+	fmt.Println("")
+
+	return resourcesForDeletion, nil
+}
+
+// DeleteResources deletes a set of named resources from Kubernetes
+func (k *Kubernetes) DeleteResources(deletions []string) error {
+
+	re := regexp.MustCompile("(.*)/(.*)\\.(.*)/(.*)")
+	for _, deletion := range deletions {
+		parts := re.FindStringSubmatch(deletion)
+		opts := DeleteOpts{
+			Namespace: parts[0],
+			Kind:      parts[1],
+			Name:      parts[3],
+		}
+		err := k.client.Delete(opts)
+		if err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
 func objectspec(m Manifest) string {
 	return fmt.Sprintf("%s/%s",
 		m.Kind(),
 		m.Name(),
 	)
+}
+
+func getEnvironmentLabel(environment string) string {
+	return strings.ReplaceAll(environment, "/", ".")
 }

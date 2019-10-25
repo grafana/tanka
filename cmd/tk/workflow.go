@@ -37,19 +37,33 @@ func applyCmd() *cobra.Command {
 	vars := workflowFlags(cmd.Flags())
 	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	willDelete := cmd.Flags().Bool("enable-delete", false, "enable deletion of removed resources")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if kube == nil {
 			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "apply"})
 		}
 
-		raw, err := evalDict(args[0])
+		environment := args[0]
+
+		raw, err := evalDict(environment)
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
 
-		desired, err := kube.Reconcile(raw, stringsToRegexps(vars.targets)...)
+		desired, err := kube.Reconcile(raw, environment, stringsToRegexps(vars.targets)...)
 		if err != nil {
 			log.Fatalln("Reconciling:", err)
+		}
+
+		if *willDelete {
+			deletions, err := kube.ReconcileDeletions(desired, kubernetes.ReconcileDeletionsOpts{Environment: environment})
+			if err != nil {
+				log.Fatalln("Reconciling deletions:", err)
+			}
+			err = kube.DeleteResources(deletions)
+			if err != nil {
+				log.Fatalln("Deleting resources:", err)
+			}
 		}
 
 		if !diff(desired, false, kubernetes.DiffOpts{}) {
@@ -85,6 +99,7 @@ func diffCmd() *cobra.Command {
 		vars         = workflowFlags(cmd.Flags())
 		diffStrategy = cmd.Flags().String("diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
 		summarize    = cmd.Flags().BoolP("summarize", "s", false, "quick summary of the differences, hides file contents")
+		willDelete   = cmd.Flags().Bool("enable-delete", false, "enable deletion of removed resources")
 	)
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
@@ -92,7 +107,9 @@ func diffCmd() *cobra.Command {
 			log.Fatalln(kubernetes.ErrorMissingConfig{Verb: "diff"})
 		}
 
-		raw, err := evalDict(args[0])
+		environment := args[0]
+
+		raw, err := evalDict(environment)
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
@@ -101,15 +118,26 @@ func diffCmd() *cobra.Command {
 			kube.Spec.DiffStrategy = *diffStrategy
 		}
 
-		desired, err := kube.Reconcile(raw, stringsToRegexps(vars.targets)...)
+		desired, err := kube.Reconcile(raw, environment, stringsToRegexps(vars.targets)...)
 		if err != nil {
 			log.Fatalln("Reconciling:", err)
 		}
 
-		if diff(desired, interactive, kubernetes.DiffOpts{Summarize: *summarize}) {
-			os.Exit(16)
+		if !diff(desired, interactive, kubernetes.DiffOpts{Summarize: *summarize}) {
+			log.Println("No differences.")
 		}
-		log.Println("No differences.")
+
+		if *willDelete {
+			deletions, err := kube.ReconcileDeletions(desired, kubernetes.ReconcileDeletionsOpts{Environment: environment})
+			if err != nil {
+				log.Fatalln("Reconciling deletions:", err)
+			}
+			for _, deletion := range deletions {
+				fmt.Println("Requires deletion: ", deletion)
+			}
+		}
+
+		os.Exit(16)
 	}
 
 	return cmd
@@ -153,20 +181,33 @@ func showCmd() *cobra.Command {
 	}
 	vars := workflowFlags(cmd.Flags())
 	canRedirect := cmd.Flags().Bool("dangerous-allow-redirect", false, "allow redirecting output to a file or a pipe.")
+	willDelete := cmd.Flags().Bool("enable-delete", false, "enable deletion of removed resources")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if !interactive && !*canRedirect {
 			fmt.Fprintln(os.Stderr, "Redirection of the output of tk show is discouraged and disabled by default. Run tk show --dangerous-allow-redirect to enable.")
 			return
 		}
 
-		raw, err := evalDict(args[0])
+		environment := args[0]
+
+		raw, err := evalDict(environment)
 		if err != nil {
 			log.Fatalln("Evaluating jsonnet:", err)
 		}
 
-		state, err := kube.Reconcile(raw, stringsToRegexps(vars.targets)...)
+		state, err := kube.Reconcile(raw, environment, stringsToRegexps(vars.targets)...)
 		if err != nil {
 			log.Fatalln("Reconciling:", err)
+		}
+
+		if *willDelete {
+			deletions, err := kube.ReconcileDeletions(state, kubernetes.ReconcileDeletionsOpts{Environment: environment})
+			if err != nil {
+				log.Fatalln("Reconciling deletions:", err)
+			}
+			for _, deletion := range deletions {
+				fmt.Println("Requires deletion: ", deletion)
+			}
 		}
 
 		pretty, err := kube.Fmt(state)
