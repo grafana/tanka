@@ -45,7 +45,6 @@ func initCmd() *cobra.Command {
 		}
 
 		fmt.Println("Directory structure set up! Remember to configure the API endpoint:\n`tk env set environments/default --server=127.0.0.1:6443`")
-
 	}
 	return cmd
 }

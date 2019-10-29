@@ -11,8 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/grafana/tanka/pkg/cmp"
-	"github.com/grafana/tanka/pkg/kubernetes"
+	"github.com/grafana/tanka/pkg/cli/cmp"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
@@ -21,25 +20,11 @@ import (
 // To be overwritten at build time
 var Version = "dev"
 
-// primary handlers
-var (
-	config = &v1alpha1.Config{}
-	kube   *kubernetes.Kubernetes
-)
-
 // describing variables
 var (
 	verbose     = false
 	interactive = terminal.IsTerminal(int(os.Stdout.Fd()))
 )
-
-// list of deprecated config keys and their alternatives
-// however, they still work and are aliased internally
-var deprecated = map[string]string{
-	"namespace": "spec.namespace",
-	"server":    "spec.apiServer",
-	"team":      "metadata.labels.team",
-}
 
 func main() {
 	log.SetFlags(0)
@@ -48,20 +33,6 @@ func main() {
 		Short:            "tanka <3 jsonnet",
 		Version:          Version,
 		TraverseChildren: true,
-		// Configuration
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 {
-				return
-			}
-			config = setupConfiguration(args[0])
-			if config == nil {
-				return
-			}
-
-			// Kubernetes
-			kube = kubernetes.New(config.Spec)
-
-		},
 	}
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 

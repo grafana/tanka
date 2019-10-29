@@ -1,6 +1,9 @@
 package kubernetes
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type ErrorNotFound struct {
 	name string
@@ -11,10 +14,6 @@ func (e ErrorNotFound) Error() string {
 	return fmt.Sprintf(`error from server (NotFound): %s "%s" not found`, e.kind, e.name)
 }
 
-type ErrorMissingConfig struct {
-	Verb string
-}
-
-func (e ErrorMissingConfig) Error() string {
-	return fmt.Sprintf("%s requires additional configuration. Refer to https://tanka.dev/environments for that.", e.Verb)
-}
+var (
+	ErrorMissingConfig = errors.New("This operation requires additional configuration. Refer to https://tanka.dev/environments for instructions")
+)

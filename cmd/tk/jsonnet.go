@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"path/filepath"
 
@@ -46,17 +45,4 @@ func eval(workdir string) (string, error) {
 		return "", err
 	}
 	return json, nil
-}
-
-func evalDict(workdir string) (map[string]interface{}, error) {
-	var rawDict map[string]interface{}
-
-	raw, err := eval(workdir)
-	if err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal([]byte(raw), &rawDict); err != nil {
-		return nil, err
-	}
-	return rawDict, nil
 }

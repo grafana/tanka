@@ -7,9 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
-	yaml "gopkg.in/yaml.v2"
-
-	"github.com/grafana/tanka/pkg/util"
+	yaml "gopkg.in/yaml.v3"
 )
 
 type difference struct {
@@ -27,7 +25,7 @@ func (k Kubectl) SubsetDiff(y string) (*string, error) {
 
 	for {
 		// jsonnet output -> desired state
-		var rawShould map[interface{}]interface{}
+		var rawShould map[string]interface{}
 		err := d.Decode(&rawShould)
 		if err == io.EOF {
 			break
@@ -39,7 +37,6 @@ func (k Kubectl) SubsetDiff(y string) (*string, error) {
 
 		routines++
 		go subsetDiff(k, rawShould, resultCh, errCh)
-
 	}
 
 	var lastErr error
@@ -74,9 +71,8 @@ func (k Kubectl) SubsetDiff(y string) (*string, error) {
 	return &diffs, nil
 }
 
-func subsetDiff(k Kubectl, rawShould map[interface{}]interface{}, r chan difference, e chan error) {
-	// filename
-	m := objx.New(util.CleanupInterfaceMap(rawShould))
+func subsetDiff(k Kubectl, rawShould map[string]interface{}, r chan difference, e chan error) {
+	m := objx.New(rawShould)
 	name := strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
 		m.Get("apiVersion").MustStr(),
 		m.Get("kind").MustStr(),
