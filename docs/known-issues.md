@@ -1,6 +1,6 @@
 # Known Errors
 
-Below is a list of common error messages and how to address them.
+Below is a list of common errors and how to address them.
 
 ### `Evaluating jsonnet: RUNTIME ERROR: Undefined external variable: __ksonnet/components`
 When migrating from `ksonnet`, this error might occur, because Tanka does not
@@ -23,3 +23,10 @@ This installs version `beta.3` of the libraries, matching Kubernetes version
 https://github.com/ksonnet/ksonnet-lib. When a pre-compiled version is
 available, install it using `jb`, otherwise compile it yourself and place it
 under `lib/`.
+
+### Unexpected diff if the same port number is used for UDP and TCP
+A [long-standing bug in `kubectl`](https://github.com/kubernetes/kubernetes/issues/39188) results in an
+incorrect diff output if the same port number is used multiple times in
+differently named ports, which commonly happens if a port is specified using
+both protocols, `tcp` and `udp`.  Nevertheless, `tk apply` will still work
+correctly.
