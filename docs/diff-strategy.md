@@ -30,8 +30,7 @@ However, this is a fairly new feature and only available for Kubernetes
 versions greater than 1.13. Only the API server (master nodes) needs to have
 that version, worker nodes do not matter.
 
-There is a [known issue](known-issues.md#unexpected-diff-if-the-same-port-number
--is-used-for-udp-and-tcp)
+There is a [known issue](known-issues.md#unexpected-diff-if-the-same-port-number-is-used-for-udp-and-tcp)
 with `kubectl diff`, which affects ports configured to use both TCP and UDP.
 
 ## Subset
