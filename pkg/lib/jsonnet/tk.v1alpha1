@@ -1,0 +1,25 @@
+// Tanka extended standard library, v1alpha1
+// NOTE: This is currently in alpha state. BREAKING CHANGES MAY OCCUR AT ANY TIME.
+//
+// This file includes several extensions to the jsonnet standard library,
+// available while using Tanka.
+//
+// Current extensions:
+// - Secrets (`sec`): Retrieve secrets from various key-value stores
+
+{
+  // sec exposes an convenient API to retrieve secrets from various sources.
+  // All `sec.*` functions share the same signature, so they can be interchanged.
+  sec:: {
+
+    // vault retrieves a secret from HashiCorp Vaults KV backend.
+    // The environment variables VAULT_ADDR and VAULT_TOKEN must
+    // be set for this to work.
+    vault:: std.native('secretFromVault'),
+
+    // file reads a `.jsonnet` compatible file from disk and returns
+    // the evaluated result. This is equivalent to `import '<path>'`,
+    // but shares the same API of the other `tk.sec` calls.
+    // file(path):: import(path)
+  },
+}
