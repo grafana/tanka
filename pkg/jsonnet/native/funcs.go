@@ -9,6 +9,8 @@ import (
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
+	vault "github.com/hashicorp/vault/api"
+	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -28,6 +30,45 @@ func Funcs() []*jsonnet.NativeFunction {
 		escapeStringRegex(),
 		regexMatch(),
 		regexSubst(),
+
+		// Secrets
+		secretFromVault(),
+	}
+}
+
+// secretFromVault retrieves a secret from HashiCorp Vault. The environment
+// variables VAULT_TOKEN and VAULT_ADDR must be set correctly for this to work.
+func secretFromVault() *jsonnet.NativeFunction {
+	raw, newErr := vault.NewClient(vault.DefaultConfig())
+	c := raw.Logical()
+
+	cache := make(map[string]*vault.Secret)
+
+	return &jsonnet.NativeFunction{
+		Name:   "secretFromVault",
+		Params: ast.Identifiers{"path"},
+		Func: func(data []interface{}) (res interface{}, err error) {
+			if newErr != nil {
+				return nil, errors.Wrap(err, "creating vault client")
+			}
+
+			path, ok := data[0].(string)
+			if !ok {
+				return nil, errors.New("path must be a string")
+			}
+
+			sec, ok := cache[path]
+			if !ok {
+				var err error
+				sec, err = c.Read(path)
+				if err != nil {
+					return nil, errors.Wrapf(err, "reading `%s` from vault", path)
+				}
+				cache[path] = sec
+			}
+
+			return sec.Data, nil
+		},
 	}
 }
 
