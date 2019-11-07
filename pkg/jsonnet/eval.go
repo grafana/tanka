@@ -27,12 +27,8 @@ func EvaluateFile(jsonnetFile string) (string, error) {
 
 // Evaluate renders the given jsonnet into a string
 func Evaluate(sonnet string, jpath []string) (string, error) {
-	importer := jsonnet.FileImporter{
-		JPaths: jpath,
-	}
-
 	vm := jsonnet.MakeVM()
-	vm.Importer(&importer)
+	vm.Importer(NewExtendedImporter(jpath))
 	for _, nf := range native.Funcs() {
 		vm.NativeFunction(nf)
 	}
