@@ -1,65 +1,57 @@
 package kubernetes
 
 import (
-	"bytes"
 	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/Masterminds/semver"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
-	yaml "gopkg.in/yaml.v3"
 
+	"github.com/grafana/tanka/pkg/cli"
+	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 // Kubernetes bridges tanka to the Kubernetse orchestrator.
 type Kubernetes struct {
-	client Kubectl
-	Spec   v1alpha1.Spec
+	ctl  client.Client
+	Spec v1alpha1.Spec
 
 	// Diffing
 	differs map[string]Differ // List of diff strategies
 }
 
-type Differ func(yaml string) (*string, error)
+type Differ func(client.Manifests) (*string, error)
 
-// New creates a new Kubernetes
-func New(s v1alpha1.Spec) *Kubernetes {
+// New creates a new Kubernetes with an initialized client
+func New(s v1alpha1.Spec) (*Kubernetes, error) {
+	ctl, err := client.New(s.APIServer)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating client")
+	}
+
 	k := Kubernetes{
 		Spec: s,
+		ctl:  ctl,
 	}
-	k.client.APIServer = k.Spec.APIServer
+
 	k.differs = map[string]Differ{
-		"native": k.client.Diff,
-		"subset": k.client.SubsetDiff,
+		"native": k.ctl.DiffServerSide,
+		"subset": SubsetDiffer(ctl),
 	}
-	return &k
-}
-
-// Manifest describes a single Kubernetes manifest
-type Manifest map[string]interface{}
-
-func (m Manifest) Kind() string {
-	return m["kind"].(string)
-}
-
-func (m Manifest) Name() string {
-	return m["metadata"].(map[string]interface{})["name"].(string)
-}
-
-func (m Manifest) Namespace() string {
-	return m["metadata"].(map[string]interface{})["namespace"].(string)
+	return &k, nil
 }
 
 // Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 // shall return it reconciled as a state object of the target system
-func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs []*regexp.Regexp) (state []Manifest, err error) {
+func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs []*regexp.Regexp) (state client.Manifests, err error) {
 	docs, err := walkJSON(raw, "")
-	out := make([]Manifest, 0, len(docs))
+	out := make(client.Manifests, 0, len(docs))
 	if err != nil {
 		return nil, errors.Wrap(err, "flattening manifests")
 	}
@@ -68,56 +60,56 @@ func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs []*regexp
 		if k != nil && !m.Has("metadata.namespace") {
 			m.Set("metadata.namespace", k.Spec.Namespace)
 		}
-		out = append(out, Manifest(m))
+		out = append(out, client.Manifest(m))
 	}
 
 	if len(objectspecs) > 0 {
-		out = funk.Filter(out, func(i interface{}) bool {
-			p := objectspec(i.(Manifest))
+		tmp := funk.Filter(out, func(i interface{}) bool {
+			p := objectspec(i.(client.Manifest))
 			for _, o := range objectspecs {
 				if o.MatchString(strings.ToLower(p)) {
 					return true
 				}
 			}
 			return false
-		}).([]Manifest)
+		}).([]client.Manifest)
+		out = client.Manifests(tmp)
 	}
 
 	sort.SliceStable(out, func(i int, j int) bool {
 		if out[i].Kind() != out[j].Kind() {
 			return out[i].Kind() < out[j].Kind()
 		}
-		return out[i].Name() < out[j].Name()
+		return out[i].Metadata().Name() < out[j].Metadata().Name()
 	})
 
 	return out, nil
 }
 
-// Fmt receives the state and reformats it to YAML Documents
-func (k *Kubernetes) Fmt(state []Manifest) (string, error) {
-	buf := bytes.Buffer{}
-	enc := yaml.NewEncoder(&buf)
-
-	for _, d := range state {
-		if err := enc.Encode(d); err != nil {
-			return "", err
-		}
-	}
-
-	return buf.String(), nil
-}
+type ApplyOpts client.ApplyOpts
 
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
-func (k *Kubernetes) Apply(state []Manifest, opts ApplyOpts) error {
-	if k == nil {
-		return ErrorMissingConfig
-	}
-
-	yaml, err := k.Fmt(state)
+func (k *Kubernetes) Apply(state client.Manifests, opts ApplyOpts) error {
+	info, err := k.ctl.Info()
 	if err != nil {
 		return err
 	}
-	return k.client.Apply(yaml, k.Spec.Namespace, opts)
+	alert := color.New(color.FgRed, color.Bold).SprintFunc()
+
+	if !opts.AutoApprove {
+		if err := cli.Confirm(
+			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
+				alert(k.Spec.Namespace),
+				alert(info.Cluster.Get("name").MustStr()),
+				alert(info.Cluster.Get("cluster.server").MustStr()),
+				alert(info.Context.Get("name").MustStr()),
+			),
+			"yes",
+		); err != nil {
+			return err
+		}
+	}
+	return k.ctl.Apply(state, client.ApplyOpts(opts))
 }
 
 // DiffOpts allow to specify additional parameters for diff operations
@@ -130,29 +122,22 @@ type DiffOpts struct {
 }
 
 // Diff takes the desired state and returns the differences from the cluster
-func (k *Kubernetes) Diff(state []Manifest, opts DiffOpts) (*string, error) {
-	if k == nil {
-		return nil, ErrorMissingConfig
-	}
-	yaml, err := k.Fmt(state)
-	if err != nil {
-		return nil, err
+func (k *Kubernetes) Diff(state client.Manifests, opts DiffOpts) (*string, error) {
+	strategy := k.Spec.DiffStrategy
+	if opts.Strategy != "" {
+		strategy = opts.Strategy
 	}
 
-	ds := k.Spec.DiffStrategy
-	if opts.Strategy != "" {
-		ds = opts.Strategy
-	}
-	if ds == "" {
-		ds = "native"
-		if _, server, err := k.client.Version(); err == nil {
-			if server.LessThan(semver.MustParse("1.13.0")) {
-				ds = "subset"
-			}
+	if strategy == "" {
+		strategy = "native"
+
+		info, err := k.ctl.Info()
+		if err == nil && info.ServerVersion.LessThan(semver.MustParse("1.13.0")) {
+			strategy = "subset"
 		}
 	}
 
-	d, err := k.differs[ds](yaml)
+	d, err := k.differs[strategy](state)
 	switch {
 	case err != nil:
 		return nil, err
@@ -167,9 +152,9 @@ func (k *Kubernetes) Diff(state []Manifest, opts DiffOpts) (*string, error) {
 	return d, nil
 }
 
-func objectspec(m Manifest) string {
+func objectspec(m client.Manifest) string {
 	return fmt.Sprintf("%s/%s",
 		m.Kind(),
-		m.Name(),
+		m.Metadata().Name(),
 	)
 }

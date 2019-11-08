@@ -8,6 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
 	yaml "gopkg.in/yaml.v3"
+
+	"github.com/grafana/tanka/pkg/kubernetes/client"
 )
 
 type difference struct {
@@ -15,63 +17,65 @@ type difference struct {
 	live, merged string
 }
 
-func (k Kubectl) SubsetDiff(y string) (*string, error) {
-	docs := []difference{}
-	d := yaml.NewDecoder(strings.NewReader(y))
+func SubsetDiffer(c client.Client) Differ {
+	return func(state client.Manifests) (*string, error) {
+		docs := []difference{}
+		d := yaml.NewDecoder(strings.NewReader(state.String()))
 
-	routines := 0
-	errCh := make(chan error)
-	resultCh := make(chan difference)
+		routines := 0
+		errCh := make(chan error)
+		resultCh := make(chan difference)
 
-	for {
-		// jsonnet output -> desired state
-		var rawShould map[string]interface{}
-		err := d.Decode(&rawShould)
-		if err == io.EOF {
-			break
+		for {
+			// jsonnet output -> desired state
+			var rawShould map[string]interface{}
+			err := d.Decode(&rawShould)
+			if err == io.EOF {
+				break
+			}
+
+			if err != nil {
+				return nil, errors.Wrap(err, "decoding yaml")
+			}
+
+			routines++
+			go subsetDiff(c, rawShould, resultCh, errCh)
 		}
 
-		if err != nil {
-			return nil, errors.Wrap(err, "decoding yaml")
+		var lastErr error
+		for i := 0; i < routines; i++ {
+			select {
+			case d := <-resultCh:
+				docs = append(docs, d)
+			case err := <-errCh:
+				lastErr = err
+			}
+		}
+		close(resultCh)
+		close(errCh)
+
+		if lastErr != nil {
+			return nil, errors.Wrap(lastErr, "calculating subset")
 		}
 
-		routines++
-		go subsetDiff(k, rawShould, resultCh, errCh)
+		var diffs string
+		for _, d := range docs {
+			diffStr, err := diff(d.name, d.live, d.merged)
+			if err != nil {
+				return nil, errors.Wrap(err, "invoking diff")
+			}
+			if diffStr != "" {
+				diffStr += "\n"
+			}
+			diffs += diffStr
+		}
+		diffs = strings.TrimSuffix(diffs, "\n")
+
+		return &diffs, nil
 	}
-
-	var lastErr error
-	for i := 0; i < routines; i++ {
-		select {
-		case d := <-resultCh:
-			docs = append(docs, d)
-		case err := <-errCh:
-			lastErr = err
-		}
-	}
-	close(resultCh)
-	close(errCh)
-
-	if lastErr != nil {
-		return nil, errors.Wrap(lastErr, "calculating subset")
-	}
-
-	var diffs string
-	for _, d := range docs {
-		diffStr, err := diff(d.name, d.live, d.merged)
-		if err != nil {
-			return nil, errors.Wrap(err, "invoking diff")
-		}
-		if diffStr != "" {
-			diffStr += "\n"
-		}
-		diffs += diffStr
-	}
-	diffs = strings.TrimSuffix(diffs, "\n")
-
-	return &diffs, nil
 }
 
-func subsetDiff(k Kubectl, rawShould map[string]interface{}, r chan difference, e chan error) {
+func subsetDiff(c client.Client, rawShould map[string]interface{}, r chan difference, e chan error) {
 	m := objx.New(rawShould)
 	name := strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
 		m.Get("apiVersion").MustStr(),
@@ -81,7 +85,7 @@ func subsetDiff(k Kubectl, rawShould map[string]interface{}, r chan difference, 
 	), "/", "-", -1)
 
 	// kubectl output -> current state
-	rawIs, err := k.Get(
+	rawIs, err := c.Get(
 		m.Get("metadata.namespace").MustStr(),
 		m.Get("kind").MustStr(),
 		m.Get("metadata.name").MustStr(),
