@@ -14,8 +14,8 @@ paths](directory-structure.md/#import-paths).
 This error can occur when the `ksonnet` kubernetes libraries are missing in the import paths. While `ksonnet` used to magically include them, Tanka follows a more explicit approach and requires you to install them using `jb`:
 
 ```bash
-$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.3/k.libsonnet
-$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.3/k8s.libsonnet
+$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k.libsonnet
+$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k8s.libsonnet
 ```
 
 This installs version `beta.3` of the libraries, matching Kubernetes version
