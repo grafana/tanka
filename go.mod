@@ -5,10 +5,14 @@ go 1.12
 require (
 	github.com/Masterminds/semver v1.4.2
 	github.com/alecthomas/chroma v0.6.6
+	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/color v1.7.0
 	github.com/google/go-jsonnet v0.14.1-0.20191006203837-42cb19ef24fb
 	github.com/kr/pretty v0.1.0 // indirect
+	github.com/mattn/go-colorable v0.1.1
+	github.com/mattn/go-isatty v0.0.7
 	github.com/pkg/errors v0.8.1
+	github.com/pmezard/go-difflib v1.0.0
 	github.com/posener/complete v1.2.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.3

@@ -10,14 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestReconcile(t *testing.T) {
+func TestCompile(t *testing.T) {
 	tests := []struct {
 		name string
 		k    *Kubernetes
 
 		data    testData
 		targets []*regexp.Regexp
-		err     error
 	}{
 		{
 			name: "regular",
@@ -80,9 +79,7 @@ func TestReconcile(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := c.k.Reconcile(c.data.deep.(map[string]interface{}), c.targets)
-
-			require.Equal(t, c.err, err)
+			got, _ := c.k.Compile(c.data.deep.(map[string]interface{}), c.targets)
 
 			flat := c.data.flat.([]map[string]interface{})
 			assert.Equal(t, msisToManifests(flat), got)
@@ -90,12 +87,11 @@ func TestReconcile(t *testing.T) {
 	}
 }
 
-func TestReconcileOrder(t *testing.T) {
+func TestCompileOrder(t *testing.T) {
 	got := make([][]Manifest, 10)
 	k := &Kubernetes{}
 	for i := 0; i < 10; i++ {
-		r, err := k.Reconcile(testDataDeep().deep.(map[string]interface{}), nil)
-		require.NoError(t, err)
+		r, _ := k.Compile(testDataDeep().deep.(map[string]interface{}), nil)
 		got[i] = r
 	}
 

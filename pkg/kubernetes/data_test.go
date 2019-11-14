@@ -110,28 +110,6 @@ func testDataFlat() testData {
 	}
 }
 
-// testDataPrimitive is an invalid manifest, because it ends with a primitive
-// without including required fields
-func testDataPrimitive() testData {
-	return testData{
-		deep: map[string]interface{}{
-			"nginx": map[string]interface{}{
-				"deployment": map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "nginx",
-					},
-				},
-				"service": map[string]interface{}{
-					"note": "invalid because apiVersion and kind are missing",
-				},
-			},
-		},
-		flat: []map[string]interface{}(nil),
-	}
-}
-
 // testDataDeep is super deeply nested on multiple levels
 func testDataDeep() testData {
 	return testData{

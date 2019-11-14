@@ -28,12 +28,12 @@ func parse(baseDir string, opts *options) ([]kubernetes.Manifest, *kubernetes.Ku
 		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 	}
 
-	rec, err := kube.Reconcile(raw, opts.targets)
+	manifests, err := kube.Compile(raw, opts.targets)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "reconciling")
+		return nil, nil, err
 	}
 
-	return rec, kube, nil
+	return manifests, kube, nil
 }
 
 // parseEnv parses the `spec.json` of the environment and returns a
