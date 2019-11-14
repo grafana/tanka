@@ -1,25 +1,33 @@
 package tanka
 
 import (
-	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-type ParseResult struct {
+type Info struct {
 	Env       *v1alpha1.Config
 	Resources client.Manifests
-
-	kube *kubernetes.Kubernetes
+	Client    client.Info
 }
 
-func Status(baseDir string, mods ...Modifier) (*ParseResult, error) {
+func Status(baseDir string, mods ...Modifier) (*Info, error) {
 	opts := parseModifiers(mods)
 
-	sum, err := parse(baseDir, opts)
+	r, err := parse(baseDir, opts)
+	if err != nil {
+		return nil, err
+	}
+	r.Env.Spec.DiffStrategy = r.kube.Spec.DiffStrategy
+
+	cInfo, err := r.kube.Info()
 	if err != nil {
 		return nil, err
 	}
 
-	return sum, nil
+	return &Info{
+		Env:       r.Env,
+		Resources: r.Resources,
+		Client:    *cInfo,
+	}, nil
 }

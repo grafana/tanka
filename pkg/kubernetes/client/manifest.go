@@ -76,6 +76,13 @@ func (m Metadata) Name() string {
 	return m["name"].(string)
 }
 
+func (m Metadata) Namespace() string {
+	if _, ok := m["namespace"]; !ok {
+		return ""
+	}
+	return m["namespace"].(string)
+}
+
 func (m Metadata) Labels() map[string]interface{} {
 	if _, ok := m["labels"]; !ok {
 		return nil

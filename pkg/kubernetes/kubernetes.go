@@ -17,7 +17,7 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-// Kubernetes bridges tanka to the Kubernetse orchestrator.
+// Kubernetes bridges tanka to the Kubernetes orchestrator.
 type Kubernetes struct {
 	ctl  client.Client
 	Spec v1alpha1.Spec
@@ -30,20 +30,31 @@ type Differ func(client.Manifests) (*string, error)
 
 // New creates a new Kubernetes with an initialized client
 func New(s v1alpha1.Spec) (*Kubernetes, error) {
+	// setup client
 	ctl, err := client.New(s.APIServer)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating client")
 	}
 
+	// setup diffing
+	if s.DiffStrategy == "" {
+		s.DiffStrategy = "native"
+
+		info, err := ctl.Info()
+		if err == nil && info.ServerVersion.LessThan(semver.MustParse("1.13.0")) {
+			s.DiffStrategy = "subset"
+		}
+	}
+
 	k := Kubernetes{
 		Spec: s,
 		ctl:  ctl,
+		differs: map[string]Differ{
+			"native": ctl.DiffServerSide,
+			"subset": SubsetDiffer(ctl),
+		},
 	}
 
-	k.differs = map[string]Differ{
-		"native": k.ctl.DiffServerSide,
-		"subset": SubsetDiffer(ctl),
-	}
 	return &k, nil
 }
 
@@ -128,15 +139,6 @@ func (k *Kubernetes) Diff(state client.Manifests, opts DiffOpts) (*string, error
 		strategy = opts.Strategy
 	}
 
-	if strategy == "" {
-		strategy = "native"
-
-		info, err := k.ctl.Info()
-		if err == nil && info.ServerVersion.LessThan(semver.MustParse("1.13.0")) {
-			strategy = "subset"
-		}
-	}
-
 	d, err := k.differs[strategy](state)
 	switch {
 	case err != nil:
@@ -150,6 +152,10 @@ func (k *Kubernetes) Diff(state client.Manifests, opts DiffOpts) (*string, error
 	}
 
 	return d, nil
+}
+
+func (k *Kubernetes) Info() (*client.Info, error) {
+	return k.ctl.Info()
 }
 
 func objectspec(m client.Manifest) string {

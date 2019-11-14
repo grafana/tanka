@@ -39,7 +39,7 @@ func SubsetDiffer(c client.Client) Differ {
 			}
 
 			routines++
-			go subsetDiff(c, rawShould, resultCh, errCh)
+			go parallelSubsetDiff(c, rawShould, resultCh, errCh)
 		}
 
 		var lastErr error
@@ -75,7 +75,15 @@ func SubsetDiffer(c client.Client) Differ {
 	}
 }
 
-func subsetDiff(c client.Client, rawShould map[string]interface{}, r chan difference, e chan error) {
+func parallelSubsetDiff(c client.Client, rawShould map[string]interface{}, r chan difference, e chan error) {
+	diff, err := subsetDiff(c, rawShould)
+	if err != nil {
+		e <- err
+	}
+	r <- *diff
+}
+
+func subsetDiff(c client.Client, rawShould map[string]interface{}) (*difference, error) {
 	m := objx.New(rawShould)
 	name := strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
 		m.Get("apiVersion").MustStr(),
@@ -94,31 +102,28 @@ func subsetDiff(c client.Client, rawShould map[string]interface{}, r chan differ
 		if _, ok := err.(ErrorNotFound); ok {
 			rawIs = map[string]interface{}{}
 		} else {
-			e <- errors.Wrap(err, "getting state from cluster")
-			return
+			return nil, errors.Wrap(err, "getting state from cluster")
 		}
 	}
 
 	should, err := yaml.Marshal(rawShould)
 	if err != nil {
-		e <- err
-		return
+		return nil, err
 	}
 
 	is, err := yaml.Marshal(subset(m, rawIs))
 	if err != nil {
-		e <- err
-		return
+		return nil, err
 	}
 	if string(is) == "{}\n" {
 		is = []byte("")
 	}
 
-	r <- difference{
+	return &difference{
 		name:   name,
 		live:   string(is),
 		merged: string(should),
-	}
+	}, nil
 }
 
 // subset removes all keys from is, that are not present in should.
