@@ -213,3 +213,15 @@ func testDataDeep() testData {
 		},
 	}
 }
+
+// testDataArray is an array of (deeply nested) dicts that should be fully
+// flattened
+func testDataArray() testData {
+	return testData{
+		deep: append([]map[string]interface{}{
+			testDataDeep().deep.(map[string]interface{}),
+		}, testDataFlat().deep.(map[string]interface{})),
+
+		flat: append(testDataDeep().flat.([]map[string]interface{}), testDataFlat().flat.([]map[string]interface{})...),
+	}
+}
