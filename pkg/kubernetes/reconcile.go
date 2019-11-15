@@ -28,7 +28,7 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 	// complete missing namespace from spec.json
 	for _, d := range docs {
 		m := objx.New(d)
-		if !m.Has("metadata.namespace") {
+		if spec.Namespace != "" && !m.Has("metadata.namespace") {
 			m.Set("metadata.namespace", spec.Namespace)
 		}
 		out = append(out, client.Manifest(m))

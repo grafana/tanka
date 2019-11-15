@@ -15,7 +15,7 @@ import (
 func TestReconcile(t *testing.T) {
 	tests := []struct {
 		name string
-		k    *Kubernetes
+		spec v1alpha1.Spec
 
 		data    testData
 		targets []*regexp.Regexp
@@ -52,7 +52,7 @@ func TestReconcile(t *testing.T) {
 		},
 		{
 			name: "force-namespace",
-			k:    &Kubernetes{Spec: v1alpha1.Spec{Namespace: "tanka"}},
+			spec: v1alpha1.Spec{Namespace: "tanka"},
 			data: testData{
 				deep: testDataFlat().deep,
 				flat: func() []map[string]interface{} {
@@ -64,7 +64,7 @@ func TestReconcile(t *testing.T) {
 		},
 		{
 			name: "custom-namespace",
-			k:    &Kubernetes{Spec: v1alpha1.Spec{Namespace: "tanka"}},
+			spec: v1alpha1.Spec{Namespace: "tanka"},
 			data: testData{
 				deep: func() map[string]interface{} {
 					d := objx.New(testDataFlat().deep)
@@ -82,7 +82,7 @@ func TestReconcile(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := c.k.Reconcile(c.data.deep.(map[string]interface{}), c.targets)
+			got, err := Reconcile(c.data.deep.(map[string]interface{}), c.spec, c.targets)
 
 			require.Equal(t, c.err, err)
 
@@ -94,9 +94,8 @@ func TestReconcile(t *testing.T) {
 
 func TestReconcileOrder(t *testing.T) {
 	got := make([]client.Manifests, 10)
-	k := &Kubernetes{}
 	for i := 0; i < 10; i++ {
-		r, err := k.Reconcile(testDataDeep().deep.(map[string]interface{}), nil)
+		r, err := Reconcile(testDataDeep().deep.(map[string]interface{}), v1alpha1.Spec{}, nil)
 		require.NoError(t, err)
 		got[i] = r
 	}
