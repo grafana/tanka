@@ -2,14 +2,18 @@
 
 Tanka evaluates the `main.jsonnet` file of your [Environment](/environments) and
 filters the output (either Object or Array) for valid Kubernetes objects.  
-An object is considered valid if it has both, a `kind` and a `metadata.name` set.
+An object is considered valid if it has both, a `kind` and a `apiVersion` set.
+
+!!! warning
+    This behaviour is going to change in the future, `metadata.name` will
+    also become required.
 
 ## Deeply nested object (Recommended)
 The most commonly used structure is a single big object that includes all of
 your configs to be applied to the cluster nested under keys.  
 How deeply encapsulated the actual object is does not matter, Tanka will
-traverse down until it finds something that has both, a `kind` and a
-`metadata.name`.  
+traverse down until it finds something that has both, a `kind` and an
+`apiVersion`.  
 
 ??? Example
     ```json
