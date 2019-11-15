@@ -27,11 +27,11 @@ traverse down until it finds something that has both, a `kind` and an
           }
         },
         "deployment": {
-          "apiVersion": "apps/v1",
-          "kind": "Deployment", // kind ..
+          "apiVersion": "apps/v1", // apiVersion ..
+          "kind": "Deployment", // .. and kind are required
+                                // to identify an object.
           "metadata": {
-            "name": "prom" // .. and metadata.name are required
-                          // to indentify a valid object.
+            "name": "prom" 
           }
         }
       },
