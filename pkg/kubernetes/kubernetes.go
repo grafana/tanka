@@ -2,15 +2,10 @@ package kubernetes
 
 import (
 	"fmt"
-	"regexp"
-	"sort"
-	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
-	"github.com/stretchr/objx"
-	funk "github.com/thoas/go-funk"
 
 	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
@@ -56,45 +51,6 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	}
 
 	return &k, nil
-}
-
-// Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
-// shall return it reconciled as a state object of the target system
-func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs []*regexp.Regexp) (state client.Manifests, err error) {
-	docs, err := walkJSON(raw, "")
-	out := make(client.Manifests, 0, len(docs))
-	if err != nil {
-		return nil, errors.Wrap(err, "flattening manifests")
-	}
-	for _, d := range docs {
-		m := objx.New(d)
-		if k != nil && !m.Has("metadata.namespace") {
-			m.Set("metadata.namespace", k.Spec.Namespace)
-		}
-		out = append(out, client.Manifest(m))
-	}
-
-	if len(objectspecs) > 0 {
-		tmp := funk.Filter(out, func(i interface{}) bool {
-			p := objectspec(i.(client.Manifest))
-			for _, o := range objectspecs {
-				if o.MatchString(strings.ToLower(p)) {
-					return true
-				}
-			}
-			return false
-		}).([]client.Manifest)
-		out = client.Manifests(tmp)
-	}
-
-	sort.SliceStable(out, func(i int, j int) bool {
-		if out[i].Kind() != out[j].Kind() {
-			return out[i].Kind() < out[j].Kind()
-		}
-		return out[i].Metadata().Name() < out[j].Metadata().Name()
-	})
-
-	return out, nil
 }
 
 type ApplyOpts client.ApplyOpts

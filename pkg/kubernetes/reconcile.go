@@ -2,21 +2,61 @@ package kubernetes
 
 import (
 	"fmt"
+	"regexp"
+	"sort"
+	"strings"
 
+	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
+	funk "github.com/thoas/go-funk"
 )
 
-// ErrorPrimitiveReached occurs when walkJSON reaches the end of nested dicts without finding a valid Kubernetes manifest
-type ErrorPrimitiveReached struct {
-	path, key string
-	primitive interface{}
-}
+// Reconcile extracts all valid Kubernetes objects from the raw output of the
+// Jsonnet compiler. A valid object is identified by the presence of `kind` and
+// `apiVersion`.
+// TODO: Check on `metadata.name` as well and assert that they are
+// not only set but also strings.
+func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state client.Manifests, err error) {
+	docs, err := walkJSON(raw, "")
+	out := make(client.Manifests, 0, len(docs))
+	if err != nil {
+		return nil, errors.Wrap(err, "flattening manifests")
+	}
 
-func (e ErrorPrimitiveReached) Error() string {
-	return fmt.Sprintf("recursion did not resolve in a valid Kubernetes object, "+
-		"because one of `kind` or `apiVersion` is missing in path `.%s`."+
-		" Found non-dict value `%s` of type `%T` instead.",
-		e.path, e.key, e.primitive)
+	// complete missing namespace from spec.json
+	for _, d := range docs {
+		m := objx.New(d)
+		if !m.Has("metadata.namespace") {
+			m.Set("metadata.namespace", spec.Namespace)
+		}
+		out = append(out, client.Manifest(m))
+	}
+
+	// optionally filter the working set of objects
+	if len(targets) > 0 {
+		tmp := funk.Filter(out, func(i interface{}) bool {
+			p := objectspec(i.(client.Manifest))
+			for _, t := range targets {
+				if t.MatchString(strings.ToLower(p)) {
+					return true
+				}
+			}
+			return false
+		}).([]client.Manifest)
+		out = client.Manifests(tmp)
+	}
+
+	// Stable output order
+	sort.SliceStable(out, func(i int, j int) bool {
+		if out[i].Kind() != out[j].Kind() {
+			return out[i].Kind() < out[j].Kind()
+		}
+		return out[i].Metadata().Name() < out[j].Metadata().Name()
+	})
+
+	return out, nil
 }
 
 // walkJSON traverses deeply nested kubernetes manifest and extracts them into a flat []dict.
@@ -47,4 +87,17 @@ func walkJSON(deep map[string]interface{}, path string) ([]map[string]interface{
 		}
 	}
 	return flat, nil
+}
+
+// ErrorPrimitiveReached occurs when walkJSON reaches the end of nested dicts without finding a valid Kubernetes manifest
+type ErrorPrimitiveReached struct {
+	path, key string
+	primitive interface{}
+}
+
+func (e ErrorPrimitiveReached) Error() string {
+	return fmt.Sprintf("recursion did not resolve in a valid Kubernetes object, "+
+		"because one of `kind` or `apiVersion` is missing in path `.%s`."+
+		" Found non-dict value `%s` of type `%T` instead.",
+		e.path, e.key, e.primitive)
 }
