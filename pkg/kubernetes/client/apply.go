@@ -4,16 +4,10 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // Apply applies the given yaml to the cluster
 func (k Kubectl) Apply(data Manifests, opts ApplyOpts) error {
-	if err := k.setupContext(); err != nil {
-		return errors.Wrap(err, "finding usable context")
-	}
-
 	argv := []string{"apply",
 		"--context", k.context.Get("name").MustStr(),
 		"-f", "-",

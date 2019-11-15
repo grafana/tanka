@@ -20,14 +20,20 @@ import (
 type ParseResult struct {
 	Env       *v1alpha1.Config
 	Resources client.Manifests
+}
 
-	kube *kubernetes.Kubernetes
+func (p *ParseResult) newKube() (*kubernetes.Kubernetes, error) {
+	kube, err := kubernetes.New(p.Env.Spec)
+	if err != nil {
+		return nil, errors.Wrap(err, "connecting to Kubernetes")
+	}
+	return kube, nil
 }
 
 // parse loads the `spec.json`, evaluates the jsonnet and returns both, the
 // kubernetes object and the reconciled manifests
 func parse(baseDir string, opts *options) (*ParseResult, error) {
-	env, kube, err := parseEnv(baseDir, opts)
+	env, err := parseEnv(baseDir, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -45,20 +51,18 @@ func parse(baseDir string, opts *options) (*ParseResult, error) {
 	return &ParseResult{
 		Resources: rec,
 		Env:       env,
-
-		kube: kube,
 	}, nil
 }
 
 // parseEnv parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
-func parseEnv(baseDir string, opts *options) (*v1alpha1.Config, *kubernetes.Kubernetes, error) {
+func parseEnv(baseDir string, opts *options) (*v1alpha1.Config, error) {
 	config, err := spec.ParseDir(baseDir)
 	if err != nil {
 		switch err.(type) {
 		// config is missing
 		case viper.ConfigFileNotFoundError:
-			return nil, nil, kubernetes.ErrorMissingConfig
+			return nil, kubernetes.ErrorMissingConfig
 		// the config includes deprecated fields
 		case spec.ErrDeprecated:
 			if opts.wWarn == nil {
@@ -67,15 +71,11 @@ func parseEnv(baseDir string, opts *options) (*v1alpha1.Config, *kubernetes.Kube
 			fmt.Fprint(opts.wWarn, err)
 		// some other error
 		default:
-			return nil, nil, errors.Wrap(err, "reading spec.json")
+			return nil, errors.Wrap(err, "reading spec.json")
 		}
 	}
 
-	kube, err := kubernetes.New(config.Spec)
-	if err != nil {
-		return nil, nil, err
-	}
-	return config, kube, nil
+	return config, nil
 }
 
 // eval evaluates the jsonnet environment at the given directory starting with

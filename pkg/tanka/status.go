@@ -18,16 +18,16 @@ func Status(baseDir string, mods ...Modifier) (*Info, error) {
 	if err != nil {
 		return nil, err
 	}
-	r.Env.Spec.DiffStrategy = r.kube.Spec.DiffStrategy
-
-	cInfo, err := r.kube.Info()
+	kube, err := r.newKube()
 	if err != nil {
 		return nil, err
 	}
 
+	r.Env.Spec.DiffStrategy = kube.Spec.DiffStrategy
+
 	return &Info{
 		Env:       r.Env,
 		Resources: r.Resources,
-		Client:    *cInfo,
+		Client:    kube.Info(),
 	}, nil
 }

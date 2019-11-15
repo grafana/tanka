@@ -52,10 +52,6 @@ func (k Kubectl) GetByLabels(namespace string, labels map[string]interface{}) (M
 }
 
 func (k Kubectl) get(namespace string, sel []string) (Manifest, error) {
-	if err := k.setupContext(); err != nil {
-		return nil, errors.Wrap(err, "finding usable context")
-	}
-
 	argv := append([]string{"get",
 		"-o", "json",
 		"-n", namespace,

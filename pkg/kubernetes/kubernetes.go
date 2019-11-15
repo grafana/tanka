@@ -12,15 +12,20 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-// Kubernetes bridges tanka to the Kubernetes orchestrator.
+// Kubernetes exposes methods to work with the Kubernetes orchestrator
 type Kubernetes struct {
-	ctl  client.Client
 	Spec v1alpha1.Spec
+
+	// Client (kubectl)
+	ctl  client.Client
+	info client.Info
 
 	// Diffing
 	differs map[string]Differ // List of diff strategies
 }
 
+// Differ is responsible for comparing the given manifests to the cluster and
+// returning differences (if any) in `diff(1)` format.
 type Differ func(client.Manifests) (*string, error)
 
 // New creates a new Kubernetes with an initialized client
@@ -31,12 +36,17 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 		return nil, errors.Wrap(err, "creating client")
 	}
 
+	// obtain information about the client (including versions)
+	info, err := ctl.Info()
+	if err != nil {
+		return nil, err
+	}
+
 	// setup diffing
 	if s.DiffStrategy == "" {
 		s.DiffStrategy = "native"
 
-		info, err := ctl.Info()
-		if err == nil && info.ServerVersion.LessThan(semver.MustParse("1.13.0")) {
+		if info.ServerVersion.LessThan(semver.MustParse("1.13.0")) {
 			s.DiffStrategy = "subset"
 		}
 	}
@@ -44,6 +54,7 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	k := Kubernetes{
 		Spec: s,
 		ctl:  ctl,
+		info: *info,
 		differs: map[string]Differ{
 			"native": ctl.DiffServerSide,
 			"subset": SubsetDiffer(ctl),
@@ -110,8 +121,9 @@ func (k *Kubernetes) Diff(state client.Manifests, opts DiffOpts) (*string, error
 	return d, nil
 }
 
-func (k *Kubernetes) Info() (*client.Info, error) {
-	return k.ctl.Info()
+// Information about the client, etc.
+func (k *Kubernetes) Info() client.Info {
+	return k.info
 }
 
 func objectspec(m client.Manifest) string {

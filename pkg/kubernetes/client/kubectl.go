@@ -24,15 +24,14 @@ func New(endpoint string) (*Kubectl, error) {
 	k := Kubectl{
 		APIServer: endpoint,
 	}
+	if err := k.setupContext(); err != nil {
+		return nil, errors.Wrap(err, "finding usable context")
+	}
 	return &k, nil
 }
 
 // Info returns known informational data about the client and its environment
 func (k Kubectl) Info() (*Info, error) {
-	if err := k.setupContext(); err != nil {
-		return nil, errors.Wrap(err, "finding usable context")
-	}
-
 	client, server, err := k.version()
 	if err != nil {
 		return nil, errors.Wrap(err, "obtaining versions")
@@ -49,10 +48,6 @@ func (k Kubectl) Info() (*Info, error) {
 
 // Version returns the version of kubectl and the Kubernetes api server
 func (k Kubectl) version() (client, server *semver.Version, err error) {
-	if err := k.setupContext(); err != nil {
-		return nil, nil, errors.Wrap(err, "finding usable context")
-	}
-
 	cmd := exec.Command("kubectl", "version",
 		"-o", "json",
 		"--context", k.context.Get("name").MustStr(),
@@ -72,10 +67,6 @@ func (k Kubectl) version() (client, server *semver.Version, err error) {
 // Diff takes a desired state as yaml and returns the differences
 // to the system in common diff format
 func (k Kubectl) DiffServerSide(data Manifests) (*string, error) {
-	if err := k.setupContext(); err != nil {
-		return nil, errors.Wrap(err, "finding usable context")
-	}
-
 	argv := []string{"diff",
 		"--context", k.context.Get("name").MustStr(),
 		"-f", "-",

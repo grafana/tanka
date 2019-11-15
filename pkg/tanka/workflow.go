@@ -22,7 +22,10 @@ func Apply(baseDir string, mods ...Modifier) error {
 	if err != nil {
 		return err
 	}
-	kube := p.kube
+	kube, err := p.newKube()
+	if err != nil {
+		return err
+	}
 
 	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{})
 	if err != nil {
@@ -54,8 +57,12 @@ func Diff(baseDir string, mods ...Modifier) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
+	kube, err := p.newKube()
+	if err != nil {
+		return nil, err
+	}
 
-	return p.kube.Diff(p.Resources, opts.diff)
+	return kube.Diff(p.Resources, opts.diff)
 }
 
 // Show parses the environment at the given directory (a `baseDir`) and returns

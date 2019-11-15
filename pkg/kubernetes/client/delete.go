@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-
-	"github.com/pkg/errors"
 )
 
 // Delete removes the specified object from the cluster
@@ -24,10 +22,6 @@ func (k Kubectl) DeleteByLabels(namespace string, labels map[string]interface{},
 }
 
 func (k Kubectl) delete(namespace string, sel []string, opts DeleteOpts) error {
-	if err := k.setupContext(); err != nil {
-		return errors.Wrap(err, "finding usable context")
-	}
-
 	argv := append([]string{"delete",
 		"-n", namespace,
 		"--context", k.context.Get("name").MustStr(),
