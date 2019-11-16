@@ -6,11 +6,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/grafana/tanka/pkg/kubernetes/client"
-	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
+
+	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 // Reconcile extracts all valid Kubernetes objects from the raw output of the

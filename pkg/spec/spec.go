@@ -5,9 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 // list of deprecated config keys and their alternatives
