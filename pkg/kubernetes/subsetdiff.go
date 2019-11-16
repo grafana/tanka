@@ -2,7 +2,6 @@ package kubernetes
 
 import (
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -20,30 +19,16 @@ type difference struct {
 func SubsetDiffer(c client.Client) Differ {
 	return func(state client.Manifests) (*string, error) {
 		docs := []difference{}
-		d := yaml.NewDecoder(strings.NewReader(state.String()))
 
-		routines := 0
 		errCh := make(chan error)
 		resultCh := make(chan difference)
 
-		for {
-			// jsonnet output -> desired state
-			var rawShould map[string]interface{}
-			err := d.Decode(&rawShould)
-			if err == io.EOF {
-				break
-			}
-
-			if err != nil {
-				return nil, errors.Wrap(err, "decoding yaml")
-			}
-
-			routines++
+		for _, rawShould := range state {
 			go parallelSubsetDiff(c, rawShould, resultCh, errCh)
 		}
 
 		var lastErr error
-		for i := 0; i < routines; i++ {
+		for i := 0; i < len(state); i++ {
 			select {
 			case d := <-resultCh:
 				docs = append(docs, d)
@@ -71,6 +56,10 @@ func SubsetDiffer(c client.Client) Differ {
 		}
 		diffs = strings.TrimSuffix(diffs, "\n")
 
+		if diffs == "" {
+			return nil, nil
+		}
+
 		return &diffs, nil
 	}
 }
@@ -79,6 +68,7 @@ func parallelSubsetDiff(c client.Client, rawShould map[string]interface{}, r cha
 	diff, err := subsetDiff(c, rawShould)
 	if err != nil {
 		e <- err
+		return
 	}
 	r <- *diff
 }
@@ -99,7 +89,7 @@ func subsetDiff(c client.Client, rawShould map[string]interface{}) (*difference,
 		m.Get("metadata.name").MustStr(),
 	)
 	if err != nil {
-		if _, ok := err.(ErrorNotFound); ok {
+		if _, ok := err.(client.ErrorNotFound); ok {
 			rawIs = map[string]interface{}{}
 		} else {
 			return nil, errors.Wrap(err, "getting state from cluster")

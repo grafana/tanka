@@ -11,6 +11,14 @@ import (
 // `kind` are required, `metadata.name` should be present as well
 type Manifest map[string]interface{}
 
+func (m Manifest) String() string {
+	y, err := yaml.Marshal(m)
+	if err != nil {
+		return err.Error()
+	}
+	return string(y)
+}
+
 // Kind returns the kind of the API object
 func (m Manifest) Kind() string {
 	if _, ok := m["kind"]; !ok {
@@ -59,10 +67,6 @@ func (m Manifest) Verify() error {
 
 	if m.Metadata().Name() == "" {
 		return errors.New("name missing")
-	}
-
-	if m.Metadata().Labels() == nil {
-		return errors.New("labels missing")
 	}
 	return nil
 }
