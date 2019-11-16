@@ -20,24 +20,17 @@ import (
 // TODO: Check on `metadata.name` as well and assert that they are
 // not only set but also strings.
 func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
-	docs, err := walkJSON(raw, "")
-	if err != nil {
+	extracted := make(map[string]manifest.Manifest)
+	if err := walkJSON(raw, extracted, nil); err != nil {
 		return nil, errors.Wrap(err, "flattening manifests")
 	}
 
-	out := make(manifest.List, 0, len(docs))
-	for _, d := range docs {
-		o := objx.New(d)
-
-		// complete missing namespace from spec.json
-		if spec.Namespace != "" && !o.Has("metadata.namespace") {
-			o.Set("metadata.namespace", spec.Namespace)
+	out := make(manifest.List, 0, len(extracted))
+	for _, m := range extracted {
+		if spec.Namespace != "" && !m.Metadata().HasNamespace() {
+			m.Metadata()["namespace"] = spec.Namespace
 		}
 
-		m, err := manifest.New(o)
-		if err != nil {
-			return nil, err
-		}
 		out = append(out, m)
 	}
 
@@ -67,33 +60,51 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 }
 
 // walkJSON traverses deeply nested kubernetes manifest and extracts them into a flat []dict.
-func walkJSON(deep map[string]interface{}, path string) ([]map[string]interface{}, error) {
+func walkJSON(deep map[string]interface{}, extracted map[string]manifest.Manifest, path trace) error {
 	r := objx.New(deep)
+
 	if r.Has("apiVersion") && r.Has("kind") {
-		return []map[string]interface{}{deep}, nil
+		extracted[path.Full()] = deep
+		return nil
 	}
 
-	flat := make([]map[string]interface{}, 0)
-
-	for n, d := range deep {
-		if n == "__ksonnet" {
+	for key, d := range deep {
+		if key == "__ksonnet" {
 			continue
 		}
+		path := append(path, key)
+
 		if _, ok := d.(map[string]interface{}); !ok {
-			return nil, ErrorPrimitiveReached{path, n, d}
+			return ErrorPrimitiveReached{path.Base(), key, d}
 		}
+
 		m := objx.New(d)
 		if m.Has("apiVersion") && m.Has("kind") {
-			flat = append(flat, m)
-		} else {
-			f, err := walkJSON(m, path+"."+n)
+			mf, err := manifest.NewFromObj(m)
 			if err != nil {
-				return nil, err
+				return err.WithName(path.Full())
 			}
-			flat = append(flat, f...)
+			extracted[path.Full()] = mf
+		} else {
+			if err := walkJSON(m, extracted, path); err != nil {
+				return err
+			}
 		}
 	}
-	return flat, nil
+	return nil
+}
+
+type trace []string
+
+func (t trace) Full() string {
+	return "." + strings.Join(t, ".")
+}
+
+func (t trace) Base() string {
+	if len(t) > 0 {
+		t = t[:len(t)-1]
+	}
+	return "." + strings.Join(t, ".")
 }
 
 // ErrorPrimitiveReached occurs when walkJSON reaches the end of nested dicts without finding a valid Kubernetes manifest
@@ -104,7 +115,7 @@ type ErrorPrimitiveReached struct {
 
 func (e ErrorPrimitiveReached) Error() string {
 	return fmt.Sprintf("recursion did not resolve in a valid Kubernetes object, "+
-		"because one of `kind` or `apiVersion` is missing in path `.%s`."+
+		"because one of `kind` or `apiVersion` is missing in path `%s`."+
 		" Found non-dict value `%s` of type `%T` instead.",
 		e.path, e.key, e.primitive)
 }

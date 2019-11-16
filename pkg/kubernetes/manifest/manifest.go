@@ -13,12 +13,16 @@ import (
 // `kind` are required, `metadata.name` should be present as well
 type Manifest map[string]interface{}
 
-func New(raw map[string]interface{}) (Manifest, error) {
+func New(raw map[string]interface{}) (Manifest, *SchemaError) {
 	m := Manifest(raw)
 	if err := m.Verify(); err != nil {
 		return nil, err
 	}
 	return m, nil
+}
+
+func NewFromObj(raw objx.Map) (Manifest, *SchemaError) {
+	return New(map[string]interface{}(raw))
 }
 
 func (m Manifest) String() string {
@@ -31,27 +35,27 @@ func (m Manifest) String() string {
 }
 
 // Verify checks whether the manifest is correctly structured
-func (m Manifest) Verify() error {
-	o := objx.New(map[string]interface{}(m))
-	err := make(SchemaError)
+func (m Manifest) Verify() *SchemaError {
+	o := m2o(m)
+	var err SchemaError
 
-	if !o.Has("kind") {
+	if !o.Get("kind").IsStr() {
 		err.add("kind")
 	}
-	if !o.Has("apiVersion") {
+	if !o.Get("apiVersion").IsStr() {
 		err.add("apiVersion")
 	}
-	if !o.Has("metadata") {
+	if !o.Get("metadata").IsMSI() {
 		err.add("metadata")
 	}
-	if !o.Has("metadata.name") && m.Kind() != "List" {
+	if !o.Get("metadata.name").IsStr() && m.Kind() != "List" {
 		err.add("metadata.name")
 	}
 
-	if len(err) == 0 {
+	if len(err.fields) == 0 {
 		return nil
 	}
-	return err
+	return &err
 }
 
 // Kind returns the kind of the API object
@@ -91,8 +95,9 @@ func (m Metadata) Name() string {
 }
 
 func (m Metadata) HasNamespace() bool {
-	return objx.New(m).Get("namespace").IsStr()
+	return m2o(m).Get("namespace").IsStr()
 }
+
 func (m Metadata) Namespace() string {
 	if !m.HasNamespace() {
 		return ""
@@ -101,7 +106,7 @@ func (m Metadata) Namespace() string {
 }
 
 func (m Metadata) HasLabels() bool {
-	return objx.New(m).Get("labels").IsStr()
+	return m2o(m).Get("labels").IsMSI()
 }
 func (m Metadata) Labels() map[string]interface{} {
 	if !m.HasLabels() {
@@ -111,7 +116,7 @@ func (m Metadata) Labels() map[string]interface{} {
 }
 
 func (m Metadata) HasAnnotations() bool {
-	return objx.New(m).Get("annotations").IsStr()
+	return m2o(m).Get("annotations").IsMSI()
 }
 func (m Metadata) Annotations() map[string]interface{} {
 	if !m.HasAnnotations() {
@@ -137,4 +142,14 @@ func (m List) String() string {
 	}
 
 	return buf.String()
+}
+
+func m2o(m interface{}) objx.Map {
+	switch mm := m.(type) {
+	case Metadata:
+		return objx.New(map[string]interface{}(mm))
+	case Manifest:
+		return objx.New(map[string]interface{}(mm))
+	}
+	return nil
 }

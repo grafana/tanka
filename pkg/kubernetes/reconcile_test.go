@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"testing"
 
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,9 +35,10 @@ func TestWalkJSON(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := walkJSON(c.data.deep.(map[string]interface{}), "")
+			extracted := make(map[string]manifest.Manifest)
+			err := walkJSON(c.data.deep.(map[string]interface{}), extracted, nil)
 			require.Equal(t, c.err, err)
-			assert.ElementsMatch(t, c.data.flat, got)
+			assert.Equal(t, c.data.flat, extracted)
 		})
 	}
 }
