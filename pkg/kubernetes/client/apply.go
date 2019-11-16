@@ -4,10 +4,12 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 // Apply applies the given yaml to the cluster
-func (k Kubectl) Apply(data Manifests, opts ApplyOpts) error {
+func (k Kubectl) Apply(data manifest.List, opts ApplyOpts) error {
 	argv := []string{"apply",
 		"--context", k.context.Get("name").MustStr(),
 		"-f", "-",

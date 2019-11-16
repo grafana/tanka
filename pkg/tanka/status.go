@@ -2,12 +2,13 @@ package tanka
 
 import (
 	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 type Info struct {
 	Env       *v1alpha1.Config
-	Resources client.Manifests
+	Resources manifest.List
 	Client    client.Info
 }
 

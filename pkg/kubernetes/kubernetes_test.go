@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
@@ -93,7 +93,7 @@ func TestReconcile(t *testing.T) {
 }
 
 func TestReconcileOrder(t *testing.T) {
-	got := make([]client.Manifests, 10)
+	got := make([]manifest.List, 10)
 	for i := 0; i < 10; i++ {
 		r, err := Reconcile(testDataDeep().deep.(map[string]interface{}), v1alpha1.Spec{}, nil)
 		require.NoError(t, err)
@@ -105,10 +105,10 @@ func TestReconcileOrder(t *testing.T) {
 	}
 }
 
-func msisToManifests(msis []map[string]interface{}) client.Manifests {
-	ms := make(client.Manifests, len(msis))
+func msisToManifests(msis []map[string]interface{}) manifest.List {
+	ms := make(manifest.List, len(msis))
 	for i, msi := range msis {
-		ms[i] = client.Manifest(msi)
+		ms[i] = manifest.Manifest(msi)
 	}
 	return ms
 }

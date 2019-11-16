@@ -9,6 +9,7 @@ import (
 	yaml "gopkg.in/yaml.v3"
 
 	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 type difference struct {
@@ -17,7 +18,7 @@ type difference struct {
 }
 
 func SubsetDiffer(c client.Client) Differ {
-	return func(state client.Manifests) (*string, error) {
+	return func(state manifest.List) (*string, error) {
 		docs := []difference{}
 
 		errCh := make(chan error)

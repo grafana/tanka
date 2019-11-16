@@ -9,6 +9,7 @@ import (
 
 	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
@@ -26,7 +27,7 @@ type Kubernetes struct {
 
 // Differ is responsible for comparing the given manifests to the cluster and
 // returning differences (if any) in `diff(1)` format.
-type Differ func(client.Manifests) (*string, error)
+type Differ func(manifest.List) (*string, error)
 
 // New creates a new Kubernetes with an initialized client
 func New(s v1alpha1.Spec) (*Kubernetes, error) {
@@ -67,7 +68,7 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 type ApplyOpts client.ApplyOpts
 
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
-func (k *Kubernetes) Apply(state client.Manifests, opts ApplyOpts) error {
+func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 	info, err := k.ctl.Info()
 	if err != nil {
 		return err
@@ -100,7 +101,7 @@ type DiffOpts struct {
 }
 
 // Diff takes the desired state and returns the differences from the cluster
-func (k *Kubernetes) Diff(state client.Manifests, opts DiffOpts) (*string, error) {
+func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
 	strategy := k.Spec.DiffStrategy
 	if opts.Strategy != "" {
 		strategy = opts.Strategy
@@ -126,7 +127,7 @@ func (k *Kubernetes) Info() client.Info {
 	return k.info
 }
 
-func objectspec(m client.Manifest) string {
+func objectspec(m manifest.Manifest) string {
 	return fmt.Sprintf("%s/%s",
 		m.Kind(),
 		m.Metadata().Name(),

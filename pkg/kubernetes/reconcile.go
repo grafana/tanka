@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
 
-	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
@@ -19,34 +19,40 @@ import (
 // `apiVersion`.
 // TODO: Check on `metadata.name` as well and assert that they are
 // not only set but also strings.
-func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state client.Manifests, err error) {
+func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
 	docs, err := walkJSON(raw, "")
-	out := make(client.Manifests, 0, len(docs))
 	if err != nil {
 		return nil, errors.Wrap(err, "flattening manifests")
 	}
 
-	// complete missing namespace from spec.json
+	out := make(manifest.List, 0, len(docs))
 	for _, d := range docs {
-		m := objx.New(d)
-		if spec.Namespace != "" && !m.Has("metadata.namespace") {
-			m.Set("metadata.namespace", spec.Namespace)
+		o := objx.New(d)
+
+		// complete missing namespace from spec.json
+		if spec.Namespace != "" && !o.Has("metadata.namespace") {
+			o.Set("metadata.namespace", spec.Namespace)
 		}
-		out = append(out, client.Manifest(m))
+
+		m, err := manifest.New(o)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, m)
 	}
 
 	// optionally filter the working set of objects
 	if len(targets) > 0 {
 		tmp := funk.Filter(out, func(i interface{}) bool {
-			p := objectspec(i.(client.Manifest))
+			p := objectspec(i.(manifest.Manifest))
 			for _, t := range targets {
 				if t.MatchString(strings.ToLower(p)) {
 					return true
 				}
 			}
 			return false
-		}).([]client.Manifest)
-		out = client.Manifests(tmp)
+		}).([]manifest.Manifest)
+		out = manifest.List(tmp)
 	}
 
 	// Stable output order

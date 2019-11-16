@@ -3,19 +3,21 @@ package client
 import (
 	"github.com/Masterminds/semver"
 	"github.com/stretchr/objx"
+
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 type Client interface {
-	Get(namespace, kind, name string) (Manifest, error)
-	GetByLabels(namespace string, labels map[string]interface{}) (Manifests, error)
+	Get(namespace, kind, name string) (manifest.Manifest, error)
+	GetByLabels(namespace string, labels map[string]interface{}) (manifest.List, error)
 
 	// Apply the configuration to the cluster. `data` must contain a plaintext
 	// format that is `kubectl-apply(1)` compatible
-	Apply(data Manifests, opts ApplyOpts) error
+	Apply(data manifest.List, opts ApplyOpts) error
 
 	// DiffServerSide runs the diff operation on the server and returns the
 	// result in `diff(1)` format
-	DiffServerSide(data Manifests) (*string, error)
+	DiffServerSide(data manifest.List) (*string, error)
 
 	// Delete the specified object from the cluster
 	Delete(namespace, kind, name string, opts DeleteOpts) error

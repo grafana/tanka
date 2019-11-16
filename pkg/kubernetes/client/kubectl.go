@@ -10,6 +10,8 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
+
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 // Kubectl uses the `kubectl` command to operate on a Kubernetes cluster
@@ -66,7 +68,7 @@ func (k Kubectl) version() (client, server *semver.Version, err error) {
 
 // Diff takes a desired state as yaml and returns the differences
 // to the system in common diff format
-func (k Kubectl) DiffServerSide(data Manifests) (*string, error) {
+func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
 	argv := []string{"diff",
 		"--context", k.context.Get("name").MustStr(),
 		"-f", "-",

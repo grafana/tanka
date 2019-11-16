@@ -12,14 +12,14 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes"
-	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 type ParseResult struct {
 	Env       *v1alpha1.Config
-	Resources client.Manifests
+	Resources manifest.List
 }
 
 func (p *ParseResult) newKube() (*kubernetes.Kubernetes, error) {
