@@ -2,8 +2,8 @@ package client
 
 import (
 	"bytes"
-	"errors"
 
+	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -14,7 +14,8 @@ type Manifest map[string]interface{}
 func (m Manifest) String() string {
 	y, err := yaml.Marshal(m)
 	if err != nil {
-		return err.Error()
+		// this should never go wrong in normal operations
+		panic(errors.Wrap(err, "formatting manifest"))
 	}
 	return string(y)
 }
@@ -104,7 +105,8 @@ func (m Manifests) String() string {
 
 	for _, d := range m {
 		if err := enc.Encode(d); err != nil {
-			return err.Error()
+			// This should never happen in normal operations
+			panic(errors.Wrap(err, "formatting manifests"))
 		}
 	}
 
