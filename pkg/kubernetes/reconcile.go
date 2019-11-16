@@ -20,14 +20,37 @@ func (e ErrorPrimitiveReached) Error() string {
 }
 
 // walkJSON traverses deeply nested kubernetes manifest and extracts them into a flat []dict.
-func walkJSON(deep map[string]interface{}, path string) ([]map[string]interface{}, error) {
+func walkJSON(rawDeep interface{}, path string) ([]map[string]interface{}, error) {
+	flat := make([]map[string]interface{}, 0)
+
+	// array: walkJSON for each
+	if d, ok := rawDeep.([]map[string]interface{}); ok {
+		for i, j := range d {
+			out, err := walkJSON(j, fmt.Sprintf("%s[%v]", path, i))
+			if err != nil {
+				return nil, err
+			}
+			flat = append(flat, out...)
+		}
+		return flat, nil
+	}
+
+	// assert for map[string]interface{} (also aliased objx.Map)
+	if m, ok := rawDeep.(objx.Map); ok {
+		rawDeep = map[string]interface{}(m)
+	}
+	deep, ok := rawDeep.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("deep has unexpected type %T @ %s", deep, path)
+	}
+
+	// already flat?
 	r := objx.New(deep)
 	if r.Has("apiVersion") && r.Has("kind") {
 		return []map[string]interface{}{deep}, nil
 	}
 
-	flat := make([]map[string]interface{}, 0)
-
+	// walk it
 	for n, d := range deep {
 		if n == "__ksonnet" {
 			continue

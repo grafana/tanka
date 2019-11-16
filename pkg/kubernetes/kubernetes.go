@@ -11,9 +11,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 
-	"github.com/grafana/tanka/pkg/config/v1alpha1"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 // Kubernetes bridges tanka to the Kubernetse orchestrator.
@@ -57,7 +57,7 @@ func (m Manifest) Namespace() string {
 
 // Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
 // shall return it reconciled as a state object of the target system
-func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs ...*regexp.Regexp) (state []Manifest, err error) {
+func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs []*regexp.Regexp) (state []Manifest, err error) {
 	docs, err := walkJSON(raw, "")
 	out := make([]Manifest, 0, len(docs))
 	if err != nil {
@@ -110,7 +110,7 @@ func (k *Kubernetes) Fmt(state []Manifest) (string, error) {
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
 func (k *Kubernetes) Apply(state []Manifest, opts ApplyDeleteOpts) error {
 	if k == nil {
-		return ErrorMissingConfig{"apply"}
+		return ErrorMissingConfig
 	}
 
 	yaml, err := k.Fmt(state)
@@ -122,29 +122,37 @@ func (k *Kubernetes) Apply(state []Manifest, opts ApplyDeleteOpts) error {
 
 // DiffOpts allow to specify additional parameters for diff operations
 type DiffOpts struct {
+	// Use `diffstat(1)` to create a histogram of the changes instead
 	Summarize bool
+
+	// Set the diff-strategy. If unset, the value set in the spec is used
+	Strategy string
 }
 
 // Diff takes the desired state and returns the differences from the cluster
 func (k *Kubernetes) Diff(state []Manifest, opts DiffOpts) (*string, error) {
 	if k == nil {
-		return nil, ErrorMissingConfig{"diff"}
+		return nil, ErrorMissingConfig
 	}
 	yaml, err := k.Fmt(state)
 	if err != nil {
 		return nil, err
 	}
 
-	if k.Spec.DiffStrategy == "" {
-		k.Spec.DiffStrategy = "native"
+	ds := k.Spec.DiffStrategy
+	if opts.Strategy != "" {
+		ds = opts.Strategy
+	}
+	if ds == "" {
+		ds = "native"
 		if _, server, err := k.client.Version(); err == nil {
 			if server.LessThan(semver.MustParse("1.13.0")) {
-				k.Spec.DiffStrategy = "subset"
+				ds = "subset"
 			}
 		}
 	}
 
-	d, err := k.differs[k.Spec.DiffStrategy](yaml)
+	d, err := k.differs[ds](yaml)
 	switch {
 	case err != nil:
 		return nil, err

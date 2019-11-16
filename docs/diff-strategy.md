@@ -26,9 +26,12 @@ differences over there.
 This has the huge benefit that all possible changes by webhooks and other
 internal components of Kubernetes can be encountered as well.
 
-However, this is a fairly new feature and only available for Kubernetes versions
-greater than 1.13. Only the API server (master nodes) needs to have that version, worker nodes
-do not matter.
+However, this is a fairly new feature and only available for Kubernetes
+versions greater than 1.13. Only the API server (master nodes) needs to have
+that version, worker nodes do not matter.
+
+There is a [known issue](known-issues.md#unexpected-diff-if-the-same-port-number-is-used-for-udp-and-tcp)
+with `kubectl diff`, which affects ports configured to use both TCP and UDP.
 
 ## Subset
 If native diffing is not supported by your cluster, Tanka provides subset diff

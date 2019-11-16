@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"path/filepath"
 
-	"github.com/grafana/tanka/pkg/jpath"
 	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +13,7 @@ import (
 func evalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Short: "evaluate the jsonnet to json",
-		Use:   "eval [path]",
+		Use:   "eval <path>",
 		Args:  cobra.ExactArgs(1),
 		Annotations: map[string]string{
 			"args": "baseDir",
@@ -46,17 +45,4 @@ func eval(workdir string) (string, error) {
 		return "", err
 	}
 	return json, nil
-}
-
-func evalDict(workdir string) (map[string]interface{}, error) {
-	var rawDict map[string]interface{}
-
-	raw, err := eval(workdir)
-	if err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal([]byte(raw), &rawDict); err != nil {
-		return nil, err
-	}
-	return rawDict, nil
 }

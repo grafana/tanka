@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/grafana/tanka/pkg/config/v1alpha1"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/objx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -80,7 +80,7 @@ func TestReconcile(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := c.k.Reconcile(c.data.deep.(map[string]interface{}), c.targets...)
+			got, err := c.k.Reconcile(c.data.deep.(map[string]interface{}), c.targets)
 
 			require.Equal(t, c.err, err)
 
@@ -94,7 +94,7 @@ func TestReconcileOrder(t *testing.T) {
 	got := make([][]Manifest, 10)
 	k := &Kubernetes{}
 	for i := 0; i < 10; i++ {
-		r, err := k.Reconcile(testDataDeep().deep.(map[string]interface{}))
+		r, err := k.Reconcile(testDataDeep().deep.(map[string]interface{}), nil)
 		require.NoError(t, err)
 		got[i] = r
 	}

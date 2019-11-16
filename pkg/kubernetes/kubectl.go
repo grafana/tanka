@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
 
-	"github.com/grafana/tanka/pkg/util"
+	"github.com/grafana/tanka/pkg/cli"
 )
 
 var (
@@ -143,7 +143,7 @@ func (k Kubectl) Apply(yaml, namespace string, opts ApplyDeleteOpts) error {
 	}
 
 	if !opts.AutoApprove {
-		if err := util.Confirm(
+		if err := cli.Confirm(
 			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
 				alert(namespace),
 				alert(k.cluster.Get("name").MustStr()),

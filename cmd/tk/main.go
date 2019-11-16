@@ -2,43 +2,29 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/posener/complete"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/grafana/tanka/pkg/cmp"
-	"github.com/grafana/tanka/pkg/config/v1alpha1"
-	"github.com/grafana/tanka/pkg/kubernetes"
+	"github.com/grafana/tanka/pkg/cli/cmp"
+	"github.com/grafana/tanka/pkg/spec"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 // Version is the current version of the tk command.
 // To be overwritten at build time
 var Version = "dev"
 
-// primary handlers
-var (
-	config = &v1alpha1.Config{}
-	kube   *kubernetes.Kubernetes
-)
-
 // describing variables
 var (
 	verbose     = false
 	interactive = terminal.IsTerminal(int(os.Stdout.Fd()))
 )
-
-// list of deprecated config keys and their alternatives
-// however, they still work and are aliased internally
-var deprecated = map[string]string{
-	"namespace": "spec.namespace",
-	"server":    "spec.apiServer",
-	"team":      "metadata.labels.team",
-}
 
 func main() {
 	log.SetFlags(0)
@@ -47,20 +33,6 @@ func main() {
 		Short:            "tanka <3 jsonnet",
 		Version:          Version,
 		TraverseChildren: true,
-		// Configuration
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 {
-				return
-			}
-			config = setupConfiguration(args[0])
-			if config == nil {
-				return
-			}
-
-			// Kubernetes
-			kube = kubernetes.New(config.Spec)
-
-		},
 	}
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 
@@ -114,48 +86,22 @@ func main() {
 }
 
 func setupConfiguration(baseDir string) *v1alpha1.Config {
-	viper.SetConfigName("spec")
-
-	// if the baseDir arg is not a dir, abort
-	pwd, err := filepath.Abs(baseDir)
+	config, err := spec.ParseDir(baseDir)
 	if err != nil {
-		return nil
-	}
-	viper.AddConfigPath(pwd)
-
-	// read it
-	if err := viper.ReadInConfig(); err != nil {
+		switch err.(type) {
 		// just run fine without config. Provider features won't work (apply, show, diff)
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		case viper.ConfigFileNotFoundError:
 			return nil
+		// the config includes deprecated fields
+		case spec.ErrDeprecated:
+			if verbose {
+				fmt.Print(err)
+			}
+		// some other error
+		default:
+			log.Fatalf("Reading spec.json: %s", err)
 		}
-
-		log.Fatalf("Reading spec.json: %s", err)
 	}
 
-	// handle deprecated ksonnet spec
-	for old, new := range deprecated {
-		if viper.IsSet(old) && !viper.IsSet(new) {
-			viper.Set(new, viper.Get(old))
-		}
-	}
-
-	if verbose {
-		checkDeprecated()
-	}
-
-	var config = v1alpha1.New()
-	if err := viper.Unmarshal(config); err != nil {
-		log.Fatalf("Parsing spec.json: %s", err)
-	}
-	config.Metadata.Name = filepath.Base(baseDir)
 	return config
-}
-
-func checkDeprecated() {
-	for old, use := range deprecated {
-		if viper.IsSet(old) {
-			log.Printf("Warning: `%s` is deprecated, use `%s` instead.", old, use)
-		}
-	}
 }

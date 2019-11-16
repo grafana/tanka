@@ -30,11 +30,15 @@ func TestWalkJSON(t *testing.T) {
 			name: "deep",
 			data: testDataDeep(),
 		},
+		{
+			name: "array",
+			data: testDataArray(),
+		},
 	}
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := walkJSON(c.data.deep.(map[string]interface{}), "")
+			got, err := walkJSON(c.data.deep, "")
 			require.Equal(t, c.err, err)
 			assert.ElementsMatch(t, c.data.flat, got)
 		})

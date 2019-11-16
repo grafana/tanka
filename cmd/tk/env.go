@@ -8,12 +8,13 @@ import (
 	"path/filepath"
 	"text/tabwriter"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/grafana/tanka/pkg/config/v1alpha1"
-	"github.com/grafana/tanka/pkg/util"
+	"github.com/grafana/tanka/pkg/cli"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 func envCmd() *cobra.Command {
@@ -50,7 +51,7 @@ func envSetCmd() *cobra.Command {
 	envSettingsFlags(&tmp, cmd.Flags())
 
 	name := cmd.Flags().String("name", "", "")
-	cmd.Flags().MarkHidden("name")
+	_ = cmd.Flags().MarkHidden("name")
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if *name != "" {
@@ -64,6 +65,9 @@ func envSetCmd() *cobra.Command {
 
 		viper.Reset()
 		cfg := setupConfiguration(path)
+		if cfg == nil {
+			log.Fatalf("Failed to load an environment at `%s`.\nMake sure it exists and is properly configured. See https://tanka.dev/environments/ for details.", path)
+		}
 		if tmp.Spec.APIServer != "" && tmp.Spec.APIServer != cfg.Spec.APIServer {
 			fmt.Printf("updated spec.apiServer (`%s -> `%s`)\n", cfg.Spec.APIServer, tmp.Spec.APIServer)
 			cfg.Spec.APIServer = tmp.Spec.APIServer
@@ -86,7 +90,7 @@ func envSetCmd() *cobra.Command {
 
 func envAddCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add [path]",
+		Use:   "add <path>",
 		Short: "create a new environment",
 		Args:  cobra.ExactArgs(1),
 		Annotations: map[string]string{
@@ -112,14 +116,16 @@ func addEnv(dir string, cfg *v1alpha1.Config) error {
 	if _, err := os.Stat(path); err != nil {
 		// folder does not exist
 		if os.IsNotExist(err) {
-			os.MkdirAll(path, os.ModePerm)
+			if err := os.MkdirAll(path, os.ModePerm); err != nil {
+				return errors.Wrap(err, "creating directory")
+			}
 		} else {
 			// it exists
 			if os.IsExist(err) {
-				return fmt.Errorf("Directory %s already exists.", path)
+				return fmt.Errorf("directory %s already exists", path)
 			}
 			// we have another error
-			return fmt.Errorf("Creating directory: %s", err)
+			return errors.Wrap(err, "creating directory")
 		}
 	}
 
@@ -141,7 +147,7 @@ func addEnv(dir string, cfg *v1alpha1.Config) error {
 
 func envRemoveCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:     "remove [path]",
+		Use:     "remove <path>",
 		Aliases: []string{"rm"},
 		Short:   "delete an environment",
 		Annotations: map[string]string{
@@ -153,7 +159,7 @@ func envRemoveCmd() *cobra.Command {
 				if err != nil {
 					log.Fatalln("parsing environments name:", err)
 				}
-				if err := util.Confirm(fmt.Sprintf("Permanently removing the environment located at '%s'.", path), "yes"); err != nil {
+				if err := cli.Confirm(fmt.Sprintf("Permanently removing the environment located at '%s'.", path), "yes"); err != nil {
 					log.Fatalln(err)
 				}
 				if err := os.RemoveAll(path); err != nil {
@@ -176,7 +182,7 @@ func envListCmd() *cobra.Command {
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		envs := []v1alpha1.Config{}
 		dirs := findBaseDirs()
-		useJson, err := cmd.Flags().GetBool("json")
+		useJSON, err := cmd.Flags().GetBool("json")
 		if err != nil {
 			// this err should never occur. Panic in case
 			panic(err)
@@ -186,7 +192,7 @@ func envListCmd() *cobra.Command {
 			envs = append(envs, *setupConfiguration(dir))
 		}
 
-		if useJson {
+		if useJSON {
 			j, err := json.Marshal(envs)
 			if err != nil {
 				log.Fatalln("Formatting as json:", j)
