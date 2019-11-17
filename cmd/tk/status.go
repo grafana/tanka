@@ -15,7 +15,7 @@ import (
 func statusCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status <path>",
-		Short: "display an overview",
+		Short: "display an overview of the environment, including contents and metadata.",
 		Args:  cobra.ExactArgs(1),
 		Annotations: map[string]string{
 			"args": "baseDir",
