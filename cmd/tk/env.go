@@ -191,7 +191,7 @@ func envListCmd() *cobra.Command {
 			viper.Reset()
 			env := setupConfiguration(dir)
 			if env == nil {
-				log.Printf("Could not find env in %q", dir)
+				log.Printf("Could not setup configuration from %q", dir)
 				continue
 			}
 			envs = append(envs, *env)
