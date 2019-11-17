@@ -31,14 +31,19 @@ func TestWalkJSON(t *testing.T) {
 			name: "deep",
 			data: testDataDeep(),
 		},
+		{
+			name: "array",
+			data: testDataArray(),
+		},
 	}
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
 			extracted := make(map[string]manifest.Manifest)
-			err := walkJSON(c.data.deep.(map[string]interface{}), extracted, nil)
+			err := walkJSON(c.data.deep, extracted, nil)
+
 			require.Equal(t, c.err, err)
-			assert.Equal(t, c.data.flat, extracted)
+			assert.EqualValues(t, c.data.flat, extracted)
 		})
 	}
 }

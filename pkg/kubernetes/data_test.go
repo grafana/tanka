@@ -224,3 +224,22 @@ func testDataDeep() testData {
 		},
 	}
 }
+
+// testDataArray is an array of (deeply nested) dicts that should be fully
+// flattened
+func testDataArray() testData {
+	return testData{
+		deep: append(make([]map[string]interface{}, 0),
+			testDataDeep().deep.(map[string]interface{}),
+			testDataFlat().deep.(map[string]interface{}),
+		),
+
+		flat: map[string]manifest.Manifest{
+			".[0].app.web.backend.server.nginx.deployment":    testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
+			".[0].app.web.frontend.nodejs.express.service":    testDataDeep().flat[".app.web.frontend.nodejs.express.service"],
+			".[0].app.web.frontend.nodejs.express.deployment": testDataDeep().flat[".app.web.frontend.nodejs.express.deployment"],
+			".[0].app.namespace":                              testDataDeep().flat[".app.namespace"],
+			".[1]":                                            testDataFlat().flat["."],
+		},
+	}
+}

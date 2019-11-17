@@ -24,12 +24,9 @@ func TransitiveImports(filename string) ([]string, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "resolving JPATH")
 	}
-	importer := jsonnet.FileImporter{
-		JPaths: jpath,
-	}
 
 	vm := jsonnet.MakeVM()
-	vm.Importer(&importer)
+	vm.Importer(NewExtendedImporter(jpath))
 	for _, nf := range native.Funcs() {
 		vm.NativeFunction(nf)
 	}

@@ -60,15 +60,38 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 }
 
 // walkJSON traverses deeply nested kubernetes manifest and extracts them into a flat []dict.
-func walkJSON(deep map[string]interface{}, extracted map[string]manifest.Manifest, path trace) error {
-	r := objx.New(deep)
+func walkJSON(deep interface{}, extracted map[string]manifest.Manifest, path trace) error {
 
-	if r.Has("apiVersion") && r.Has("kind") {
-		extracted[path.Full()] = deep
+	// array: walkJSON for each
+	if d, ok := deep.([]map[string]interface{}); ok {
+		for i, j := range d {
+			path := append(path, fmt.Sprintf("[%v]", i))
+			if err := walkJSON(j, extracted, path); err != nil {
+				return err
+			}
+		}
 		return nil
 	}
 
-	for key, d := range deep {
+	// assert for map[string]interface{} (also aliased objx.Map)
+	if m, ok := deep.(objx.Map); ok {
+		deep = map[string]interface{}(m)
+	}
+	deep, ok := deep.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("deep has unexpected type %T @ %s", deep, path)
+	}
+
+	// already flat?
+	r := objx.New(deep)
+
+	if r.Has("apiVersion") && r.Has("kind") {
+		extracted[path.Full()] = deep.(map[string]interface{})
+		return nil
+	}
+
+	// walk it
+	for key, d := range deep.(map[string]interface{}) {
 		if key == "__ksonnet" {
 			continue
 		}
