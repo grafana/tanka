@@ -131,15 +131,6 @@ func testDataPrimitive() testData {
 				},
 			},
 		},
-		flat: map[string]manifest.Manifest{
-			".nginx.deployment": map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "nginx",
-				},
-			},
-		},
 	}
 }
 

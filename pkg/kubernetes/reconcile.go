@@ -20,8 +20,8 @@ import (
 // TODO: Check on `metadata.name` as well and assert that they are
 // not only set but also strings.
 func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
-	extracted := make(map[string]manifest.Manifest)
-	if err := walkJSON(raw, extracted, nil); err != nil {
+	extracted, err := extract(raw)
+	if err != nil {
 		return nil, errors.Wrap(err, "flattening manifests")
 	}
 
@@ -59,9 +59,16 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 	return out, nil
 }
 
+func extract(deep interface{}) (map[string]manifest.Manifest, error) {
+	extracted := make(map[string]manifest.Manifest)
+	if err := walkJSON(deep, extracted, nil); err != nil {
+		return nil, err
+	}
+	return extracted, nil
+}
+
 // walkJSON traverses deeply nested kubernetes manifest and extracts them into a flat []dict.
 func walkJSON(deep interface{}, extracted map[string]manifest.Manifest, path trace) error {
-
 	// array: walkJSON for each
 	if d, ok := deep.([]map[string]interface{}); ok {
 		for i, j := range d {
