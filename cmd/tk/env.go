@@ -189,7 +189,12 @@ func envListCmd() *cobra.Command {
 		}
 		for _, dir := range dirs {
 			viper.Reset()
-			envs = append(envs, *setupConfiguration(dir))
+			env := setupConfiguration(dir)
+			if env == nil {
+				log.Printf("Could not setup configuration from %q", dir)
+				continue
+			}
+			envs = append(envs, *env)
 		}
 
 		if useJSON {
