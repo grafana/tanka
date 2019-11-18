@@ -12,12 +12,7 @@ import (
 
 // Get retrieves a single Kubernetes object from the cluster
 func (k Kubectl) Get(namespace, kind, name string) (manifest.Manifest, error) {
-	m, err := k.get(namespace, []string{kind, name})
-	if err != nil {
-		return nil, err
-	}
-
-	return m, nil
+	return k.get(namespace, []string{kind, name})
 }
 
 // GetByLabels retrieves all objects matched by the given labels from the cluster

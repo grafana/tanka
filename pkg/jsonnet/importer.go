@@ -25,6 +25,7 @@ func NewExtendedImporter(jpath []string) *ExtendedImporter {
 	}
 }
 
+// Import implements the functionality offered by the ExtendedImporter
 func (i *ExtendedImporter) Import(importedFrom, importedPath string) (contents jsonnet.Contents, foundAt string, err error) {
 	// regularly import
 	contents, foundAt, err = i.fi.Import(importedFrom, importedPath)

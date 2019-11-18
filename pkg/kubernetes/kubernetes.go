@@ -65,6 +65,7 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	return &k, nil
 }
 
+// ApplyOpts allow set additional parameters for the apply operation
 type ApplyOpts client.ApplyOpts
 
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
@@ -122,7 +123,7 @@ func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
 	return d, nil
 }
 
-// Information about the client, etc.
+// Info about the client, etc.
 func (k *Kubernetes) Info() client.Info {
 	return k.info
 }

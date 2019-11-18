@@ -11,6 +11,7 @@ type SchemaError struct {
 	name   string
 }
 
+// Error returns the fields the manifest at the path is missing
 func (s *SchemaError) Error() string {
 	e := ""
 	for k, missing := range s.fields {
@@ -30,10 +31,12 @@ func (s *SchemaError) add(field string) {
 	s.fields[field] = true
 }
 
+// Missing returns whether a field is missing
 func (s *SchemaError) Missing(field string) bool {
 	return s.fields[field]
 }
 
+// WithName inserts a path into the error message
 func (s *SchemaError) WithName(name string) *SchemaError {
 	s.name = name
 	return s

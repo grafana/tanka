@@ -46,7 +46,7 @@ func contextFromKubeconfig(kubeconfig map[string]interface{}, apiServer string) 
 		host := objx.New(x).Get("cluster.server").MustStr()
 		return host == apiServer
 	}))
-	if !(len(cluster) > 0) { // empty map means no result
+	if len(cluster) == 0 { // empty map means no result
 		return nil, nil, fmt.Errorf("no cluster that matches the apiServer `%s` was found. Please check your $KUBECONFIG", apiServer)
 	}
 

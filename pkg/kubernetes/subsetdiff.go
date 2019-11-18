@@ -17,6 +17,10 @@ type difference struct {
 	live, merged string
 }
 
+// SubsetDiffer returns a implementation of Differ that computes the diff by
+// comparing only the fields present in the desired state. This algorithm might
+// miss information, but is all that's possible on cluster versions lower than
+// 1.13.
 func SubsetDiffer(c client.Client) Differ {
 	return func(state manifest.List) (*string, error) {
 		docs := []difference{}

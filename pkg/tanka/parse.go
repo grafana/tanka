@@ -17,6 +17,8 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
+// ParseResult contains the environments config and the manifests of this
+// particular env
 type ParseResult struct {
 	Env       *v1alpha1.Config
 	Resources manifest.List

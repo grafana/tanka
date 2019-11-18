@@ -7,7 +7,9 @@ import (
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
+// Client for working with Kubernetes
 type Client interface {
+	// Get the specified object(s) from the cluster
 	Get(namespace, kind, name string) (manifest.Manifest, error)
 	GetByLabels(namespace string, labels map[string]interface{}) (manifest.List, error)
 
@@ -19,7 +21,7 @@ type Client interface {
 	// result in `diff(1)` format
 	DiffServerSide(data manifest.List) (*string, error)
 
-	// Delete the specified object from the cluster
+	// Delete the specified object(s) from the cluster
 	Delete(namespace, kind, name string, opts DeleteOpts) error
 	DeleteByLabels(namespace string, labels map[string]interface{}, opts DeleteOpts) error
 

@@ -66,8 +66,8 @@ func (k Kubectl) version() (client, server *semver.Version, err error) {
 	return client, server, nil
 }
 
-// Diff takes a desired state as yaml and returns the differences
-// to the system in common diff format
+// DiffServerSide takes the desired state and computes the differences on the
+// server, returning them in `diff(1)` format
 func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
 	argv := []string{"diff",
 		"--context", k.context.Get("name").MustStr(),
