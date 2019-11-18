@@ -1,10 +1,13 @@
 package kubernetes
 
+import "github.com/grafana/tanka/pkg/kubernetes/manifest"
+
 // This file  contains data for testing
 
 // testData holds data for tests
 type testData struct {
-	deep, flat interface{}
+	deep interface{}
+	flat map[string]manifest.Manifest
 }
 
 // testDataRegular is a regular output of jsonnet without special things, but it
@@ -40,8 +43,8 @@ func testDataRegular() testData {
 				},
 			},
 		},
-		flat: []map[string]interface{}{
-			{
+		flat: map[string]manifest.Manifest{
+			".deployment": {
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
 				"metadata": map[string]interface{}{
@@ -56,7 +59,7 @@ func testDataRegular() testData {
 					},
 				},
 			},
-			{
+			".service": {
 				"apiVersion": "v1",
 				"kind":       "Service",
 				"metadata": map[string]interface{}{
@@ -90,8 +93,8 @@ func testDataFlat() testData {
 				},
 			},
 		},
-		flat: []map[string]interface{}{
-			{
+		flat: map[string]manifest.Manifest{
+			".": {
 				"apiVersion": "apps/v1",
 				"kind":       "Deployment",
 				"metadata": map[string]interface{}{
@@ -128,7 +131,6 @@ func testDataPrimitive() testData {
 				},
 			},
 		},
-		flat: []map[string]interface{}(nil),
 	}
 }
 
@@ -181,29 +183,29 @@ func testDataDeep() testData {
 				},
 			},
 		},
-		flat: []map[string]interface{}{
-			{
+		flat: map[string]manifest.Manifest{
+			".app.web.backend.server.nginx.deployment": {
 				"kind":       "Deployment",
 				"apiVersion": "apps/v1",
 				"metadata": map[string]interface{}{
 					"name": "nginx",
 				},
 			},
-			{
+			".app.web.frontend.nodejs.express.service": {
 				"kind":       "Service",
 				"apiVersion": "v1",
 				"metadata": map[string]interface{}{
 					"name": "frontend",
 				},
 			},
-			{
+			".app.web.frontend.nodejs.express.deployment": {
 				"kind":       "Deployment",
 				"apiVersion": "apps/v1",
 				"metadata": map[string]interface{}{
 					"name": "frontend",
 				},
 			},
-			{
+			".app.namespace": {
 				"kind":       "Namespace",
 				"apiVersion": "v1",
 				"metadata": map[string]interface{}{
@@ -218,10 +220,17 @@ func testDataDeep() testData {
 // flattened
 func testDataArray() testData {
 	return testData{
-		deep: append([]map[string]interface{}{
+		deep: append(make([]map[string]interface{}, 0),
 			testDataDeep().deep.(map[string]interface{}),
-		}, testDataFlat().deep.(map[string]interface{})),
+			testDataFlat().deep.(map[string]interface{}),
+		),
 
-		flat: append(testDataDeep().flat.([]map[string]interface{}), testDataFlat().flat.([]map[string]interface{})...),
+		flat: map[string]manifest.Manifest{
+			".[0].app.web.backend.server.nginx.deployment":    testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
+			".[0].app.web.frontend.nodejs.express.service":    testDataDeep().flat[".app.web.frontend.nodejs.express.service"],
+			".[0].app.web.frontend.nodejs.express.deployment": testDataDeep().flat[".app.web.frontend.nodejs.express.deployment"],
+			".[0].app.namespace":                              testDataDeep().flat[".app.namespace"],
+			".[1]":                                            testDataFlat().flat["."],
+		},
 	}
 }

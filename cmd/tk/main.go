@@ -48,6 +48,7 @@ func main() {
 
 	rootCmd.AddCommand(
 		envCmd(),
+		statusCmd(),
 	)
 
 	// jsonnet commands

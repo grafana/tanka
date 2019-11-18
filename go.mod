@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/semver v1.4.2
 	github.com/alecthomas/chroma v0.6.6
 	github.com/fatih/color v1.7.0
+	github.com/fatih/structs v1.1.0
 	github.com/google/go-jsonnet v0.14.1-0.20191006203837-42cb19ef24fb
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pkg/errors v0.8.1

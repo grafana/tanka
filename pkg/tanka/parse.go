@@ -12,33 +12,53 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
+
+// ParseResult contains the environments config and the manifests of this
+// particular env
+type ParseResult struct {
+	Env       *v1alpha1.Config
+	Resources manifest.List
+}
+
+func (p *ParseResult) newKube() (*kubernetes.Kubernetes, error) {
+	kube, err := kubernetes.New(p.Env.Spec)
+	if err != nil {
+		return nil, errors.Wrap(err, "connecting to Kubernetes")
+	}
+	return kube, nil
+}
 
 // parse loads the `spec.json`, evaluates the jsonnet and returns both, the
 // kubernetes object and the reconciled manifests
-func parse(baseDir string, opts *options) ([]kubernetes.Manifest, *kubernetes.Kubernetes, error) {
-	kube, err := parseEnv(baseDir, opts)
+func parse(baseDir string, opts *options) (*ParseResult, error) {
+	env, err := parseEnv(baseDir, opts)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	raw, err := eval(baseDir)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
+		return nil, errors.Wrap(err, "evaluating jsonnet")
 	}
 
-	rec, err := kube.Reconcile(raw, opts.targets)
+	rec, err := kubernetes.Reconcile(raw, env.Spec, opts.targets)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "reconciling")
+		return nil, errors.Wrap(err, "reconciling")
 	}
 
-	return rec, kube, nil
+	return &ParseResult{
+		Resources: rec,
+		Env:       env,
+	}, nil
 }
 
 // parseEnv parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
-func parseEnv(baseDir string, opts *options) (*kubernetes.Kubernetes, error) {
+func parseEnv(baseDir string, opts *options) (*v1alpha1.Config, error) {
 	config, err := spec.ParseDir(baseDir)
 	if err != nil {
 		switch err.(type) {
@@ -57,7 +77,7 @@ func parseEnv(baseDir string, opts *options) (*kubernetes.Kubernetes, error) {
 		}
 	}
 
-	return kubernetes.New(config.Spec), nil
+	return config, nil
 }
 
 // eval evaluates the jsonnet environment at the given directory starting with

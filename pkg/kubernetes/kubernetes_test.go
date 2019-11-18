@@ -4,33 +4,36 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/objx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 func TestReconcile(t *testing.T) {
 	tests := []struct {
 		name string
-		k    *Kubernetes
+		spec v1alpha1.Spec
 
-		data    testData
+		deep interface{}
+		flat manifest.List
+
 		targets []*regexp.Regexp
 		err     error
 	}{
 		{
 			name: "regular",
-			data: testDataRegular(),
+			deep: testDataRegular().deep,
+			flat: mapToList(testDataRegular().flat),
 		},
 		{
 			name: "targets",
-			data: testData{
-				deep: testDataDeep().deep,
-				flat: []map[string]interface{}{
-					testDataDeep().flat.([]map[string]interface{})[0], // deployment/nginx
-					testDataDeep().flat.([]map[string]interface{})[1], // service/frontend
-				},
+			deep: testDataDeep().deep,
+			flat: manifest.List{
+				testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
+				testDataDeep().flat[".app.web.frontend.nodejs.express.service"],
 			},
 			targets: []*regexp.Regexp{
 				regexp.MustCompile("deployment/nginx"),
@@ -39,62 +42,53 @@ func TestReconcile(t *testing.T) {
 		},
 		{
 			name: "targets-regex",
-			data: testData{
-				deep: testDataDeep().deep,
-				flat: []map[string]interface{}{
-					testDataDeep().flat.([]map[string]interface{})[2], // deployment/frontend
-					testDataDeep().flat.([]map[string]interface{})[0], // deployment/nginx
-				},
+			deep: testDataDeep().deep,
+			flat: manifest.List{
+				testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
+				testDataDeep().flat[".app.web.frontend.nodejs.express.deployment"],
 			},
 			targets: []*regexp.Regexp{regexp.MustCompile("deployment/.*")},
 		},
 		{
 			name: "force-namespace",
-			k:    &Kubernetes{Spec: v1alpha1.Spec{Namespace: "tanka"}},
-			data: testData{
-				deep: testDataFlat().deep,
-				flat: func() []map[string]interface{} {
-					f := objx.New(testDataFlat().flat.([]map[string]interface{})[0])
-					f.Set("metadata.namespace", "tanka")
-					return []map[string]interface{}{f}
-				}(),
-			},
+			spec: v1alpha1.Spec{Namespace: "tanka"},
+			deep: testDataFlat().deep,
+			flat: func() manifest.List {
+				f := testDataFlat().flat["."]
+				f.Metadata()["namespace"] = "tanka"
+				return manifest.List{f}
+			}(),
 		},
 		{
 			name: "custom-namespace",
-			k:    &Kubernetes{Spec: v1alpha1.Spec{Namespace: "tanka"}},
-			data: testData{
-				deep: func() map[string]interface{} {
-					d := objx.New(testDataFlat().deep)
-					d.Set("metadata.namespace", "custom")
-					return d
-				}(),
-				flat: func() []map[string]interface{} {
-					f := objx.New(testDataFlat().flat.([]map[string]interface{})[0])
-					f.Set("metadata.namespace", "custom")
-					return []map[string]interface{}{f}
-				}(),
-			},
+			spec: v1alpha1.Spec{Namespace: "tanka"},
+			deep: func() map[string]interface{} {
+				d := objx.New(testDataFlat().deep)
+				d.Set("metadata.namespace", "custom")
+				return d
+			}(),
+			flat: func() manifest.List {
+				f := testDataFlat().flat["."]
+				f.Metadata()["namespace"] = "custom"
+				return manifest.List{f}
+			}(),
 		},
 	}
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := c.k.Reconcile(c.data.deep.(map[string]interface{}), c.targets)
+			got, err := Reconcile(c.deep.(map[string]interface{}), c.spec, c.targets)
 
 			require.Equal(t, c.err, err)
-
-			flat := c.data.flat.([]map[string]interface{})
-			assert.Equal(t, msisToManifests(flat), got)
+			assert.ElementsMatch(t, c.flat, got)
 		})
 	}
 }
 
 func TestReconcileOrder(t *testing.T) {
-	got := make([][]Manifest, 10)
-	k := &Kubernetes{}
+	got := make([]manifest.List, 10)
 	for i := 0; i < 10; i++ {
-		r, err := k.Reconcile(testDataDeep().deep.(map[string]interface{}), nil)
+		r, err := Reconcile(testDataDeep().deep.(map[string]interface{}), v1alpha1.Spec{}, nil)
 		require.NoError(t, err)
 		got[i] = r
 	}
@@ -104,10 +98,10 @@ func TestReconcileOrder(t *testing.T) {
 	}
 }
 
-func msisToManifests(msis []map[string]interface{}) []Manifest {
-	ms := make([]Manifest, len(msis))
-	for i, msi := range msis {
-		ms[i] = Manifest(msi)
+func mapToList(ms map[string]manifest.Manifest) manifest.List {
+	l := make(manifest.List, 0, len(ms))
+	for _, m := range ms {
+		l = append(l, m)
 	}
-	return ms
+	return l
 }

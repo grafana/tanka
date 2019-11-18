@@ -18,12 +18,16 @@ import (
 func Apply(baseDir string, mods ...Modifier) error {
 	opts := parseModifiers(mods)
 
-	rec, kube, err := parse(baseDir, opts)
+	p, err := parse(baseDir, opts)
+	if err != nil {
+		return err
+	}
+	kube, err := p.newKube()
 	if err != nil {
 		return err
 	}
 
-	diff, err := kube.Diff(rec, kubernetes.DiffOpts{})
+	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{})
 	if err != nil {
 		return errors.Wrap(err, "diffing")
 	}
@@ -37,7 +41,7 @@ func Apply(baseDir string, mods ...Modifier) error {
 	}
 	fmt.Fprintln(opts.wWarn, *diff)
 
-	return kube.Apply(rec, opts.apply)
+	return kube.Apply(p.Resources, opts.apply)
 }
 
 // Diff parses the environment at the given directory (a `baseDir`) and returns
@@ -49,12 +53,16 @@ func Apply(baseDir string, mods ...Modifier) error {
 func Diff(baseDir string, mods ...Modifier) (*string, error) {
 	opts := parseModifiers(mods)
 
-	rec, kube, err := parse(baseDir, opts)
+	p, err := parse(baseDir, opts)
+	if err != nil {
+		return nil, err
+	}
+	kube, err := p.newKube()
 	if err != nil {
 		return nil, err
 	}
 
-	return kube.Diff(rec, opts.diff)
+	return kube.Diff(p.Resources, opts.diff)
 }
 
 // Show parses the environment at the given directory (a `baseDir`) and returns
@@ -62,14 +70,10 @@ func Diff(baseDir string, mods ...Modifier) (*string, error) {
 func Show(baseDir string, mods ...Modifier) (string, error) {
 	opts := parseModifiers(mods)
 
-	rec, kube, err := parse(baseDir, opts)
+	p, err := parse(baseDir, opts)
 	if err != nil {
 		return "", err
 	}
 
-	s, err := kube.Fmt(rec)
-	if err != nil {
-		return "", errors.Wrap(err, "pretty printing state")
-	}
-	return s, nil
+	return p.Resources.String(), nil
 }

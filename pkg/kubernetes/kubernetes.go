@@ -1,123 +1,95 @@
 package kubernetes
 
 import (
-	"bytes"
 	"fmt"
-	"regexp"
-	"sort"
-	"strings"
 
 	"github.com/Masterminds/semver"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
-	"github.com/stretchr/objx"
-	funk "github.com/thoas/go-funk"
-	yaml "gopkg.in/yaml.v3"
 
+	"github.com/grafana/tanka/pkg/cli"
+	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-// Kubernetes bridges tanka to the Kubernetse orchestrator.
+// Kubernetes exposes methods to work with the Kubernetes orchestrator
 type Kubernetes struct {
-	client Kubectl
-	Spec   v1alpha1.Spec
+	Spec v1alpha1.Spec
+
+	// Client (kubectl)
+	ctl  client.Client
+	info client.Info
 
 	// Diffing
 	differs map[string]Differ // List of diff strategies
 }
 
-type Differ func(yaml string) (*string, error)
+// Differ is responsible for comparing the given manifests to the cluster and
+// returning differences (if any) in `diff(1)` format.
+type Differ func(manifest.List) (*string, error)
 
-// New creates a new Kubernetes
-func New(s v1alpha1.Spec) *Kubernetes {
+// New creates a new Kubernetes with an initialized client
+func New(s v1alpha1.Spec) (*Kubernetes, error) {
+	// setup client
+	ctl, err := client.New(s.APIServer)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating client")
+	}
+
+	// obtain information about the client (including versions)
+	info, err := ctl.Info()
+	if err != nil {
+		return nil, err
+	}
+
+	// setup diffing
+	if s.DiffStrategy == "" {
+		s.DiffStrategy = "native"
+
+		if info.ServerVersion.LessThan(semver.MustParse("1.13.0")) {
+			s.DiffStrategy = "subset"
+		}
+	}
+
 	k := Kubernetes{
 		Spec: s,
-	}
-	k.client.APIServer = k.Spec.APIServer
-	k.differs = map[string]Differ{
-		"native": k.client.Diff,
-		"subset": k.client.SubsetDiff,
-	}
-	return &k
-}
-
-// Manifest describes a single Kubernetes manifest
-type Manifest map[string]interface{}
-
-func (m Manifest) Kind() string {
-	return m["kind"].(string)
-}
-
-func (m Manifest) Name() string {
-	return m["metadata"].(map[string]interface{})["name"].(string)
-}
-
-func (m Manifest) Namespace() string {
-	return m["metadata"].(map[string]interface{})["namespace"].(string)
-}
-
-// Reconcile receives the raw evaluated jsonnet as a marshaled json dict and
-// shall return it reconciled as a state object of the target system
-func (k *Kubernetes) Reconcile(raw map[string]interface{}, objectspecs []*regexp.Regexp) (state []Manifest, err error) {
-	docs, err := walkJSON(raw, "")
-	out := make([]Manifest, 0, len(docs))
-	if err != nil {
-		return nil, errors.Wrap(err, "flattening manifests")
-	}
-	for _, d := range docs {
-		m := objx.New(d)
-		if k != nil && !m.Has("metadata.namespace") {
-			m.Set("metadata.namespace", k.Spec.Namespace)
-		}
-		out = append(out, Manifest(m))
+		ctl:  ctl,
+		info: *info,
+		differs: map[string]Differ{
+			"native": ctl.DiffServerSide,
+			"subset": SubsetDiffer(ctl),
+		},
 	}
 
-	if len(objectspecs) > 0 {
-		out = funk.Filter(out, func(i interface{}) bool {
-			p := objectspec(i.(Manifest))
-			for _, o := range objectspecs {
-				if o.MatchString(strings.ToLower(p)) {
-					return true
-				}
-			}
-			return false
-		}).([]Manifest)
-	}
-
-	sort.SliceStable(out, func(i int, j int) bool {
-		if out[i].Kind() != out[j].Kind() {
-			return out[i].Kind() < out[j].Kind()
-		}
-		return out[i].Name() < out[j].Name()
-	})
-
-	return out, nil
+	return &k, nil
 }
 
-// Fmt receives the state and reformats it to YAML Documents
-func (k *Kubernetes) Fmt(state []Manifest) (string, error) {
-	buf := bytes.Buffer{}
-	enc := yaml.NewEncoder(&buf)
-
-	for _, d := range state {
-		if err := enc.Encode(d); err != nil {
-			return "", err
-		}
-	}
-
-	return buf.String(), nil
-}
+// ApplyOpts allow set additional parameters for the apply operation
+type ApplyOpts client.ApplyOpts
 
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
-func (k *Kubernetes) Apply(state []Manifest, opts ApplyOpts) error {
-	if k == nil {
-		return ErrorMissingConfig
-	}
-
-	yaml, err := k.Fmt(state)
+func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
+	info, err := k.ctl.Info()
 	if err != nil {
 		return err
 	}
-	return k.client.Apply(yaml, k.Spec.Namespace, opts)
+	alert := color.New(color.FgRed, color.Bold).SprintFunc()
+
+	if !opts.AutoApprove {
+		if err := cli.Confirm(
+			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
+				alert(k.Spec.Namespace),
+				alert(info.Cluster.Get("name").MustStr()),
+				alert(info.Cluster.Get("cluster.server").MustStr()),
+				alert(info.Context.Get("name").MustStr()),
+			),
+			"yes",
+		); err != nil {
+			return err
+		}
+	}
+	return k.ctl.Apply(state, client.ApplyOpts(opts))
 }
 
 // DiffOpts allow to specify additional parameters for diff operations
@@ -130,29 +102,13 @@ type DiffOpts struct {
 }
 
 // Diff takes the desired state and returns the differences from the cluster
-func (k *Kubernetes) Diff(state []Manifest, opts DiffOpts) (*string, error) {
-	if k == nil {
-		return nil, ErrorMissingConfig
-	}
-	yaml, err := k.Fmt(state)
-	if err != nil {
-		return nil, err
-	}
-
-	ds := k.Spec.DiffStrategy
+func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
+	strategy := k.Spec.DiffStrategy
 	if opts.Strategy != "" {
-		ds = opts.Strategy
-	}
-	if ds == "" {
-		ds = "native"
-		if _, server, err := k.client.Version(); err == nil {
-			if server.LessThan(semver.MustParse("1.13.0")) {
-				ds = "subset"
-			}
-		}
+		strategy = opts.Strategy
 	}
 
-	d, err := k.differs[ds](yaml)
+	d, err := k.differs[strategy](state)
 	switch {
 	case err != nil:
 		return nil, err
@@ -167,9 +123,14 @@ func (k *Kubernetes) Diff(state []Manifest, opts DiffOpts) (*string, error) {
 	return d, nil
 }
 
-func objectspec(m Manifest) string {
+// Info about the client, etc.
+func (k *Kubernetes) Info() client.Info {
+	return k.info
+}
+
+func objectspec(m manifest.Manifest) string {
 	return fmt.Sprintf("%s/%s",
 		m.Kind(),
-		m.Name(),
+		m.Metadata().Name(),
 	)
 }

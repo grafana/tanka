@@ -6,8 +6,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/spf13/cobra"
+
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 // initCmd creates a new application

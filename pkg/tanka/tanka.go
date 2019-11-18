@@ -1,4 +1,4 @@
-// The tanka package allows to use most of Tanka's features available on the
+// Package tanka allows to use most of Tanka's features available on the
 // command line programmatically as a Golang library. Keep in mind that the API
 // is still experimental and may change without and signs of warnings while
 // Tanka is still in alpha. Nevertheless, we try to avoid breaking changes.
@@ -33,7 +33,7 @@ type options struct {
 	apply kubernetes.ApplyOpts
 }
 
-// Modifiers allow to influence the behavior of certain `tanka.*` actions. They
+// Modifier allow to influence the behavior of certain `tanka.*` actions. They
 // are roughly equivalent to flags on the command line. See the `tanka.With*`
 // functions for available options.
 type Modifier func(*options)

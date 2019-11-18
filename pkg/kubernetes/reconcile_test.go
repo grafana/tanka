@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWalkJSON(t *testing.T) {
+func TestExtract(t *testing.T) {
 	tests := []struct {
 		name string
 		data testData
@@ -38,9 +38,10 @@ func TestWalkJSON(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := walkJSON(c.data.deep, "")
+			extracted, err := extract(c.data.deep)
+
 			require.Equal(t, c.err, err)
-			assert.ElementsMatch(t, c.data.flat, got)
+			assert.EqualValues(t, c.data.flat, extracted)
 		})
 	}
 }

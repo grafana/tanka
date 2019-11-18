@@ -2,12 +2,14 @@ package kubernetes
 
 import (
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
 	yaml "gopkg.in/yaml.v3"
+
+	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 type difference struct {
@@ -15,63 +17,68 @@ type difference struct {
 	live, merged string
 }
 
-func (k Kubectl) SubsetDiff(y string) (*string, error) {
-	docs := []difference{}
-	d := yaml.NewDecoder(strings.NewReader(y))
+// SubsetDiffer returns a implementation of Differ that computes the diff by
+// comparing only the fields present in the desired state. This algorithm might
+// miss information, but is all that's possible on cluster versions lower than
+// 1.13.
+func SubsetDiffer(c client.Client) Differ {
+	return func(state manifest.List) (*string, error) {
+		docs := []difference{}
 
-	routines := 0
-	errCh := make(chan error)
-	resultCh := make(chan difference)
+		errCh := make(chan error)
+		resultCh := make(chan difference)
 
-	for {
-		// jsonnet output -> desired state
-		var rawShould map[string]interface{}
-		err := d.Decode(&rawShould)
-		if err == io.EOF {
-			break
+		for _, rawShould := range state {
+			go parallelSubsetDiff(c, rawShould, resultCh, errCh)
 		}
 
-		if err != nil {
-			return nil, errors.Wrap(err, "decoding yaml")
+		var lastErr error
+		for i := 0; i < len(state); i++ {
+			select {
+			case d := <-resultCh:
+				docs = append(docs, d)
+			case err := <-errCh:
+				lastErr = err
+			}
+		}
+		close(resultCh)
+		close(errCh)
+
+		if lastErr != nil {
+			return nil, errors.Wrap(lastErr, "calculating subset")
 		}
 
-		routines++
-		go subsetDiff(k, rawShould, resultCh, errCh)
+		var diffs string
+		for _, d := range docs {
+			diffStr, err := diff(d.name, d.live, d.merged)
+			if err != nil {
+				return nil, errors.Wrap(err, "invoking diff")
+			}
+			if diffStr != "" {
+				diffStr += "\n"
+			}
+			diffs += diffStr
+		}
+		diffs = strings.TrimSuffix(diffs, "\n")
+
+		if diffs == "" {
+			return nil, nil
+		}
+
+		return &diffs, nil
 	}
-
-	var lastErr error
-	for i := 0; i < routines; i++ {
-		select {
-		case d := <-resultCh:
-			docs = append(docs, d)
-		case err := <-errCh:
-			lastErr = err
-		}
-	}
-	close(resultCh)
-	close(errCh)
-
-	if lastErr != nil {
-		return nil, errors.Wrap(lastErr, "calculating subset")
-	}
-
-	var diffs string
-	for _, d := range docs {
-		diffStr, err := diff(d.name, d.live, d.merged)
-		if err != nil {
-			return nil, errors.Wrap(err, "invoking diff")
-		}
-		if diffStr != "" {
-			diffStr += "\n"
-		}
-		diffs += diffStr
-	}
-	diffs = strings.TrimSuffix(diffs, "\n")
-
-	return &diffs, nil
 }
 
-func subsetDiff(k Kubectl, rawShould map[string]interface{}, r chan difference, e chan error) {
+func parallelSubsetDiff(c client.Client, rawShould map[string]interface{}, r chan difference, e chan error) {
+	diff, err := subsetDiff(c, rawShould)
+	if err != nil {
+		e <- err
+		return
+	}
+	r <- *diff
+}
+
+func subsetDiff(c client.Client, rawShould map[string]interface{}) (*difference, error) {
 	m := objx.New(rawShould)
 	name := strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
 		m.Get("apiVersion").MustStr(),
@@ -81,40 +88,37 @@ func subsetDiff(k Kubectl, rawShould map[string]interface{}, r chan difference, 
 	), "/", "-", -1)
 
 	// kubectl output -> current state
-	rawIs, err := k.Get(
+	rawIs, err := c.Get(
 		m.Get("metadata.namespace").MustStr(),
 		m.Get("kind").MustStr(),
 		m.Get("metadata.name").MustStr(),
 	)
 	if err != nil {
-		if _, ok := err.(ErrorNotFound); ok {
+		if _, ok := err.(client.ErrorNotFound); ok {
 			rawIs = map[string]interface{}{}
 		} else {
-			e <- errors.Wrap(err, "getting state from cluster")
-			return
+			return nil, errors.Wrap(err, "getting state from cluster")
 		}
 	}
 
 	should, err := yaml.Marshal(rawShould)
 	if err != nil {
-		e <- err
-		return
+		return nil, err
 	}
 
 	is, err := yaml.Marshal(subset(m, rawIs))
 	if err != nil {
-		e <- err
-		return
+		return nil, err
 	}
 	if string(is) == "{}\n" {
 		is = []byte("")
 	}
 
-	r <- difference{
+	return &difference{
 		name:   name,
 		live:   string(is),
 		merged: string(should),
-	}
+	}, nil
 }
 
 // subset removes all keys from is, that are not present in should.
