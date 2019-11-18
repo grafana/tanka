@@ -54,7 +54,7 @@ local docker(arch) = pipeline('docker-' + arch) {
   ],
 };
 
-local drone = [
+[
   pipeline('check') {
     steps: [
       go('download', ['go mod download']),
@@ -102,8 +102,4 @@ local drone = [
       'docker-arm64',
     ],
   } + constraints.onlyTagOrMaster,
-];
-
-{
-  drone: std.manifestYamlStream(drone),
-}
+]

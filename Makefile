@@ -35,4 +35,4 @@ container: static
 
 # CI
 drone:
-	jsonnet .drone/drone.jsonnet  | jq .drone -r | yq -y . > .drone/drone.yml
+	drone jsonnet --source .drone/drone.jsonnet --target .drone/drone.yml --stream --format

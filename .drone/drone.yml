@@ -1,116 +1,100 @@
+---
 kind: pipeline
 name: check
+
+platform:
+  os: linux
+  arch: amd64
+
 steps:
-- commands:
+- name: download
+  image: golang:1.12
+  commands:
   - go mod download
-  image: golang:1.12
-  name: download
   volumes:
   - name: gopath
     path: /go
-- commands:
+
+- name: lint
+  image: golang:1.12
+  commands:
   - make lint
-  depends_on:
-  - download
-  image: golang:1.12
-  name: lint
   volumes:
   - name: gopath
     path: /go
-- commands:
+  depends_on:
+  - download
+
+- name: test
+  image: golang:1.12
+  commands:
   - make test
-  depends_on:
-  - download
-  image: golang:1.12
-  name: test
   volumes:
   - name: gopath
     path: /go
+  depends_on:
+  - download
+
 volumes:
 - name: gopath
   temp: {}
+
 ---
-depends_on:
-- check
 kind: pipeline
 name: release
+
+platform:
+  os: linux
+  arch: amd64
+
 steps:
-- commands:
-  - make cross
+- name: cross
   image: golang:1.12
-  name: cross
+  commands:
+  - make cross
   volumes:
   - name: gopath
     path: /go
-- image: plugins/github-release
-  name: publish
+
+- name: publish
+  image: plugins/github-release
   settings:
     api_key:
       from_secret: GITHUB_TOKEN
     files: dist/*
-    note: 'This is release ${DRONE_TAG} of Tanka (`tk`). Check out the [CHANGELOG](CHANGELOG.md)
-      for detailed release notes.
-
-      ## Install instructions
-
-
-      #### Binary:
-
-      ```bash
-
-      # download the binary (adapt os and arch as needed)
-
-      $ curl -fSL -o "/usr/local/bin/tk" "https://github.com/sh0rez/tanka/releases/download/${DRONE_TAG}/tk-linux-amd64"
-
-
-      # make it executable
-
-      $ chmod a+x "/usr/local/bin/tk"
-
-
-      # have fun :)
-
-      $ tk --help
-
-      ```
-
-
-      #### Docker container:
-
-      https://hub.docker.com/r/grafana/tanka
-
-      ```bash
-
-      $ docker pull grafana/tanka:${DRONE_TAG}
-
-      ```
-
-      '
+    note: "This is release ${DRONE_TAG} of Tanka (`tk`). Check out the [CHANGELOG](CHANGELOG.md) for detailed release notes.\n## Install instructions\n\n#### Binary:\n```bash\n# download the binary (adapt os and arch as needed)\n$ curl -fSL -o \"/usr/local/bin/tk\" \"https://github.com/sh0rez/tanka/releases/download/${DRONE_TAG}/tk-linux-amd64\"\n\n# make it executable\n$ chmod a+x \"/usr/local/bin/tk\"\n\n# have fun :)\n$ tk --help\n```\n\n#### Docker container:\nhttps://hub.docker.com/r/grafana/tanka\n```bash\n$ docker pull grafana/tanka:${DRONE_TAG}\n```\n"
     title: ${DRONE_TAG}
-trigger:
-  event:
-  - tag
+
 volumes:
 - name: gopath
   temp: {}
----
+
+trigger:
+  event:
+  - tag
+
 depends_on:
 - check
+
+---
 kind: pipeline
 name: docker-amd64
+
 platform:
-  arch: amd64
   os: linux
+  arch: amd64
+
 steps:
-- commands:
-  - make static
+- name: static
   image: golang:1.12
-  name: static
+  commands:
+  - make static
   volumes:
   - name: gopath
     path: /go
-- image: plugins/docker
-  name: container
+
+- name: container
+  image: plugins/docker
   settings:
     auto_tag: true
     auto_tag_suffix: amd64
@@ -119,32 +103,39 @@ steps:
     repo: grafana/tanka
     username:
       from_secret: docker_username
+
+volumes:
+- name: gopath
+  temp: {}
+
 trigger:
   ref:
   - refs/heads/master
   - refs/heads/docker
   - refs/tags/v*
-volumes:
-- name: gopath
-  temp: {}
----
+
 depends_on:
 - check
+
+---
 kind: pipeline
 name: docker-arm
+
 platform:
-  arch: arm
   os: linux
+  arch: arm
+
 steps:
-- commands:
-  - make static
+- name: static
   image: golang:1.12
-  name: static
+  commands:
+  - make static
   volumes:
   - name: gopath
     path: /go
-- image: plugins/docker
-  name: container
+
+- name: container
+  image: plugins/docker
   settings:
     auto_tag: true
     auto_tag_suffix: arm
@@ -153,32 +144,39 @@ steps:
     repo: grafana/tanka
     username:
       from_secret: docker_username
+
+volumes:
+- name: gopath
+  temp: {}
+
 trigger:
   ref:
   - refs/heads/master
   - refs/heads/docker
   - refs/tags/v*
-volumes:
-- name: gopath
-  temp: {}
----
+
 depends_on:
 - check
+
+---
 kind: pipeline
 name: docker-arm64
+
 platform:
-  arch: arm64
   os: linux
+  arch: arm64
+
 steps:
-- commands:
-  - make static
+- name: static
   image: golang:1.12
-  name: static
+  commands:
+  - make static
   volumes:
   - name: gopath
     path: /go
-- image: plugins/docker
-  name: container
+
+- name: container
+  image: plugins/docker
   settings:
     auto_tag: true
     auto_tag_suffix: arm64
@@ -187,24 +185,31 @@ steps:
     repo: grafana/tanka
     username:
       from_secret: docker_username
+
+volumes:
+- name: gopath
+  temp: {}
+
 trigger:
   ref:
   - refs/heads/master
   - refs/heads/docker
   - refs/tags/v*
-volumes:
-- name: gopath
-  temp: {}
----
+
 depends_on:
-- docker-amd64
-- docker-arm
-- docker-arm64
+- check
+
+---
 kind: pipeline
 name: manifest
+
+platform:
+  os: linux
+  arch: amd64
+
 steps:
-- image: plugins/manifest
-  name: manifest
+- name: manifest
+  image: plugins/manifest
   settings:
     auto_tag: true
     ignore_missing: true
@@ -213,11 +218,20 @@ steps:
     spec: .drone/docker-manifest.tmpl
     username:
       from_secret: docker_username
+
+volumes:
+- name: gopath
+  temp: {}
+
 trigger:
   ref:
   - refs/heads/master
   - refs/heads/docker
   - refs/tags/v*
-volumes:
-- name: gopath
-  temp: {}
+
+depends_on:
+- docker-amd64
+- docker-arm
+- docker-arm64
+
+...
