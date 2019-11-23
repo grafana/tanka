@@ -14,7 +14,7 @@ import (
 type Manifest map[string]interface{}
 
 // New creates a new Manifest
-func New(raw map[string]interface{}) (Manifest, *SchemaError) {
+func New(raw map[string]interface{}) (Manifest, error) {
 	m := Manifest(raw)
 	if err := m.Verify(); err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func New(raw map[string]interface{}) (Manifest, *SchemaError) {
 }
 
 // NewFromObj creates a new Manifest from an objx.Map
-func NewFromObj(raw objx.Map) (Manifest, *SchemaError) {
+func NewFromObj(raw objx.Map) (Manifest, error) {
 	return New(map[string]interface{}(raw))
 }
 
@@ -38,7 +38,7 @@ func (m Manifest) String() string {
 }
 
 // Verify checks whether the manifest is correctly structured
-func (m Manifest) Verify() *SchemaError {
+func (m Manifest) Verify() error {
 	o := m2o(m)
 	var err SchemaError
 
@@ -58,6 +58,7 @@ func (m Manifest) Verify() *SchemaError {
 	if len(err.fields) == 0 {
 		return nil
 	}
+
 	return &err
 }
 
@@ -77,18 +78,24 @@ func (m Manifest) Metadata() Metadata {
 }
 
 // UnmarshalJSON validates the Manifest during json parsing
-func (m Manifest) UnmarshalJSON(data []byte) error {
-	if err := json.Unmarshal(data, &m); err != nil {
+func (m *Manifest) UnmarshalJSON(data []byte) error {
+	type tmp Manifest
+	var t tmp
+	if err := json.Unmarshal(data, &t); err != nil {
 		return err
 	}
+	*m = Manifest(t)
 	return m.Verify()
 }
 
 // UnmarshalYAML validates the Manifest during yaml parsing
-func (m Manifest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	if err := unmarshal(&m); err != nil {
+func (m *Manifest) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type tmp Manifest
+	var t tmp
+	if err := unmarshal(&t); err != nil {
 		return err
 	}
+	*m = Manifest(t)
 	return m.Verify()
 }
 

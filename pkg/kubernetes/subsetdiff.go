@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/stretchr/objx"
 	yaml "gopkg.in/yaml.v3"
 
 	"github.com/grafana/tanka/pkg/kubernetes/client"
@@ -69,8 +68,8 @@ func SubsetDiffer(c client.Client) Differ {
 	}
 }
 
-func parallelSubsetDiff(c client.Client, rawShould map[string]interface{}, r chan difference, e chan error) {
-	diff, err := subsetDiff(c, rawShould)
+func parallelSubsetDiff(c client.Client, should manifest.Manifest, r chan difference, e chan error) {
+	diff, err := subsetDiff(c, should)
 	if err != nil {
 		e <- err
 		return
@@ -78,30 +77,28 @@ func parallelSubsetDiff(c client.Client, rawShould map[string]interface{}, r cha
 	r <- *diff
 }
 
-func subsetDiff(c client.Client, rawShould map[string]interface{}) (*difference, error) {
-	m := objx.New(rawShould)
+func subsetDiff(c client.Client, m manifest.Manifest) (*difference, error) {
 	name := strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
-		m.Get("apiVersion").MustStr(),
-		m.Get("kind").MustStr(),
-		m.Get("metadata.namespace").MustStr(),
-		m.Get("metadata.name").MustStr(),
+		m.APIVersion(),
+		m.Kind(),
+		m.Metadata().Namespace(),
+		m.Metadata().Name(),
 	), "/", "-", -1)
 
 	// kubectl output -> current state
 	rawIs, err := c.Get(
-		m.Get("metadata.namespace").MustStr(),
-		m.Get("kind").MustStr(),
-		m.Get("metadata.name").MustStr(),
+		m.Metadata().Namespace(),
+		m.Kind(),
+		m.Metadata().Name(),
 	)
-	if err != nil {
-		if _, ok := err.(client.ErrorNotFound); ok {
-			rawIs = map[string]interface{}{}
-		} else {
-			return nil, errors.Wrap(err, "getting state from cluster")
-		}
+
+	if _, ok := err.(client.ErrorNotFound); ok {
+		rawIs = map[string]interface{}{}
+	} else if err != nil {
+		return nil, errors.Wrap(err, "getting state from cluster")
 	}
 
-	should, err := yaml.Marshal(rawShould)
+	should, err := yaml.Marshal(m)
 	if err != nil {
 		return nil, err
 	}

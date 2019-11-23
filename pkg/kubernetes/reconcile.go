@@ -112,7 +112,7 @@ func walkJSON(deep interface{}, extracted map[string]manifest.Manifest, path tra
 		if m.Has("apiVersion") && m.Has("kind") {
 			mf, err := manifest.NewFromObj(m)
 			if err != nil {
-				return err.WithName(path.Full())
+				return err.(*manifest.SchemaError).WithName(path.Full())
 			}
 			extracted[path.Full()] = mf
 		} else {
