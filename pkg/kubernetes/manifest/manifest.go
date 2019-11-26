@@ -133,6 +133,11 @@ func (m Metadata) Labels() map[string]interface{} {
 	return m["labels"].(map[string]interface{})
 }
 
+// Sets the labels of a manifest
+func (m Metadata) SetLabels(labels map[string]interface{}) {
+	m["labels"] = labels
+}
+
 // HasAnnotations returns whether the manifest has annotations
 func (m Metadata) HasAnnotations() bool {
 	return m2o(m).Get("annotations").IsMSI()

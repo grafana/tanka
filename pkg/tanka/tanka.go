@@ -27,6 +27,9 @@ type options struct {
 	// target regular expressions to limit the working set
 	targets []*regexp.Regexp
 
+	// allow deletions
+	applyDeletes bool
+
 	// additional options for diff
 	diff kubernetes.DiffOpts
 	// additional options for apply
@@ -83,5 +86,12 @@ func WithApplyForce(b bool) Modifier {
 func WithApplyAutoApprove(b bool) Modifier {
 	return func(opts *options) {
 		opts.apply.AutoApprove = b
+	}
+}
+
+// WithApplyDeletes enables automatic deletions support
+func WithApplyDeletes(b bool) Modifier {
+	return func(opts *options) {
+		opts.applyDeletes = b
 	}
 }

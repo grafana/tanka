@@ -16,8 +16,9 @@ func (k Kubectl) Get(namespace, kind, name string) (manifest.Manifest, error) {
 }
 
 // GetByLabels retrieves all objects matched by the given labels from the cluster
-func (k Kubectl) GetByLabels(namespace string, labels map[string]interface{}) (manifest.List, error) {
-	lArgs := make([]string, 0, len(labels))
+func (k Kubectl) GetByLabels(namespace, kind string, labels map[string]interface{}) (manifest.List, error) {
+	lArgs := make([]string, 0, len(labels)+1)
+	lArgs = append(lArgs, kind)
 	for k, v := range labels {
 		lArgs = append(lArgs, fmt.Sprintf("-l=%s=%s", k, v))
 	}

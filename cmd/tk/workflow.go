@@ -45,11 +45,14 @@ func applyCmd() *cobra.Command {
 	vars := workflowFlags(cmd.Flags())
 	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	willDelete := cmd.Flags().BoolP("enable-delete", "D", false, "enable deletion of removed resources")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		err := tanka.Apply(args[0],
+		environment := args[0]
+		err := tanka.Apply(environment,
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 			tanka.WithApplyForce(*force),
 			tanka.WithApplyAutoApprove(*autoApprove),
+			tanka.WithApplyDeletes(*willDelete),
 		)
 		if err != nil {
 			log.Fatalln(err)
@@ -77,13 +80,17 @@ func diffCmd() *cobra.Command {
 		vars         = workflowFlags(cmd.Flags())
 		diffStrategy = cmd.Flags().String("diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
 		summarize    = cmd.Flags().BoolP("summarize", "s", false, "quick summary of the differences, hides file contents")
+		willDelete   = cmd.Flags().BoolP("enable-delete", "D", false, "enable deletion of removed resources")
 	)
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		changes, err := tanka.Diff(args[0],
+
+		environment := args[0]
+		changes, err := tanka.Diff(environment,
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 			tanka.WithDiffStrategy(*diffStrategy),
 			tanka.WithDiffSummarize(*summarize),
+			tanka.WithApplyDeletes(*willDelete),
 		)
 		if err != nil {
 			log.Fatalln(err)
@@ -124,7 +131,9 @@ func showCmd() *cobra.Command {
 			return
 		}
 
-		pretty, err := tanka.Show(args[0],
+		environment := args[0]
+
+		pretty, err := tanka.Show(environment,
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 		)
 		if err != nil {

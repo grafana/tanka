@@ -128,6 +128,19 @@ func (k *Kubernetes) Info() client.Info {
 	return k.info
 }
 
+// APIResourcesOpts allow set additional parameters for the api-resources operation
+type APIResourcesOpts client.APIResourcesOpts
+
+// APIResources retrieves a list of available resources from a Kubernetes API server
+func (k *Kubernetes) APIResources(opts APIResourcesOpts) ([]string, error) {
+	return k.ctl.APIResources(client.APIResourcesOpts(opts))
+}
+
+// GetByLabels retrieves resources by label
+func (k *Kubernetes) GetByLabels(namespace, kind string, labels map[string]interface{}) (manifest.List, error) {
+	return k.ctl.GetByLabels(namespace, kind, labels)
+}
+
 func objectspec(m manifest.Manifest) string {
 	return fmt.Sprintf("%s/%s",
 		m.Kind(),
