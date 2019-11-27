@@ -1,4 +1,4 @@
-package kubernetes
+package util
 
 import (
 	"bytes"
@@ -9,11 +9,23 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
-// diff computes the differences between the strings `is` and `should` using the
+// DiffName computes the filename for use with `DiffStr`
+func DiffName(m manifest.Manifest) string {
+	return strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
+		m.APIVersion(),
+		m.Kind(),
+		m.Metadata().Namespace(),
+		m.Metadata().Name(),
+	), "/", "-", -1)
+}
+
+// Diff computes the differences between the strings `is` and `should` using the
 // UNIX `diff(1)` utility.
-func diff(name, is, should string) (string, error) {
+func DiffStr(name, is, should string) (string, error) {
 	dir, err := ioutil.TempDir("", "diff")
 	if err != nil {
 		return "", err
@@ -49,8 +61,8 @@ func diff(name, is, should string) (string, error) {
 	return out, nil
 }
 
-// diffstat uses `diffstat(1)` utility to summarize a `diff(1)` output
-func diffstat(d string) (*string, error) {
+// Diffstat uses `diffstat(1)` utility to summarize a `diff(1)` output
+func Diffstat(d string) (*string, error) {
 	cmd := exec.Command("diffstat", "-C")
 	buf := bytes.Buffer{}
 	cmd.Stdout = &buf

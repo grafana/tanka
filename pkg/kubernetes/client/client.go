@@ -25,6 +25,9 @@ type Client interface {
 	Delete(namespace, kind, name string, opts DeleteOpts) error
 	DeleteByLabels(namespace string, labels map[string]interface{}, opts DeleteOpts) error
 
+	// Namespaces the cluster currently has
+	Namespaces() (map[string]bool, error)
+
 	// Info returns known informational data about the client. Best effort based,
 	// fields of `Info` that cannot be stocked with valuable data, e.g.
 	// due to an error, shall be left nil.

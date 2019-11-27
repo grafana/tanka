@@ -2,10 +2,11 @@ package client
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
-	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
@@ -66,35 +67,44 @@ func (k Kubectl) version() (client, server *semver.Version, err error) {
 	return client, server, nil
 }
 
-// DiffServerSide takes the desired state and computes the differences on the
-// server, returning them in `diff(1)` format
-func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
-	argv := []string{"diff",
+// Namespaces of the cluster
+func (k Kubectl) Namespaces() (map[string]bool, error) {
+	argv := []string{"get",
+		"-o", "json",
 		"--context", k.context.Get("name").MustStr(),
-		"-f", "-",
+		"namespaces",
 	}
 	cmd := exec.Command("kubectl", argv...)
 
-	raw := bytes.Buffer{}
-	cmd.Stdout = &raw
-	cmd.Stderr = FilterWriter{regexp.MustCompile(`exit status \d`)}
-
-	cmd.Stdin = strings.NewReader(data.String())
+	var sout bytes.Buffer
+	cmd.Stdout = &sout
+	cmd.Stderr = os.Stderr
 
 	err := cmd.Run()
-
-	// kubectl uses exit status 1 to tell us that there is a diff
-	if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 1 {
-		s := raw.String()
-		return &s, nil
-	}
-	// another error
 	if err != nil {
 		return nil, err
 	}
 
-	// no diff -> nil
-	return nil, nil
+	var list manifest.Manifest
+	if err := json.Unmarshal(sout.Bytes(), &list); err != nil {
+		return nil, err
+	}
+
+	items, ok := list["items"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("listing namespaces: expected items to be an object, but got %T instead", list["items"])
+	}
+
+	namespaces := make(map[string]bool)
+	for _, i := range items {
+		m, err := manifest.New(i.(map[string]interface{}))
+		if err != nil {
+			return nil, err
+		}
+
+		namespaces[m.Metadata().Name()] = true
+	}
+	return namespaces, nil
 }
 
 // FilterWriter is an io.Writer that discards every message that matches at
