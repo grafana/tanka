@@ -128,7 +128,7 @@ func (m Metadata) HasLabels() bool {
 // Labels of the manifest
 func (m Metadata) Labels() map[string]interface{} {
 	if !m.HasLabels() {
-		return make(map[string]interface{})
+		m["labels"] = make(map[string]interface{})
 	}
 	return m["labels"].(map[string]interface{})
 }
@@ -141,7 +141,7 @@ func (m Metadata) HasAnnotations() bool {
 // Annotations of the manifest
 func (m Metadata) Annotations() map[string]interface{} {
 	if !m.HasAnnotations() {
-		return make(map[string]interface{})
+		m["annotations"] = make(map[string]interface{})
 	}
 	return m["annotations"].(map[string]interface{})
 }

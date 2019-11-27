@@ -68,21 +68,17 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 // ApplyOpts allow set additional parameters for the apply operation
 type ApplyOpts client.ApplyOpts
 
-// Apply receives a state object generated using `Reconcile()` and may apply it to the target system
+// Apply receives the desired state applies it to the cluster
 func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
-	info, err := k.ctl.Info()
-	if err != nil {
-		return err
-	}
 	alert := color.New(color.FgRed, color.Bold).SprintFunc()
 
 	if !opts.AutoApprove {
 		if err := cli.Confirm(
 			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
 				alert(k.Spec.Namespace),
-				alert(info.Cluster.Get("name").MustStr()),
-				alert(info.Cluster.Get("cluster.server").MustStr()),
-				alert(info.Context.Get("name").MustStr()),
+				alert(k.info.Cluster.Get("name").MustStr()),
+				alert(k.info.Cluster.Get("cluster.server").MustStr()),
+				alert(k.info.Context.Get("name").MustStr()),
 			),
 			"yes",
 		); err != nil {

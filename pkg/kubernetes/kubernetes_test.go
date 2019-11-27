@@ -12,7 +12,7 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-func TestReconcile(t *testing.T) {
+func TestPrepare(t *testing.T) {
 	tests := []struct {
 		name string
 		spec v1alpha1.Spec
@@ -77,7 +77,7 @@ func TestReconcile(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := Reconcile(c.deep.(map[string]interface{}), c.spec, c.targets)
+			got, err := Prepare(c.deep.(map[string]interface{}), c.spec, c.targets)
 
 			require.Equal(t, c.err, err)
 			assert.ElementsMatch(t, c.flat, got)
@@ -85,10 +85,10 @@ func TestReconcile(t *testing.T) {
 	}
 }
 
-func TestReconcileOrder(t *testing.T) {
+func TestPrepareOrder(t *testing.T) {
 	got := make([]manifest.List, 10)
 	for i := 0; i < 10; i++ {
-		r, err := Reconcile(testDataDeep().deep.(map[string]interface{}), v1alpha1.Spec{}, nil)
+		r, err := Prepare(testDataDeep().deep.(map[string]interface{}), v1alpha1.Spec{}, nil)
 		require.NoError(t, err)
 		got[i] = r
 	}

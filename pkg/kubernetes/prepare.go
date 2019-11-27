@@ -14,22 +14,37 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-// Reconcile extracts all valid Kubernetes objects from the raw output of the
+// Labels injected into the manifest
+const (
+	// LabelPrefix is a string to mark all of Tanka's fields as such
+	LabelPrefix = "tanka.dev"
+
+	// LabelJSONPath is location where the manifest is found in the jsonnet output
+	LabelJSONPath = LabelPrefix + "/jsonpath"
+)
+
+// Prepare extracts all valid Kubernetes objects from the raw output of the
 // Jsonnet compiler. A valid object is identified by the presence of `kind` and
 // `apiVersion`.
 // TODO: Check on `metadata.name` as well and assert that they are
 // not only set but also strings.
-func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
+// It also injects Tanka specific labels
+func Prepare(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
+	// extract from jsonnet output
 	extracted, err := extract(raw)
 	if err != nil {
 		return nil, errors.Wrap(err, "flattening manifests")
 	}
 
 	out := make(manifest.List, 0, len(extracted))
-	for _, m := range extracted {
+	for jsonpath, m := range extracted {
+		// default namespace if unset
 		if spec.Namespace != "" && !m.Metadata().HasNamespace() {
 			m.Metadata()["namespace"] = spec.Namespace
 		}
+
+		// add jsonpath to annotations
+		m.Metadata().Annotations()[LabelJSONPath] = jsonpath
 
 		out = append(out, m)
 	}
