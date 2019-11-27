@@ -82,7 +82,7 @@ func TestPrepare(t *testing.T) {
 			// Don't test on the labels for now, too complicated to add to the current fixtures.
 			// TODO: Properly test this, once we have file fixtures with real resources.
 			for _, r := range got {
-				delete(r.Metadata(), "labels")
+				delete(r.Metadata(), "annotations")
 			}
 
 			require.Equal(t, c.err, err)

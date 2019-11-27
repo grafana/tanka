@@ -43,7 +43,7 @@ func statusCmd() *cobra.Command {
 			fmt.Fprintf(w, f,
 				r.Metadata().Namespace(),      // namespace
 				r.Kind(), r.Metadata().Name(), // objectspec
-				r.Metadata().Labels()[kubernetes.LabelJSONPath], // jsonpath
+				r.Metadata().Annotations()[kubernetes.AnnotationJSONPath], // jsonpath
 			)
 		}
 		w.Flush()
