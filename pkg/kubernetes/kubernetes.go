@@ -10,6 +10,7 @@ import (
 	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/kubernetes/util"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
@@ -117,7 +118,7 @@ func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
 	}
 
 	if opts.Summarize {
-		return diffstat(*d)
+		return util.Diffstat(*d)
 	}
 
 	return d, nil

@@ -1,7 +1,6 @@
 package kubernetes
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/kubernetes/util"
 )
 
 type difference struct {
@@ -49,7 +49,7 @@ func SubsetDiffer(c client.Client) Differ {
 
 		var diffs string
 		for _, d := range docs {
-			diffStr, err := diff(d.name, d.live, d.merged)
+			diffStr, err := util.DiffStr(d.name, d.live, d.merged)
 			if err != nil {
 				return nil, errors.Wrap(err, "invoking diff")
 			}
@@ -78,12 +78,7 @@ func parallelSubsetDiff(c client.Client, should manifest.Manifest, r chan differ
 }
 
 func subsetDiff(c client.Client, m manifest.Manifest) (*difference, error) {
-	name := strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
-		m.APIVersion(),
-		m.Kind(),
-		m.Metadata().Namespace(),
-		m.Metadata().Name(),
-	), "/", "-", -1)
+	name := util.DiffName(m)
 
 	// kubectl output -> current state
 	rawIs, err := c.Get(
