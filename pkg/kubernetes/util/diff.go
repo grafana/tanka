@@ -13,6 +13,7 @@ import (
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
+// DiffName computes the filename for use with `DiffStr`
 func DiffName(m manifest.Manifest) string {
 	return strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
 		m.APIVersion(),
