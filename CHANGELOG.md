@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.6.0 (2019-11-27)
+It has been quite some time since the last release during which Tanka has become
+much more mature, especially regarding the code quality and structure.
+
+Furthermore, Tanka has just hit the 100 Stars :tada:
+
+Notable changes include:
+
+#### API ([#97](https://github.com/grafana/tanka/commit/c5edb8b0153ef991765f2f555c839b0f9a487e75))
+The most notable change is probably the **Go API**, available at
+`https://godoc.org/github.com/grafana/tanka/pkg/tanka`, which allows to use all
+features of Tanka directly from any other Golang application, without needing to
+exec the binary. The API is inspired by the command line parameters and should
+feel very similar.
+
+#### Importing YAML ([#106](https://github.com/grafana/tanka/commit/8029efa44461b5f7ba83a218ccc45bd758c8a322))
+It is now possible to import `.yaml` documents directly from Jsonnet. Just use
+the familiar syntax `import "foo.yaml"` like you would with JSON.
+
+#### Missing Namespaces ([#120](https://github.com/grafana/tanka/commit/3b9fac1563a75a571b512887602eb53f82e565bf))
+Tanka now handles namespaces that are not yet created, in a more user friendly
+way than `kubectl** does natively.  
+During diff, all objects of an in-existent namespace are shown as new and when
+applying, namespaces are applied first to allow applying in a single step.
+
+### Features
+* **tool/imports**: import analysis using upstream jsonnet: Due to recent
+  changes to google/jsonnet, we can now use the upstream compiler for static
+  import analysis
+  ([#84](https://github.com/grafana/tanka/commit/394cb12b28beb0ea05d065594b6cf5c3f92de5e4))
+* **Array output**: The output of Jsonnet may now be an array of Manifests.
+  Nested arrays are not supported yet.
+  ([#112](https://github.com/grafana/tanka/commit/eb647793ff5515bc828e4f91186655c143bb6a04))
+
+
+### Bug Fixes
+* **Command Usage Guidelines**: Tanka now uses the [command description
+  syntax](https://en.wikipedia.org/wiki/Command-line_interface#Command_description_syntax)
+  ([#94](https://github.com/grafana/tanka/commit/13238e5941bd6e68f410d3938d1a285224c2f91d))
+* **cli/env** resolved panic on missing `spec.json`
+  ([#108](https://github.com/grafana/tanka/commit/9bd15e6b4226164efe45f50c9ed41c4a5673ea2d))
+
 ## 0.5.0 (2019-09-20)
 This version adds a set of commands to manipulate environments (`tk env add, rm,
 set, list`) ([#73](https://github.com/grafana/tanka/pull/73)). The commands are
