@@ -9,6 +9,7 @@ import (
 	"github.com/fatih/structs"
 	"github.com/spf13/cobra"
 
+	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
@@ -35,11 +36,15 @@ func statusCmd() *cobra.Command {
 		}
 
 		fmt.Println("Resources:")
-		f := "  %s\t%s/%s\n"
+		f := "  %s\t%s/%s\t%s\n"
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
-		fmt.Fprintln(w, "  NAMESPACE\tOBJECTSPEC")
+		fmt.Fprintln(w, "  NAMESPACE\tTARGET\tJSONPATH")
 		for _, r := range status.Resources {
-			fmt.Fprintf(w, f, r.Metadata().Namespace(), r.Kind(), r.Metadata().Name())
+			fmt.Fprintf(w, f,
+				r.Metadata().Namespace(),      // namespace
+				r.Kind(), r.Metadata().Name(), // objectspec
+				r.Metadata().Labels()[kubernetes.LabelJSONPath], // jsonpath
+			)
 		}
 		w.Flush()
 	}

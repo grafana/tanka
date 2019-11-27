@@ -44,7 +44,7 @@ func Prepare(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.R
 		}
 
 		// add jsonpath to annotations
-		m.Metadata().Annotations()[LabelJSONPath] = jsonpath
+		m.Metadata().Labels()[LabelJSONPath] = jsonpath
 
 		out = append(out, m)
 	}
