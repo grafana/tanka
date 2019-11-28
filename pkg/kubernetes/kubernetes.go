@@ -2,6 +2,8 @@ package kubernetes
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/fatih/color"
@@ -70,7 +72,7 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 type ApplyOpts client.ApplyOpts
 
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
-func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
+func (k *Kubernetes) Apply(baseDir string, state manifest.List, opts ApplyOpts) error {
 	info, err := k.ctl.Info()
 	if err != nil {
 		return err
@@ -78,8 +80,14 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 	alert := color.New(color.FgRed, color.Bold).SprintFunc()
 
 	if !opts.AutoApprove {
+		var message string
+		if opts.Prune {
+			message = `Applying to and pruning namespace '%s' of cluster '%s' at '%s' using context '%s'.`
+		} else {
+			message = `Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`
+		}
 		if err := cli.Confirm(
-			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
+			fmt.Sprintf(message,
 				alert(k.Spec.Namespace),
 				alert(info.Cluster.Get("name").MustStr()),
 				alert(info.Cluster.Get("cluster.server").MustStr()),
@@ -90,7 +98,10 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 			return err
 		}
 	}
-	return k.ctl.Apply(state, client.ApplyOpts(opts))
+
+	environmentLabel := TankaEnvironmentLabel + "=" + getEnvironmentLabel(baseDir)
+	labels := []string{environmentLabel}
+	return k.ctl.Apply(labels, state, client.ApplyOpts(opts))
 }
 
 // DiffOpts allow to specify additional parameters for diff operations
@@ -103,25 +114,40 @@ type DiffOpts struct {
 }
 
 // Diff takes the desired state and returns the differences from the cluster
-func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
+func (k *Kubernetes) Diff(baseDir string, state manifest.List, opts DiffOpts) (*string, error) {
 	strategy := k.Spec.DiffStrategy
 	if opts.Strategy != "" {
 		strategy = opts.Strategy
 	}
-
 	d, err := k.differs[strategy](state)
-	switch {
-	case err != nil:
+	if err != nil {
 		return nil, err
-	case d == nil:
-		return nil, nil
 	}
 
-	if opts.Summarize {
-		return util.Diffstat(*d)
-	}
+	environmentLabel := TankaEnvironmentLabel + "=" + getEnvironmentLabel(baseDir)
+	labels := []string{environmentLabel}
 
-	return d, nil
+	if opts.Summarize && d != nil {
+		d, err = util.Diffstat(*d)
+		if err != nil {
+			return nil, err
+		}
+	}
+	output, err := k.ctl.ApplyDryRun(labels, state)
+	if err != nil {
+		return nil, err
+	} else if output == "" {
+		return d, nil
+	}
+	prunes := extractPrunes(output)
+	lines := []string{}
+	if d != nil {
+		lines = append(lines, *d)
+	}
+	lines = append(lines, "--- Resources due for pruning:")
+	lines = append(lines, prunes...)
+	result := strings.Join(lines, "\n")
+	return &result, nil
 }
 
 // Info about the client, etc.
@@ -134,4 +160,18 @@ func objectspec(m manifest.Manifest) string {
 		m.Kind(),
 		m.Metadata().Name(),
 	)
+}
+
+var prunedRE, _ = regexp.Compile("(.*) pruned \\(dry run\\)")
+
+func extractPrunes(output string) []string {
+	prunes := []string{}
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		match := prunedRE.FindStringSubmatch(line)
+		if len(match) > 0 {
+			prunes = append(prunes, "- "+match[1])
+		}
+	}
+	return prunes
 }

@@ -45,7 +45,7 @@ func parse(baseDir string, opts *options) (*ParseResult, error) {
 		return nil, errors.Wrap(err, "evaluating jsonnet")
 	}
 
-	rec, err := kubernetes.Reconcile(raw, env.Spec, opts.targets)
+	rec, err := kubernetes.Reconcile(raw, baseDir, env.Spec, opts.targets)
 	if err != nil {
 		return nil, errors.Wrap(err, "reconciling")
 	}

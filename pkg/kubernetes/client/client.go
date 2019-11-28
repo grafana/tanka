@@ -15,7 +15,10 @@ type Client interface {
 
 	// Apply the configuration to the cluster. `data` must contain a plaintext
 	// format that is `kubectl-apply(1)` compatible
-	Apply(data manifest.List, opts ApplyOpts) error
+	Apply(labels []string, data manifest.List, opts ApplyOpts) error
+
+	// ApplyDryRun runs an apply with prune enabled
+	ApplyDryRun(labels []string, data manifest.List) (string, error)
 
 	// DiffServerSide runs the diff operation on the server and returns the
 	// result in `diff(1)` format
@@ -53,6 +56,9 @@ type ApplyOpts struct {
 
 	// autoApprove allows to skip the interactive approval
 	AutoApprove bool
+
+	// Prune causes k8s API to remove resources not present in manifests
+	Prune bool
 }
 
 // DeleteOpts allow to specify additional parameters for delete operations

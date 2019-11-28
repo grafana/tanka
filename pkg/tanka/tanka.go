@@ -85,3 +85,10 @@ func WithApplyAutoApprove(b bool) Modifier {
 		opts.apply.AutoApprove = b
 	}
 }
+
+// WithPrune invokes `kubectl apply` with the `--prune` flag
+func WithPrune(b bool) Modifier {
+	return func(opts *options) {
+		opts.apply.Prune = b
+	}
+}

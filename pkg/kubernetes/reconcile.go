@@ -14,22 +14,32 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
+// TankaEnvironmentLabel is the label applied to all resources. Used to identify resources that are
+// eligible for deletion, if not present in the generated set of manifests.
+const TankaEnvironmentLabel = "tanka/environment"
+
 // Reconcile extracts all valid Kubernetes objects from the raw output of the
 // Jsonnet compiler. A valid object is identified by the presence of `kind` and
 // `apiVersion`.
 // TODO: Check on `metadata.name` as well and assert that they are
 // not only set but also strings.
-func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
+func Reconcile(raw map[string]interface{}, baseDir string, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
 	extracted, err := extract(raw)
 	if err != nil {
 		return nil, errors.Wrap(err, "flattening manifests")
 	}
+
+	environmentLabel := getEnvironmentLabel(baseDir)
 
 	out := make(manifest.List, 0, len(extracted))
 	for _, m := range extracted {
 		if spec.Namespace != "" && !m.Metadata().HasNamespace() {
 			m.Metadata()["namespace"] = spec.Namespace
 		}
+
+		labels := m.Metadata().Labels()
+		labels[TankaEnvironmentLabel] = environmentLabel
+		m.Metadata().SetLabels(labels)
 
 		out = append(out, m)
 	}
@@ -57,6 +67,13 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 	})
 
 	return out, nil
+}
+
+func getEnvironmentLabel(baseDir string) string {
+	if baseDir[len(baseDir)-1:] == "/" {
+		return strings.ReplaceAll(baseDir[:len(baseDir)-1], "/", ".")
+	}
+	return strings.ReplaceAll(baseDir, "/", ".")
 }
 
 func extract(deep interface{}) (map[string]manifest.Manifest, error) {
