@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestExtract(t *testing.T) {
+func TestWalkJSON(t *testing.T) {
 	tests := []struct {
 		name string
 		data testData
@@ -24,7 +24,7 @@ func TestExtract(t *testing.T) {
 		{
 			name: "primitive",
 			data: testDataPrimitive(),
-			err:  ErrorPrimitiveReached{path: ".nginx.service", key: "note", primitive: "invalid because apiVersion and kind are missing"},
+			err:  ErrorPrimitiveReached{path: "nginx/service/note", primitive: "invalid because apiVersion and kind are missing"},
 		},
 		{
 			name: "deep",
@@ -38,10 +38,15 @@ func TestExtract(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			extracted, err := extract(c.data.deep)
+			manifests, err := walkJSON(c.data.deep)
+
+			expectedManifests := []Manifest{}
+			for _, manifest := range c.data.flat {
+				expectedManifests = append(expectedManifests, manifest)
+			}
 
 			require.Equal(t, c.err, err)
-			assert.EqualValues(t, c.data.flat, extracted)
+			assert.ElementsMatch(t, expectedManifests, manifests)
 		})
 	}
 }

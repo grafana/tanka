@@ -220,10 +220,10 @@ func testDataDeep() testData {
 // flattened
 func testDataArray() testData {
 	return testData{
-		deep: append(make([]map[string]interface{}, 0),
+		deep: []interface{}{
 			testDataDeep().deep.(map[string]interface{}),
 			testDataFlat().deep.(map[string]interface{}),
-		),
+		},
 
 		flat: map[string]manifest.Manifest{
 			".[0].app.web.backend.server.nginx.deployment":    testDataDeep().flat[".app.web.backend.server.nginx.deployment"],

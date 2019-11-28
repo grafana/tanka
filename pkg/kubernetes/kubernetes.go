@@ -128,10 +128,3 @@ func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
 func (k *Kubernetes) Info() client.Info {
 	return k.info
 }
-
-func objectspec(m manifest.Manifest) string {
-	return fmt.Sprintf("%s/%s",
-		m.Kind(),
-		m.Metadata().Name(),
-	)
-}
