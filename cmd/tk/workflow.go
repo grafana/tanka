@@ -45,13 +45,13 @@ func applyCmd() *cobra.Command {
 	vars := workflowFlags(cmd.Flags())
 	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
-	prune := cmd.Flags().Bool("prune", false, "delete resources from cluster not present in Jsonnet")
+	prune := cmd.Flags().Bool("prune", false, "delete resources from the cluster that are not present in Jsonnet")
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		err := tanka.Apply(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 			tanka.WithApplyForce(*force),
 			tanka.WithApplyAutoApprove(*autoApprove),
-			tanka.WithPrune(*prune),
+			tanka.WithApplyPrune(*prune),
 		)
 		if err != nil {
 			log.Fatalln(err)

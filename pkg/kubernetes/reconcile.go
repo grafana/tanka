@@ -16,7 +16,7 @@ import (
 
 // TankaEnvironmentLabel is the label applied to all resources. Used to identify resources that are
 // eligible for deletion, if not present in the generated set of manifests.
-const TankaEnvironmentLabel = "tanka/environment"
+const TankaEnvironmentLabel = "tanka.dev/environment"
 
 // Reconcile extracts all valid Kubernetes objects from the raw output of the
 // Jsonnet compiler. A valid object is identified by the presence of `kind` and
@@ -39,7 +39,6 @@ func Reconcile(raw map[string]interface{}, baseDir string, spec v1alpha1.Spec, t
 
 		labels := m.Metadata().Labels()
 		labels[TankaEnvironmentLabel] = environmentLabel
-		m.Metadata().SetLabels(labels)
 
 		out = append(out, m)
 	}
