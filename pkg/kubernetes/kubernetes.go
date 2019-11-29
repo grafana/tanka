@@ -136,10 +136,11 @@ func (k *Kubernetes) Diff(baseDir string, state manifest.List, opts DiffOpts) (*
 	output, err := k.ctl.ApplyDryRun(labels, state)
 	if err != nil {
 		return nil, err
-	} else if output == "" {
-		return d, nil
 	}
 	prunes := extractPrunes(output)
+	if len(prunes) == 0 {
+		return d, nil
+	}
 	lines := []string{}
 	if d != nil {
 		lines = append(lines, *d)
