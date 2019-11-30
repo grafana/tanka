@@ -13,8 +13,10 @@ import (
 func (k Kubectl) Apply(data manifest.List, opts ApplyOpts) error {
 	// create namespaces first to succeed first try
 	ns := filterNamespace(data)
-	if err := k.apply(ns, opts); err != nil {
-		return err
+	if len(ns) > 0 {
+		if err := k.apply(ns, opts); err != nil {
+			return err
+		}
 	}
 
 	return k.apply(data, opts)
