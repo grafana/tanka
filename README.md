@@ -1,6 +1,6 @@
 # Overview
 
-![Tanka Banner](docs/banner.png)
+![Tanka Banner](docs/img/banner.png)
 
 [![Build Status](https://cloud.drone.io/api/badges/grafana/tanka/status.svg)](https://cloud.drone.io/grafana/tanka)
 ![Golang](https://img.shields.io/badge/language-Go-blue)

@@ -1,0 +1,25 @@
+{
+  "name": "tanka",
+  "repository": "https://github.com/grafana/tanka.git",
+  "license": "MIT",
+  "files": [
+    "src/",
+    "doczrc.js",
+    "package.json"
+  ],
+  "scripts": {
+    "dev": "docz dev",
+    "build": "docz build",
+    "serve": "docz serve"
+  },
+  "dependencies": {
+    "docz": "latest",
+    "gatsby-remark-vscode": "^1.4.0",
+    "prop-types": "^15.7.2",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
+    "remark-emoji": "^2.0.2",
+    "remark-external-links": "^5.0.0",
+    "remark-github": "^8.0.0"
+  }
+}
