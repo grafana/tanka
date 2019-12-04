@@ -1,7 +1,9 @@
 package jsonnet
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"path/filepath"
 
 	jsonnet "github.com/google/go-jsonnet"
@@ -36,9 +38,23 @@ func (i *ExtendedImporter) Import(importedFrom, importedPath string) (contents j
 	// if yaml -> convert to json
 	ext := filepath.Ext(foundAt)
 	if ext == ".yaml" || ext == ".yml" {
-		var data map[string]interface{}
-		if err := yaml.Unmarshal([]byte(contents.String()), &data); err != nil {
-			return jsonnet.Contents{}, "", errors.Wrapf(err, "unmarshalling yaml import '%s'", foundAt)
+		ret := []interface{}{}
+		d := yaml.NewDecoder(bytes.NewReader([]byte(contents.String())))
+		for {
+			var doc interface{}
+			if err := d.Decode(&doc); err != nil {
+				if err == io.EOF {
+					break
+				}
+				return jsonnet.Contents{}, "", errors.Wrapf(err, "unmarshalling yaml import '%s'", foundAt)
+			}
+			ret = append(ret, doc)
+		}
+		var data interface{}
+		if len(ret) == 1 {
+			data = ret[0]
+		} else {
+			data = ret
 		}
 		out, err := json.Marshal(data)
 		if err != nil {
