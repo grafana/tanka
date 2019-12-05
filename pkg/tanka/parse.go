@@ -25,7 +25,7 @@ type ParseResult struct {
 }
 
 func (p *ParseResult) newKube() (*kubernetes.Kubernetes, error) {
-	kube, err := kubernetes.New(p.Env.Spec)
+	kube, err := kubernetes.New(*p.Env)
 	if err != nil {
 		return nil, errors.Wrap(err, "connecting to Kubernetes")
 	}
@@ -45,7 +45,7 @@ func parse(baseDir string, opts *options) (*ParseResult, error) {
 		return nil, errors.Wrap(err, "evaluating jsonnet")
 	}
 
-	rec, err := kubernetes.Reconcile(raw, baseDir, env.Spec, opts.targets)
+	rec, err := kubernetes.Reconcile(raw, *env, opts.targets)
 	if err != nil {
 		return nil, errors.Wrap(err, "reconciling")
 	}

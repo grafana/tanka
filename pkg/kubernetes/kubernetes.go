@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -18,7 +19,7 @@ import (
 
 // Kubernetes exposes methods to work with the Kubernetes orchestrator
 type Kubernetes struct {
-	Spec v1alpha1.Spec
+	Config v1alpha1.Config
 
 	// Client (kubectl)
 	ctl  client.Client
@@ -33,9 +34,10 @@ type Kubernetes struct {
 type Differ func(manifest.List) (*string, error)
 
 // New creates a new Kubernetes with an initialized client
-func New(s v1alpha1.Spec) (*Kubernetes, error) {
+func New(c v1alpha1.Config) (*Kubernetes, error) {
+
 	// setup client
-	ctl, err := client.New(s.APIServer)
+	ctl, err := client.New(c.Spec.APIServer)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating client")
 	}
@@ -47,18 +49,18 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	}
 
 	// setup diffing
-	if s.DiffStrategy == "" {
-		s.DiffStrategy = "native"
+	if c.Spec.DiffStrategy == "" {
+		c.Spec.DiffStrategy = "native"
 
 		if info.ServerVersion.LessThan(semver.MustParse("1.13.0")) {
-			s.DiffStrategy = "subset"
+			c.Spec.DiffStrategy = "subset"
 		}
 	}
 
 	k := Kubernetes{
-		Spec: s,
-		ctl:  ctl,
-		info: *info,
+		Config: c,
+		ctl:    ctl,
+		info:   *info,
 		differs: map[string]Differ{
 			"native": ctl.DiffServerSide,
 			"subset": SubsetDiffer(ctl),
@@ -88,7 +90,7 @@ func (k *Kubernetes) Apply(baseDir string, state manifest.List, opts ApplyOpts) 
 		}
 		if err := cli.Confirm(
 			fmt.Sprintf(message,
-				alert(k.Spec.Namespace),
+				alert(k.Config.Spec.Namespace),
 				alert(info.Cluster.Get("name").MustStr()),
 				alert(info.Cluster.Get("cluster.server").MustStr()),
 				alert(info.Context.Get("name").MustStr()),
@@ -99,8 +101,7 @@ func (k *Kubernetes) Apply(baseDir string, state manifest.List, opts ApplyOpts) 
 		}
 	}
 
-	environmentLabel := TankaEnvironmentLabel + "=" + getEnvironmentLabel(baseDir)
-	labels := []string{environmentLabel}
+	labels := getLabelArray(k.Config)
 	return k.ctl.Apply(labels, state, client.ApplyOpts(opts))
 }
 
@@ -115,7 +116,7 @@ type DiffOpts struct {
 
 // Diff takes the desired state and returns the differences from the cluster
 func (k *Kubernetes) Diff(baseDir string, state manifest.List, opts DiffOpts) (*string, error) {
-	strategy := k.Spec.DiffStrategy
+	strategy := k.Config.Spec.DiffStrategy
 	if opts.Strategy != "" {
 		strategy = opts.Strategy
 	}
@@ -124,15 +125,14 @@ func (k *Kubernetes) Diff(baseDir string, state manifest.List, opts DiffOpts) (*
 		return nil, err
 	}
 
-	environmentLabel := TankaEnvironmentLabel + "=" + getEnvironmentLabel(baseDir)
-	labels := []string{environmentLabel}
-
 	if opts.Summarize && d != nil {
 		d, err = util.Diffstat(*d)
 		if err != nil {
 			return nil, err
 		}
 	}
+
+	labels := getLabelArray(k.Config)
 	output, err := k.ctl.ApplyDryRun(labels, state)
 	if err != nil {
 		return nil, err
@@ -149,6 +149,27 @@ func (k *Kubernetes) Diff(baseDir string, state manifest.List, opts DiffOpts) (*
 	lines = append(lines, prunes...)
 	result := strings.Join(lines, "\n")
 	return &result, nil
+}
+
+func getLabelArray(config v1alpha1.Config) []string {
+	labelArray := []string{}
+	if config.Spec.InjectLabels.Environment {
+		path := filepath.Clean(config.Metadata.Labels["path"])
+		path = strings.ReplaceAll(path, "/", ".")
+		environmentLabel := fmt.Sprintf("%s=%s", TankaEnvironmentLabel, path)
+		labelArray = append(labelArray, environmentLabel)
+	}
+	return labelArray
+}
+
+func getLabelMap(config v1alpha1.Config) map[string]string {
+	labelMap := map[string]string{}
+	if config.Spec.InjectLabels.Environment {
+		path := filepath.Clean(config.Metadata.Labels["path"])
+		path = strings.ReplaceAll(path, "/", ".")
+		labelMap[TankaEnvironmentLabel] = path
+	}
+	return labelMap
 }
 
 // Info about the client, etc.

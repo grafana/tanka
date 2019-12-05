@@ -11,6 +11,8 @@ func New() *Config {
 	// default namespace
 	c.Spec.Namespace = "default"
 
+	c.Spec.InjectLabels.Environment = true
+
 	c.Metadata.Labels = make(map[string]string)
 
 	return &c
@@ -33,7 +35,13 @@ type Metadata struct {
 
 // Spec defines Kubernetes properties
 type Spec struct {
-	APIServer    string `json:"apiServer"`
-	Namespace    string `json:"namespace"`
-	DiffStrategy string `json:"diffStrategy,omitempty"`
+	APIServer    string       `json:"apiServer"`
+	Namespace    string       `json:"namespace"`
+	DiffStrategy string       `json:"diffStrategy,omitempty"`
+	InjectLabels InjectLabels `json:"injectLabels,omitempty"`
+}
+
+// InjectLabels defines labels that Tanka will inject into manifests
+type InjectLabels struct {
+	Environment bool `json:"environment,omitempty"`
 }

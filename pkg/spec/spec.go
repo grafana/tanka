@@ -20,14 +20,14 @@ var deprecated = []depreciation{
 }
 
 // Parse parses the json `data` into a `v1alpha1.Config` object.
-// `name` is the name of the environment
-func Parse(data []byte, name string) (*v1alpha1.Config, error) {
+// `baseDir` is the path of the environment
+func Parse(data []byte, baseDir string) (*v1alpha1.Config, error) {
 	v := viper.New()
 	v.SetConfigType("json")
 	if err := v.ReadConfig(bytes.NewReader(data)); err != nil {
 		return nil, err
 	}
-	return parse(v, name)
+	return parse(v, baseDir)
 }
 
 // ParseDir parses the given environments `spec.json` into a `v1alpha1.Config`
@@ -49,12 +49,12 @@ func ParseDir(baseDir string) (*v1alpha1.Config, error) {
 		return nil, err
 	}
 
-	return parse(v, filepath.Base(baseDir))
+	return parse(v, baseDir)
 }
 
 // parse accepts a viper.Viper already loaded with the actual config and
 // unmarshals it onto a v1alpha1.Config
-func parse(v *viper.Viper, name string) (*v1alpha1.Config, error) {
+func parse(v *viper.Viper, baseDir string) (*v1alpha1.Config, error) {
 	var errDepr ErrDeprecated
 
 	// handle deprecated ksonnet spec
@@ -75,7 +75,8 @@ func parse(v *viper.Viper, name string) (*v1alpha1.Config, error) {
 	}
 
 	// set the name field
-	config.Metadata.Name = name
+	config.Metadata.Name = filepath.Base(baseDir)
+	config.Metadata.Labels["path"] = baseDir
 
 	// return depreciation notes in case any exist as well
 	return config, errDepr

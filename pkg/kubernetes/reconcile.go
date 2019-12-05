@@ -23,22 +23,25 @@ const TankaEnvironmentLabel = "tanka.dev/environment"
 // `apiVersion`.
 // TODO: Check on `metadata.name` as well and assert that they are
 // not only set but also strings.
-func Reconcile(raw map[string]interface{}, baseDir string, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
+func Reconcile(raw map[string]interface{}, config v1alpha1.Config, targets []*regexp.Regexp) (state manifest.List, err error) {
 	extracted, err := extract(raw)
 	if err != nil {
 		return nil, errors.Wrap(err, "flattening manifests")
 	}
 
-	environmentLabel := getEnvironmentLabel(baseDir)
+	labels := getLabelMap(config)
 
 	out := make(manifest.List, 0, len(extracted))
 	for _, m := range extracted {
-		if spec.Namespace != "" && !m.Metadata().HasNamespace() {
-			m.Metadata()["namespace"] = spec.Namespace
+		if config.Spec.Namespace != "" && !m.Metadata().HasNamespace() {
+			m.Metadata()["namespace"] = config.Spec.Namespace
 		}
 
-		labels := m.Metadata().Labels()
-		labels[TankaEnvironmentLabel] = environmentLabel
+		mLabels := m.Metadata().Labels()
+		for k, v := range labels {
+			mLabels[k] = v
+		}
+		m.Metadata()["labels"] = mLabels
 
 		out = append(out, m)
 	}
@@ -66,13 +69,6 @@ func Reconcile(raw map[string]interface{}, baseDir string, spec v1alpha1.Spec, t
 	})
 
 	return out, nil
-}
-
-func getEnvironmentLabel(baseDir string) string {
-	if baseDir[len(baseDir)-1:] == "/" {
-		return strings.ReplaceAll(baseDir[:len(baseDir)-1], "/", ".")
-	}
-	return strings.ReplaceAll(baseDir, "/", ".")
 }
 
 func extract(deep interface{}) (map[string]manifest.Manifest, error) {
