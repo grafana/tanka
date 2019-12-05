@@ -14,8 +14,8 @@ import (
 
 func TestReconcile(t *testing.T) {
 	tests := []struct {
-		name string
-		spec v1alpha1.Spec
+		name   string
+		config v1alpha1.Config
 
 		deep interface{}
 		flat manifest.List
@@ -50,9 +50,9 @@ func TestReconcile(t *testing.T) {
 			targets: []*regexp.Regexp{regexp.MustCompile("deployment/.*")},
 		},
 		{
-			name: "force-namespace",
-			spec: v1alpha1.Spec{Namespace: "tanka"},
-			deep: testDataFlat().deep,
+			name:   "force-namespace",
+			config: v1alpha1.Config{Spec: v1alpha1.Spec{Namespace: "tanka"}},
+			deep:   testDataFlat().deep,
 			flat: func() manifest.List {
 				f := testDataFlat().flat["."]
 				f.Metadata()["namespace"] = "tanka"
@@ -60,8 +60,8 @@ func TestReconcile(t *testing.T) {
 			}(),
 		},
 		{
-			name: "custom-namespace",
-			spec: v1alpha1.Spec{Namespace: "tanka"},
+			name:   "custom-namespace",
+			config: v1alpha1.Config{Spec: v1alpha1.Spec{Namespace: "tanka"}},
 			deep: func() map[string]interface{} {
 				d := objx.New(testDataFlat().deep)
 				d.Set("metadata.namespace", "custom")
@@ -77,7 +77,7 @@ func TestReconcile(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := Reconcile(c.deep.(map[string]interface{}), c.spec, c.targets)
+			got, err := Reconcile(c.deep.(map[string]interface{}), c.config, c.targets)
 
 			require.Equal(t, c.err, err)
 			assert.ElementsMatch(t, c.flat, got)
@@ -88,7 +88,7 @@ func TestReconcile(t *testing.T) {
 func TestReconcileOrder(t *testing.T) {
 	got := make([]manifest.List, 10)
 	for i := 0; i < 10; i++ {
-		r, err := Reconcile(testDataDeep().deep.(map[string]interface{}), v1alpha1.Spec{}, nil)
+		r, err := Reconcile(testDataDeep().deep.(map[string]interface{}), v1alpha1.Config{}, nil)
 		require.NoError(t, err)
 		got[i] = r
 	}

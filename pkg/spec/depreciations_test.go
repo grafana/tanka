@@ -32,6 +32,7 @@ func TestDeprecated(t *testing.T) {
 	want.Spec.APIServer = "https://127.0.0.1"
 	want.Spec.Namespace = "new"
 	want.Metadata.Labels["team"] = "cool"
+	want.Metadata.Labels["path"] = "test"
 	want.Metadata.Name = "test"
 
 	assert.Equal(t, want, got)
