@@ -82,11 +82,9 @@ func (k *Kubernetes) Apply(baseDir string, state manifest.List, opts ApplyOpts) 
 	alert := color.New(color.FgRed, color.Bold).SprintFunc()
 
 	if !opts.AutoApprove {
-		var message string
+		message := `Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`
 		if opts.Prune {
 			message = `Applying to and pruning namespace '%s' of cluster '%s' at '%s' using context '%s'.`
-		} else {
-			message = `Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`
 		}
 		if err := cli.Confirm(
 			fmt.Sprintf(message,
