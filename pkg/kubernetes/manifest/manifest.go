@@ -122,28 +122,30 @@ func (m Metadata) Namespace() string {
 
 // HasLabels returns whether the manifest has labels
 func (m Metadata) HasLabels() bool {
-	return m2o(m).Get("labels").IsMSI()
+	_, ok := m["labels"].(map[string]string)
+	return ok
 }
 
 // Labels of the manifest
-func (m Metadata) Labels() map[string]interface{} {
+func (m Metadata) Labels() map[string]string {
 	if !m.HasLabels() {
-		return make(map[string]interface{})
+		m["labels"] = make(map[string]string)
 	}
-	return m["labels"].(map[string]interface{})
+	return m["labels"].(map[string]string)
 }
 
-// HasAnnotations returns whether the manifest has annotations
+// HasAnnotations returns whether the manifest has labels
 func (m Metadata) HasAnnotations() bool {
-	return m2o(m).Get("annotations").IsMSI()
+	_, ok := m["annotations"].(map[string]string)
+	return ok
 }
 
 // Annotations of the manifest
-func (m Metadata) Annotations() map[string]interface{} {
+func (m Metadata) Annotations() map[string]string {
 	if !m.HasAnnotations() {
-		return make(map[string]interface{})
+		m["annotations"] = make(map[string]string)
 	}
-	return m["annotations"].(map[string]interface{})
+	return m["annotations"].(map[string]string)
 }
 
 // List of individual Manifests

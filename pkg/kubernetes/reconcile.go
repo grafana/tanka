@@ -14,12 +14,21 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
+// Labels injected into the manifest
+const (
+	// MetadataPrefix is a string to mark all of Tanka's fields as such
+	MetadataPrefix = "tanka.dev"
+
+	// Environment the resource originates from
+	LabelEnvironment = MetadataPrefix + "/environment"
+)
+
 // Reconcile extracts all valid Kubernetes objects from the raw output of the
 // Jsonnet compiler. A valid object is identified by the presence of `kind` and
 // `apiVersion`.
 // TODO: Check on `metadata.name` as well and assert that they are
 // not only set but also strings.
-func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
+func Reconcile(raw map[string]interface{}, config v1alpha1.Config, targets []*regexp.Regexp) (state manifest.List, err error) {
 	extracted, err := extract(raw)
 	if err != nil {
 		return nil, errors.Wrap(err, "flattening manifests")
@@ -27,8 +36,12 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 
 	out := make(manifest.List, 0, len(extracted))
 	for _, m := range extracted {
-		if spec.Namespace != "" && !m.Metadata().HasNamespace() {
-			m.Metadata()["namespace"] = spec.Namespace
+		if config.Spec.Namespace != "" && !m.Metadata().HasNamespace() {
+			m.Metadata()["namespace"] = config.Spec.Namespace
+		}
+
+		if config.Spec.InjectLabels.Environment {
+			m.Metadata().Labels()[LabelEnvironment] = config.Metadata.NameLabel()
 		}
 
 		out = append(out, m)

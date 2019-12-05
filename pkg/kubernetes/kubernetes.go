@@ -16,7 +16,7 @@ import (
 
 // Kubernetes exposes methods to work with the Kubernetes orchestrator
 type Kubernetes struct {
-	Spec v1alpha1.Spec
+	Env v1alpha1.Config
 
 	// Client (kubectl)
 	ctl  client.Client
@@ -31,9 +31,9 @@ type Kubernetes struct {
 type Differ func(manifest.List) (*string, error)
 
 // New creates a new Kubernetes with an initialized client
-func New(s v1alpha1.Spec) (*Kubernetes, error) {
+func New(c v1alpha1.Config) (*Kubernetes, error) {
 	// setup client
-	ctl, err := client.New(s.APIServer)
+	ctl, err := client.New(c.Spec.APIServer)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating client")
 	}
@@ -45,16 +45,16 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	}
 
 	// setup diffing
-	if s.DiffStrategy == "" {
-		s.DiffStrategy = "native"
+	if c.Spec.DiffStrategy == "" {
+		c.Spec.DiffStrategy = "native"
 
 		if info.ServerVersion.LessThan(semver.MustParse("1.13.0")) {
-			s.DiffStrategy = "subset"
+			c.Spec.DiffStrategy = "subset"
 		}
 	}
 
 	k := Kubernetes{
-		Spec: s,
+		Env:  c,
 		ctl:  ctl,
 		info: *info,
 		differs: map[string]Differ{
@@ -80,7 +80,7 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 	if !opts.AutoApprove {
 		if err := cli.Confirm(
 			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
-				alert(k.Spec.Namespace),
+				alert(k.Env.Spec.Namespace),
 				alert(info.Cluster.Get("name").MustStr()),
 				alert(info.Cluster.Get("cluster.server").MustStr()),
 				alert(info.Context.Get("name").MustStr()),
@@ -104,7 +104,7 @@ type DiffOpts struct {
 
 // Diff takes the desired state and returns the differences from the cluster
 func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
-	strategy := k.Spec.DiffStrategy
+	strategy := k.Env.Spec.DiffStrategy
 	if opts.Strategy != "" {
 		strategy = opts.Strategy
 	}

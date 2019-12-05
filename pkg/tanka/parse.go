@@ -25,7 +25,7 @@ type ParseResult struct {
 }
 
 func (p *ParseResult) newKube() (*kubernetes.Kubernetes, error) {
-	kube, err := kubernetes.New(p.Env.Spec)
+	kube, err := kubernetes.New(*p.Env)
 	if err != nil {
 		return nil, errors.Wrap(err, "connecting to Kubernetes")
 	}
