@@ -35,7 +35,12 @@ func (p *ParseResult) newKube() (*kubernetes.Kubernetes, error) {
 // parse loads the `spec.json`, evaluates the jsonnet and returns both, the
 // kubernetes object and the reconciled manifests
 func parse(baseDir string, opts *options) (*ParseResult, error) {
-	env, err := parseEnv(baseDir, opts)
+	_, baseDir, rootDir, err := jpath.Resolve(baseDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "resolving jpath")
+	}
+
+	env, err := parseEnv(baseDir, rootDir, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +50,7 @@ func parse(baseDir string, opts *options) (*ParseResult, error) {
 		return nil, errors.Wrap(err, "evaluating jsonnet")
 	}
 
-	rec, err := kubernetes.Reconcile(raw, env.Spec, opts.targets)
+	rec, err := kubernetes.Reconcile(raw, *env, opts.targets)
 	if err != nil {
 		return nil, errors.Wrap(err, "reconciling")
 	}
@@ -58,8 +63,11 @@ func parse(baseDir string, opts *options) (*ParseResult, error) {
 
 // parseEnv parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
-func parseEnv(baseDir string, opts *options) (*v1alpha1.Config, error) {
-	config, err := spec.ParseDir(baseDir)
+func parseEnv(baseDir, rootDir string, opts *options) (*v1alpha1.Config, error) {
+	// name of the environment: relative path from rootDir
+	name, _ := filepath.Rel(rootDir, baseDir)
+
+	config, err := spec.ParseDir(baseDir, name)
 	if err != nil {
 		switch err.(type) {
 		// config is missing
@@ -82,15 +90,7 @@ func parseEnv(baseDir string, opts *options) (*v1alpha1.Config, error) {
 
 // eval evaluates the jsonnet environment at the given directory starting with
 // `main.jsonnet`
-func eval(path string) (map[string]interface{}, error) {
-	workdir, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
-	}
-	_, baseDir, _, err := jpath.Resolve(workdir)
-	if err != nil {
-		return nil, errors.Wrap(err, "resolving jpath")
-	}
+func eval(baseDir string) (map[string]interface{}, error) {
 	raw, err := jsonnet.EvaluateFile(filepath.Join(baseDir, "main.jsonnet"))
 	if err != nil {
 		return nil, err
