@@ -35,12 +35,23 @@ func (p *ParseResult) newKube() (*kubernetes.Kubernetes, error) {
 // parse loads the `spec.json`, evaluates the jsonnet and returns both, the
 // kubernetes object and the reconciled manifests
 func parse(baseDir string, opts *options) (*ParseResult, error) {
-	raw, env, err := eval(baseDir, opts)
+	_, baseDir, rootDir, err := jpath.Resolve(baseDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "resolving jpath")
+	}
+
+	env, err := parseEnv(baseDir, rootDir, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	rec, err := kubernetes.Reconcile(raw, env.Spec, opts.targets)
+	raw, err := eval(baseDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "evaluating jsonnet")
+	}
+
+	rec, err := kubernetes.Reconcile(raw, *env, opts.targets)
+
 	if err != nil {
 		return nil, errors.Wrap(err, "reconciling")
 	}
@@ -83,8 +94,11 @@ func eval(baseDir string, opts *options) (raw map[string]interface{}, env *v1alp
 
 // parseEnv parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
-func parseEnv(baseDir string, opts *options) (*v1alpha1.Config, error) {
-	config, err := spec.ParseDir(baseDir)
+func parseEnv(baseDir, rootDir string, opts *options) (*v1alpha1.Config, error) {
+	// name of the environment: relative path from rootDir
+	name, _ := filepath.Rel(rootDir, baseDir)
+
+	config, err := spec.ParseDir(baseDir, name)
 	if err != nil {
 		switch err.(type) {
 		// config is missing
@@ -107,16 +121,7 @@ func parseEnv(baseDir string, opts *options) (*v1alpha1.Config, error) {
 
 // evalJsonnet evaluates the jsonnet environment at the given directory starting with
 // `main.jsonnet`
-func evalJsonnet(path string, env *v1alpha1.Config, extCode map[string]string) (map[string]interface{}, error) {
-	workdir, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
-	}
-	_, baseDir, _, err := jpath.Resolve(workdir)
-	if err != nil {
-		return nil, errors.Wrap(err, "resolving jpath")
-	}
-
+func evalJsonnet(baseDir string, env *v1alpha1.Config, extCode map[string]string) (map[string]interface{}, error) {
 	jsonEnv, err := json.Marshal(env)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshalling environment config")
@@ -133,9 +138,6 @@ func evalJsonnet(path string, env *v1alpha1.Config, extCode map[string]string) (
 		filepath.Join(baseDir, "main.jsonnet"),
 		ext...,
 	)
-	if err != nil {
-		return nil, err
-	}
 
 	var dict map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &dict); err != nil {
