@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
@@ -105,6 +106,24 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 		namespaces[m.Metadata().Name()] = true
 	}
 	return namespaces, nil
+}
+
+func (k Kubectl) APIResources() ([]string, error) {
+	argv := []string{"api-resources",
+		"--context", k.context.Get("name").MustStr(),
+		"--verbs=list", "-o=name",
+	}
+	cmd := exec.Command("kubectl", argv...)
+
+	var buf bytes.Buffer
+	cmd.Stdout = &buf
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, err
+	}
+
+	return strings.Split(strings.TrimSuffix(buf.String(), "\n"), "\n"), nil
 }
 
 // FilterWriter is an io.Writer that discards every message that matches at
