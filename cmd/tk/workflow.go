@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/grafana/tanka/pkg/cli/cmp"
+	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/util"
 	"github.com/grafana/tanka/pkg/tanka"
 )
@@ -25,11 +26,14 @@ const (
 
 type workflowFlagVars struct {
 	targets []string
+	prune   kubernetes.PruneOpts
 }
 
 func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
 	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects (Format: <type>/<name>)")
+	fs.BoolVarP(&v.prune.Prune, "prune", "p", true, "automatically remove objects from the cluster that are not present in Jsonnet anymore")
+	fs.BoolVar(&v.prune.AllKinds, "prune-all-kinds", false, "prune all object kinds, not just the most common ones (much slower)")
 	return &v
 }
 
@@ -50,6 +54,8 @@ func applyCmd() *cobra.Command {
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 			tanka.WithApplyForce(*force),
 			tanka.WithApplyAutoApprove(*autoApprove),
+			tanka.WithPrune(vars.prune.Prune),
+			tanka.WithPruneAllKinds(vars.prune.AllKinds),
 		)
 		if err != nil {
 			log.Fatalln(err)
@@ -84,6 +90,8 @@ func diffCmd() *cobra.Command {
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 			tanka.WithDiffStrategy(*diffStrategy),
 			tanka.WithDiffSummarize(*summarize),
+			tanka.WithPrune(vars.prune.Prune),
+			tanka.WithPruneAllKinds(vars.prune.AllKinds),
 		)
 		if err != nil {
 			log.Fatalln(err)

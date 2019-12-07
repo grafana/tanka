@@ -138,10 +138,13 @@ func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
 		strategy = opts.Strategy
 	}
 
-	diff, err := multiDiff(state, []Differ{
-		k.differs[strategy],
-		k.diffOrphaned(opts.PruneOpts.AllKinds),
-	})
+	differs := []Differ{k.differs[strategy]}
+	if opts.PruneOpts.Prune {
+		differs = append(differs, k.diffOrphaned(opts.PruneOpts.AllKinds))
+	}
+
+	diff, err := multiDiff(state, differs)
+
 	if err != nil {
 		return nil, err
 	}

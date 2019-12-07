@@ -13,10 +13,21 @@ import (
 
 // parseModifiers parses all modifiers into an options struct
 func parseModifiers(mods []Modifier) *options {
-	o := &options{}
+	o := &options{
+		prune: kubernetes.PruneOpts{
+			Prune:    true,
+			AllKinds: false,
+		},
+	}
+
 	for _, mod := range mods {
 		mod(o)
 	}
+
+	o.prune.Force = o.apply.Force
+	o.apply.PruneOpts = o.prune
+	o.diff.PruneOpts = o.prune
+
 	return o
 }
 
@@ -31,6 +42,8 @@ type options struct {
 	diff kubernetes.DiffOpts
 	// additional options for apply
 	apply kubernetes.ApplyOpts
+	// additional options for pruning as part of diff/apply
+	prune kubernetes.PruneOpts
 }
 
 // Modifier allow to influence the behavior of certain `tanka.*` actions. They
@@ -83,5 +96,20 @@ func WithApplyForce(b bool) Modifier {
 func WithApplyAutoApprove(b bool) Modifier {
 	return func(opts *options) {
 		opts.apply.AutoApprove = b
+	}
+}
+
+// WithPrune enables pruning of orphaned resources
+func WithPrune(b bool) Modifier {
+	return func(opts *options) {
+		opts.prune.Prune = b
+	}
+}
+
+// WihtPruneAllKinds enables pruning all kinds, instead of only the most common
+// ones. Please note that this is much slower.
+func WithPruneAllKinds(b bool) Modifier {
+	return func(opts *options) {
+		opts.prune.AllKinds = b
 	}
 }
