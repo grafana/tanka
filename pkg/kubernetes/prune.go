@@ -92,6 +92,14 @@ func (k *Kubernetes) listOrphaned(state manifest.List, all bool) (orphaned manif
 		select {
 		case list := <-results:
 			for _, m := range list {
+				// ComponentStatus resource is broken in Kubernetes versions
+				// below 1.17, it will be returned even if the label does not
+				// match. Ignoring it here is fine, as it is an internal object
+				// type.
+				if m.APIVersion() == "v1" && m.Kind() == "ComponentStatus" {
+					continue
+				}
+
 				if state.Has(m) {
 					continue
 				}
