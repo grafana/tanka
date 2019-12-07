@@ -21,7 +21,7 @@ func (s *SchemaError) Error() string {
 		e += ", " + k
 	}
 	e = strings.TrimPrefix(e, ", ")
-	return fmt.Sprintf("%s missing or invalid fields: %s", s.name, e)
+	return fmt.Sprintf("%smissing or invalid fields: %s", s.name, e)
 }
 
 func (s *SchemaError) add(field string) {
@@ -38,6 +38,6 @@ func (s *SchemaError) Missing(field string) bool {
 
 // WithName inserts a path into the error message
 func (s *SchemaError) WithName(name string) *SchemaError {
-	s.name = name
+	s.name = fmt.Sprintf("%s has ", name)
 	return s
 }
