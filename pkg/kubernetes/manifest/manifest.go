@@ -3,6 +3,7 @@ package manifest
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
@@ -51,7 +52,7 @@ func (m Manifest) Verify() error {
 	if !o.Get("metadata").IsMSI() {
 		err.add("metadata")
 	}
-	if !o.Get("metadata.name").IsStr() && m.Kind() != "List" {
+	if !o.Get("metadata.name").IsStr() && strings.ToLower(m.Kind()) != "list" {
 		err.add("metadata.name")
 	}
 
@@ -150,6 +151,27 @@ func (m Metadata) Annotations() map[string]string {
 
 // List of individual Manifests
 type List []Manifest
+
+// Has checks whether the manifest c is included in the List.
+// It correctly handles non-namespaced objects as well.
+func (l List) Has(c Manifest) bool {
+	for _, m := range l {
+		kind := m.Kind() == c.Kind()
+		name := m.Metadata().Name() == c.Metadata().Name()
+
+		// unnamespaced?
+		if kind && name && c.Metadata().Namespace() == "" {
+			return true
+		}
+
+		// no? check namespace as well
+		if kind && name && m.Metadata().Namespace() == c.Metadata().Namespace() {
+			return true
+		}
+	}
+
+	return false
+}
 
 // String returns the List as a yaml stream. In case of an error, it is
 // returned as a string instead.
