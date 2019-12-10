@@ -39,7 +39,7 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 		tmp := funk.Filter(out, func(i interface{}) bool {
 			p := objectspec(i.(manifest.Manifest))
 			for _, t := range targets {
-				if t.MatchString(strings.ToLower(p)) {
+				if t.MatchString(p) {
 					return true
 				}
 			}
