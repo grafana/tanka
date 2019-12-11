@@ -88,7 +88,7 @@ func (k *Kubernetes) listOrphaned(state manifest.List, all bool) (orphaned manif
 	}
 
 	var lastErr error
-	for _ = range kinds {
+	for range kinds {
 		select {
 		case list := <-results:
 			for _, m := range list {

@@ -167,7 +167,7 @@ func multiDiff(state manifest.List, differs []Differ) (*string, error) {
 	var d string
 	var lastErr error
 
-	for _ = range differs {
+	for range differs {
 		select {
 		case result := <-diffs:
 			if result == nil {
