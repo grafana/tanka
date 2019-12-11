@@ -51,9 +51,12 @@ func jpathCmd() *cobra.Command {
 
 func importsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "imports <file>",
-		Short: "list all transitive imports of a file",
+		Use:   "imports <directory>",
+		Short: "list all transitive imports of an environment",
 		Args:  cobra.ExactArgs(1),
+		Annotations: map[string]string{
+			"args": "baseDir",
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			var modFiles []string
 			if cmd.Flag("check").Changed {
@@ -64,22 +67,28 @@ func importsCmd() *cobra.Command {
 				}
 			}
 
-			f, err := filepath.Abs(args[0])
+			dir, err := filepath.Abs(args[0])
 			if err != nil {
-				log.Fatalln("Opening file:", err)
+				log.Fatalln("Loading environment:", err)
 			}
 
-			deps, err := jsonnet.TransitiveImports(f)
+			fi, err := os.Stat(dir)
 			if err != nil {
-				log.Fatalln("resolving imports:", err)
+				log.Fatalln("Loading environment:", err)
 			}
 
-			// include main.jsonnet as well
-			deps = append(deps, f)
+			if !fi.IsDir() {
+				log.Fatalln("The argument must be an environment's directory, but this does not seem to be the case.")
+			}
+
+			deps, err := jsonnet.TransitiveImports(dir)
+			if err != nil {
+				log.Fatalln("Resolving imports:", err)
+			}
 
 			root, err := gitRoot()
 			if err != nil {
-				log.Fatalln("invoking git:", err)
+				log.Fatalln("Invoking git:", err)
 			}
 			if modFiles != nil {
 				for _, m := range modFiles {
