@@ -20,6 +20,8 @@
     "react-dom": "^16.11.0",
     "remark-emoji": "^2.0.2",
     "remark-external-links": "^5.0.0",
-    "remark-github": "^8.0.0"
+    "remark-github": "^8.0.0",
+    "typeface-fira-mono": "^0.0.72",
+    "typeface-roboto-mono": "^0.0.75"
   }
 }

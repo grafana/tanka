@@ -11,7 +11,7 @@ export default {
     {
       resolve: "gatsby-remark-vscode",
       options: {
-        colorTheme: "Gruvbox Dark Medium",
+        colorTheme: "Material Theme Darker",
         injectStyles: false,
         extensions: [
           {
@@ -19,8 +19,8 @@ export default {
             version: "0.1.0"
           },
           {
-            identifier: "jdinhlife.gruvbox",
-            version: "1.4.0"
+            identifier: "Equinusocio.vsc-material-theme",
+            version: "30.0.0"
           }
         ]
       }
@@ -38,8 +38,8 @@ export default {
         "Using Jsonnet",
         "Parameterizing",
         "Abstraction",
-        "Environments",
-        "k.libsonnet"
+        "k.libsonnet",
+        "Environments"
       ]
     },
     {
