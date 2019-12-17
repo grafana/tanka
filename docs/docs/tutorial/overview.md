@@ -1,0 +1,25 @@
+---
+title: Overview
+menu: Tutorial
+route: /tutorial/overview
+---
+
+# Tutorial
+
+## Learning how to use Tanka
+
+Welcome to the Tanka tutorial!
+The following sections will explain how to deploy an example stack,
+([Grafana](https://hub.docker.com/grafana/grafana) and
+[Prometheus](https://hub.docker.com/prom/prometheus)), to Kubernetes. We will also deal with parameters, differences between `dev` and `prod` and how to stop worrying and love libraries.
+
+To do so, we have the following steps:
+
+1. [Deploying **without** Tanka first](/tutorial/refresher): Using good old `kubectl` to understand what Tanka will do for us.
+2. Using Jsonnet: Doing the same thing once again, but this time with Tanka and Jsonnet.
+3. Parameterizing: Using Variables to avoid data duplication.
+4. Abstraction: Splitting components into individual parts.
+5. Environments: Dealing with differences between `dev` and `prod`.
+6. `k.libsonnet`: Avoid having to remember API resources.
+
+Completing this gives a solid knowledge of Tanka's fundamentals. Let's get started!

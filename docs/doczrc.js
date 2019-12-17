@@ -28,28 +28,42 @@ export default {
   ],
 
   menu: [
+    "Introduction",
+    "Installation",
     {
-      name: "General",
-      menu: ["Introduction", "Installation", "Getting started", "FAQ"]
-    },
-    {
-      name: "Environments",
-      menu: ["Overview", "Directory structure", "Configuration"]
+      name: "Tutorial",
+      menu: [
+        "Overview",
+        "Refresher on deploying",
+        "Using Jsonnet",
+        "Parameterizing",
+        "Abstraction",
+        "Environments",
+        "k.libsonnet"
+      ]
     },
     {
       name: "Writing Jsonnet",
       menu: [
-        "Language overview",
+        "Syntax overview",
         "main.jsonnet",
-        "Libraries",
-        "Vendoring",
-        "k.libsonnet",
+        "The global object",
         "Native Functions"
       ]
     },
     {
-      name: "Other",
-      menu: ["Command-line completion", "Output filtering"]
-    }
+      name: "Libraries",
+      menu: [
+        "Import paths",
+        "Using libraries",
+        "Creating and structure",
+        "Installing and publishing"
+      ]
+    },
+    "Command-line completion",
+    "Diff strategies",
+    "Output filtering",
+    "Known issues",
+    "Frequently asked questions"
   ]
 };

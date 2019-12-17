@@ -1,7 +1,6 @@
 ---
-name: "FAQ"
-route: "/general/faq"
-menu: "General"
+name: "Frequently asked questions"
+route: "/faq"
 ---
 
 # Frequently asked questions

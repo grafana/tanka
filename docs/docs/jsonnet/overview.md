@@ -1,5 +1,5 @@
 ---
-name: Language overview
+name: Syntax overview
 route: /jsonnet/overview
 menu: Writing Jsonnet
 ---
