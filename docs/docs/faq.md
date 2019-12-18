@@ -5,7 +5,7 @@ route: "/faq"
 
 # Frequently asked questions
 
-## How is this different from `ksonnet`?
+## How is this different from ksonnet?
 
 Tanka aims to be a fully compatible, drop-in replacement for the main workflow
 of `ksonnet` (`show`, `diff`, `apply`).

@@ -6,7 +6,7 @@ route: /tutorial/refresher
 
 # Refresher on deploying
 
-## Deploying to Kubernetes using `kubectl`
+## Deploying to Kubernetes using kubectl
 
 To understand how Tanka works, it is important to know what steps are required
 for the task of deploying Grafana and Prometheus to Kubernetes:

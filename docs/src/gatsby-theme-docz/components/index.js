@@ -25,7 +25,8 @@ const Box = props => (
       borderColor: "text",
       padding: ".25em",
       paddingLeft: "1em",
-      background: localStyles.backgroundLight
+      background: localStyles.backgroundLight,
+      marginBottom: "1rem"
     }}
   >
     {// remove the marginBottom from the last element

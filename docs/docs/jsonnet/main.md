@@ -4,7 +4,7 @@ route: "/jsonnet/main"
 menu: "Writing Jsonnet"
 ---
 
-# `main.jsonnet`
+# main.jsonnet
 
 The most important file is called `main.jsonnet`, because this is where Tanka
 invokes the Jsonnet compiler on. Every single line of Jsonnet, including
@@ -106,7 +106,7 @@ Using an array of objects is also fine:
 ]
 ```
 
-### `List` type
+### List type
 
 Users of `kubectl` might have had contact with a type called `List`. It is not
 part of the official Kubernetes API but rather a pseudo-type introduced by

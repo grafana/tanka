@@ -8,7 +8,7 @@ menu: "Writing Jsonnet"
 
 Tanka extends the Jsonnet standard library with some common helper utilities.
 
-### `parseJSON`
+## parseJSON
 
 ```ts
 parseJSON(string json) Object
@@ -16,7 +16,7 @@ parseJSON(string json) Object
 
 `parseJSON` wraps `json.Unmarshal` to convert a json string into a dict
 
-### `parseYAML`
+## parseYAML
 
 ```ts
 parseYAML(string yaml) []Object
@@ -26,7 +26,7 @@ parseYAML(string yaml) []Object
 a set of dicts. If `yaml` only contains a single document, a single value array
 will be returned.
 
-### `manifestJSONFromJSON`
+## manifestJSONFromJSON
 
 ```ts
 manifestJSONFromJSON(string json, int indent) string
@@ -34,7 +34,7 @@ manifestJSONFromJSON(string json, int indent) string
 
 `manifestJSONFromJSON` reserializes JSON and allows to change the indentation.
 
-### `manifestYAMLFromJSON`
+## manifestYAMLFromJSON
 
 ```ts
 manifestYAMLFromJSON(string json) string
@@ -42,7 +42,7 @@ manifestYAMLFromJSON(string json) string
 
 `manifestYamlFromJSON` serializes a JSON string as a YAML document
 
-### `escapeStringRegex`
+## escapeStringRegex
 
 ```ts
 escapeStringRegex(string s) string
@@ -51,7 +51,7 @@ escapeStringRegex(string s) string
 `escapeStringRegex` escapes all regular expression metacharacters and returns a
 regular expression that matches the literal text.
 
-### `regexMatch`
+## regexMatch
 
 ```ts
 regexMatch(string regex, string s) boolean
@@ -60,7 +60,7 @@ regexMatch(string regex, string s) boolean
 `regexMatch` returns whether the given string is matched by the given
 [RE2](https://golang.org/s/re2syntax) regular expression.
 
-### `regexSubst`
+## regexSubst
 
 ```ts
 regexSubst(string regex, string src, string repl) string

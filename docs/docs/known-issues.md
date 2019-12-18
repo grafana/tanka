@@ -7,7 +7,7 @@ route: "/known-issues"
 
 Below is a list of common errors and how to address them.
 
-### `Evaluating jsonnet: RUNTIME ERROR: Undefined external variable: __ksonnet/components`
+### Evaluating jsonnet: RUNTIME ERROR: Undefined external variable: __ksonnet/components
 
 When migrating from `ksonnet`, this error might occur, because Tanka does not
 provide the global `__ksonnet` variable, nor does it strictly have the concept
@@ -16,7 +16,7 @@ You will need to use the plain Jsonnet `import` feature instead. Note that this
 requires your code to be inside of one of the
 [import paths](directory-structure.md/#import-paths).
 
-### `Evaluating jsonnet: RUNTIME ERROR: couldn't open import "k.libsonnet": no match locally or in the Jsonnet library paths`
+### Evaluating jsonnet: RUNTIME ERROR: couldn't open import "k.libsonnet": no match locally or in the Jsonnet library paths
 
 This error can occur when the `ksonnet` kubernetes libraries are missing in the
 import paths. While `ksonnet` used to magically include them, Tanka follows a
