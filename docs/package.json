@@ -22,6 +22,7 @@
     "remark-external-links": "^5.0.0",
     "remark-github": "^8.0.0",
     "typeface-fira-mono": "^0.0.72",
-    "typeface-roboto-mono": "^0.0.75"
+    "typeface-roboto-mono": "^0.0.75",
+    "typeface-source-sans-pro": "^0.0.75"
   }
 }

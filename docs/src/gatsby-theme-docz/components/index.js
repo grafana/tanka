@@ -1,7 +1,6 @@
 /** @jsx jsx */
 import { jsx } from "theme-ui";
 import React from "react";
-import { Global } from "@emotion/core";
 
 import * as headings from "gatsby-theme-docz/src/components/Headings";
 import { Layout } from "gatsby-theme-docz/src/components/Layout";
@@ -10,30 +9,13 @@ import { Props } from "gatsby-theme-docz/src/components/Props";
 import ThemeStyles from "gatsby-theme-docz/src/theme/styles";
 
 import "typeface-fira-mono";
+import "typeface-source-sans-pro";
 
-// codeblock style
-const Code = props => (
-  <code
-    sx={{
-      fontFamily: "Fira Mono, monospace",
-      fontSize: "1em"
-    }}
-  >
-    {props.children}
-  </code>
-);
+import { Code, CodeBlock, Pre } from "./codeblock";
 
-const Pre = props => (
-  <pre
-    {...props}
-    sx={{
-      ...ThemeStyles.pre,
-      fontSize: "1rem",
-      lineHeight: 1.4,
-      overflowX: "auto"
-    }}
-  ></pre>
-);
+const localStyles = {
+  backgroundLight: "#2d37471f"
+};
 
 // custom "box" (blockquote)
 const Box = props => (
@@ -43,7 +25,7 @@ const Box = props => (
       borderColor: "text",
       padding: ".25em",
       paddingLeft: "1em",
-      background: "#2d37471f"
+      background: localStyles.backgroundLight
     }}
   >
     {// remove the marginBottom from the last element
@@ -72,13 +54,20 @@ const Table = props => (
   </div>
 );
 
+const inlineCode = props => (
+  <Code style={{ background: localStyles.backgroundLight }}>
+    {props.children}
+  </Code>
+);
+
 export default {
   ...headings,
   playground: Playground,
   layout: Layout,
   props: Props,
-  code: Code,
+  code: CodeBlock,
   pre: Pre,
   blockquote: Box,
-  table: Table
+  table: Table,
+  inlineCode: inlineCode
 };
