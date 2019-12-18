@@ -249,6 +249,10 @@ spec:
 Spend some time here and try to relocate resources from the output in the
 `.jsonnet` source.
 
+> **Bonus:** There is also `tk eval`, which displays the raw JSON object
+> `main.jsonnet` evaluates to. Tanka won't extract resources or mutate the structure
+> here, so you can verify how your Jsonnet works.
+
 ## Connecting to the cluster
 
 The YAML looks as expected? Let's apply it to the cluster. To do so, Tanka needs
