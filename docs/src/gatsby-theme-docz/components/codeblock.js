@@ -20,7 +20,7 @@ export const Code = props => (
 // Smart codeblock: shows only first 25 lines, if longer an expand button
 export const CodeBlock = props => (
   <Code>
-    {React.Children.toArray(props.children).length > 25 ? (
+    {React.Children.toArray(props.children).length > 20 ? (
       <LongCode>{props.children}</LongCode>
     ) : (
       props.children
