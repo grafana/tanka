@@ -38,7 +38,7 @@ export default {
         "Using Jsonnet",
         "Parameterizing",
         "Abstraction",
-        "k.libsonnet",
+        "Kubernetes library",
         "Environments"
       ]
     },

@@ -163,10 +163,10 @@ passed function parameters and return the assembled object.
 
 To use it, just add it to the root object in `main.jsonnet`:
 
-```diff
+```jsonnet
+  (import "kubernetes.libsonnet") + // this line adds it
   (import "grafana.jsonnet") +
   (import "prometheus.jsonnet") +
-+ (import "kubernetes.libsonnet") +
   { /* ... */ }
 ```
 
