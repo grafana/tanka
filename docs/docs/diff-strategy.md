@@ -33,8 +33,8 @@ differences over there.
 This has the huge benefit that all possible changes by webhooks and other
 internal components of Kubernetes can be encountered as well.
 
-However, this is a fairly new feature and only available for Kubernetes versions
-greater than 1.13. Only the API server (master nodes) needs to have that
+However, this is a fairly new feature and only available on Kubernetes 1.13 or
+later. Only the API server (master nodes) needs to have that
 version, worker nodes do not matter.
 
 There is a
