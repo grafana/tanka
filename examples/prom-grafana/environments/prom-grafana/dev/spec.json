@@ -1,0 +1,11 @@
+{
+  "apiVersion": "tanka.dev/v1alpha1",
+  "kind": "Environment",
+  "metadata": {
+    "name": "dev"
+  },
+  "spec": {
+    "apiServer": "",
+    "namespace": "prom-grafana-dev"
+  }
+}

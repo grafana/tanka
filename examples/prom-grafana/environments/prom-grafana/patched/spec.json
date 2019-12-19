@@ -2,10 +2,10 @@
   "apiVersion": "tanka.dev/v1alpha1",
   "kind": "Environment",
   "metadata": {
-    "name": "default"
+    "name": "patched"
   },
   "spec": {
-    "apiServer": "https://127.0.0.1:6443",
-    "namespace": "monitoring"
+    "apiServer": "",
+    "namespace": "default"
   }
 }

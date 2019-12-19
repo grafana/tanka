@@ -15,16 +15,6 @@
       "source": {
         "git": {
           "remote": "https://github.com/ksonnet/ksonnet-lib",
-          "subdir": "ksonnet.beta.3"
-        }
-      },
-      "version": "0d2f82676817bbf9e4acf6495b2090205f323b9f",
-      "sum": "Z3pCZ5Zzgi/eCCOruCGS8bslwVOAhxhNJLZsevXDvFs="
-    },
-    {
-      "source": {
-        "git": {
-          "remote": "https://github.com/ksonnet/ksonnet-lib",
           "subdir": "ksonnet.beta.4"
         }
       },
