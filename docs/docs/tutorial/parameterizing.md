@@ -12,6 +12,7 @@ in terms of maintainability and readability.
 To do so, the following sections will explore some ways Jsonnet provides us with.
 
 ## Config object
+
 The most straightforward thing to do is creating a hidden object that holds all
 actual values in a single place to be consumed by the actual resources.
 
@@ -36,6 +37,7 @@ Such an object could look like this:
 ```
 
 We can then replace hardcoded values with a reference to this object:
+
 ```diff
 { // <- This is $
   _config:: { /* .. */ },

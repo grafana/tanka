@@ -288,11 +288,13 @@ cluster.
 
 > **Note**: Tanka won't create the namespace for you. Either include it in
 > Jsonnet, or with the following command:
+>
 > ```bash
 > $ kubectl create ns monitoring
 > ```
 
 ## Verifying the changes
+
 Before applying to the cluster, Tanka gives you a chance to check that your
 changes actually behave as expected: `tk diff` works just like `git diff` – you
 see what will be changed.
@@ -337,6 +339,7 @@ since we are using a blank namespace.
 > differences.
 
 ## Applying to the cluster
+
 Once it's all looking good, `tk apply` serves the exact same purpose as `kubectl apply`:
 
 ```bash
@@ -357,6 +360,7 @@ After that, `kubectl` is used to apply to the cluster. By **piping to
 edge-cases of differing Kubernetes client implemetations should ever occur.
 
 ## Checking it worked
+
 Again, let's connect to Grafana:
 
 ```bash

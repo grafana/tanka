@@ -1,21 +1,21 @@
 /** @jsx jsx */
-import { jsx } from "theme-ui";
-import React, { useState } from "react";
+import { jsx } from "theme-ui"
+import React, { useState } from "react"
 
-import ThemeStyles from "gatsby-theme-docz/src/theme/styles";
-import { ChevronDown, ChevronUp } from "gatsby-theme-docz/src/components/Icons";
+import ThemeStyles from "gatsby-theme-docz/src/theme/styles"
+import { ChevronDown, ChevronUp } from "gatsby-theme-docz/src/components/Icons"
 
 export const Code = props => (
   <code
     sx={{
       ...props.style,
       fontFamily: "Fira Mono, monospace",
-      fontSize: "1rem"
+      fontSize: "1rem",
     }}
   >
     {props.children}
   </code>
-);
+)
 
 // Smart codeblock: shows only first 25 lines, if longer an expand button
 export const CodeBlock = props => (
@@ -26,7 +26,7 @@ export const CodeBlock = props => (
       props.children
     )}
   </Code>
-);
+)
 
 export const Pre = props => (
   <pre
@@ -35,26 +35,26 @@ export const Pre = props => (
       ...ThemeStyles.pre,
       fontSize: "1rem",
       lineHeight: 1.4,
-      overflowX: "auto"
+      overflowX: "auto",
     }}
   ></pre>
-);
+)
 
 // Expandable codeblock
 const LongCode = props => {
-  const [toggled, setToggled] = useState(false);
+  const [toggled, setToggled] = useState(false)
 
   return (
     <>
       {toggled
         ? props.children
         : React.Children.map(props.children, (child, i) => {
-            if (i < 20 * 2) return child;
+            if (i < 20 * 2) return child
           })}
       <Expand toggled={toggled} onClick={() => setToggled(!toggled)}></Expand>
     </>
-  );
-};
+  )
+}
 
 // ExpandButton
 const Expand = props => (
@@ -69,22 +69,22 @@ const Expand = props => (
       textDecoration: "underline",
       cursor: "pointer",
       ":hover": {
-        textDecoration: "none"
+        textDecoration: "none",
       },
       display: "flex",
       padding: 0,
       width: "100%",
-      justifyContent: "center"
+      justifyContent: "center",
     }}
   >
     <div
       sx={{
         display: "flex",
-        alignItems: "center"
+        alignItems: "center",
       }}
     >
       {props.toggled ? <ChevronUp></ChevronUp> : <ChevronDown></ChevronDown>}
       Show {props.toggled ? "less" : "more"}
     </div>
   </button>
-);
+)

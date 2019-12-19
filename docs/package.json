@@ -1,28 +1,34 @@
 {
-  "name": "tanka",
+  "name": "tanka-docs",
+  "private": true,
+  "description": "Docs for Grafana Tanka",
+  "author": "sh0rez <me@shorez.de>",
   "repository": "https://github.com/grafana/tanka.git",
-  "license": "MIT",
-  "files": [
-    "src/",
-    "doczrc.js",
-    "package.json"
-  ],
-  "scripts": {
-    "dev": "docz dev",
-    "build": "docz build",
-    "serve": "docz serve"
-  },
   "dependencies": {
-    "docz": "latest",
+    "docz": "^2.3.0-alpha.5",
+    "gatsby": "^2.18.12",
+    "gatsby-image": "^2.2.34",
     "gatsby-remark-vscode": "^1.4.0",
+    "gatsby-theme-docz": "^2.3.0-alpha.5",
     "prop-types": "^15.7.2",
-    "react": "^16.11.0",
-    "react-dom": "^16.11.0",
-    "remark-emoji": "^2.0.2",
-    "remark-external-links": "^5.0.0",
-    "remark-github": "^8.0.0",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-helmet": "^5.2.1",
     "typeface-fira-mono": "^0.0.72",
-    "typeface-roboto-mono": "^0.0.75",
     "typeface-source-sans-pro": "^0.0.75"
+  },
+  "devDependencies": {
+    "prettier": "^1.19.1"
+  },
+  "keywords": [
+    "gatsby"
+  ],
+  "license": "Apache v2",
+  "scripts": {
+    "build": "gatsby build",
+    "dev": "gatsby develop",
+    "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
+    "serve": "gatsby serve",
+    "clean": "gatsby clean"
   }
 }

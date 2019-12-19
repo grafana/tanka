@@ -7,7 +7,7 @@ route: "/known-issues"
 
 Below is a list of common errors and how to address them.
 
-### Evaluating jsonnet: RUNTIME ERROR: Undefined external variable: __ksonnet/components
+### Evaluating jsonnet: RUNTIME ERROR: Undefined external variable: \_\_ksonnet/components
 
 When migrating from `ksonnet`, this error might occur, because Tanka does not
 provide the global `__ksonnet` variable, nor does it strictly have the concept

@@ -151,7 +151,9 @@ thing in `dev` and `prod` your choices are very limited.
 Let's explore how Tanka can help us here in the next section!
 
 ## Cleaning up
+
 Let's remove everything we created to start fresh with Jsonnet in the next section:
+
 ```bash
 $ kubectl delete -f prometheus.yaml grafana.yaml
 ```

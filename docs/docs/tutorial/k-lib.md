@@ -16,6 +16,7 @@ Luckily, it is possible to generate such a library from the Kubernetes OpenAPI
 specification! Even better, it has already been done for you.
 
 ## k.libsonnet
+
 The library is called `k.libsonnet` (sometimes also `ksonnet-lib`), currently
 available at https://github.com/ksonnet/ksonnet-lib.
 
@@ -34,12 +35,12 @@ If you do not have any strong reasons against it, just adopt the wrapper as
 well, it will ease your work. Ultimately, we hope to integrate our enhancements
 in the other library as well.
 
-
 ## Installation
+
 Like every other external library, `ksonnet-lib` can be installed using `jsonnet-bundler`. However, we need to pick a version first:
 
 | Version          | OpenAPI version | Notes                                                                                                      |
-|------------------|-----------------|------------------------------------------------------------------------------------------------------------|
+| ---------------- | --------------- | ---------------------------------------------------------------------------------------------------------- |
 | `ksonnet.beta.3` | `v1.8.0`        |                                                                                                            |
 | `ksonnet.beta.4` | `v1.14.0`       | Required for 1.16+: includes `apps/v1`, which must be used for `Deployment`, etc. from this version and up |
 
@@ -57,6 +58,7 @@ $ jb install github.com/grafana/jsonnet-libs/ksonnet-util
 ```
 
 This creates the following files in `/vendor`:
+
 ```bash
 vendor
 ├── ksonnet.beta.4
@@ -70,6 +72,7 @@ vendor
 > can be used for your own ones. Check [import paths](/libraries/import-paths) for more information.
 
 ## Aliasing
+
 While you could already use the library by importing `ksonnet.beta.4/k.libsonnet`, this has a drawback: Because the Kubernetes API version is indirectly included in the import name, it makes it impossible to create version agnostic downstream libraries.
 
 As a workaround, most libraries expect the correct version of `k.libsonnet` to be importable as a literal `k.libsonnet` (without any package name prefixes). While Jsonnet-bundler won't let you do that, you can alias it by hand:
@@ -80,14 +83,16 @@ First, create a file `/lib/k.libsonnet` and add the following line to it:
 import "ksonnet.beta.4/k.libsonnet"
 ```
 
-> **More information**: 
-> * This works, because `import` behaves like copy-pasting. So
+> **More information**:
+>
+> - This works, because `import` behaves like copy-pasting. So
 >   the contents of `ksonnet.beta.4` are "copied" into our new file, making them
->   behave exactly the same.  
-> * Make sure to use the `lib/` instead of the `vendor/` folder, because `jb`
+>   behave exactly the same.
+> - Make sure to use the `lib/` instead of the `vendor/` folder, because `jb`
 >   cleans everything from `vendor/` it did not create itself on each run.
 
 ## Using it
+
 First we need to import it in `main.jsonnet`:
 
 ```diff
@@ -124,13 +129,14 @@ Now that we have installed the correct version, let's use it in
 
     // instead of using a service constructor, our wrapper provides
     // a handy helper to automatically generate a service for a Deployment
-    service: $.util.serviceFor(self.deployment) 
+    service: $.util.serviceFor(self.deployment)
              + service.mixin.spec.withType("NodePort"),
   }
 }
 ```
 
 ## Full example
+
 Now that creating the individual objects does not take more than 5 lines, we can merge it all back into a single file and take a look at the whole picture:
 
 ```jsonnet
@@ -146,7 +152,7 @@ Now that creating the individual objects does not take more than 5 lines, we can
       name: "prometheus"
     }
   },
-  
+
   local deployment = $.apps.v1.deployment,
   local container = $.core.v1.container,
   local port = $.core.v1.containerPort,

@@ -25,10 +25,11 @@ But again, **Jsonnet can be the solution**: By extracting the actual objects
 into a library, you can import them in as many environments as you need!
 
 ## Creating a library
+
 A library is nothing special, just a folder of `.libsonnet` files somewhere in the import paths:
 
 | Path      | Description                                           |
-|-----------|-------------------------------------------------------|
+| --------- | ----------------------------------------------------- |
 | `/lib`    | Custom, user-created libraries only for this project. |
 | `/vendor` | External libraries installed using Jsonnet-bundler    |
 
@@ -44,6 +45,7 @@ project. Let's set one up:
 ```
 
 ##### config.libsonnet
+
 For documentation purposes it is handy to have a separate file for parameters and used images:
 
 ```jsonnet
@@ -75,6 +77,7 @@ For documentation purposes it is handy to have a separate file for parameters an
 ```
 
 ##### prom-grafana.libsonnet
+
 ```jsonnet
 (import "ksonnet-util/kausal.libsonnet") +
 (import "./config.libsonnet") +
@@ -114,6 +117,7 @@ For documentation purposes it is handy to have a separate file for parameters an
 ```
 
 ## Dev and Prod
+
 So far we have only used the `environments/default` environment. Let's create some real ones:
 
 ```bash
@@ -137,7 +141,7 @@ add some proper tags:
 ```jsonnet
 // environments/prom-grafana/prod
 (import "ksonnet-util/kausal.libsonnet") +
-(import "prom-grafana/prom-grafana.libsonnet") + 
+(import "prom-grafana/prom-grafana.libsonnet") +
 {
   // again, we only want to patch, not replace, thus +::
   _images+:: {
@@ -151,6 +155,7 @@ add some proper tags:
 ```
 
 ## Patching
+
 The above works well for libraries we control ourselves, but what when another
 team wrote the library, it was installed using `jb` from GitHub or you can't
 change it easily?
@@ -160,7 +165,7 @@ Here comes the already familiar `+:` (or `+::`) syntax into play. It allows to
 
 ```jsonnet
 (import "ksonnet-util/kausal.libsonnet") +
-(import "prom-grafana/prom-grafana.libsonnet") + 
+(import "prom-grafana/prom-grafana.libsonnet") +
 {
   promgrafana+: {
     prometheus+: {

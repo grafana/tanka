@@ -25,5 +25,6 @@ To do so, we have the following steps:
 Completing this gives a solid knowledge of Tanka's fundamentals. Let's get started!
 
 ## Resources
-* The final outcome of this tutorial can be seen here:
+
+- The final outcome of this tutorial can be seen here:
   [https://github.com/grafana/tanka/examples/prom-grafana](https://github.com/grafana/tanka/tree/master/examples/prom-grafana)

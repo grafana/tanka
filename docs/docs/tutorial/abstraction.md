@@ -12,13 +12,15 @@ anymore now that we have the `_config` object for our tunables, the
 all the brackets, it's even worse than yaml at the moment.
 
 ## Splitting it up
+
 Let's start cleaning this up by separating logical pieces into distinct files:
 
-* `main.jsonnet`: Still our main file, containing the `_config` object and importing the other files
-* `grafana.jsonnet`: `Deployment` and `Service` for the Grafana instance
-* `prometheus.jsonnet`: `Deployment` and `Service` for the Prometheus server
+- `main.jsonnet`: Still our main file, containing the `_config` object and importing the other files
+- `grafana.jsonnet`: `Deployment` and `Service` for the Grafana instance
+- `prometheus.jsonnet`: `Deployment` and `Service` for the Prometheus server
 
 ##### /environments/default/grafana.jsonnet
+
 ```jsonnet
 {
   // DO NOT use the root level here.
@@ -86,6 +88,7 @@ The file should contain just the same that was located under the `grafana` key
 on the root object before. Do the same for `/environments/default/prometheus.jsonnet` as well.
 
 ##### /environments/default/main.jsonnet
+
 ```jsonnet
 // Think of `import` as copy-pasting the contents
 // of ./grafana.jsonnet here
@@ -115,6 +118,7 @@ on the root object before. Do the same for `/environments/default/prometheus.jso
 > all three objects joined to one big object, which is then converted to JSON.
 
 ## Helper utilities
+
 While `main.jsonnet` is now short and very readable, the other two files are not
 really an improvement over regular yaml, mostly because they are still full of
 boilerplate.
@@ -127,6 +131,7 @@ will hold our Kubernetes utilities.
 > not have to use it, it dinstinguished helper code from actual configuration.
 
 ### A Deployment constructor
+
 Creating a `Deployment` requires some mandatory information and a lot of
 boilerplate. A function that creates one could look like this:
 

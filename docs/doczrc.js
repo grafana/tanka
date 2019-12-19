@@ -2,30 +2,12 @@ export default {
   title: "Tanka",
   description: "Flexible, reusable and concise configuration for Kubernetes",
 
-  public: "./public",
-  ignore: ["design/**"],
+  public: "/static",
+  ignore: ["design/**", ".vscodeext/**"],
 
-  mdPlugins: [],
-  hastPlugins: [],
-  gatsbyRemarkPlugins: [
-    {
-      resolve: "gatsby-remark-vscode",
-      options: {
-        colorTheme: "Material Theme Darker",
-        injectStyles: false,
-        extensions: [
-          {
-            identifier: "heptio.jsonnet",
-            version: "0.1.0"
-          },
-          {
-            identifier: "Equinusocio.vsc-material-theme",
-            version: "30.0.0"
-          }
-        ]
-      }
-    }
-  ],
+  themeConfig: {
+    showDarkModeSwitch: false,
+  },
 
   menu: [
     "Introduction",
@@ -39,8 +21,8 @@ export default {
         "Parameterizing",
         "Abstraction",
         "Kubernetes library",
-        "Environments"
-      ]
+        "Environments",
+      ],
     },
     {
       name: "Writing Jsonnet",
@@ -48,8 +30,8 @@ export default {
         "Syntax overview",
         "main.jsonnet",
         // "The global object",
-        "Native Functions"
-      ]
+        "Native Functions",
+      ],
     },
     {
       name: "Libraries",
@@ -57,13 +39,13 @@ export default {
         "Import paths",
         // "Using libraries",
         // "Creating and structure",
-        "Installing and publishing"
-      ]
+        "Installing and publishing",
+      ],
     },
     "Command-line completion",
     "Diff strategies",
     "Output filtering",
     "Known issues",
-    "Frequently asked questions"
-  ]
-};
+    "Frequently asked questions",
+  ],
+}

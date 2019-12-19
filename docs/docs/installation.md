@@ -9,12 +9,12 @@ To install Tanka, it is usually sufficient to install the `tk` binary. It
 contains the Jsonnet compiler and everything else required, apart from some
 prerequesites:
 
-* [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/): Tanka
+- [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/): Tanka
   uses `kubectl` to communicate to your cluster. This means `kubectl` must be
   available somewhere on your `$PATH`. If you ever have worked with Kubernetes
   before, this should be the case anyways.
-* `diff`: To compute differences, standard UNIX `diff(1)` is required.
-* (recommended) `jb`: [#Jsonnet-bundler](#jsonnet-bundler), the Jsonnet package
+- `diff`: To compute differences, standard UNIX `diff(1)` is required.
+- (recommended) `jb`: [#Jsonnet-bundler](#jsonnet-bundler), the Jsonnet package
   manager
 
 ## Precompiled binaries (recommended)
@@ -46,6 +46,7 @@ $ make install
 ---
 
 ## Jsonnet-bundler
+
 Apart from the `tk` binary, you will most probably also want to install
 Jsonnet-bundler, the Jsonnet package manager:
 
