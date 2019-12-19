@@ -77,7 +77,7 @@ For documentation purposes it is handy to have a separate file for parameters an
 ##### prom-grafana.libsonnet
 ```jsonnet
 (import "ksonnet-util/kausal.libsonnet") +
-(import "./config.libsonnet") + // import our parameters
+(import "./config.libsonnet") +
 {
   local deployment = $.apps.v1.deployment,
   local container = $.core.v1.container,
@@ -87,28 +87,29 @@ For documentation purposes it is handy to have a separate file for parameters an
   // alias our params, too long to type every time
   local c = $._config.promgrafana,
 
-  // this are the object definitions that were in main.jsonnet before
-  prometheus: {
-    deployment: deployment.new(
-      name=c.prometheus.name, replicas=1,
-      containers=[
-        container.new(c.prometheus.name, $._images.promgrafana.prometheus)
-        + container.withPorts([port.new("api", c.prometheus.port)]),
-      ],
-    ),
-    service: $.util.serviceFor(self.deployment),
-  },
+  promgrafana: {
+    prometheus: {
+      deployment: deployment.new(
+        name=c.prometheus.name, replicas=1,
+        containers=[
+          container.new(c.prometheus.name, $._images.promgrafana.prometheus)
+          + container.withPorts([port.new("api", c.prometheus.port)]),
+        ],
+      ),
+      service: $.util.serviceFor(self.deployment),
+    },
 
-  grafana: {
-    deployment: deployment.new(
-      name=c.grafana.name, replicas=1,
-      containers=[
-        container.new(c.grafana.name, $._images.promgrafana.grafana)
-        + container.withPorts([port.new("ui", c.grafana.port)]),
-      ],
-    ),
-    service: $.util.serviceFor(self.deployment) + service.mixin.spec.withType("NodePort"),
-  },
+    grafana: {
+      deployment: deployment.new(
+        name=c.grafana.name, replicas=1,
+        containers=[
+          container.new(c.grafana.name, $._images.promgrafana.grafana)
+          + container.withPorts([port.new("ui", c.grafana.port)]),
+        ],
+      ),
+      service: $.util.serviceFor(self.deployment) + service.mixin.spec.withType("NodePort"),
+    },
+  }
 }
 ```
 

@@ -23,3 +23,7 @@ To do so, we have the following steps:
 6. [`k.libsonnet`](/tutorial/k-lib): Avoid having to remember API resources.
 
 Completing this gives a solid knowledge of Tanka's fundamentals. Let's get started!
+
+## Resources
+* The final outcome of this tutorial can be seen here:
+  [https://github.com/grafana/tanka/examples/prom-grafana](https://github.com/grafana/tanka/tree/master/examples/prom-grafana)
