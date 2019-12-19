@@ -1,6 +1,6 @@
 ---
 name: "Diff strategies"
-route: "/other/diff-strategy"
+route: "/diff-strategy"
 ---
 
 # Diff Strategies

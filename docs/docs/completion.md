@@ -1,6 +1,6 @@
 ---
 name: "Command-line completion"
-route: "/other/completion"
+route: "/completion"
 ---
 
 # Command-line Completion

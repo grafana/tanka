@@ -47,7 +47,7 @@ export default {
       menu: [
         "Syntax overview",
         "main.jsonnet",
-        "The global object",
+        // "The global object",
         "Native Functions"
       ]
     },
@@ -55,8 +55,8 @@ export default {
       name: "Libraries",
       menu: [
         "Import paths",
-        "Using libraries",
-        "Creating and structure",
+        // "Using libraries",
+        // "Creating and structure",
         "Installing and publishing"
       ]
     },

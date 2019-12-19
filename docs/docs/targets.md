@@ -1,6 +1,6 @@
 ---
 name: "Output filtering"
-route: "/other/output-filtering"
+route: "/output-filtering"
 ---
 
 # Output Filtering

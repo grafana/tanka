@@ -174,3 +174,6 @@ Now that creating the individual objects does not take more than 5 lines, we can
   },
 }
 ```
+
+That's a pretty big improvement, considering how verbose and error-prone it was
+before!

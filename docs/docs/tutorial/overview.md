@@ -10,8 +10,8 @@ route: /tutorial/overview
 
 Welcome to the Tanka tutorial!
 The following sections will explain how to deploy an example stack,
-([Grafana](https://hub.docker.com/grafana/grafana) and
-[Prometheus](https://hub.docker.com/prom/prometheus)), to Kubernetes. We will also deal with parameters, differences between `dev` and `prod` and how to stop worrying and love libraries.
+([Grafana](https://hub.docker.com/r/grafana/grafana) and
+[Prometheus](https://hub.docker.com/r/prom/prometheus)), to Kubernetes. We will also deal with parameters, differences between `dev` and `prod` and how to stop worrying and love libraries.
 
 To do so, we have the following steps:
 
