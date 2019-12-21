@@ -13,12 +13,12 @@ it.
 
 It has a lot in common with more _real_ programming languages such as JavaScript
 than with markup languages, still it is tailored specifically to representing
-data and configuration. Opposing to JSON (and YAML) it is a language meant for
+data and configuration. As opposed to JSON (and YAML) it is a language meant for
 humans, not for computers.
 
 ## Creating a new project
 
-To get started with Tanka and Jsonnet, let's initiate a new project:
+To get started with Tanka and Jsonnet, let's initiate a new project, in which we will install both Prometheus and Grafana into our Kubernetes cluster:
 
 ```bash
 $ mkdir prom-grafana && cd prom-grafana # create a new folder for the project and change to it
@@ -47,7 +47,7 @@ When using Tanka, you apply **configuration** for an **Environment** to a
 Kubernetes **cluster**. An Environment is some logical group of pieces that form
 an application stack.
 
-Grafana for example runs [Loki](https://grafana.com/loki),
+[Grafana Labs](https://grafana.com) for example runs [Loki](https://grafana.com/loki),
 [Cortex](https://cortexmetrics.io) and of course
 [Grafana](https://grafana.com/grafana) for our [Grafana
 Cloud](https://grafana.com/cloud) hosted offering. For each of these, we have a
@@ -63,7 +63,7 @@ environments usually require other configuration (secrets, scale, etc) than
 | `dev`  | Name: `/environments/loki/dev` <br /> Namespace: `loki-dev`   | Name: `/environments/cortex/dev` <br /> Namespace: `cortex-dev`   | Name: `/environments/grafana/dev` <br /> Namespace: `grafana-dev`   |
 
 There is no limit in Environment complexity, create as many as you need to model
-your own requirements. Grafana for example also has all of these multiplied per
+your own requirements. Grafana Labs for example also has all of these multiplied per
 high-availability region.
 
 To get started, a single environment is enough. Lets use the automatically
@@ -73,7 +73,7 @@ created `environnments/default` for that.
 
 While `kubectl` loads all `.yaml` files in a certain folder, Tanka has a single
 file that serves as the canonical source for all contents of an environment,
-called `main.jsonnet`. This is just like go has the `main.go` or C++ the
+called `main.jsonnet`. This is just like Go has the `main.go` or C++ the
 `main.cpp`.
 
 Similar to JSON, each `.jsonnet` file holds a single object. The one returned by
@@ -246,7 +246,7 @@ spec:
 # ...
 ```
 
-Spend some time here and try to relocate resources from the output in the
+Spend some time here and try to identify resources from the output in the
 `.jsonnet` source.
 
 > **Bonus:** There is also `tk eval`, which displays the raw JSON object

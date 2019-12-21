@@ -10,6 +10,8 @@ menu: Writing Jsonnet
 expressing what shall be deployed to your Kubernetes cluster. Understanding
 Jsonnet is crucial to using Tanka effectively.
 
+This page covers the Jsonnet language itself. For more information on how to use Jsonnet with Kubernetes, see [the tutorial](/tutorial/jsonnet).
+
 ## Syntax
 
 Being a superset of JSON, the syntax is very similar:
@@ -38,7 +40,7 @@ local greeting = "hello world!";
 ## Abstraction
 
 Jsonnet has rich abstraction features, which makes it interesting for
-configuring Kubernetes, as it allows to keep configurations concicse, yet
+configuring Kubernetes, as it allows to keep configurations concise, yet
 readable.
 
 - [Imports](#imports)
@@ -80,7 +82,7 @@ local secret = {
 };
 ```
 
-To do that, we can use the special merge key `+::` like so:
+To change the namespace only, we can use the special merge key `+::` like so:
 
 ```jsonnet
 // define the patch:
@@ -108,7 +110,7 @@ The output of this is the following JSON object:
   "kind": "Secret",
   "metadata": {
     "name": "mySecret",
-    "namespace": "default"
+    "namespace": "myApp"
   },
   "data": {
     "foo": "Zm9vCg=="
@@ -130,7 +132,7 @@ Objects can have methods:
 
 ```jsonnet
 {
-  greet(who): "hello +" who,
+  greet(who): "hello " + who,
 }
 ```
 

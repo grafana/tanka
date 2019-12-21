@@ -2,6 +2,7 @@
 (import "./config.libsonnet") +
 {
   local deployment = $.apps.v1.deployment,
+  local statefulset = $.apps.v1.statefulSet,
   local container = $.core.v1.container,
   local port = $.core.v1.containerPort,
   local service = $.core.v1.service,
@@ -22,8 +23,8 @@
     },
 
     grafana: {
-      deployment: deployment.new(
-        name=c.grafana.name, replicas=1,
+      deployment: statefulset.new(
+        name=c.grafana.name, replicas=1, volumeClaims={},
         containers=[
           container.new(c.grafana.name, $._images.promgrafana.grafana)
           + container.withPorts([port.new("ui", c.grafana.port)]),

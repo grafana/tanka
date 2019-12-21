@@ -29,7 +29,7 @@ yaml.
 
 This makes debugging very hard. Furthermore, `helm` is not able to provide an
 adequate solution for edge cases. If I wanted to set some parameters that are
-not already implemented by the Chart, I have no chance but modifying the Chart
+not already implemented by the Chart, I have no choice but to modify the Chart
 first.
 
 Jsonnet on the other hand got you covered by supporting mixing (patching,

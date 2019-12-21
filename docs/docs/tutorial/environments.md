@@ -9,15 +9,15 @@ menu: Tutorial
 At this point, our is configuration is already flexible and concise, but not
 really reusable. Let's take a look at Tanka's third buzzword as well: **Environments**.
 
-In these days, the same piece of software is usually deployed many times inside
-of one organziation. This can be `dev`, `testing` and `prod` environments, but
+These days, the same piece of software is usually deployed many times inside a
+single organziation. This could be `dev`, `testing` and `prod` environments, but
 also regions (`europe`, `us`, `asia`) or individual customers (`foo-corp`,
 `bar-gmbh`, `baz-inc`).
 
-Most of the application however is exactly the same across those environments ..
+Most of the application however is exactly the same across those environments ...
 usually only configuration, scaling or small details are different after all.
 YAML (and thus `kubectl`) provides us only one solution here: Duplicating the
-directory, changing the details, maintaining both. But if you have 32
+directory, changing the details, maintaining both. But what if you have 32
 environments? Correct! Then you have to maintain 32 directories of YAML. And we can all
 imagine the nightmare of these files drifting apart from each other.
 

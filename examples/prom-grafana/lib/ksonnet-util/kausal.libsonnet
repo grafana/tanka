@@ -161,7 +161,12 @@ k {
     statefulSet+: {
       new(name, replicas, containers, volumeClaims, podLabels={})::
         super.new(name, replicas,containers,volumeClaims,podLabels {name: name}) +
-      super.mixin.spec.updateStrategy.withType('RollingUpdate'),
+        super.mixin.spec.updateStrategy.withType('RollingUpdate') +
+
+        // remove volumeClaimTemplates if empty (otherwise it will create a diff all the time)
+        (if std.length(volumeClaims) == 0 then {
+          spec+: {volumeClaimTemplates:: {}}
+        })
     },
   },
 

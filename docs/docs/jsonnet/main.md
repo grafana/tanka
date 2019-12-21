@@ -7,7 +7,7 @@ menu: "Writing Jsonnet"
 # main.jsonnet
 
 The most important file is called `main.jsonnet`, because this is where Tanka
-invokes the Jsonnet compiler on. Every single line of Jsonnet, including
+invokes the Jsonnet compiler. Every single line of Jsonnet, including
 imports, functions and whatnot is then evaluated until a single, very big JSON
 object is left.  
 This object is returned to Tanka and includes all of your Kubernetes manifests
@@ -66,7 +66,7 @@ traverse down until it finds something that is valid.
 }
 ```
 
-Using this technique has the big benefit that it is self-documentary, as the
+Using this technique has the big benefit that it is self-documenting, as the
 nesting of keys can be used to logically group related manifests, for example by
 application.
 
@@ -116,7 +116,18 @@ support it out of the box.
 To take full advantage of Tankas features, you can manually flatten it:
 
 ```jsonnet
-local list = import "list.libsonnet";
+local list = {
+  apiVersion: "v1",
+  kind: "List",
+  items: [
+    {
+      apiVersion: "v1",
+      kind: "Service,
+      /* ... */
+    }
+    /* ... */
+  ]
+};
 
 # expose the `items` array on the top level:
 list.items
