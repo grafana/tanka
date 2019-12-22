@@ -17,7 +17,7 @@ module.exports = {
             options: {
               colorTheme: "Material Theme Darker",
               injectStyles: false,
-              extensionDataDirectory: path.resolve("node_modules/vscext"),
+              extensionDataDirectory: path.resolve(".vscext"),
               extensions: [
                 {
                   identifier: "heptio.jsonnet",
