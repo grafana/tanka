@@ -1,0 +1,4 @@
+*.ts
+!lib/index.d.ts
+spec
+tsconfig.json

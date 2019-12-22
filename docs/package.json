@@ -8,6 +8,7 @@
     "docz": "^2.3.0-alpha.5",
     "gatsby": "^2.18.12",
     "gatsby-image": "^2.2.34",
+    "gatsby-plugin-netlify-cache": "^1.2.0",
     "gatsby-remark-vscode": "^1.4.0",
     "gatsby-theme-docz": "^2.3.0-alpha.5",
     "prop-types": "^15.7.2",

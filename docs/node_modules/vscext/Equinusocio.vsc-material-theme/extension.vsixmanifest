@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Language="en-US" Id="vsc-material-theme" Version="30.0.0" Publisher="Equinusocio"/>
+    <DisplayName>Material Theme</DisplayName>
+    <Description xml:space="preserve">The most epic theme now for Visual Studio Code</Description>
+    <Tags>VSCode,Themes,theme,color-theme</Tags>
+    <Categories>Themes,Other</Categories>
+    <GalleryFlags>Public</GalleryFlags>
+    <Badges><Badge Link="https://github.com/equinusocio/vsc-material-theme/issues" ImgUri="https://camo.githubusercontent.com/d3c6e53aa66426dead24cdedab0e83082103bea6/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f6973737565732f657175696e75736f63696f2f7673632d6d6174657269616c2d7468656d652e7376673f7374796c653d666c61742d737175617265" Description="Open issues" /><Badge Link="https://opencollective.com/vsc-material-theme" ImgUri="https://img.shields.io/badge/Support%20this%20project-%F0%9F%92%96%EF%B8%8F-green.svg?style=flat-square" Description="Support us!" /></Badges>
+    <Properties>
+      <Property Id="Microsoft.VisualStudio.Code.Engine" Value="&gt;=1.36.0" />
+      <Property Id="Microsoft.VisualStudio.Code.ExtensionDependencies" Value="" />
+      <Property Id="Microsoft.VisualStudio.Code.ExtensionPack" Value="" />
+      <Property Id="Microsoft.VisualStudio.Code.LocalizedLanguages" Value="" />
+      
+        <Property Id="Microsoft.VisualStudio.Services.Links.Source" Value="https://github.com/equinusocio/vsc-material-theme.git" />
+        <Property Id="Microsoft.VisualStudio.Services.Links.Getstarted" Value="https://github.com/equinusocio/vsc-material-theme.git" />
+        
+          <Property Id="Microsoft.VisualStudio.Services.Links.GitHub" Value="https://github.com/equinusocio/vsc-material-theme.git" />
+        
+      
+      <Property Id="Microsoft.VisualStudio.Services.Links.Support" Value="https://github.com/equinusocio/vsc-material-theme/issues" />
+      <Property Id="Microsoft.VisualStudio.Services.Links.Learn" Value="https://equinsuocha.io/projects/material-theme/" />
+      <Property Id="Microsoft.VisualStudio.Services.Branding.Color" Value="#11131C" />
+      <Property Id="Microsoft.VisualStudio.Services.Branding.Theme" Value="dark" />
+      <Property Id="Microsoft.VisualStudio.Services.GitHubFlavoredMarkdown" Value="true" />
+      
+      
+    </Properties>
+    <License>extension/LICENSE.txt</License>
+    <Icon>extension/logo.png</Icon>
+  </Metadata>
+  <Installation>
+    <InstallationTarget Id="Microsoft.VisualStudio.Code"/>
+  </Installation>
+  <Dependencies/>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />
+    <Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true" /><Asset Type="Microsoft.VisualStudio.Services.Content.License" Path="extension/LICENSE.txt" Addressable="true" /><Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="extension/logo.png" Addressable="true" />
+  </Assets>
+</PackageManifest>

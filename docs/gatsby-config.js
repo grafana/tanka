@@ -1,3 +1,5 @@
+const path = require("path");
+
 module.exports = {
   siteMetadata: {
     title: `Grafana Tanka`,
@@ -5,6 +7,7 @@ module.exports = {
     author: `@sh0rez`,
   },
   plugins: [
+    `gatsby-plugin-netlify-cache`,
     {
       resolve: "gatsby-theme-docz",
       options: {
@@ -14,6 +17,7 @@ module.exports = {
             options: {
               colorTheme: "Material Theme Darker",
               injectStyles: false,
+              extensionDataDirectory: path.resolve("node_modules/vscext"),
               extensions: [
                 {
                   identifier: "heptio.jsonnet",
