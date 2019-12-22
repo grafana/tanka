@@ -1,4 +1,4 @@
-const path = require("path");
+const path = require("path")
 
 module.exports = {
   siteMetadata: {
@@ -7,7 +7,6 @@ module.exports = {
     author: `@sh0rez`,
   },
   plugins: [
-    `gatsby-plugin-netlify-cache`,
     {
       resolve: "gatsby-theme-docz",
       options: {
@@ -32,6 +31,25 @@ module.exports = {
             },
           },
         ],
+      },
+    },
+    `gatsby-plugin-netlify-cache`,
+    {
+      resolve: `gatsby-plugin-manifest`,
+      options: {
+        name: "Grafana Tanka",
+        short_name: "Tanka",
+        start_url: "/",
+        display: `standalone`,
+        icon: `img/tk_black.png`,
+        background_color: "#ffffff",
+        theme_color: "#000000",
+      },
+    },
+    {
+      resolve: `gatsby-plugin-offline`,
+      options: {
+        precachePages: [`/`, `/install`, `/tutorial/overview`],
       },
     },
   ],
