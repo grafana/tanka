@@ -7,10 +7,19 @@ module.exports = {
     author: `@sh0rez`,
   },
   plugins: [
+    `gatsby-plugin-sharp`,
+    `gatsby-plugin-catch-links`,
     {
       resolve: "gatsby-theme-docz",
       options: {
         gatsbyRemarkPlugins: [
+          {
+            resolve: `gatsby-remark-images`,
+            options: {
+              sizeByPixelDensity: true,
+              withWebp: true,
+            },
+          },
           {
             resolve: "gatsby-remark-vscode",
             options: {
