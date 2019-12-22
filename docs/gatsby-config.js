@@ -15,6 +15,7 @@ module.exports = {
           {
             resolve: "gatsby-remark-vscode",
             options: {
+              logLevel: "debug",
               colorTheme: "Material Theme Darker",
               injectStyles: false,
               extensionDataDirectory: path.resolve(".vscext"),
