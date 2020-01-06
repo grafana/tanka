@@ -98,7 +98,7 @@ func installK8sLib() error {
 }
 `
 
-	if err := writeNewFile("lib/k.libsonnet", `import "k.libsonnet"`); err != nil {
+	if err := writeNewFile("lib/k.libsonnet", `import "ksonnet.beta.4/k.libsonnet"`); err != nil {
 		return err
 	}
 
