@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/Masterminds/semver"
@@ -72,7 +73,7 @@ func New(c v1alpha1.Config) (*Kubernetes, error) {
 
 // ApplyOpts allow set additional parameters for the apply operation
 type ApplyOpts struct {
-	PruneOpts
+	*PruneOpts
 
 	// force allows to ignore checks and force the operation
 	Force bool
@@ -114,7 +115,7 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 		return nil
 	}
 
-	if err := k.prune(state, opts.PruneOpts); err != nil {
+	if err := k.prune(state, *opts.PruneOpts); err != nil {
 		return errors.Wrap(err, "removing orphaned resources")
 	}
 	return nil
@@ -122,7 +123,7 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 
 // DiffOpts allow to specify additional parameters for diff operations
 type DiffOpts struct {
-	PruneOpts
+	*PruneOpts
 
 	// Use `diffstat(1)` to create a histogram of the changes instead
 	Summarize bool
@@ -140,7 +141,7 @@ func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
 
 	differs := []Differ{k.differs[strategy]}
 	if opts.PruneOpts.Prune {
-		differs = append(differs, k.diffOrphaned(opts.PruneOpts.AllKinds))
+		differs = append(differs, k.diffOrphaned(opts.PruneOpts.AllKinds, opts.PruneOpts.Targets))
 	}
 
 	diff, err := multiDiff(state, differs)
@@ -198,9 +199,9 @@ func diffParallel(diff Differ, state manifest.List, results chan (*string), errs
 	results <- r
 }
 
-func (k *Kubernetes) diffOrphaned(all bool) Differ {
+func (k *Kubernetes) diffOrphaned(all bool, targets []*regexp.Regexp) Differ {
 	return func(state manifest.List) (*string, error) {
-		orphan, err := k.listOrphaned(state, all)
+		orphan, err := k.listOrphaned(state, all, targets)
 		if err != nil {
 			return nil, err
 		}
@@ -230,11 +231,4 @@ func (k *Kubernetes) diffOrphaned(all bool) Differ {
 // Info about the client, etc.
 func (k *Kubernetes) Info() client.Info {
 	return k.info
-}
-
-func objectspec(m manifest.Manifest) string {
-	return fmt.Sprintf("%s/%s",
-		m.Kind(),
-		m.Metadata().Name(),
-	)
 }

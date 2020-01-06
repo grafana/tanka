@@ -24,9 +24,13 @@ func parseModifiers(mods []Modifier) *options {
 		mod(o)
 	}
 
+	// finish prune object
+	o.prune.Targets = o.targets
 	o.prune.Force = o.apply.Force
-	o.apply.PruneOpts = o.prune
-	o.diff.PruneOpts = o.prune
+
+	// add finished object to apply and diff (they need this info as well)
+	o.apply.PruneOpts = &o.prune
+	o.diff.PruneOpts = &o.prune
 
 	return o
 }

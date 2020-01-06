@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	funk "github.com/thoas/go-funk"
 )
 
 type ErrBadTargetExp struct {
@@ -37,4 +40,30 @@ func MustCompileTargetExps(strs ...string) (exps []*regexp.Regexp) {
 		panic(err)
 	}
 	return exps
+}
+
+// FilterTargets filters list to only include those matched by targets
+func FilterTargets(list manifest.List, targets []*regexp.Regexp) manifest.List {
+	if len(targets) == 0 {
+		return list
+	}
+
+	tmp := funk.Filter(list, func(i interface{}) bool {
+		p := objectspec(i.(manifest.Manifest))
+		for _, t := range targets {
+			if t.MatchString(p) {
+				return true
+			}
+		}
+		return false
+	}).([]manifest.Manifest)
+
+	return manifest.List(tmp)
+}
+
+func objectspec(m manifest.Manifest) string {
+	return fmt.Sprintf("%s/%s",
+		m.Kind(),
+		m.Metadata().Name(),
+	)
 }

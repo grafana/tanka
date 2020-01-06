@@ -1,8 +1,11 @@
 package kubernetes
 
 import (
+	"regexp"
+
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/kubernetes/util"
 	"github.com/pkg/errors"
 )
 
@@ -48,10 +51,13 @@ type PruneOpts struct {
 
 	// Skip verification and force deleting
 	Force bool
+
+	// Limit the working set to these objects
+	Targets []*regexp.Regexp
 }
 
 func (k *Kubernetes) prune(state manifest.List, opts PruneOpts) error {
-	orphan, err := k.listOrphaned(state, opts.AllKinds)
+	orphan, err := k.listOrphaned(state, opts.AllKinds, opts.Targets)
 	if err != nil {
 		return errors.Wrap(err, "listing orphaned objects")
 	}
@@ -66,7 +72,7 @@ func (k *Kubernetes) prune(state manifest.List, opts PruneOpts) error {
 
 // listOrphaned returns all resources known to the cluster not present in
 // Jsonnet
-func (k *Kubernetes) listOrphaned(state manifest.List, all bool) (orphaned manifest.List, err error) {
+func (k *Kubernetes) listOrphaned(state manifest.List, all bool, targets []*regexp.Regexp) (orphaned manifest.List, err error) {
 	if k.orphaned != nil {
 		return k.orphaned, nil
 	}
@@ -116,6 +122,7 @@ func (k *Kubernetes) listOrphaned(state manifest.List, all bool) (orphaned manif
 		return nil, lastErr
 	}
 
+	orphaned = util.FilterTargets(orphaned, targets)
 	return orphaned, nil
 }
 

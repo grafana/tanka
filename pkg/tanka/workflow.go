@@ -27,9 +27,7 @@ func Apply(baseDir string, mods ...Modifier) error {
 		return err
 	}
 
-	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{
-		PruneOpts: opts.prune,
-	})
+	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{})
 	if err != nil {
 		return errors.Wrap(err, "diffing")
 	}

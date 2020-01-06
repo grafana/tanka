@@ -8,9 +8,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
-	funk "github.com/thoas/go-funk"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/kubernetes/util"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
@@ -48,18 +48,7 @@ func Reconcile(raw map[string]interface{}, config v1alpha1.Config, targets []*re
 	}
 
 	// optionally filter the working set of objects
-	if len(targets) > 0 {
-		tmp := funk.Filter(out, func(i interface{}) bool {
-			p := objectspec(i.(manifest.Manifest))
-			for _, t := range targets {
-				if t.MatchString(p) {
-					return true
-				}
-			}
-			return false
-		}).([]manifest.Manifest)
-		out = manifest.List(tmp)
-	}
+	out = util.FilterTargets(out, targets)
 
 	// Stable output order
 	sort.SliceStable(out, func(i int, j int) bool {
