@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1 (2020-01-06)
+First release of the new year! This one is a quick patch that lived on master
+for some time, fixing an issue with the recent "missing namespaces" enhancement
+leading to `apply` being impossible when no namespace is included in Jsonnet.
+
+More to come soon :D
+
 ## 0.6.0 (2019-11-27)
 It has been quite some time since the last release during which Tanka has become
 much more mature, especially regarding the code quality and structure.
