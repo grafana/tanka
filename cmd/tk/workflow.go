@@ -32,7 +32,7 @@ type workflowFlagVars struct {
 func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
 	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects (Format: <type>/<name>)")
-	fs.BoolVarP(&v.prune.Prune, "prune", "p", true, "automatically remove objects from the cluster that are not present in Jsonnet anymore")
+	fs.BoolVarP(&v.prune.Prune, "prune", "p", false, "automatically remove objects from the cluster that are not present in Jsonnet anymore")
 	fs.BoolVar(&v.prune.AllKinds, "prune-all-kinds", false, "prune all object kinds, not just the most common ones (much slower)")
 	return &v
 }
