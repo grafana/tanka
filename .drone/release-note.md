@@ -16,5 +16,5 @@ $ tk --help
 #### Docker container:
 https://hub.docker.com/r/grafana/tanka
 ```bash
-$ docker pull grafana/tanka:${DRONE_TAG}
+$ docker pull grafana/tanka:${DRONE_TAG#v}
 ```
