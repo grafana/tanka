@@ -5,13 +5,13 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/posener/complete"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	"github.com/grafana/tanka/pkg/cli/cmp"
+	"github.com/grafana/tanka/pkg/kubernetes/util"
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
@@ -136,17 +136,10 @@ func showCmd() *cobra.Command {
 	return cmd
 }
 
-// stringsToRegexps compiles each string to a regular expression
-func stringsToRegexps(strs []string) (exps []*regexp.Regexp) {
-	exps = make([]*regexp.Regexp, 0, len(strs))
-	for _, raw := range strs {
-		// surround the regular expression with start and end markers
-		s := fmt.Sprintf(`^%s$`, raw)
-		exp, err := regexp.Compile(s)
-		if err != nil {
-			log.Fatalf("%s.\nSee https://tanka.dev/targets/#regular-expressions for details on regular expressions.", strings.Title(err.Error()))
-		}
-		exps = append(exps, exp)
+func stringsToRegexps(exps []string) []*regexp.Regexp {
+	regexs, err := util.CompileTargetExps(exps)
+	if err != nil {
+		log.Fatalln(err)
 	}
-	return exps
+	return regexs
 }

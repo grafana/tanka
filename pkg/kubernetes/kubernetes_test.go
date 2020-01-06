@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/kubernetes/util"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
@@ -35,10 +36,10 @@ func TestReconcile(t *testing.T) {
 				testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
 				testDataDeep().flat[".app.web.frontend.nodejs.express.service"],
 			},
-			targets: []*regexp.Regexp{
-				regexp.MustCompile("deployment/nginx"),
-				regexp.MustCompile("service/frontend"),
-			},
+			targets: util.MustCompileTargetExps(
+				`deployment/nginx`,
+				`service/frontend`,
+			),
 		},
 		{
 			name: "targets-regex",
@@ -47,7 +48,17 @@ func TestReconcile(t *testing.T) {
 				testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
 				testDataDeep().flat[".app.web.frontend.nodejs.express.deployment"],
 			},
-			targets: []*regexp.Regexp{regexp.MustCompile("deployment/.*")},
+			targets: util.MustCompileTargetExps(`deployment/.*`),
+		},
+		{
+			name: "targets-caseInsensitive",
+			deep: testDataDeep().deep,
+			flat: manifest.List{
+				testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
+			},
+			targets: util.MustCompileTargetExps(
+				`DePlOyMeNt/NgInX`,
+			),
 		},
 		{
 			name: "force-namespace",
