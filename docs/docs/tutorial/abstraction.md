@@ -124,7 +124,7 @@ really an improvement over regular yaml, mostly because they are still full of
 boilerplate.
 
 Let's use functions to create some useful helpers to reduce the amount of
-repitition. For that, we create a new file called `kubernetes.libsonnet`, which
+repetition. For that, we create a new file called `kubernetes.libsonnet`, which
 will hold our Kubernetes utilities.
 
 > **Note**: The extension for Jsonnet libraries is `.libsonnet`. While you do

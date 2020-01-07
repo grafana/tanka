@@ -170,7 +170,7 @@ Jsonnet has multiple options to refer to parts of an object:
   },
   children: { // this is also self
     baz: "bar",
-    junk: $.nested.junk + self.baz, // "foobar"
+    junk: $.junk + self.baz, // "foobar"
   }
 }
 ```

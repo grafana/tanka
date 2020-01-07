@@ -24,7 +24,7 @@ available** and are not likely to be ever added.
 
 Helm relies heavily on _string templating_ `.yaml` files. We feel this is the
 wrong way to approach the absence of abstractions inside of `yaml`, because the
-templating part of the application has to idea of the structure and syntax of
+templating part of the application has no idea of the structure and syntax of
 yaml.
 
 This makes debugging very hard. Furthermore, `helm` is not able to provide an
