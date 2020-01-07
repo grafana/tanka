@@ -37,27 +37,17 @@ in the original library as well.
 
 ## Installation
 
-Like every other external library, `ksonnet-lib` can be installed using `jsonnet-bundler`. However, we need to pick a version first:
-
-| Version          | OpenAPI version | Notes                                                                                                      |
-| ---------------- | --------------- | ---------------------------------------------------------------------------------------------------------- |
-| `ksonnet.beta.3` | `v1.8.0`        |                                                                                                            |
-| `ksonnet.beta.4` | `v1.14.0`       | Required for 1.16+: includes `apps/v1`, which must be used for `Deployment`, etc. from this version and up |
-
-For the time being, you will most probably want to go with `ksonnet.beta.4`, as
-it should cover all current Kubernetes versions around (mostly).
-
-> **Note**: Once our own edition of this library are available, there will be a
-> pregenerated one for each Kubernetes version.
-
-Let's install it then:
+Like every other external library, `ksonnet-lib` can be installed using
+`jsonnet-bundler`.  
+However, Tanka already **did this for you** during [project
+creation (`tk init`)](/tutorial/jsonnet#creating-a-new-project):
 
 ```bash
-$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4
-$ jb install github.com/grafana/jsonnet-libs/ksonnet-util
+$ tk init
+  └─ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4 github.com/grafana/jsonnet-libs/ksonnet-util
 ```
 
-This creates the following files in `/vendor`:
+This created the following files in `/vendor`:
 
 ```bash
 vendor
@@ -69,13 +59,19 @@ vendor
 ```
 
 > **Info**: The `vendor/` is the location for external libraries, while `lib/`
-> can be used for your own ones. Check [import paths](/libraries/import-paths) for more information.
+> can be used for your own ones. Check [import paths](/libraries/import-paths)
+> for more information.
 
 ## Aliasing
 
-While you could already use the library by importing `ksonnet.beta.4/k.libsonnet`, this has a drawback: Because the Kubernetes API version is indirectly included in the import name, it makes it impossible to create version agnostic downstream libraries.
+While you could already use the library by importing
+`ksonnet.beta.4/k.libsonnet`, this has a drawback: Because the Kubernetes API
+version is indirectly included in the import name, it makes it impossible to
+create version agnostic downstream libraries.
 
-As a workaround, most libraries expect the correct version of `k.libsonnet` to be importable as a literal `k.libsonnet` (without any package name prefixes). While Jsonnet-bundler won't let you do that, you can alias it by hand:
+As a workaround, most libraries expect the correct version of `k.libsonnet` to
+be importable as a literal `k.libsonnet` (without any package name prefixes).
+While Jsonnet-bundler won't let you do that, you can alias it by hand:
 
 First, create a file `/lib/k.libsonnet` and add the following line to it:
 
