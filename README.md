@@ -26,7 +26,7 @@ concise configuration.
   they will be applied and `tk apply` makes sure you always select the correct
   cluster. Stop guessing and make sure it's all good.
 - **:rocket: Used in production**: While still a very young project, Tanka is
-  used internally at Grafana Labs for all our Kubernetes configuration needs.
+  used internally at Grafana Labs for all of their Kubernetes configuration needs.
 - **:heart: Fully open source**: This is an open-source project. It is free as
   in beer and as in speech and this will never change.
 

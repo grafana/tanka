@@ -22,7 +22,7 @@ concise configuration.
 - **Work with confidence**: `tk diff` allows to check all changes before they
   will be applied. Stop guessing and make sure it's all good.
 - **Used in production**: While still a very young project, Tanka is
-  used internally at Grafana Labs for all our Kubernetes configuration needs.
+  used internally at Grafana Labs for all of their Kubernetes configuration needs.
 - **Fully open source**: This is an open-source project. It is free as in beer and as in speech and this will never change.
 
 ## Getting started
