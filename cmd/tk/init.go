@@ -73,40 +73,16 @@ func installK8sLib() error {
 		return errors.New("jsonnet-bundler not found in $PATH. Follow https://tanka.dev/install#jsonnet-bundler for installation instructions.")
 	}
 
-	// TODO: use the jb packages for this once refactored there
-	const klibsonnetJsonnetfile = `{
-"dependencies": [
-    {
-      "source": {
-        "git": {
-          "remote": "https://github.com/grafana/jsonnet-libs",
-          "subdir": "ksonnet-util"
-        }
-      },
-      "version": "master"
-    },
-    {
-      "source": {
-        "git": {
-          "remote": "https://github.com/ksonnet/ksonnet-lib",
-          "subdir": "ksonnet.beta.4"
-        }
-      },
-      "version": "master"
-    }
-  ]
-}
-`
+	var initialPackages = []string{
+		"github.com/ksonnet/ksonnet-lib/ksonnet.beta.4",
+		"github.com/grafana/jsonnet-libs/ksonnet-util",
+	}
 
 	if err := writeNewFile("lib/k.libsonnet", `import "ksonnet.beta.4/k.libsonnet"`); err != nil {
 		return err
 	}
 
-	if err := ioutil.WriteFile("jsonnetfile.json", []byte(klibsonnetJsonnetfile), 0644); err != nil {
-		return err
-	}
-
-	cmd := exec.Command("jb", "install")
+	cmd := exec.Command("jb", append([]string{"install"}, initialPackages...)...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
