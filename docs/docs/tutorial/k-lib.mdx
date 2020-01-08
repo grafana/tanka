@@ -62,30 +62,17 @@ vendor
 > can be used for your own ones. Check [import paths](/libraries/import-paths)
 > for more information.
 
-## Aliasing
+#### Aliasing
+Because of how `jb` works, the library can be imported as `ksonnet.beta.4/k.libsonnet`.
+Most external libraries (including our wrapper) expect it as a simple `k.libsonnet` (without
+the package prefix).
 
-While you could already use the library by importing
-`ksonnet.beta.4/k.libsonnet`, this has a drawback: Because the Kubernetes API
-version is indirectly included in the import name, it makes it impossible to
-create version agnostic downstream libraries.
+To support both, Tanka automatically created an alias file for you: `/lib/k.libsonnet` that just imports actual library, exposing it under this alternative name as well.
 
-As a workaround, most libraries expect the correct version of `k.libsonnet` to
-be importable as a literal `k.libsonnet` (without any package name prefixes).
-While Jsonnet-bundler won't let you do that, you can alias it by hand:
-
-First, create a file `/lib/k.libsonnet` and add the following line to it:
-
-```jsonnet
-import "ksonnet.beta.4/k.libsonnet"
-```
-
-> **More information**:
->
-> - This works, because `import` behaves like copy-pasting. So
->   the contents of `ksonnet.beta.4` are "copied" into our new file, making them
->   behave exactly the same.
-> - Make sure to use the `lib/` instead of the `vendor/` folder, because `jb`
->   cleans everything from `vendor/` it did not create itself on each run.
+> **More information**:  
+> This works, because `import` behaves like copy-pasting. So
+> the contents of `ksonnet.beta.4` are "copied" into our new file, making them
+> behave exactly the same.
 
 ## Using it
 
