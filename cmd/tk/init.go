@@ -44,7 +44,7 @@ func initCmd() *cobra.Command {
 		}
 
 		if err := os.Mkdir("lib", os.ModePerm); err != nil {
-			log.Fatalln("Error creating `vendor/` folder:", err)
+			log.Fatalln("Error creating `lib/` folder:", err)
 		}
 
 		cfg := v1alpha1.New()
