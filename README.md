@@ -33,7 +33,7 @@ concise configuration.
 ## Getting started
 
 To get started, [install Tanka](https://tanka.dev/install) first, and then
-[follow the tutorial](https://tanka.dev/tutorial/overview2). This should get you
+[follow the tutorial](https://tanka.dev/tutorial/overview). This should get you
 on track quickly.
 
 ## Additional resources
