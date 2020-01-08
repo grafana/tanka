@@ -9,11 +9,14 @@ import (
 	"text/tabwriter"
 
 	"github.com/pkg/errors"
+	"github.com/posener/complete"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"github.com/grafana/tanka/pkg/cli"
+	"github.com/grafana/tanka/pkg/cli/cmp"
+	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
@@ -34,6 +37,7 @@ func envCmd() *cobra.Command {
 
 func envSettingsFlags(env *v1alpha1.Config, fs *pflag.FlagSet) {
 	fs.StringVar(&env.Spec.APIServer, "server", env.Spec.APIServer, "endpoint of the Kubernetes API")
+	fs.StringVar(&env.Spec.APIServer, "server-from-context", env.Spec.APIServer, "set the server to a known one from $KUBECONFIG")
 	fs.StringVar(&env.Spec.Namespace, "namespace", env.Spec.Namespace, "namespace to create objects in")
 	fs.StringVar(&env.Spec.DiffStrategy, "diff-strategy", env.Spec.DiffStrategy, "specify diff-strategy. Automatically detected otherwise.")
 }
@@ -44,12 +48,24 @@ func envSetCmd() *cobra.Command {
 		Short: "update properties of an environment",
 		Args:  cobra.ExactArgs(1),
 		Annotations: map[string]string{
-			"args": "baseDir",
+			"args":                      "baseDir",
+			"flags/server-from-context": "kubectlContexts",
 		},
 	}
+
+	// handler for server-from-context
+	cmp.Handlers.Add("kubectlContexts", complete.PredictFunc(
+		func(complete.Args) []string {
+			c, _ := client.Contexts()
+			return c
+		},
+	))
+
+	// flags
 	tmp := v1alpha1.Config{}
 	envSettingsFlags(&tmp, cmd.Flags())
 
+	// removed name flag
 	name := cmd.Flags().String("name", "", "")
 	_ = cmd.Flags().MarkHidden("name")
 
@@ -61,6 +77,14 @@ func envSetCmd() *cobra.Command {
 		path, err := filepath.Abs(args[0])
 		if err != nil {
 			log.Fatalln(err)
+		}
+
+		if cmd.Flags().Changed("server-from-context") {
+			server, err := client.IPFromContext(tmp.Spec.APIServer)
+			if err != nil {
+				log.Fatalln("Resolving IP from context: %s", err)
+			}
+			tmp.Spec.APIServer = server
 		}
 
 		viper.Reset()
