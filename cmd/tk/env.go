@@ -82,7 +82,7 @@ func envSetCmd() *cobra.Command {
 		if cmd.Flags().Changed("server-from-context") {
 			server, err := client.IPFromContext(tmp.Spec.APIServer)
 			if err != nil {
-				log.Fatalln("Resolving IP from context: %s", err)
+				log.Fatalf("Resolving IP from context: %s", err)
 			}
 			tmp.Spec.APIServer = server
 		}
