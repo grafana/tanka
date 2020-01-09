@@ -3,6 +3,7 @@ package manifest
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
@@ -48,11 +49,15 @@ func (m Manifest) Verify() error {
 	if !o.Get("apiVersion").IsStr() {
 		err.add("apiVersion")
 	}
-	if !o.Get("metadata").IsMSI() {
-		err.add("metadata")
-	}
-	if !o.Get("metadata.name").IsStr() && m.Kind() != "List" {
-		err.add("metadata.name")
+
+	// Lists don't have `metadata`
+	if !strings.HasSuffix(m.Kind(), "List") {
+		if !o.Get("metadata").IsMSI() {
+			err.add("metadata")
+		}
+		if !o.Get("metadata.name").IsStr() {
+			err.add("metadata.name")
+		}
 	}
 
 	if len(err.fields) == 0 {
@@ -74,6 +79,9 @@ func (m Manifest) APIVersion() string {
 
 // Metadata returns the metadata of this object
 func (m Manifest) Metadata() Metadata {
+	if m["metadata"] == nil {
+		m["metadata"] = make(map[string]interface{})
+	}
 	return Metadata(m["metadata"].(map[string]interface{}))
 }
 
@@ -104,7 +112,11 @@ type Metadata map[string]interface{}
 
 // Name of the manifest
 func (m Metadata) Name() string {
-	return m["name"].(string)
+	name, ok := m["name"]
+	if !ok {
+		return ""
+	}
+	return name.(string)
 }
 
 // HasNamespace returns whether the manifest has a namespace set
