@@ -17,8 +17,7 @@ for the task of deploying Grafana and Prometheus to Kubernetes:
      Prometheus.
 2. Grafana
    - Another `Deployment` is required for the Grafana server.
-   - To connect to the webinterface, we also need a `Service` of type
-     `NodePort`.
+   - To connect to the webinterface, we also need a `Service`.
 
 Before taking a look how Tanka can help doing so, let's recall how to do it with
 plain `kubectl`.
@@ -52,7 +51,7 @@ spec:
             - containerPort: 3000
               name: ui
 ---
-# Grafana UI Service NodePort
+# Grafana UI Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -66,7 +65,6 @@ spec:
       targetPort: 3000
   selector:
     name: grafana
-  type: NodePort
 ```
 
 ... and for Prometheus:

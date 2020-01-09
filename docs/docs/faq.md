@@ -35,6 +35,13 @@ first.
 Jsonnet on the other hand got you covered by supporting mixing (patching,
 deep-merging) objects on top of the libraries output if required.
 
+## What about kubecfg ?
+
+Tanka development has started at the time when kubecfg was a part of
+already-deprecated `ksonnet` project. Although these projects are similar, Tanka
+aims to provide continuity for `ksonnet` users, whereas `kubecfg`goes the way of
+a very simple jsonnet-to-kubernetes synchronization tool.
+
 ## What is Jsonnet?
 
 Jsonnet is a data templating language, originally created by Google.

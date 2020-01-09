@@ -27,7 +27,8 @@ Just grab the latest version from there, download it and put somewhere in your
 
 ## From source
 
-In case the above won't work for you, try with `go get`:
+In case the above won't work for you, you can try building the most recent
+code using `go get`:
 
 ```bash
 $ go get -u github.com/grafana/tanka/cmd/tk

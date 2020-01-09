@@ -82,8 +82,8 @@ Similar to JSON, each `.jsonnet` file holds a single object. The one returned by
 ```jsonnet
 // main.jsonnet
 {
-    "deployment": { /* ... */ },
-    "service": { /* ... */ }
+    "some_deployment": { /* ... */ },
+    "some_service": { /* ... */ }
 }
 ```
 
@@ -286,12 +286,15 @@ clusters just work.
 This allows us to make sure that you will never accidentally apply to the wrong
 cluster.
 
-> **Note**: Tanka won't create the namespace for you. Either include it in
-> Jsonnet, or with the following command:
+> **Note**: Tanka won't create the namespace for you -- you need to include it in
+> Jsonnet. Alternatively, you can create the namespace manually:
 >
 > ```bash
 > $ kubectl create ns monitoring
 > ```
+>
+> This, however, will create an object that is not tracked by the configuration
+> used by Tanka and thus needs to be taked care of via other means.
 
 ## Verifying the changes
 
