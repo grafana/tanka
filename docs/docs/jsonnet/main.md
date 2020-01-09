@@ -18,9 +18,6 @@ extract your objects first. To do this, it traverses the tree until it finds
 something that looks like a Kubernetes manifest. An object is considered valid
 when it has both, `kind` and `apiVersion` set.
 
-> This behaviour is going to change in the future, `metadata.name` will also
-> become required.
-
 To ensure Tanka can find your manifests, the output of your Jsonnet needs to
 have one of the following structures:
 
