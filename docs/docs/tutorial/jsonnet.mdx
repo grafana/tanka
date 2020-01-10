@@ -287,7 +287,8 @@ This allows us to make sure that you will never accidentally apply to the wrong
 cluster.
 
 > **Note**: Tanka won't create the namespace for you -- you need to include it in
-> Jsonnet using:
+> Jsonnet. Using ksonnet lib (mentioned in [Kubernetes library](/tutorial/k-lib)
+> section), the following snippet will take care of the namespace creation:
 > ```json
 > {
 >   my_namespace: $.core.v1.namespace.new('my-namespace'),
