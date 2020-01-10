@@ -23,12 +23,11 @@ import paths. While `ksonnet` used to magically include them, Tanka follows a
 more explicit approach and requires you to install them using `jb`:
 
 ```bash
-$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k.libsonnet
-$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k8s.libsonnet
+$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4
 ```
 
-This installs version `beta.3` of the libraries, matching Kubernetes version
-`1.8.0`. If you need another version, take a look at
+This installs version `beta.4` of the libraries (in vendor/ksonnet.beta.4),
+matching Kubernetes version `1.14.0`. If you need another version, take a look at
 https://github.com/ksonnet/ksonnet-lib. When a pre-compiled version is
 available, install it using `jb`, otherwise compile it yourself and place it
 under `lib/`.
