@@ -36,7 +36,7 @@ available, install it using `jb`, otherwise compile it yourself and place it
 under `lib/`.
 
 2) It makes an alias for libraries importing `k.libsonnet` directly. See
-https://tanka.dev/tutorial/k-lib#installation for the alias rationale.
+https://tanka.dev/tutorial/k-lib#aliasing for the alias rationale.
 
 ### Unexpected diff if the same port number is used for UDP and TCP
 
