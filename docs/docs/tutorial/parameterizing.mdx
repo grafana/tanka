@@ -56,7 +56,7 @@ We can then replace hardcoded values with a reference to this object:
       spec: {
         ports: [{
 -           name: 'grafana-ui',
-+           name: '%s-ui' % $._config.grafana.port, // printf-style formatting
++           name: '%s-ui' % $._config.grafana.name, // printf-style formatting
 -           port: 3000,
 +           port: $._config.grafana.port,
 -           targetPort: 3000,
