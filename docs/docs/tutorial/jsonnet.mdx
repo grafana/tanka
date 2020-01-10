@@ -287,7 +287,14 @@ This allows us to make sure that you will never accidentally apply to the wrong
 cluster.
 
 > **Note**: Tanka won't create the namespace for you -- you need to include it in
-> Jsonnet. Alternatively, you can create the namespace manually:
+> Jsonnet using:
+> ```json
+> {
+>   my_namespace: $.core.v1.namespace.new('my-namespace'),
+> }
+> ```
+>
+> Alternatively, you can create the namespace manually:
 >
 > ```bash
 > $ kubectl create ns monitoring
