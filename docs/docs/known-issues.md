@@ -24,7 +24,7 @@ more explicit approach and requires you to install them using `jb`:
 
 ```bash
 $ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4
-$ echo 'import "ksonnet.beta.4"' > lib/k.libsonnet
+$ echo 'import "ksonnet.beta.4/k.libsonnet"' > lib/k.libsonnet
 ```
 
 This does 2 things:
