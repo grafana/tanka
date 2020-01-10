@@ -23,15 +23,20 @@ import paths. While `ksonnet` used to magically include them, Tanka follows a
 more explicit approach and requires you to install them using `jb`:
 
 ```bash
-$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k.libsonnet
-$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k8s.libsonnet
+$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4
+$ echo 'import "ksonnet.beta.4/k.libsonnet"' > lib/k.libsonnet
 ```
 
-This installs version `beta.3` of the libraries, matching Kubernetes version
-`1.8.0`. If you need another version, take a look at
+This does 2 things:
+
+1) It installs the ksonnet library (in `vendor/ksonnet.beta.4`).
+If you need a specific version, take a look at
 https://github.com/ksonnet/ksonnet-lib. When a pre-compiled version is
 available, install it using `jb`, otherwise compile it yourself and place it
 under `lib/`.
+
+2) It makes an alias for libraries importing `k.libsonnet` directly. See
+https://tanka.dev/tutorial/k-lib#aliasing for the alias rationale.
 
 ### Unexpected diff if the same port number is used for UDP and TCP
 
