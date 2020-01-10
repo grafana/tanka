@@ -29,7 +29,7 @@ $ echo 'import "ksonnet.beta.4/k.libsonnet"' > lib/k.libsonnet
 
 This does 2 things:
 
-1) It installs the ksonnet library (in vendor/ksonnet.beta.4).
+1) It installs the ksonnet library (in `vendor/ksonnet.beta.4`).
 If you need a specific version, take a look at
 https://github.com/ksonnet/ksonnet-lib. When a pre-compiled version is
 available, install it using `jb`, otherwise compile it yourself and place it
