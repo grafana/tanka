@@ -24,13 +24,19 @@ more explicit approach and requires you to install them using `jb`:
 
 ```bash
 $ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4
+$ echo 'import "ksonnet.beta.4"' > lib/k.libsonnet
 ```
 
-This installs version `beta.4` of the libraries (in vendor/ksonnet.beta.4),
+This does 2 things:
+
+1) It installs version `beta.4` of the libraries (in vendor/ksonnet.beta.4),
 matching Kubernetes version `1.14.0`. If you need another version, take a look at
 https://github.com/ksonnet/ksonnet-lib. When a pre-compiled version is
 available, install it using `jb`, otherwise compile it yourself and place it
 under `lib/`.
+
+2) It makes an alias for libraries importing `k.libsonnet` directly. See
+https://tanka.dev/tutorial/k-lib#installation for the alias rationale.
 
 ### Unexpected diff if the same port number is used for UDP and TCP
 
