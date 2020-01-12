@@ -70,7 +70,7 @@ Let's start cleaning this up by separating logical pieces into distinct files:
       },
       spec: {
         ports: [{
-            name: '%s-ui' % $._config.grafana.port,
+            name: '%s-ui' % $._config.grafana.name,
             port: $._config.grafana.port,
             targetPort: $._config.grafana.port,
         }],
