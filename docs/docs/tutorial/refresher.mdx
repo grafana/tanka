@@ -136,7 +136,7 @@ Grafana can connect to Prometheus!
 
 ```bash
 # Temporarily forward Grafana to localhost
-kubectl port-forward deployments/grafana 3000:8080
+kubectl port-forward deployments/grafana 8080:3000
 ```
 
 Now go to http://localhost:8080 in your browser and login using `admin:admin`.
