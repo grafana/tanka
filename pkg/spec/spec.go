@@ -11,6 +11,8 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
+const APIGroup = "tanka.dev"
+
 // list of deprecated config keys and their alternatives
 // however, they still work and are aliased internally
 var deprecated = []depreciation{
