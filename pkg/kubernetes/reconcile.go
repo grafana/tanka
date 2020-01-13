@@ -99,9 +99,13 @@ func walkJSON(deep interface{}, extracted map[string]manifest.Manifest, path tra
 
 	// walk it
 	for key, d := range deep.(map[string]interface{}) {
-		if key == "__ksonnet" {
+		switch {
+		case key == "__ksonnet": // exclude ksonnet object
+			continue
+		case d == nil: // result from false if condition in Jsonnet
 			continue
 		}
+
 		path := append(path, key)
 
 		if _, ok := d.(map[string]interface{}); !ok {
