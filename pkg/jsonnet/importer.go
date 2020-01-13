@@ -17,81 +17,86 @@ const locationInternal = "<internal>"
 // - `import "file.yaml"`
 // - `import "tk"`
 type ExtendedImporter struct {
-	fi           *jsonnet.FileImporter
-	interceptors []ImportInterceptor
-	processors   []ImportProcessor
+	loaders    []importLoader    // for loading jsonnet from somewhere. First one that returns non-nil is used
+	processors []importProcessor // for post-processing (e.g. yaml -> json)
 }
 
-// ImportInterceptor are executed before the actual importing. If they return
+// importLoader are executed before the actual importing. If they return
 // something, this value is used.
-type ImportInterceptor func(importedFrom, importedPath string) (c *string, foundAt string, err error)
+type importLoader func(importedFrom, importedPath string) (c *jsonnet.Contents, foundAt string, err error)
 
-// ImportProcessor are executed after the file import and may modify the result
+// importProcessor are executed after the file import and may modify the result
 // further
-type ImportProcessor func(contents, foundAt string) (c *string, err error)
+type importProcessor func(contents, foundAt string) (c *jsonnet.Contents, err error)
 
 // NewExtendedImporter returns a new instance of ExtendedImporter with the
 // correct jpaths set up
 func NewExtendedImporter(jpath []string) *ExtendedImporter {
 	return &ExtendedImporter{
-		fi: &jsonnet.FileImporter{
-			JPaths: jpath,
+		loaders: []importLoader{
+			tkLoader,
+			newFileLoader(&jsonnet.FileImporter{
+				JPaths: jpath,
+			})},
+		processors: []importProcessor{
+			yamlProcessor,
 		},
-		interceptors: []ImportInterceptor{tkInterceptor},
-		processors:   []ImportProcessor{yamlProcessor},
 	}
 }
 
 // Import implements the functionality offered by the ExtendedImporter
 func (i *ExtendedImporter) Import(importedFrom, importedPath string) (contents jsonnet.Contents, foundAt string, err error) {
-	// check if an interceptor handles this
-	for _, interceptor := range i.interceptors {
-		c, foundAt, err := interceptor(importedFrom, importedPath)
-		switch {
-		case err != nil:
+	// load using loader
+	for _, loader := range i.loaders {
+		c, f, err := loader(importedFrom, importedPath)
+		if err != nil {
 			return jsonnet.Contents{}, "", err
-		case c == nil:
-			continue
-		default:
-			return jsonnet.MakeContents(*c), foundAt, nil
 		}
-	}
-
-	// regularly import
-	contents, foundAt, err = i.fi.Import(importedFrom, importedPath)
-	if err != nil {
-		return jsonnet.Contents{}, "", err
+		if c != nil {
+			contents = *c
+			foundAt = f
+			break
+		}
 	}
 
 	// check if needs postprocessing
 	for _, processor := range i.processors {
 		c, err := processor(contents.String(), foundAt)
-		switch {
-		case err != nil:
+		if err != nil {
 			return jsonnet.Contents{}, "", err
-		case c == nil:
-			continue
-		default:
-			return jsonnet.MakeContents(*c), foundAt, nil
+		}
+		if c != nil {
+			contents = *c
+			break
 		}
 	}
 
 	return contents, foundAt, nil
 }
 
-// tkInterceptor provides `tk.libsonnet` from memory (builtin)
-func tkInterceptor(importedFrom, importedPath string) (contents *string, foundAt string, err error) {
+// tkLoader provides `tk.libsonnet` from memory (builtin)
+func tkLoader(importedFrom, importedPath string) (contents *jsonnet.Contents, foundAt string, err error) {
 	if importedPath != "tk" {
 		return nil, "", nil
 	}
 
-	s := tkLibsonnet
+	s := jsonnet.MakeContents(tkLibsonnet)
 	return &s, filepath.Join(locationInternal, "tk.libsonnet"), nil
+}
+
+// newFileLoader returns an importLoader that uses jsonnet.FileImporter to source
+// files from the local filesystem
+func newFileLoader(fi *jsonnet.FileImporter) importLoader {
+	return func(importedFrom, importedPath string) (contents *jsonnet.Contents, foundAt string, err error) {
+		var c jsonnet.Contents
+		c, foundAt, err = fi.Import(importedFrom, importedPath)
+		return &c, foundAt, err
+	}
 }
 
 // yamlProcessor catches yaml files and converts them to JSON so that they can
 // be used with `import`
-func yamlProcessor(contents, foundAt string) (c *string, err error) {
+func yamlProcessor(contents, foundAt string) (c *jsonnet.Contents, err error) {
 	ext := filepath.Ext(foundAt)
 	if yaml := ext == ".yaml" || ext == ".yml"; !yaml {
 		return nil, nil
@@ -120,6 +125,6 @@ func yamlProcessor(contents, foundAt string) (c *string, err error) {
 		return nil, errors.Wrapf(err, "converting '%s' to json", foundAt)
 	}
 
-	s := string(out)
+	s := jsonnet.MakeContents(string(out))
 	return &s, nil
 }
