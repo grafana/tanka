@@ -11,6 +11,8 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/native"
 )
 
+// Modifiers allow to set optional paramters on the Jsonnet VM.
+// See jsonnet.With* for this.
 type Modifier func(vm *jsonnet.VM) error
 
 // EvaluateFile opens the file, reads it into memory and evaluates it afterwards (`Evaluate()`)
@@ -45,6 +47,8 @@ func Evaluate(sonnet string, jpath []string, mods ...Modifier) (string, error) {
 	return vm.EvaluateSnippet("main.jsonnet", sonnet)
 }
 
+// WithExtCode allows to make the supplied snippet available to Jsonnet as an
+// ext var
 func WithExtCode(key, code string) Modifier {
 	return func(vm *jsonnet.VM) error {
 		vm.ExtCode(key, code)

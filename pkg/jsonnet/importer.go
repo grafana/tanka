@@ -37,8 +37,8 @@ func NewExtendedImporter(jpath []string) *ExtendedImporter {
 		fi: &jsonnet.FileImporter{
 			JPaths: jpath,
 		},
-		processors:   []ImportProcessor{yamlProcessor},
 		interceptors: []ImportInterceptor{tkInterceptor},
+		processors:   []ImportProcessor{yamlProcessor},
 	}
 }
 
@@ -79,6 +79,7 @@ func (i *ExtendedImporter) Import(importedFrom, importedPath string) (contents j
 	return contents, foundAt, nil
 }
 
+// tkInterceptor provides `tk.libsonnet` from memory (builtin)
 func tkInterceptor(importedFrom, importedPath string) (contents *string, foundAt string, err error) {
 	if importedPath != "tk" {
 		return nil, "", nil
@@ -88,6 +89,8 @@ func tkInterceptor(importedFrom, importedPath string) (contents *string, foundAt
 	return &s, filepath.Join(locationInternal, "tk.libsonnet"), nil
 }
 
+// yamlProcessor catches yaml files and converts them to JSON so that they can
+// be used with `import`
 func yamlProcessor(contents, foundAt string) (c *string, err error) {
 	ext := filepath.Ext(foundAt)
 	if yaml := ext == ".yaml" || ext == ".yml"; !yaml {

@@ -35,20 +35,3 @@ func evalCmd() *cobra.Command {
 
 	return cmd
 }
-
-// func eval(workdir string) (string, error) {
-// 	// pwd, err := filepath.Abs(workdir)
-// 	// if err != nil {
-// 	// 	return "", err
-// 	// }
-// 	// _, baseDir, _, err := jpath.Resolve(pwd)
-// 	// if err != nil {
-// 	// 	return "", errors.Wrap(err, "resolving jpath")
-// 	// }
-// 	// json, err := jsonnet.EvaluateFile(filepath.Join(baseDir, "main.jsonnet"))
-// 	// if err != nil {
-// 	// 	return "", err
-// 	// }
-
-// 	return json, nil
-// }
