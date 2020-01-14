@@ -10,7 +10,10 @@ menu: Writing Jsonnet
 expressing what shall be deployed to your Kubernetes cluster. Understanding
 Jsonnet is crucial to using Tanka effectively.
 
-This page covers the Jsonnet language itself. For more information on how to use Jsonnet with Kubernetes, see [the tutorial](/tutorial/jsonnet).
+This page covers the Jsonnet language itself. For more information on how to
+use Jsonnet with Kubernetes, see [the tutorial](/tutorial/jsonnet). There's
+also [the official Jsonnet tutorial](https://jsonnet.org/learning/tutorial.html)
+that provides a more detailed review of language features.
 
 ## Syntax
 
