@@ -122,7 +122,7 @@ furthermore harms readability a lot.
 To actually apply those resources, copy them into `.yaml` files and use:
 
 ```bash
-$ kubectl apply -f prometheus.yaml grafana.yaml
+$ kubectl apply -f prometheus.yaml -f grafana.yaml
 deployment.apps/grafana created
 deployment.apps/prometheus created
 service/grafana created
@@ -155,7 +155,7 @@ Let's explore how Tanka can help us here in the next section!
 Let's remove everything we created to start fresh with Jsonnet in the next section:
 
 ```bash
-$ kubectl delete -f prometheus.yaml grafana.yaml
+$ kubectl delete -f prometheus.yaml -f grafana.yaml
 ```
 
 import TutorialButtons from "./TutorialButtons"
