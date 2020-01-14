@@ -38,8 +38,9 @@ available** and are not likely to be ever added.
 
 Tanka development has started at the time when kubecfg was a part of
 already-deprecated `ksonnet` project. Although these projects are similar, Tanka
-aims to provide continuity for `ksonnet` users, whereas `kubecfg`goes the way of
-a very simple jsonnet-to-kubernetes synchronization tool.
+aims to provide continuity for `ksonnet` users, whereas `kubecfg` is (according
+to project's [README.md](https://github.com/bitnami/kubecfg/blob/master/README.md)
+really just a thin Kubernetes-specific wrapper around jsonnet evaluation.
 
 ## Why not Helm?
 
