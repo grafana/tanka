@@ -43,9 +43,11 @@ export default {
       ],
     },
     "Command-line completion",
+    "Directory structure",
     "Diff strategies",
     "Output filtering",
-    "Known issues",
+	  
     "Frequently asked questions",
+    "Known issues",
   ],
 }
