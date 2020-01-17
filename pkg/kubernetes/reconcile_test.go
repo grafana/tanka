@@ -3,12 +3,11 @@ package kubernetes
 import (
 	"testing"
 
-	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestWalkJSON(t *testing.T) {
+func TestExtract(t *testing.T) {
 	tests := []struct {
 		name string
 		data testData
@@ -48,15 +47,10 @@ func TestWalkJSON(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			manifests, err := walkJSON(c.data.deep)
-
-			expectedManifests := manifest.List{}
-			for _, manifest := range c.data.flat {
-				expectedManifests = append(expectedManifests, manifest)
-			}
+			extracted, err := extract(c.data.deep)
 
 			require.Equal(t, c.err, err)
-			assert.ElementsMatch(t, expectedManifests, manifests)
+			assert.EqualValues(t, c.data.flat, extracted)
 		})
 	}
 }
