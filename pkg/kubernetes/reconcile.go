@@ -73,7 +73,7 @@ func extract(deep interface{}) (map[string]manifest.Manifest, error) {
 
 // walkJSON recurses into either a map or list, returning a list of all objects that look
 // like kubernetes resources. We support resources at an arbitrary level of nesting, and
-// return an error if any leaf nodes f
+// return an error if a node is not walkable.
 //
 // Handling the different types is quite gross, so we split this method into a generic
 // walkJSON, and then walkObj/walkList to handle the two different types of collection we
