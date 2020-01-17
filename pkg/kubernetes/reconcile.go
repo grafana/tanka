@@ -81,7 +81,7 @@ func walkJSON(ptr interface{}, extracted map[string]manifest.Manifest, path trac
 	switch v := ptr.(type) {
 	case map[string]interface{}:
 		return walkObj(v, extracted, path)
-	case []map[string]interface{}:
+	case []interface{}:
 		return walkList(v, extracted, path)
 	}
 
@@ -121,9 +121,17 @@ func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) e
 	return nil
 }
 
-func walkList(list []map[string]interface{}, extracted map[string]manifest.Manifest, path trace) error {
+func walkList(list []interface{}, extracted map[string]manifest.Manifest, path trace) error {
 	for idx, value := range list {
-		err := walkJSON(value, extracted, append(path, fmt.Sprintf("[%d]", idx)))
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return ErrorPrimitiveReached{
+				path:      path.Base(),
+				key:       path.Name(),
+				primitive: value,
+			}
+		}
+		err := walkJSON(v, extracted, append(path, fmt.Sprintf("[%d]", idx)))
 		if err != nil {
 			return err
 		}
@@ -161,7 +169,7 @@ type ErrorPrimitiveReached struct {
 
 func (e ErrorPrimitiveReached) Error() string {
 	return fmt.Sprintf("recursion did not resolve in a valid Kubernetes object. "+
-		" In path path `%s` found key `%s` of type `%T` instead.",
+		" In path `%s` found key `%s` of type `%T` instead.",
 		e.path, e.key, e.primitive)
 }
 
