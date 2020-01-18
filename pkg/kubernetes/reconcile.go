@@ -174,7 +174,7 @@ func (e ErrorPrimitiveReached) Error() string {
 }
 
 // isKubernetesManifest attempts to infer whether the given object is a valid kubernetes
-// resource by verifying the presence of apiVersion, kind and metadata.name. These three
+// resource by verifying the presence of apiVersion and kind. These two
 // fields are required for kubernetes to accept any resource.
 //
 // In future, it might be a good idea to allow users to opt their object out of being
