@@ -220,10 +220,10 @@ func testDataDeep() testData {
 // flattened
 func testDataArray() testData {
 	return testData{
-		deep: append(make([]map[string]interface{}, 0),
+		deep: []map[string]interface{}{
 			testDataDeep().deep.(map[string]interface{}),
 			testDataFlat().deep.(map[string]interface{}),
-		),
+		},
 
 		flat: map[string]manifest.Manifest{
 			".[0].app.web.backend.server.nginx.deployment":    testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
@@ -231,6 +231,27 @@ func testDataArray() testData {
 			".[0].app.web.frontend.nodejs.express.deployment": testDataDeep().flat[".app.web.frontend.nodejs.express.deployment"],
 			".[0].app.namespace":                              testDataDeep().flat[".app.namespace"],
 			".[1]":                                            testDataFlat().flat["."],
+		},
+	}
+}
+
+// testDataDeepArray is an array of (deeply nested) dicts that should be fully
+// flattened
+func testDataDeepArray() testData {
+	return testData{
+		deep: [][]map[string]interface{}{
+			{
+				testDataDeep().deep.(map[string]interface{}),
+				testDataFlat().deep.(map[string]interface{}),
+			},
+		},
+
+		flat: map[string]manifest.Manifest{
+			".[0].[0].app.web.backend.server.nginx.deployment":    testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
+			".[0].[0].app.web.frontend.nodejs.express.service":    testDataDeep().flat[".app.web.frontend.nodejs.express.service"],
+			".[0].[0].app.web.frontend.nodejs.express.deployment": testDataDeep().flat[".app.web.frontend.nodejs.express.deployment"],
+			".[0].[0].app.namespace":                              testDataDeep().flat[".app.namespace"],
+			".[0].[1]":                                            testDataFlat().flat["."],
 		},
 	}
 }

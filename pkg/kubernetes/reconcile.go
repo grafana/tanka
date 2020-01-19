@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -14,11 +15,13 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-// Reconcile extracts all valid Kubernetes objects from the raw output of the
-// Jsonnet compiler. A valid object is identified by the presence of `kind` and
-// `apiVersion`.
-// TODO: Check on `metadata.name` as well and assert that they are
-// not only set but also strings.
+// Reconcile extracts kubernetes Manifests from raw evaluated jsonnet <kind>/<name>,
+// provided the manifests match the given regular expressions. It finds each manifest by
+// recursively walking the jsonnet structure.
+//
+// In addition, we sort the manifests to ensure the order is consistent in each
+// show/diff/apply cycle. This isn't necessary, but it does help users by producing
+// consistent diffs.
 func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
 	extracted, err := extract(raw)
 	if err != nil {
@@ -34,7 +37,8 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 		out = append(out, m)
 	}
 
-	// optionally filter the working set of objects
+	// If we have any kind-name matchers, we should filter all the manifests by matching
+	// against their <kind>/<name> identifier.
 	if len(targets) > 0 {
 		tmp := funk.Filter(out, func(i interface{}) bool {
 			p := objectspec(i.(manifest.Manifest))
@@ -67,65 +71,91 @@ func extract(deep interface{}) (map[string]manifest.Manifest, error) {
 	return extracted, nil
 }
 
-// walkJSON traverses deeply nested kubernetes manifest and extracts them into a flat []dict.
-func walkJSON(deep interface{}, extracted map[string]manifest.Manifest, path trace) error {
-	// array: walkJSON for each
-	if d, ok := deep.([]map[string]interface{}); ok {
-		for i, j := range d {
-			path := append(path, fmt.Sprintf("[%v]", i))
-			if err := walkJSON(j, extracted, path); err != nil {
-				return err
-			}
-		}
-		return nil
+// walkJSON recurses into either a map or list, returning a list of all objects that look
+// like kubernetes resources. We support resources at an arbitrary level of nesting, and
+// return an error if a node is not walkable.
+//
+// Handling the different types is quite gross, so we split this method into a generic
+// walkJSON, and then walkObj/walkList to handle the two different types of collection we
+// support.
+func walkJSON(ptr interface{}, extracted map[string]manifest.Manifest, path trace) error {
+	// check for known types
+	switch v := ptr.(type) {
+	case map[string]interface{}:
+		return walkObj(v, extracted, path)
+	case []interface{}:
+		return walkList(v, extracted, path)
 	}
 
-	// assert for map[string]interface{} (also aliased objx.Map)
-	if m, ok := deep.(objx.Map); ok {
-		deep = map[string]interface{}(m)
-	}
-	deep, ok := deep.(map[string]interface{})
+	// Lists other than []interface{} need to be handled separately
+	s, ok := tryCoerceSlice(ptr)
 	if !ok {
-		return fmt.Errorf("deep has unexpected type %T @ %s", deep, path)
-	}
-
-	// already flat?
-	r := objx.New(deep)
-
-	if r.Has("apiVersion") && r.Has("kind") {
-		extracted[path.Full()] = deep.(map[string]interface{})
-		return nil
-	}
-
-	// walk it
-	for key, d := range deep.(map[string]interface{}) {
-		switch {
-		case key == "__ksonnet": // exclude ksonnet object
-			continue
-		case d == nil: // result from false if condition in Jsonnet
-			continue
+		// object and list tried, so not a collection.
+		return ErrorPrimitiveReached{
+			path:      path.Base(),
+			key:       path.Name(),
+			primitive: ptr,
 		}
+	}
+	return walkJSON(s, extracted, path)
+}
 
-		path := append(path, key)
-
-		if _, ok := d.(map[string]interface{}); !ok {
-			return ErrorPrimitiveReached{path.Base(), key, d}
-		}
-
-		m := objx.New(d)
-		if m.Has("apiVersion") && m.Has("kind") {
-			mf, err := manifest.NewFromObj(m)
-			if err != nil {
-				return err.(*manifest.SchemaError).WithName(path.Full())
-			}
-			extracted[path.Full()] = mf
-		} else {
-			if err := walkJSON(m, extracted, path); err != nil {
-				return err
-			}
+func walkList(list []interface{}, extracted map[string]manifest.Manifest, path trace) error {
+	for idx, value := range list {
+		err := walkJSON(value, extracted, append(path, fmt.Sprintf("[%d]", idx)))
+		if err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) error {
+	obj = obj.Exclude([]string{"__ksonnet"}) // remove our private ksonnet field
+
+	// This looks like a kubernetes manifest, so make one and return it
+	if isKubernetesManifest(obj) {
+		m, err := manifest.NewFromObj(obj)
+		if err != nil {
+			return err.(*manifest.SchemaError).WithName(path.Full())
+		}
+
+		extracted[path.Full()] = m
+		return nil
+	}
+
+	for key, value := range obj {
+		path := append(path, key)
+
+		if value == nil { // result from false if condition in Jsonnet
+			continue
+		}
+		err := walkJSON(value, extracted, path)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// tryCoerceSlice attempts to construct a []interface{} from any other kind of
+// array/slice.
+// If the argument is not a list at all, ok will be false
+func tryCoerceSlice(input interface{}) ([]interface{}, bool) {
+	v := reflect.ValueOf(input)
+	if v.Kind() != reflect.Slice && v.Kind() != reflect.Array {
+		return nil, false
+	}
+
+	l := v.Len()
+	s := make([]interface{}, l)
+
+	for i := 0; i < l; i++ {
+		s[i] = v.Index(i).Interface()
+	}
+
+	return s, true
 }
 
 type trace []string
@@ -141,6 +171,14 @@ func (t trace) Base() string {
 	return "." + strings.Join(t, ".")
 }
 
+func (t trace) Name() string {
+	if len(t) > 0 {
+		return t[len(t)-1]
+	}
+
+	return ""
+}
+
 // ErrorPrimitiveReached occurs when walkJSON reaches the end of nested dicts without finding a valid Kubernetes manifest
 type ErrorPrimitiveReached struct {
 	path, key string
@@ -148,8 +186,20 @@ type ErrorPrimitiveReached struct {
 }
 
 func (e ErrorPrimitiveReached) Error() string {
-	return fmt.Sprintf("recursion did not resolve in a valid Kubernetes object, "+
-		"because one of `kind` or `apiVersion` is missing in path `%s`."+
-		" Found non-dict value `%s` of type `%T` instead.",
+	return fmt.Sprintf("recursion did not resolve in a valid Kubernetes object. "+
+		" In path `%s` found key `%s` of type `%T` instead.",
 		e.path, e.key, e.primitive)
+}
+
+// isKubernetesManifest attempts to infer whether the given object is a valid kubernetes
+// resource by verifying the presence of apiVersion and kind. These two
+// fields are required for kubernetes to accept any resource.
+//
+// In future, it might be a good idea to allow users to opt their object out of being
+// interpreted as a kubernetes resource, perhaps with a field like `exclude: true`. For
+// now, any object within the jsonnet output that quacks like a kubernetes resource will
+// be provided to the kubernetes API.
+func isKubernetesManifest(obj objx.Map) bool {
+	return obj.Get("apiVersion").IsStr() && obj.Get("apiVersion").Str() != "" &&
+		obj.Get("kind").IsStr() && obj.Get("kind").Str() != ""
 }
