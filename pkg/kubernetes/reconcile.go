@@ -79,7 +79,6 @@ func extract(deep interface{}) (map[string]manifest.Manifest, error) {
 // will not be matched.
 func tryCoerceSlice(input interface{}, path trace) ([]interface{}, error) {
 	v := reflect.ValueOf(input)
-	v.Kind()
 	if v.Kind() != reflect.Slice && v.Kind() != reflect.Array {
 		return nil, ErrorPrimitiveReached{
 			path:      path.Base(),
