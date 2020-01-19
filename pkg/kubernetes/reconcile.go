@@ -71,32 +71,6 @@ func extract(deep interface{}) (map[string]manifest.Manifest, error) {
 	return extracted, nil
 }
 
-// tryCoerceSlice will test that an input is an array or a slice,
-// and then construct a slice of empty interface.
-//
-// This is useful to handle recursion in walkJSON.
-// Types not specified exactly in a type switch (such as highly nested arrays),
-// will not be matched.
-func tryCoerceSlice(input interface{}, path trace) ([]interface{}, error) {
-	v := reflect.ValueOf(input)
-	if v.Kind() != reflect.Slice && v.Kind() != reflect.Array {
-		return nil, ErrorPrimitiveReached{
-			path:      path.Base(),
-			key:       path.Name(),
-			primitive: input,
-		}
-	}
-
-	l := v.Len()
-	s := make([]interface{}, l)
-
-	for i := 0; i < l; i++ {
-		s[i] = v.Index(i).Interface()
-	}
-
-	return s, nil
-}
-
 // walkJSON recurses into either a map or list, returning a list of all objects that look
 // like kubernetes resources. We support resources at an arbitrary level of nesting, and
 // return an error if a node is not walkable.
@@ -105,24 +79,35 @@ func tryCoerceSlice(input interface{}, path trace) ([]interface{}, error) {
 // walkJSON, and then walkObj/walkList to handle the two different types of collection we
 // support.
 func walkJSON(ptr interface{}, extracted map[string]manifest.Manifest, path trace) error {
+	// check for known types
 	switch v := ptr.(type) {
 	case map[string]interface{}:
 		return walkObj(v, extracted, path)
-	case []interface{}: // Duplicated to handle multiple list types
-		for idx, value := range v {
-			err := walkJSON(value, extracted, append(path, fmt.Sprintf("[%d]", idx)))
-			if err != nil {
-				return err
-			}
+	case []interface{}:
+		return walkList(v, extracted, path)
+	}
+
+	// Lists other than []interface{} need to be handled separately
+	s, ok := tryCoerceSlice(ptr)
+	if !ok {
+		// object and list tried, so not a collection.
+		return ErrorPrimitiveReached{
+			path:      path.Base(),
+			key:       path.Name(),
+			primitive: ptr,
 		}
-		return nil
-	default:
-		s, err := tryCoerceSlice(ptr, path)
+	}
+	return walkJSON(s, extracted, path)
+}
+
+func walkList(list []interface{}, extracted map[string]manifest.Manifest, path trace) error {
+	for idx, value := range list {
+		err := walkJSON(value, extracted, append(path, fmt.Sprintf("[%d]", idx)))
 		if err != nil {
 			return err
 		}
-		return walkJSON(s, extracted, path)
 	}
+	return nil
 }
 
 func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) error {
@@ -152,6 +137,25 @@ func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) e
 	}
 
 	return nil
+}
+
+// tryCoerceSlice attempts to construct a []interface{} from any other kind of
+// array/slice.
+// If the argument is not a list at all, ok will be false
+func tryCoerceSlice(input interface{}) ([]interface{}, bool) {
+	v := reflect.ValueOf(input)
+	if v.Kind() != reflect.Slice && v.Kind() != reflect.Array {
+		return nil, false
+	}
+
+	l := v.Len()
+	s := make([]interface{}, l)
+
+	for i := 0; i < l; i++ {
+		s[i] = v.Index(i).Interface()
+	}
+
+	return s, true
 }
 
 type trace []string
