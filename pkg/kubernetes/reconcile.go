@@ -71,7 +71,6 @@ func extract(deep interface{}) (map[string]manifest.Manifest, error) {
 	return extracted, nil
 }
 
-
 // tryCoerceSlice will test that an input is an array or a slice,
 // and then construct a slice of empty interface.
 //
@@ -79,7 +78,8 @@ func extract(deep interface{}) (map[string]manifest.Manifest, error) {
 // Types not specified exactly in a type switch (such as highly nested arrays),
 // will not be matched.
 func tryCoerceSlice(input interface{}, path trace) ([]interface{}, error) {
-	v := reflect.ValueOf(input); v.Kind()
+	v := reflect.ValueOf(input)
+	v.Kind()
 	if v.Kind() != reflect.Slice && v.Kind() != reflect.Array {
 		return nil, ErrorPrimitiveReached{
 			path:      path.Base(),
@@ -91,7 +91,7 @@ func tryCoerceSlice(input interface{}, path trace) ([]interface{}, error) {
 	l := v.Len()
 	s := make([]interface{}, l)
 
-	for i := 0; i<l; i++ {
+	for i := 0; i < l; i++ {
 		s[i] = v.Index(i).Interface()
 	}
 

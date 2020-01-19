@@ -235,7 +235,6 @@ func testDataArray() testData {
 	}
 }
 
-
 // testDataDeepArray is an array of (deeply nested) dicts that should be fully
 // flattened
 func testDataDeepArray() testData {
