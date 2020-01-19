@@ -35,6 +35,10 @@ func TestExtract(t *testing.T) {
 			data: testDataArray(),
 		},
 		{
+			name: "deep array",
+			data: testDataDeepArray(),
+		},
+		{
 			name: "nil",
 			data: func() testData {
 				d := testDataRegular()

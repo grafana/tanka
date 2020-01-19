@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -70,6 +71,33 @@ func extract(deep interface{}) (map[string]manifest.Manifest, error) {
 	return extracted, nil
 }
 
+
+// tryCoerceSlice will test that an input is an array or a slice,
+// and then construct a slice of empty interface.
+//
+// This is useful to handle recursion in walkJSON.
+// Types not specified exactly in a type switch (such as highly nested arrays),
+// will not be matched.
+func tryCoerceSlice(input interface{}, path trace) ([]interface{}, error) {
+	v := reflect.ValueOf(input); v.Kind()
+	if v.Kind() != reflect.Slice && v.Kind() != reflect.Array {
+		return nil, ErrorPrimitiveReached{
+			path:      path.Base(),
+			key:       path.Name(),
+			primitive: input,
+		}
+	}
+
+	l := v.Len()
+	s := make([]interface{}, l)
+
+	for i := 0; i<l; i++ {
+		s[i] = v.Index(i).Interface()
+	}
+
+	return s, nil
+}
+
 // walkJSON recurses into either a map or list, returning a list of all objects that look
 // like kubernetes resources. We support resources at an arbitrary level of nesting, and
 // return an error if a node is not walkable.
@@ -89,20 +117,12 @@ func walkJSON(ptr interface{}, extracted map[string]manifest.Manifest, path trac
 			}
 		}
 		return nil
-	case []map[string]interface{}:
-		for idx, value := range v {
-			err := walkJSON(value, extracted, append(path, fmt.Sprintf("[%d]", idx)))
-			if err != nil {
-				return err
-			}
+	default:
+		s, err := tryCoerceSlice(ptr, path)
+		if err != nil {
+			return err
 		}
-		return nil
-	}
-
-	return ErrorPrimitiveReached{
-		path:      path.Base(),
-		key:       path.Name(),
-		primitive: ptr,
+		return walkJSON(s, extracted, path)
 	}
 }
 
