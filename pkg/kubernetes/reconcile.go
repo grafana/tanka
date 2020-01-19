@@ -81,16 +81,22 @@ func walkJSON(ptr interface{}, extracted map[string]manifest.Manifest, path trac
 	switch v := ptr.(type) {
 	case map[string]interface{}:
 		return walkObj(v, extracted, path)
-	case []map[string]interface{}:
-		return walkList(v, extracted, path)
-	case []interface{}:
-		l := make([]map[string]interface{}, 0, len(v))
-		for _, o := range v {
-			if dict, ok := o.(map[string]interface{}); ok {
-				l = append(l, dict)
+	case []interface{}: // Duplicated to handle multiple list types
+		for idx, value := range v {
+			err := walkJSON(value, extracted, append(path, fmt.Sprintf("[%d]", idx)))
+			if err != nil {
+				return err
 			}
 		}
-		return walkList(l, extracted, path)
+		return nil
+	case []map[string]interface{}:
+		for idx, value := range v {
+			err := walkJSON(value, extracted, append(path, fmt.Sprintf("[%d]", idx)))
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
 	return ErrorPrimitiveReached{
@@ -121,17 +127,6 @@ func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) e
 			continue
 		}
 		err := walkJSON(value, extracted, path)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func walkList(list []map[string]interface{}, extracted map[string]manifest.Manifest, path trace) error {
-	for idx, value := range list {
-		err := walkJSON(value, extracted, append(path, fmt.Sprintf("[%d]", idx)))
 		if err != nil {
 			return err
 		}
