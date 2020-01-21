@@ -39,7 +39,10 @@ func NewExtendedImporter(jpath []string) *ExtendedImporter {
 				JPaths: jpath,
 			})},
 		processors: []importProcessor{
-			yamlProcessor,
+			// TODO: re-enable this once we can without side-effects
+			// (https://github.com/grafana/tanka/issues/135)
+			//
+			// yamlProcessor,
 		},
 	}
 }
