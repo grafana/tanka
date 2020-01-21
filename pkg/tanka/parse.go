@@ -35,7 +35,7 @@ func (p *ParseResult) newKube() (*kubernetes.Kubernetes, error) {
 // parse loads the `spec.json`, evaluates the jsonnet and returns both, the
 // kubernetes object and the reconciled manifests
 func parse(baseDir string, opts *options) (*ParseResult, error) {
-	raw, env, err := Eval(baseDir, opts)
+	raw, env, err := eval(baseDir, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +51,19 @@ func parse(baseDir string, opts *options) (*ParseResult, error) {
 	}, nil
 }
 
-// Eval returns the raw evaluated Jsonnet and the parsed env used for evaluation
-func Eval(baseDir string, opts *options) (raw map[string]interface{}, env *v1alpha1.Config, err error) {
+// Eval returns the raw evaluated Jsonnet output (without any transformations)
+func Eval(baseDir string, mods ...Modifier) (raw map[string]interface{}, err error) {
+	opts := parseModifiers(mods)
+
+	r, _, err := eval(baseDir, opts)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+// eval returns the raw evaluated Jsonnet and the parsed env used for evaluation
+func eval(baseDir string, opts *options) (raw map[string]interface{}, env *v1alpha1.Config, err error) {
 	if opts == nil {
 		opts = &options{}
 	}
@@ -62,7 +73,7 @@ func Eval(baseDir string, opts *options) (raw map[string]interface{}, env *v1alp
 		return nil, nil, err
 	}
 
-	raw, err = evalJsonnet(baseDir, env)
+	raw, err = evalJsonnet(baseDir, env, opts.extCode)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 	}
@@ -96,7 +107,7 @@ func parseEnv(baseDir string, opts *options) (*v1alpha1.Config, error) {
 
 // evalJsonnet evaluates the jsonnet environment at the given directory starting with
 // `main.jsonnet`
-func evalJsonnet(path string, env *v1alpha1.Config) (map[string]interface{}, error) {
+func evalJsonnet(path string, env *v1alpha1.Config, extCode map[string]string) (map[string]interface{}, error) {
 	workdir, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
@@ -111,9 +122,16 @@ func evalJsonnet(path string, env *v1alpha1.Config) (map[string]interface{}, err
 		return nil, errors.Wrap(err, "marshalling environment config")
 	}
 
+	ext := []jsonnet.Modifier{
+		jsonnet.WithExtCode(spec.APIGroup+"/environment", string(jsonEnv)),
+	}
+	for k, v := range extCode {
+		ext = append(ext, jsonnet.WithExtCode(k, v))
+	}
+
 	raw, err := jsonnet.EvaluateFile(
 		filepath.Join(baseDir, "main.jsonnet"),
-		jsonnet.WithExtCode(spec.APIGroup+"/environment", string(jsonEnv)),
+		ext...,
 	)
 	if err != nil {
 		return nil, err

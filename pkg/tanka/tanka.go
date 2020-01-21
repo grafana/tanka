@@ -24,6 +24,9 @@ type options struct {
 	// io.Writer to write warnings and notices to
 	wWarn io.Writer
 
+	// `std.extVar`
+	extCode map[string]string
+
 	// target regular expressions to limit the working set
 	targets []*regexp.Regexp
 
@@ -43,6 +46,13 @@ type Modifier func(*options)
 func WithWarnWriter(w io.Writer) Modifier {
 	return func(opts *options) {
 		opts.wWarn = w
+	}
+}
+
+// WithExtCode allows to pass external variables (jsonnet code) to the VM
+func WithExtCode(code map[string]string) Modifier {
+	return func(opts *options) {
+		opts.extCode = code
 	}
 }
 

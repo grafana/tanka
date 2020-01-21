@@ -45,9 +45,12 @@ func applyCmd() *cobra.Command {
 	vars := workflowFlags(cmd.Flags())
 	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	getExtCode := extCodeParser(cmd.Flags())
+
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		err := tanka.Apply(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
+			tanka.WithExtCode(getExtCode()),
 			tanka.WithApplyForce(*force),
 			tanka.WithApplyAutoApprove(*autoApprove),
 		)
@@ -79,9 +82,12 @@ func diffCmd() *cobra.Command {
 		summarize    = cmd.Flags().BoolP("summarize", "s", false, "quick summary of the differences, hides file contents")
 	)
 
+	getExtCode := extCodeParser(cmd.Flags())
+
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		changes, err := tanka.Diff(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
+			tanka.WithExtCode(getExtCode()),
 			tanka.WithDiffStrategy(*diffStrategy),
 			tanka.WithDiffSummarize(*summarize),
 		)
@@ -118,6 +124,7 @@ func showCmd() *cobra.Command {
 	}
 	vars := workflowFlags(cmd.Flags())
 	allowRedirect := cmd.Flags().Bool("dangerous-allow-redirect", false, "allow redirecting output to a file or a pipe.")
+	getExtCode := extCodeParser(cmd.Flags())
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if !interactive && !*allowRedirect {
 			fmt.Fprintln(os.Stderr, "Redirection of the output of tk show is discouraged and disabled by default. Run tk show --dangerous-allow-redirect to enable.")
@@ -125,6 +132,7 @@ func showCmd() *cobra.Command {
 		}
 
 		pretty, err := tanka.Show(args[0],
+			tanka.WithExtCode(getExtCode()),
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 		)
 		if err != nil {
