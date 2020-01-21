@@ -110,10 +110,10 @@ on the root object before. Do the same for `/environments/default/prometheus.jso
 
 > **Clarification**:  
 > It might seem odd at first sight, that this code works, because
-> `grafana.libsonnet` still refers to the root object using `$`, even
+> `grafana.jsonnet` still refers to the root object using `$`, even
 > though it is outside of the file's scope.  
 > However, Jsonnet is lazy-evaluated which means that the contents of
-> `grafana.libsonnet` are **first "copied"** into `main.jsonnet` (the root
+> `grafana.jsonnet` are **first "copied"** into `main.jsonnet` (the root
 > object) and **then evaluated**. This means the above code actually consists of
 > all three objects joined to one big object, which is then converted to JSON.
 
