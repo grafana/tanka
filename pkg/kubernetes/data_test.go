@@ -1,257 +1,64 @@
 package kubernetes
 
-import "github.com/grafana/tanka/pkg/kubernetes/manifest"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"strings"
 
-// This file  contains data for testing
+	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+)
 
 // testData holds data for tests
 type testData struct {
-	deep interface{}
-	flat map[string]manifest.Manifest
+	Deep interface{}                  `json:"deep"`
+	Flat map[string]manifest.Manifest `json:"flat"`
+}
+
+func loadFixture(name string) testData {
+	raw, err := ioutil.ReadFile("./testdata/td" + strings.Title(name) + ".jsonnet")
+	if err != nil {
+		panic(fmt.Sprint("loading fixture:", err))
+	}
+
+	data, err := jsonnet.Evaluate(string(raw), []string{"./testdata"})
+	if err != nil {
+		panic(fmt.Sprint("loading fixture:", err))
+	}
+
+	var d testData
+	if err := json.Unmarshal([]byte(data), &d); err != nil {
+		panic(fmt.Sprint("loading fixture:", err))
+	}
+
+	return d
 }
 
 // testDataRegular is a regular output of jsonnet without special things, but it
 // is nested.
 func testDataRegular() testData {
-	return (testData{
-		deep: map[string]interface{}{
-			"deployment": map[string]interface{}{
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "nginx",
-				},
-				"spec": map[string]interface{}{
-					"containers": []interface{}{
-						map[string]interface{}{
-							"name":  "nginx",
-							"image": "nginx",
-						},
-					},
-				},
-			},
-			"service": map[string]interface{}{
-				"apiVersion": "v1",
-				"kind":       "Service",
-				"metadata": map[string]interface{}{
-					"name": "nginx",
-				},
-				"spec": map[string]interface{}{
-					"selector": map[string]interface{}{
-						"app": "app",
-					},
-				},
-			},
-		},
-		flat: map[string]manifest.Manifest{
-			".deployment": {
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "nginx",
-				},
-				"spec": map[string]interface{}{
-					"containers": []interface{}{
-						map[string]interface{}{
-							"name":  "nginx",
-							"image": "nginx",
-						},
-					},
-				},
-			},
-			".service": {
-				"apiVersion": "v1",
-				"kind":       "Service",
-				"metadata": map[string]interface{}{
-					"name": "nginx",
-				},
-				"spec": map[string]interface{}{
-					"selector": map[string]interface{}{
-						"app": "app",
-					},
-				},
-			},
-		},
-	})
+	return loadFixture("regular")
 }
 
 // testDataFlat is a flat manifest that does not need reconciliation
 func testDataFlat() testData {
-	return testData{
-		deep: map[string]interface{}{
-			"apiVersion": "apps/v1",
-			"kind":       "Deployment",
-			"metadata": map[string]interface{}{
-				"name": "nginx",
-			},
-			"spec": map[string]interface{}{
-				"containers": []interface{}{
-					map[string]interface{}{
-						"name":  "nginx",
-						"image": "nginx",
-					},
-				},
-			},
-		},
-		flat: map[string]manifest.Manifest{
-			".": {
-				"apiVersion": "apps/v1",
-				"kind":       "Deployment",
-				"metadata": map[string]interface{}{
-					"name": "nginx",
-				},
-				"spec": map[string]interface{}{
-					"containers": []interface{}{
-						map[string]interface{}{
-							"name":  "nginx",
-							"image": "nginx",
-						},
-					},
-				},
-			},
-		},
-	}
+	return loadFixture("flat")
 }
 
 // testDataPrimitive is an invalid manifest, because it ends with a primitive
 // without including required fields
 func testDataPrimitive() testData {
-	return testData{
-		deep: map[string]interface{}{
-			"nginx": map[string]interface{}{
-				"deployment": map[string]interface{}{
-					"apiVersion": "apps/v1",
-					"kind":       "Deployment",
-					"metadata": map[string]interface{}{
-						"name": "nginx",
-					},
-				},
-				"service": map[string]interface{}{
-					"note": "invalid because apiVersion and kind are missing",
-				},
-			},
-		},
-	}
+	return loadFixture("invalidPrimitive")
 }
 
 // testDataDeep is super deeply nested on multiple levels
 func testDataDeep() testData {
-	return testData{
-		deep: map[string]interface{}{
-			"app": map[string]interface{}{
-				"web": map[string]interface{}{
-					"backend": map[string]interface{}{
-						"server": map[string]interface{}{
-							"nginx": map[string]interface{}{
-								"deployment": map[string]interface{}{
-									"kind":       "Deployment",
-									"apiVersion": "apps/v1",
-									"metadata": map[string]interface{}{
-										"name": "nginx",
-									},
-								},
-							},
-						},
-					},
-					"frontend": map[string]interface{}{
-						"nodejs": map[string]interface{}{
-							"express": map[string]interface{}{
-								"service": map[string]interface{}{
-									"kind":       "Service",
-									"apiVersion": "v1",
-									"metadata": map[string]interface{}{
-										"name": "frontend",
-									},
-								},
-								"deployment": map[string]interface{}{
-									"kind":       "Deployment",
-									"apiVersion": "apps/v1",
-									"metadata": map[string]interface{}{
-										"name": "frontend",
-									},
-								},
-							},
-						},
-					},
-				},
-				"namespace": map[string]interface{}{
-					"kind":       "Namespace",
-					"apiVersion": "v1",
-					"metadata": map[string]interface{}{
-						"name": "app",
-					},
-				},
-			},
-		},
-		flat: map[string]manifest.Manifest{
-			".app.web.backend.server.nginx.deployment": {
-				"kind":       "Deployment",
-				"apiVersion": "apps/v1",
-				"metadata": map[string]interface{}{
-					"name": "nginx",
-				},
-			},
-			".app.web.frontend.nodejs.express.service": {
-				"kind":       "Service",
-				"apiVersion": "v1",
-				"metadata": map[string]interface{}{
-					"name": "frontend",
-				},
-			},
-			".app.web.frontend.nodejs.express.deployment": {
-				"kind":       "Deployment",
-				"apiVersion": "apps/v1",
-				"metadata": map[string]interface{}{
-					"name": "frontend",
-				},
-			},
-			".app.namespace": {
-				"kind":       "Namespace",
-				"apiVersion": "v1",
-				"metadata": map[string]interface{}{
-					"name": "app",
-				},
-			},
-		},
-	}
+	return loadFixture("deep")
 }
 
 // testDataArray is an array of (deeply nested) dicts that should be fully
 // flattened
 func testDataArray() testData {
-	return testData{
-		deep: []map[string]interface{}{
-			testDataDeep().deep.(map[string]interface{}),
-			testDataFlat().deep.(map[string]interface{}),
-		},
-
-		flat: map[string]manifest.Manifest{
-			".[0].app.web.backend.server.nginx.deployment":    testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
-			".[0].app.web.frontend.nodejs.express.service":    testDataDeep().flat[".app.web.frontend.nodejs.express.service"],
-			".[0].app.web.frontend.nodejs.express.deployment": testDataDeep().flat[".app.web.frontend.nodejs.express.deployment"],
-			".[0].app.namespace":                              testDataDeep().flat[".app.namespace"],
-			".[1]":                                            testDataFlat().flat["."],
-		},
-	}
-}
-
-// testDataDeepArray is an array of (deeply nested) dicts that should be fully
-// flattened
-func testDataDeepArray() testData {
-	return testData{
-		deep: [][]map[string]interface{}{
-			{
-				testDataDeep().deep.(map[string]interface{}),
-				testDataFlat().deep.(map[string]interface{}),
-			},
-		},
-
-		flat: map[string]manifest.Manifest{
-			".[0].[0].app.web.backend.server.nginx.deployment":    testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
-			".[0].[0].app.web.frontend.nodejs.express.service":    testDataDeep().flat[".app.web.frontend.nodejs.express.service"],
-			".[0].[0].app.web.frontend.nodejs.express.deployment": testDataDeep().flat[".app.web.frontend.nodejs.express.deployment"],
-			".[0].[0].app.namespace":                              testDataDeep().flat[".app.namespace"],
-			".[0].[1]":                                            testDataFlat().flat["."],
-		},
-	}
+	return loadFixture("array")
 }
