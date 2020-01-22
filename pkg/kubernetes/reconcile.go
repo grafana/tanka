@@ -2,7 +2,6 @@ package kubernetes
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -87,17 +86,11 @@ func walkJSON(ptr interface{}, extracted map[string]manifest.Manifest, path trac
 		return walkList(v, extracted, path)
 	}
 
-	// Lists other than []interface{} need to be handled separately
-	s, ok := tryCoerceSlice(ptr)
-	if !ok {
-		// object and list tried, so not a collection.
-		return ErrorPrimitiveReached{
-			path:      path.Base(),
-			key:       path.Name(),
-			primitive: ptr,
-		}
+	return ErrorPrimitiveReached{
+		path:      path.Base(),
+		key:       path.Name(),
+		primitive: ptr,
 	}
-	return walkJSON(s, extracted, path)
 }
 
 func walkList(list []interface{}, extracted map[string]manifest.Manifest, path trace) error {
@@ -137,25 +130,6 @@ func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) e
 	}
 
 	return nil
-}
-
-// tryCoerceSlice attempts to construct a []interface{} from any other kind of
-// array/slice.
-// If the argument is not a list at all, ok will be false
-func tryCoerceSlice(input interface{}) ([]interface{}, bool) {
-	v := reflect.ValueOf(input)
-	if v.Kind() != reflect.Slice && v.Kind() != reflect.Array {
-		return nil, false
-	}
-
-	l := v.Len()
-	s := make([]interface{}, l)
-
-	for i := 0; i < l; i++ {
-		s[i] = v.Index(i).Interface()
-	}
-
-	return s, true
 }
 
 type trace []string
