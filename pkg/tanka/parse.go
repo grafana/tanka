@@ -2,8 +2,7 @@ package tanka
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
+	"log"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -34,23 +33,13 @@ func (p *ParseResult) newKube() (*kubernetes.Kubernetes, error) {
 
 // parse loads the `spec.json`, evaluates the jsonnet and returns both, the
 // kubernetes object and the reconciled manifests
-func parse(baseDir string, opts *options) (*ParseResult, error) {
-	_, baseDir, rootDir, err := jpath.Resolve(baseDir)
-	if err != nil {
-		return nil, errors.Wrap(err, "resolving jpath")
-	}
-
-	env, err := parseEnv(baseDir, rootDir, opts)
+func parse(dir string, opts *options) (*ParseResult, error) {
+	raw, env, err := eval(dir, opts.extCode)
 	if err != nil {
 		return nil, err
 	}
 
-	raw, err := eval(baseDir)
-	if err != nil {
-		return nil, errors.Wrap(err, "evaluating jsonnet")
-	}
-
-	rec, err := kubernetes.Reconcile(raw, *env, opts.targets)
+	rec, err := kubernetes.Reconcile(raw, env.Spec, opts.targets)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "reconciling")
@@ -62,29 +51,14 @@ func parse(baseDir string, opts *options) (*ParseResult, error) {
 	}, nil
 }
 
-// Eval returns the raw evaluated Jsonnet output (without any transformations)
-func Eval(baseDir string, mods ...Modifier) (raw map[string]interface{}, err error) {
-	opts := parseModifiers(mods)
-
-	r, _, err := eval(baseDir, opts)
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
-}
-
 // eval returns the raw evaluated Jsonnet and the parsed env used for evaluation
-func eval(baseDir string, opts *options) (raw map[string]interface{}, env *v1alpha1.Config, err error) {
-	if opts == nil {
-		opts = &options{}
-	}
-
-	env, err = parseEnv(baseDir, opts)
+func eval(dir string, extCode map[string]string) (raw map[string]interface{}, env *v1alpha1.Config, err error) {
+	baseDir, env, err := loadDir(dir)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "loading environment")
 	}
 
-	raw, err = evalJsonnet(baseDir, env, opts.extCode)
+	raw, err = evalJsonnet(baseDir, env, extCode)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 	}
@@ -92,9 +66,22 @@ func eval(baseDir string, opts *options) (raw map[string]interface{}, env *v1alp
 	return raw, env, nil
 }
 
+func loadDir(dir string) (baseDir string, env *v1alpha1.Config, err error) {
+	_, baseDir, rootDir, err := jpath.Resolve(dir)
+	if err != nil {
+		return "", nil, errors.Wrap(err, "resolving jpath")
+	}
+
+	env, err = parseEnv(baseDir, rootDir)
+	if err != nil {
+		return "", nil, err
+	}
+	return baseDir, env, nil
+}
+
 // parseEnv parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
-func parseEnv(baseDir, rootDir string, opts *options) (*v1alpha1.Config, error) {
+func parseEnv(baseDir, rootDir string) (*v1alpha1.Config, error) {
 	// name of the environment: relative path from rootDir
 	name, _ := filepath.Rel(rootDir, baseDir)
 
@@ -106,10 +93,7 @@ func parseEnv(baseDir, rootDir string, opts *options) (*v1alpha1.Config, error) 
 			return nil, kubernetes.ErrorMissingConfig
 		// the config includes deprecated fields
 		case spec.ErrDeprecated:
-			if opts.wWarn == nil {
-				opts.wWarn = os.Stderr
-			}
-			fmt.Fprint(opts.wWarn, err)
+			log.Println(err)
 		// some other error
 		default:
 			return nil, errors.Wrap(err, "reading spec.json")

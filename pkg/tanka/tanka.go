@@ -5,7 +5,6 @@
 package tanka
 
 import (
-	"io"
 	"regexp"
 
 	"github.com/grafana/tanka/pkg/kubernetes"
@@ -21,9 +20,6 @@ func parseModifiers(mods []Modifier) *options {
 }
 
 type options struct {
-	// io.Writer to write warnings and notices to
-	wWarn io.Writer
-
 	// `std.extVar`
 	extCode map[string]string
 
@@ -40,14 +36,6 @@ type options struct {
 // are roughly equivalent to flags on the command line. See the `tanka.With*`
 // functions for available options.
 type Modifier func(*options)
-
-// WithWarnWriter allows to provide a custom io.Writer that all warnings are
-// written to
-func WithWarnWriter(w io.Writer) Modifier {
-	return func(opts *options) {
-		opts.wWarn = w
-	}
-}
 
 // WithExtCode allows to pass external variables (jsonnet code) to the VM
 func WithExtCode(code map[string]string) Modifier {
