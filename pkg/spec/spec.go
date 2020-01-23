@@ -61,11 +61,7 @@ func parse(v *viper.Viper, name string) (*v1alpha1.Config, error) {
 	// handle deprecated ksonnet spec
 	for _, d := range deprecated {
 		if v.IsSet(d.old) && !v.IsSet(d.new) {
-			if errDepr == nil {
-				errDepr = ErrDeprecated{d}
-			} else {
-				errDepr = append(errDepr, d)
-			}
+			errDepr = append(errDepr, d)
 			v.Set(d.new, v.Get(d.old))
 		}
 	}
@@ -77,6 +73,10 @@ func parse(v *viper.Viper, name string) (*v1alpha1.Config, error) {
 
 	// set the name field
 	config.Metadata.Name = name
+
+	if len(errDepr) == 0 {
+		return config, nil
+	}
 
 	// return depreciation notes in case any exist as well
 	return config, errDepr
