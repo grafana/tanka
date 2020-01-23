@@ -125,7 +125,7 @@ func envAddCmd() *cobra.Command {
 	envSettingsFlags(cfg, cmd.Flags())
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Changed("server-from-context") {
-			server, err := client.IPFromContext(tmp.Spec.APIServer)
+			server, err := client.IPFromContext(cfg.Spec.APIServer)
 			if err != nil {
 				log.Fatalf("Resolving IP from context: %s", err)
 			}
