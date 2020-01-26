@@ -51,6 +51,9 @@ type ApplyOpts struct {
 	// force allows to ignore checks and force the operation
 	Force bool
 
+	// validate allows to enable/disable kubectl validation
+	Validate bool
+
 	// autoApprove allows to skip the interactive approval
 	AutoApprove bool
 }

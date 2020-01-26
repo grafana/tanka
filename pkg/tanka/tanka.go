@@ -89,6 +89,13 @@ func WithApplyForce(b bool) Modifier {
 	}
 }
 
+// WithApplyValidate allows to invoke `kubectl apply` with the `--validate=false` flag
+func WithApplyValidate(b bool) Modifier {
+	return func(opts *options) {
+		opts.apply.Validate = b
+	}
+}
+
 // WithApplyAutoApprove allows to skip the interactive approval
 func WithApplyAutoApprove(b bool) Modifier {
 	return func(opts *options) {
