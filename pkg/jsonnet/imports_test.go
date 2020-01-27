@@ -11,7 +11,7 @@ import (
 // TestTransitiveImports checks that TransitiveImports is able to report all
 // recursive imports of a file
 func TestTransitiveImports(t *testing.T) {
-	imports, err := TransitiveImports("testdata")
+	imports, err := TransitiveImports("testdata/importTree")
 	fmt.Println(imports)
 	require.NoError(t, err)
 	assert.Equal(t, []string{
