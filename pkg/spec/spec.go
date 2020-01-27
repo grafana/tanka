@@ -3,7 +3,6 @@ package spec
 import (
 	"bytes"
 	"os"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -34,7 +33,7 @@ func Parse(data []byte, name string) (*v1alpha1.Config, error) {
 
 // ParseDir parses the given environments `spec.json` into a `v1alpha1.Config`
 // object with the name set to the directories name
-func ParseDir(baseDir string) (*v1alpha1.Config, error) {
+func ParseDir(baseDir, name string) (*v1alpha1.Config, error) {
 	fi, err := os.Stat(baseDir)
 	if err != nil {
 		return nil, err
@@ -51,7 +50,7 @@ func ParseDir(baseDir string) (*v1alpha1.Config, error) {
 		return nil, err
 	}
 
-	return parse(v, filepath.Base(baseDir))
+	return parse(v, name)
 }
 
 // parse accepts a viper.Viper already loaded with the actual config and
@@ -62,11 +61,7 @@ func parse(v *viper.Viper, name string) (*v1alpha1.Config, error) {
 	// handle deprecated ksonnet spec
 	for _, d := range deprecated {
 		if v.IsSet(d.old) && !v.IsSet(d.new) {
-			if errDepr == nil {
-				errDepr = ErrDeprecated{d}
-			} else {
-				errDepr = append(errDepr, d)
-			}
+			errDepr = append(errDepr, d)
 			v.Set(d.new, v.Get(d.old))
 		}
 	}
@@ -78,6 +73,10 @@ func parse(v *viper.Viper, name string) (*v1alpha1.Config, error) {
 
 	// set the name field
 	config.Metadata.Name = name
+
+	if len(errDepr) == 0 {
+		return config, nil
+	}
 
 	// return depreciation notes in case any exist as well
 	return config, errDepr

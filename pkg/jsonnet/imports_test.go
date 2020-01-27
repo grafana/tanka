@@ -1,6 +1,7 @@
 package jsonnet
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,15 +11,15 @@ import (
 // TestTransitiveImports checks that TransitiveImports is able to report all
 // recursive imports of a file
 func TestTransitiveImports(t *testing.T) {
-	imports, err := TransitiveImports("testdata/main.jsonnet")
+	imports, err := TransitiveImports("testdata")
+	fmt.Println(imports)
 	require.NoError(t, err)
-	assert.ElementsMatch(t, []string{
-		"testdata/trees.jsonnet",
-
-		"testdata/trees/apple.jsonnet",
-		"testdata/trees/cherry.jsonnet",
-		"testdata/trees/peach.jsonnet",
-
-		"testdata/trees/generic.libsonnet",
+	assert.Equal(t, []string{
+		"main.jsonnet",
+		"trees.jsonnet",
+		"trees/apple.jsonnet",
+		"trees/cherry.jsonnet",
+		"trees/generic.libsonnet",
+		"trees/peach.jsonnet",
 	}, imports)
 }

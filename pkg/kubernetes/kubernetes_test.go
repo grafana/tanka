@@ -88,7 +88,9 @@ func TestReconcile(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := Reconcile(c.deep.(map[string]interface{}), c.spec, c.targets)
+			config := v1alpha1.New()
+			config.Spec = c.spec
+			got, err := Reconcile(c.deep.(map[string]interface{}), config.Spec, c.targets)
 
 			require.Equal(t, c.err, err)
 			assert.ElementsMatch(t, c.flat, got)
@@ -99,7 +101,7 @@ func TestReconcile(t *testing.T) {
 func TestReconcileOrder(t *testing.T) {
 	got := make([]manifest.List, 10)
 	for i := 0; i < 10; i++ {
-		r, err := Reconcile(testDataDeep().Deep.(map[string]interface{}), v1alpha1.Spec{}, nil)
+		r, err := Reconcile(testDataDeep().Deep.(map[string]interface{}), v1alpha1.New().Spec, nil)
 		require.NoError(t, err)
 		got[i] = r
 	}
