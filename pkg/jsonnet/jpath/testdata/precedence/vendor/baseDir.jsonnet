@@ -1,0 +1,3 @@
+{
+  value: "/vendor"
+}

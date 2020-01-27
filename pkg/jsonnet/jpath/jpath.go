@@ -55,10 +55,10 @@ func Resolve(workdir string) (path []string, base, root string, err error) {
 
 	// The importer iterates through this list in reverse order
 	return []string{
-		base,
 		filepath.Join(root, "vendor"),
 		filepath.Join(base, "vendor"), // Look for a vendor folder in the base dir before using the root vendor
 		filepath.Join(root, "lib"),
+		base,
 	}, base, root, nil
 }
 
