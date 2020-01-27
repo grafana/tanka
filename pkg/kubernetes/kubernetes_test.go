@@ -26,46 +26,46 @@ func TestReconcile(t *testing.T) {
 	}{
 		{
 			name: "regular",
-			deep: testDataRegular().deep,
-			flat: mapToList(testDataRegular().flat),
+			deep: testDataRegular().Deep,
+			flat: mapToList(testDataRegular().Flat),
 		},
 		{
 			name: "targets",
-			deep: testDataDeep().deep,
+			deep: testDataDeep().Deep,
 			flat: manifest.List{
-				testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
-				testDataDeep().flat[".app.web.frontend.nodejs.express.service"],
+				testDataDeep().Flat[".app.web.backend.server.grafana.deployment"],
+				testDataDeep().Flat[".app.web.frontend.nodejs.express.service"],
 			},
 			targets: util.MustCompileTargetExps(
-				`deployment/nginx`,
+				`deployment/grafana`,
 				`service/frontend`,
 			),
 		},
 		{
 			name: "targets-regex",
-			deep: testDataDeep().deep,
+			deep: testDataDeep().Deep,
 			flat: manifest.List{
-				testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
-				testDataDeep().flat[".app.web.frontend.nodejs.express.deployment"],
+				testDataDeep().Flat[".app.web.backend.server.grafana.deployment"],
+				testDataDeep().Flat[".app.web.frontend.nodejs.express.deployment"],
 			},
 			targets: util.MustCompileTargetExps(`deployment/.*`),
 		},
 		{
 			name: "targets-caseInsensitive",
-			deep: testDataDeep().deep,
+			deep: testDataDeep().Deep,
 			flat: manifest.List{
-				testDataDeep().flat[".app.web.backend.server.nginx.deployment"],
+				testDataDeep().Flat[".app.web.backend.server.grafana.deployment"],
 			},
 			targets: util.MustCompileTargetExps(
-				`DePlOyMeNt/NgInX`,
+				`DePlOyMeNt/GrAfAnA`,
 			),
 		},
 		{
 			name: "force-namespace",
 			spec: v1alpha1.Spec{Namespace: "tanka"},
-			deep: testDataFlat().deep,
+			deep: testDataFlat().Deep,
 			flat: func() manifest.List {
-				f := testDataFlat().flat["."]
+				f := testDataFlat().Flat["."]
 				f.Metadata()["namespace"] = "tanka"
 				return manifest.List{f}
 			}(),
@@ -74,12 +74,12 @@ func TestReconcile(t *testing.T) {
 			name: "custom-namespace",
 			spec: v1alpha1.Spec{Namespace: "tanka"},
 			deep: func() map[string]interface{} {
-				d := objx.New(testDataFlat().deep)
+				d := objx.New(testDataFlat().Deep)
 				d.Set("metadata.namespace", "custom")
 				return d
 			}(),
 			flat: func() manifest.List {
-				f := testDataFlat().flat["."]
+				f := testDataFlat().Flat["."]
 				f.Metadata()["namespace"] = "custom"
 				return manifest.List{f}
 			}(),
@@ -101,7 +101,7 @@ func TestReconcile(t *testing.T) {
 func TestReconcileOrder(t *testing.T) {
 	got := make([]manifest.List, 10)
 	for i := 0; i < 10; i++ {
-		r, err := Reconcile(testDataDeep().deep.(map[string]interface{}), v1alpha1.New().Spec, nil)
+		r, err := Reconcile(testDataDeep().Deep.(map[string]interface{}), v1alpha1.New().Spec, nil)
 		require.NoError(t, err)
 		got[i] = r
 	}
