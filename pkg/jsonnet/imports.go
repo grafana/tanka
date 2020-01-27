@@ -3,6 +3,7 @@ package jsonnet
 import (
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
@@ -13,14 +14,21 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/native"
 )
 
-// TransitiveImports returns all recursive imports of a file
-func TransitiveImports(filename string) ([]string, error) {
-	sonnet, err := ioutil.ReadFile(filename)
+// TransitiveImports returns all recursive imports of an environment
+func TransitiveImports(dir string) ([]string, error) {
+	dir, err := filepath.Abs(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	mainFile := filepath.Join(dir, "main.jsonnet")
+
+	sonnet, err := ioutil.ReadFile(mainFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "opening file")
 	}
 
-	jpath, _, _, err := jpath.Resolve(filepath.Dir(filename))
+	jpath, _, rootDir, err := jpath.Resolve(dir)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolving JPATH")
 	}
@@ -37,9 +45,17 @@ func TransitiveImports(filename string) ([]string, error) {
 	}
 
 	imports := make([]string, 0)
-	err = importRecursive(&imports, vm, node, "main.jsonnet")
+	if err = importRecursive(&imports, vm, node, "main.jsonnet"); err != nil {
+		return nil, err
+	}
 
-	return uniqueStringSlice(imports), err
+	uniq := append(uniqueStringSlice(imports), mainFile)
+	for i := range uniq {
+		uniq[i], _ = filepath.Rel(rootDir, uniq[i])
+	}
+	sort.Strings(uniq)
+
+	return uniq, nil
 }
 
 // importRecursive takes a Jsonnet VM and recursively imports the AST. Every
@@ -56,7 +72,8 @@ func importRecursive(list *[]string, vm *jsonnet.VM, node ast.Node, currentPath 
 			return errors.Wrap(err, "importing jsonnet")
 		}
 
-		*list = append(*list, foundAt)
+		abs, _ := filepath.Abs(foundAt)
+		*list = append(*list, abs)
 
 		if err := importRecursive(list, vm, contents, foundAt); err != nil {
 			return err
@@ -71,7 +88,8 @@ func importRecursive(list *[]string, vm *jsonnet.VM, node ast.Node, currentPath 
 			return errors.Wrap(err, "importing string")
 		}
 
-		*list = append(*list, foundAt)
+		abs, _ := filepath.Abs(foundAt)
+		*list = append(*list, abs)
 
 	// neither `import` nor `importstr`, probably object or similar: try children
 	default:

@@ -2,7 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/pkg/errors"
 
@@ -35,11 +34,7 @@ func Apply(baseDir string, mods ...Modifier) error {
 		tmp := "Warning: There are no differences. Your apply may not do anything at all."
 		diff = &tmp
 	}
-
-	if opts.wWarn == nil {
-		opts.wWarn = os.Stderr
-	}
-	fmt.Fprintln(opts.wWarn, *diff)
+	fmt.Println(diff)
 
 	return kube.Apply(p.Resources, opts.apply)
 }
@@ -76,4 +71,15 @@ func Show(baseDir string, mods ...Modifier) (string, error) {
 	}
 
 	return p.Resources.String(), nil
+}
+
+// Eval returns the raw evaluated Jsonnet output (without any transformations)
+func Eval(dir string, mods ...Modifier) (raw map[string]interface{}, err error) {
+	opts := parseModifiers(mods)
+
+	r, _, err := eval(dir, opts.extCode)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
 }

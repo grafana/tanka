@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/posener/complete"
 	"github.com/spf13/cobra"
@@ -12,6 +13,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/grafana/tanka/pkg/cli/cmp"
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
@@ -86,7 +88,15 @@ func main() {
 }
 
 func setupConfiguration(baseDir string) *v1alpha1.Config {
-	config, err := spec.ParseDir(baseDir)
+	_, baseDir, rootDir, err := jpath.Resolve(baseDir)
+	if err != nil {
+		log.Fatalln("Resolving jpath:", err)
+	}
+
+	// name of the environment: relative path from rootDir
+	name, _ := filepath.Rel(rootDir, baseDir)
+
+	config, err := spec.ParseDir(baseDir, name)
 	if err != nil {
 		switch err.(type) {
 		// just run fine without config. Provider features won't work (apply, show, diff)
