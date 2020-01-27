@@ -31,6 +31,10 @@ func (k Kubectl) apply(data manifest.List, opts ApplyOpts) error {
 		argv = append(argv, "--force")
 	}
 
+	if !opts.Validate {
+		argv = append(argv, "--validate=false")
+	}
+
 	cmd := exec.Command("kubectl", argv...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

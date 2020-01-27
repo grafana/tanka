@@ -44,6 +44,7 @@ func applyCmd() *cobra.Command {
 	}
 	vars := workflowFlags(cmd.Flags())
 	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
+	validate := cmd.Flags().Bool("validate", true, "validation of resources (kubectl --validate=false)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	getExtCode := extCodeParser(cmd.Flags())
 
@@ -52,6 +53,7 @@ func applyCmd() *cobra.Command {
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 			tanka.WithExtCode(getExtCode()),
 			tanka.WithApplyForce(*force),
+			tanka.WithApplyValidate(*validate),
 			tanka.WithApplyAutoApprove(*autoApprove),
 		)
 		if err != nil {
