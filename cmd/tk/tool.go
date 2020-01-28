@@ -14,6 +14,8 @@ import (
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
+	"github.com/grafana/tanka/pkg/kubernetes/util"
+	"github.com/grafana/tanka/pkg/tanka"
 )
 
 func toolCmd() *cobra.Command {
@@ -23,6 +25,7 @@ func toolCmd() *cobra.Command {
 	}
 	cmd.AddCommand(jpathCmd())
 	cmd.AddCommand(importsCmd())
+	cmd.AddCommand(targetsCmd())
 	return cmd
 }
 
@@ -143,4 +146,40 @@ func git(argv ...string) (string, error) {
 		return "", err
 	}
 	return buf.String(), nil
+}
+
+func targetsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "targets <directory>",
+		Short: "list all targets of an environment",
+		Args:  cobra.ExactArgs(1),
+		Annotations: map[string]string{
+			"args": "baseDir",
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			dir, err := filepath.Abs(args[0])
+			if err != nil {
+				log.Fatalln("Loading environment:", err)
+			}
+
+			fi, err := os.Stat(dir)
+			if err != nil {
+				log.Fatalln("Loading environment:", err)
+			}
+
+			if !fi.IsDir() {
+				log.Fatalln("The argument must be an environment's directory, but this does not seem to be the case.")
+			}
+
+			rs, err := tanka.Resources(dir)
+			if err != nil {
+				log.Fatalln("Resolving resources:", err)
+			}
+
+			for _, r := range rs {
+				fmt.Println(util.TargetName(r))
+			}
+		},
+	}
+	return cmd
 }

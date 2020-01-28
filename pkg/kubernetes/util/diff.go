@@ -23,6 +23,13 @@ func DiffName(m manifest.Manifest) string {
 	), "/", "-", -1)
 }
 
+func TargetName(m manifest.Manifest) string {
+	return fmt.Sprintf("%s/%s",
+		strings.ToLower(m.Kind()),
+		strings.ToLower(m.Metadata().Name()),
+	)
+}
+
 // Diff computes the differences between the strings `is` and `should` using the
 // UNIX `diff(1)` utility.
 func DiffStr(name, is, should string) (string, error) {

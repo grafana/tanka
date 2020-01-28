@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/grafana/tanka/pkg/kubernetes"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 // Apply parses the environment at the given directory (a `baseDir`) and applies
@@ -82,4 +83,16 @@ func Eval(dir string, mods ...Modifier) (raw map[string]interface{}, err error) 
 		return nil, err
 	}
 	return r, nil
+}
+
+// Resources parses the environment at the given directory (a `baseDir`) and returns a list of resources (manifests)
+func Resources(baseDir string, mods ...Modifier) (manifest.List, error) {
+	opts := parseModifiers(mods)
+
+	p, err := parse(baseDir, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.Resources, nil
 }
