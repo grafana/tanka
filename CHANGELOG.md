@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.1 (2020-01-29)
+
+We have accumulated enough neat features to be worthy of a fresh release. Enjoy!
+
+ * Allow `tk env add` to use `--server-from-context ([#183](https://github.com/grafana/tanka/issues/183))
+ * `tk tool imports` now takes an environment name not a filename, so `environments/default` rather than
+   `environments/default/main.jsonnet` ([#182](https://github.com/grafana/tanka/pull/182))
+ * Added 'vendor overrides'. With this, if we want to override a vendored library for just one environment,
+   we can put the new version of the library to the environment directory, e.g. `environments/default/vendor/my-lib`.
+   This allows us to try out updates to vendored libraries without creating configuration drift with the rest of
+   our environments that use this library. ([#185](https://github.com/grafana/tanka/pull/185))
+ * Add --validate flag to tk apply, to allow invoking kubectl without schema validation (kubectl apply --validate=false)
+   ([#186](https://github.com/grafana/tanka/pull/186))
+
 ## 0.7.0 (2020-01-21)
 
 The promised big update is here! In the last couple of weeks a lot has happened.
