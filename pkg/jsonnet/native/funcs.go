@@ -52,14 +52,22 @@ var parseYAML = &jsonnet.NativeFunction{
 
 		d := yaml.NewDecoder(bytes.NewReader(data))
 		for {
-			var doc interface{}
+			var doc, jsonDoc interface{}
 			if err := d.Decode(&doc); err != nil {
 				if err == io.EOF {
 					break
 				}
 				return nil, err
 			}
-			ret = append(ret, doc)
+			jsonRaw, err := json.Marshal(doc)
+			if err != nil {
+				panic(err)
+			}
+			err = json.Unmarshal(jsonRaw, &jsonDoc)
+			if err != nil {
+				panic(err)
+			}
+			ret = append(ret, jsonDoc)
 		}
 		return ret, nil
 	},
