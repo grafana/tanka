@@ -9,6 +9,7 @@ import (
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
+	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -57,18 +58,21 @@ var parseYAML = &jsonnet.NativeFunction{
 				if err == io.EOF {
 					break
 				}
-				return nil, err
+				return nil, errors.Wrap(err, "parsing yaml")
 			}
+
 			jsonRaw, err := json.Marshal(doc)
 			if err != nil {
-				panic(err)
+				return nil, errors.Wrap(err, "converting yaml to json")
 			}
-			err = json.Unmarshal(jsonRaw, &jsonDoc)
-			if err != nil {
-				panic(err)
+
+			if err := json.Unmarshal(jsonRaw, &jsonDoc); err != nil {
+				return nil, errors.Wrap(err, "converting yaml to json")
 			}
+
 			ret = append(ret, jsonDoc)
 		}
+
 		return ret, nil
 	},
 }
