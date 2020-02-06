@@ -9,7 +9,8 @@ import (
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
-	yaml "gopkg.in/yaml.v2"
+	"github.com/pkg/errors"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // Funcs returns a slice of native Go functions that shall be available
@@ -52,19 +53,26 @@ var parseYAML = &jsonnet.NativeFunction{
 
 		d := yaml.NewDecoder(bytes.NewReader(data))
 		for {
-			var doc interface{}
+			var doc, jsonDoc interface{}
 			if err := d.Decode(&doc); err != nil {
 				if err == io.EOF {
 					break
 				}
-				return nil, err
+				return nil, errors.Wrap(err, "parsing yaml")
 			}
-			jsonDoc, err := json.Marshal(doc)
+
+			jsonRaw, err := json.Marshal(doc)
 			if err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "converting yaml to json")
 			}
+
+			if err := json.Unmarshal(jsonRaw, &jsonDoc); err != nil {
+				return nil, errors.Wrap(err, "converting yaml to json")
+			}
+
 			ret = append(ret, jsonDoc)
 		}
+
 		return ret, nil
 	},
 }
