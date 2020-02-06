@@ -57,7 +57,7 @@ func TestParseYAMLKeyValue(t *testing.T) {
 	ret, err, callerr := callNative("parseYaml", []interface{}{"a: 47"})
 
 	assert.Empty(t, callerr)
-	assert.Equal(t, []interface{}{map[interface{}]interface{}{"a": 47}}, ret)
+	assert.Equal(t, []interface{}{map[string]interface{}{"a": 47}}, ret)
 	assert.Empty(t, err)
 }
 

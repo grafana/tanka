@@ -9,7 +9,7 @@ import (
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // Funcs returns a slice of native Go functions that shall be available
