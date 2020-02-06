@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/chroma v0.6.6
 	github.com/fatih/color v1.7.0
 	github.com/fatih/structs v1.1.0
-	github.com/google/go-jsonnet v0.14.1-0.20200202165252-07fa4c037b4f
+	github.com/google/go-jsonnet v0.14.1-0.20200127133145-399a61ca3178
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/posener/complete v1.2.1
