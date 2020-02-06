@@ -1,5 +1,50 @@
 # Changelog
 
+## 0.7.1 (2020-02-06)
+
+This is a smaller release focused on critical bug fixes and some other minor
+enhancements. While features are included, none of them are significant, meaning
+they are part of a patch release.
+
+#### Critical: `parseYaml` works now
+
+Before, `std.native('parseYaml')` did not work at all, a line of code got lost
+during merge/rebase, resulting in `parseYaml` returning invalid data, that
+Jsonnet could not process. This issue has been fixed in
+**([#195](https://github.com/grafana/tanka/pull/195))**.
+
+#### Jsonnet update
+
+The built-in Jsonnet compiler has been upgraded to the lastest master
+[`07fa4c0`](https://github.com/google/go-jsonnet/commit/07fa4c037b4ff8b5e601546cb5de4abecaf2651d).
+In some cases, this should provide up to 50% more speed, especially when
+`base64` is involved, which is now natively implemented.
+**([#196](https://github.com/grafana/tanka/pull/196))**
+
+### Features
+
+- **cli**: `tk env set|add` has been extended by `--server-from-context`, which
+  allows to parse `$KUBECONFIG` to find the apiServer's IP directly from that
+  file, instead of having to manually specify it by hand.
+  **([#184](https://github.com/grafana/tanka/pull/184))**
+- **jsonnet**: `vendor` overrides:  
+  It is now possible to have a `vendor/` directory per environment, so that
+  updating upstream libraries can be done gradually.
+  **([#185](https://github.com/grafana/tanka/pull/185))**
+- **kubernetes**: disable `kubectl` validation:
+  `tk apply` now takes `--validate=false` to pass that exact flag to `kubectl`
+  as well, for disabling the integrated schema validation.
+  **([#186](https://github.com/grafana/tanka/pull/186))**
+
+### Bug Fixes
+
+- **jsonnet, cli**: Stable environment name: The value of `(import "tk").env.name`
+  does not anymore depend on how Tanka was invoked, but will
+  always be the relative path from `<rootDir>` to the environment's directory.
+  **([#182](https://github.com/grafana/tanka/pull/182))**
+- **jsonnet**: The nativeFunc `parseYaml` has been fixed to actually return a
+  valid result **([#195](https://github.com/grafana/tanka/pull/195))**
+
 ## 0.7.0 (2020-01-21)
 
 The promised big update is here! In the last couple of weeks a lot has happened.
