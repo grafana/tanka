@@ -59,11 +59,7 @@ var parseYAML = &jsonnet.NativeFunction{
 				}
 				return nil, err
 			}
-			jsonDoc, err := json.Marshal(doc)
-			if err != nil {
-				return nil, err
-			}
-			ret = append(ret, jsonDoc)
+			ret = append(ret, doc)
 		}
 		return ret, nil
 	},
