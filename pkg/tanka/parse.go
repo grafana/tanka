@@ -122,6 +122,9 @@ func evalJsonnet(baseDir string, env *v1alpha1.Config, extCode map[string]string
 		filepath.Join(baseDir, "main.jsonnet"),
 		ext...,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	var dict map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &dict); err != nil {
