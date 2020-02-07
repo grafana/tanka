@@ -11,7 +11,7 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet"
 )
 
-func TestResolve(t *testing.T) {
+func TestResolvePrecedence(t *testing.T) {
 	s, err := jsonnet.EvaluateFile(filepath.Join("./testdata/precedence/environments/default/main.jsonnet"))
 	require.NoError(t, err)
 
