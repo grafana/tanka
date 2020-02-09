@@ -40,6 +40,7 @@ export default {
         // "Using libraries",
         // "Creating and structure",
         "Installing and publishing",
+	"Overriding",
       ],
     },
     "Command-line completion",

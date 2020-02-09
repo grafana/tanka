@@ -9,23 +9,14 @@ menu: Libraries
 When using `import` or `importstr`, Tanka considers the following directories to
 find a suitable file for that specific import:
 
-1. `<baseDir>`: The directory of your environment (`/environments/default`,
-   etc). Put things that only belong to a single environment here.
-2. `/lib`: Libraries created for this very project, not meant to be shared
-   otherwise. Put everything you need across multiple environments here.
-3. `/vendor`: Shared libraries installed using `jsonnet-bundler`. Do not modify
-   this folder by hand, your changes will be overwritten by `jb` anways.
+| Rank | Path               | Purpose                                                                                                                      |
+| ---- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| 4    | `<baseDir>`        | The directory of your environment, e.g. `/environments/default`.<br /> Put things that belong to this very environment here. |
+| 3    | `/lib`             | Project-global libraries, that are used in multiple environments, but are specific to this project.                          |
+| 2    | `<baseDir>/vendor` | Per-environment vendor, can be used for [`vendor` overriding](/libraries/overriding#per-environment)                         |
+| 1    | `/vendor`          | Global vendor, holds external libraries installed using `jb`.                                                                |
 
-> **Note**: The directories are visited in the above order. For example, when a
-> file is present in both, `/lib` and `/vendor`, the one from `/lib` will be
-> taken, as it occurs higher in the list.
-
-### Shadowing
-It is possible to shadow certain files (overlay them with another version), by
-putting a file with the exact same name and into a higher ranked import path.
-This can be handy if you need to do temporary changes to a vendored library by
-overlaying the to-be-changed files using new ones in `lib/`.
-
-For example, to shadow `/vendor/my/lib/file.libsonnet`, copy it to
-`/lib/my/lib/file.libsonnet` and do your changes. Tanka will take the file in
-`lib/` instead of `vendor/` from now on.
+> **Note**:
+>
+> - If a file occurs in multiple paths, the one with the highest rank will be chosen.
+> - `/` in above table means `<rootDir>`, which is your project root.

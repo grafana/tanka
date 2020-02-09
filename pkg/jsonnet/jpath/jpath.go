@@ -9,7 +9,7 @@ import (
 
 var (
 	// ErrorNoRoot means no rootDir was found in the parents
-	ErrorNoRoot = errors.New("could not locate a jsonnetfile.json in the parent directories, which is required to identify the project root. Refer to https://tanka.dev/directory-structure for more information")
+	ErrorNoRoot = errors.New("could not locate a tkrc.yaml or jsonnetfile.json in the parent directories, which is required to identify the project root. Refer to https://tanka.dev/directory-structure for more information")
 
 	// ErrorNoBase means no baseDir was found in the parents
 	ErrorNoBase = errors.New("could not locate a main.jsonnet in the parent directories, which is required as the entrypoint for the evaluation. Refer to https://tanka.dev/directory-structure for more information")
@@ -37,11 +37,8 @@ func Resolve(workdir string) (path []string, base, root string, err error) {
 		return nil, "", "", err
 	}
 
-	root, err = FindParentFile("jsonnetfile.json", workdir, "/")
+	root, err = findRoot(workdir)
 	if err != nil {
-		if _, ok := err.(ErrorFileNotFound); ok {
-			return nil, "", "", ErrorNoRoot
-		}
 		return nil, "", "", err
 	}
 
@@ -60,6 +57,28 @@ func Resolve(workdir string) (path []string, base, root string, err error) {
 		filepath.Join(root, "lib"),
 		base,
 	}, base, root, nil
+}
+
+// findRoot searches for a rootDir by the following criteria:
+// - tkrc.yaml is considered first, for a jb-independent way of marking the root
+// - if it is not present (default), jsonnetfile.json is used.
+func findRoot(start string) (dir string, err error) {
+	// try tkrc.yaml first
+	root, err := FindParentFile("tkrc.yaml", start, "/")
+	if err == nil {
+		return root, nil
+	}
+
+	// otherwise use jsonnetfile.json
+	root, err = FindParentFile("jsonnetfile.json", start, "/")
+	if err != nil {
+		if _, ok := err.(ErrorFileNotFound); ok {
+			return "", ErrorNoRoot
+		}
+		return "", err
+	}
+
+	return root, nil
 }
 
 // FindParentFile traverses the parent directory tree for the given `file`,
