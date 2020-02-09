@@ -34,7 +34,7 @@ func Apply(baseDir string, mods ...Modifier) error {
 		tmp := "Warning: There are no differences. Your apply may not do anything at all."
 		diff = &tmp
 	}
-	fmt.Println(diff)
+	fmt.Println(*diff)
 
 	return kube.Apply(p.Resources, opts.apply)
 }
