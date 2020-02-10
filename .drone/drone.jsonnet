@@ -1,4 +1,4 @@
-local golang = 'golang:1.12';
+local golang = 'golang:1.13';
 
 local volumes = [{ name: 'gopath', temp: {} }];
 local mounts = [{ name: 'gopath', path: '/go' }];
@@ -65,6 +65,7 @@ local docker(arch) = pipeline('docker-' + arch) {
 
   pipeline('release') {
     steps: [
+      go('fetch-tags', ['git fetch origin --tags']),
       make('cross'),
       {
         name: 'publish',
