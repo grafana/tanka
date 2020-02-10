@@ -11,7 +11,7 @@ type ErrBadTargetExp struct {
 }
 
 func (e ErrBadTargetExp) Error() string {
-	return fmt.Sprintf("%s.\nSee https://tanka.dev/targets/#regular-expressions for details on regular expressions.", strings.Title(e.inner.Error()))
+	return fmt.Sprintf("%s.\nSee https://tanka.dev/output-filtering/#regular-expressions for details on regular expressions.", strings.Title(e.inner.Error()))
 }
 
 // CompileTargetExps compiles the regular expression for each target

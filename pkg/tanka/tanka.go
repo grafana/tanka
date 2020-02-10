@@ -45,7 +45,7 @@ func WithExtCode(code map[string]string) Modifier {
 }
 
 // WithTargets allows to submit regular expressions to limit the working set of
-// objects (https://tanka.dev/targets/).
+// objects (https://tanka.dev/output-filtering/).
 func WithTargets(t ...*regexp.Regexp) Modifier {
 	return func(opts *options) {
 		opts.targets = t
