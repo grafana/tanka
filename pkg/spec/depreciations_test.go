@@ -13,14 +13,15 @@ import (
 // overwritten by the newer format.
 func TestDeprecated(t *testing.T) {
 	data := []byte(`
-	{
-      "spec": {
-        "namespace": "new"
-      },
-	  "server": "https://127.0.0.1",
-	  "team": "cool",
-      "namespace": "old"
-	}`)
+{
+	"spec": {
+		"namespace": "new"
+	},
+	"server": "https://127.0.0.1",
+	"team": "cool",
+	"namespace": "old"
+}
+`)
 
 	got, err := Parse(data, "test")
 	require.Equal(t, ErrDeprecated{

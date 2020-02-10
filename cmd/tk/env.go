@@ -12,7 +12,6 @@ import (
 	"github.com/posener/complete"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/cli/cmp"
@@ -87,11 +86,7 @@ func envSetCmd() *cobra.Command {
 			tmp.Spec.APIServer = server
 		}
 
-		viper.Reset()
 		cfg := setupConfiguration(path)
-		if cfg == nil {
-			log.Fatalf("Failed to load an environment at `%s`.\nMake sure it exists and is properly configured. See https://tanka.dev/environments/ for details.", path)
-		}
 		if tmp.Spec.APIServer != "" && tmp.Spec.APIServer != cfg.Spec.APIServer {
 			fmt.Printf("updated spec.apiServer (`%s -> `%s`)\n", cfg.Spec.APIServer, tmp.Spec.APIServer)
 			cfg.Spec.APIServer = tmp.Spec.APIServer
@@ -220,7 +215,6 @@ func envListCmd() *cobra.Command {
 			panic(err)
 		}
 		for _, dir := range dirs {
-			viper.Reset()
 			env := setupConfiguration(dir)
 			if env == nil {
 				log.Printf("Could not setup configuration from %q", dir)
