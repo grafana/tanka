@@ -14,6 +14,10 @@ import (
 	"github.com/fatih/color"
 )
 
+func pageln(i ...interface{}) {
+	fPageln(strings.NewReader(fmt.Sprint(i...)))
+}
+
 // fPageln invokes the systems pager with the supplied data
 // falls back to fmt.Println() when paging fails or non-interactive
 func fPageln(r io.Reader) {
