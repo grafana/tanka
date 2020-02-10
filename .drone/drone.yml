@@ -8,7 +8,7 @@ platform:
 
 steps:
 - name: download
-  image: golang:1.12
+  image: golang:1.13
   commands:
   - go mod download
   volumes:
@@ -16,7 +16,7 @@ steps:
     path: /go
 
 - name: lint
-  image: golang:1.12
+  image: golang:1.13
   commands:
   - make lint
   volumes:
@@ -26,7 +26,7 @@ steps:
   - download
 
 - name: test
-  image: golang:1.12
+  image: golang:1.13
   commands:
   - make test
   volumes:
@@ -48,8 +48,16 @@ platform:
   arch: amd64
 
 steps:
+- name: fetch-tags
+  image: golang:1.13
+  commands:
+  - git fetch origin --tags
+  volumes:
+  - name: gopath
+    path: /go
+
 - name: cross
-  image: golang:1.12
+  image: golang:1.13
   commands:
   - make cross
   volumes:
@@ -86,7 +94,7 @@ platform:
 
 steps:
 - name: static
-  image: golang:1.12
+  image: golang:1.13
   commands:
   - make static
   volumes:
@@ -127,7 +135,7 @@ platform:
 
 steps:
 - name: static
-  image: golang:1.12
+  image: golang:1.13
   commands:
   - make static
   volumes:
@@ -168,7 +176,7 @@ platform:
 
 steps:
 - name: static
-  image: golang:1.12
+  image: golang:1.13
   commands:
   - make static
   volumes:
