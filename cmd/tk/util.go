@@ -4,24 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
-	"github.com/alecthomas/chroma/quick"
+	"github.com/fatih/color"
 )
 
-// pageln invokes the systems pager with the supplied data
+// fPageln invokes the systems pager with the supplied data
 // falls back to fmt.Println() when paging fails or non-interactive
-func pageln(i ...interface{}) {
-	// no paging in non-interactive mode
-	if !interactive {
-		fmt.Print(i...)
-		return
-	}
-
+func fPageln(r io.Reader) {
 	// get system pager, fallback to `less`
 	pager := os.Getenv("PAGER")
 	var args []string
@@ -35,22 +30,42 @@ func pageln(i ...interface{}) {
 
 	// invoke pager
 	cmd := exec.Command(pager, args...)
-	cmd.Stdin = strings.NewReader(fmt.Sprint(i...))
+	cmd.Stdin = r
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	// if this fails, just print it
 	if err := cmd.Run(); err != nil {
-		fmt.Print(i...)
+		io.Copy(os.Stdout, r)
 	}
 }
 
-func highlight(lang, s string) string {
-	var buf bytes.Buffer
-	if err := quick.Highlight(&buf, s, lang, "terminal", "vim"); err != nil {
-		log.Fatalln("Highlighting:", err)
+func colordiff(d string) io.Reader {
+	buf := bytes.Buffer{}
+
+	fmt.Fprintln(&buf)
+
+	lines := strings.Split(d, "\n")
+	for _, l := range lines {
+		switch {
+		case match(l, `^\+.*`):
+			color.New(color.FgGreen).Fprintln(&buf, l)
+		case match(l, `^-.*`):
+			color.New(color.FgRed).Fprintln(&buf, l)
+		case match(l, `^diff -u -N.*`):
+			color.New(color.FgBlue, color.Bold).Fprintln(&buf, l)
+		case match(l, `^@.*`):
+			color.New(color.FgMagenta, color.Bold).Fprintln(&buf, l)
+		default:
+			fmt.Fprintln(&buf, l)
+		}
 	}
-	return buf.String()
+
+	return &buf
+}
+
+func match(s, exp string) bool {
+	return regexp.MustCompile(exp).MatchString(s)
 }
 
 // writeJSON writes the given object to the path as a JSON file
