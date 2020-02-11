@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
@@ -17,17 +18,20 @@ import (
 
 // Kubectl uses the `kubectl` command to operate on a Kubernetes cluster
 type Kubectl struct {
-	context   objx.Map
-	cluster   objx.Map
+	// kubeconfig
+	nsPatch string
+	context objx.Map
+	cluster objx.Map
+
 	APIServer string
 }
 
 // New returns a instance of Kubectl with a correct context already discovered.
-func New(endpoint string) (*Kubectl, error) {
+func New(endpoint, namespace string) (*Kubectl, error) {
 	k := Kubectl{
 		APIServer: endpoint,
 	}
-	if err := k.setupContext(); err != nil {
+	if err := k.setupContext(namespace); err != nil {
 		return nil, errors.Wrap(err, "finding usable context")
 	}
 	return &k, nil
@@ -49,12 +53,32 @@ func (k Kubectl) Info() (*Info, error) {
 	}, nil
 }
 
+func (k Kubectl) ctl(action string, args ...string) *exec.Cmd {
+	// prepare the arguments
+	argv := []string{action,
+		"--context", k.context.Get("name").MustStr(),
+	}
+	argv = append(argv, args...)
+
+	// prepare the cmd
+	cmd := exec.Command("kubectl", argv...)
+
+	// add the nsPatch file to $KUBECONFIG
+	env := os.Environ()
+	for i, s := range env {
+		// TODO: handle empty $KUBECONFIG
+		if strings.HasPrefix(s, "KUBECONFIG=") {
+			env[i] = fmt.Sprintf("KUBECONFIG=%s:%s", k.nsPatch, strings.TrimPrefix(s, "KUBECONFIG="))
+		}
+	}
+	cmd.Env = env
+
+	return cmd
+}
+
 // Version returns the version of kubectl and the Kubernetes api server
 func (k Kubectl) version() (client, server *semver.Version, err error) {
-	cmd := exec.Command("kubectl", "version",
-		"-o", "json",
-		"--context", k.context.Get("name").MustStr(),
-	)
+	cmd := k.ctl("version", "-o", "json")
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = os.Stderr
@@ -69,12 +93,7 @@ func (k Kubectl) version() (client, server *semver.Version, err error) {
 
 // Namespaces of the cluster
 func (k Kubectl) Namespaces() (map[string]bool, error) {
-	argv := []string{"get",
-		"-o", "json",
-		"--context", k.context.Get("name").MustStr(),
-		"namespaces",
-	}
-	cmd := exec.Command("kubectl", argv...)
+	cmd := k.ctl("get", "namespaces", "-o", "json")
 
 	var sout bytes.Buffer
 	cmd.Stdout = &sout

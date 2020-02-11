@@ -4,16 +4,22 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
 )
 
-// setupContext uses `kubectl config view` to obtain the KUBECONFIG and extracts the correct context from it
-func (k *Kubectl) setupContext() error {
+// setupContext makes sure the kubectl client is set up to use the correct
+// context for the cluster IP:
+// - find a context that matches the IP
+// - create a patch for it to set the default namespace
+func (k *Kubectl) setupContext(namespace string) error {
 	if k.context != nil {
 		return nil
 	}
@@ -23,7 +29,33 @@ func (k *Kubectl) setupContext() error {
 	if err != nil {
 		return err
 	}
+
+	nsPatch, err := writeNamespacePatch(k.context, namespace)
+	if err != nil {
+		return errors.Wrap(err, "creating $KUBECONFIG patch for default namespace")
+	}
+	k.nsPatch = nsPatch
+
 	return nil
+}
+
+func writeNamespacePatch(context objx.Map, namespace string) (string, error) {
+	context.Set("context.namespace", namespace)
+
+	kubectx := map[string]interface{}{
+		"contexts": []interface{}{context},
+	}
+	out, err := json.Marshal(kubectx)
+	if err != nil {
+		return "", err
+	}
+
+	f := filepath.Join(os.TempDir(), "tk-kubectx-namespace.yaml")
+	if err := ioutil.WriteFile(f, []byte(out), 0644); err != nil {
+		return "", err
+	}
+
+	return f, nil
 }
 
 // Kubeconfig returns the merged $KUBECONFIG of the host

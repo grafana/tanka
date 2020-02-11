@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/stretchr/objx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -59,30 +58,6 @@ func TestReconcile(t *testing.T) {
 			targets: util.MustCompileTargetExps(
 				`DePlOyMeNt/GrAfAnA`,
 			),
-		},
-		{
-			name: "force-namespace",
-			spec: v1alpha1.Spec{Namespace: "tanka"},
-			deep: testDataFlat().Deep,
-			flat: func() manifest.List {
-				f := testDataFlat().Flat["."]
-				f.Metadata()["namespace"] = "tanka"
-				return manifest.List{f}
-			}(),
-		},
-		{
-			name: "custom-namespace",
-			spec: v1alpha1.Spec{Namespace: "tanka"},
-			deep: func() map[string]interface{} {
-				d := objx.New(testDataFlat().Deep)
-				d.Set("metadata.namespace", "custom")
-				return d
-			}(),
-			flat: func() manifest.List {
-				f := testDataFlat().Flat["."]
-				f.Metadata()["namespace"] = "custom"
-				return manifest.List{f}
-			}(),
 		},
 	}
 
