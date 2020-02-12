@@ -54,7 +54,8 @@ func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
 
 func separateMissingNamespace(in manifest.List, exists map[string]bool) (ready, missingNamespace manifest.List) {
 	for _, r := range in {
-		if !exists[r.Metadata().Namespace()] {
+		// namespace does not exist, also ignore implicit default ("")
+		if ns := r.Metadata().Namespace(); ns != "" && !exists[ns] {
 			missingNamespace = append(missingNamespace, r)
 			continue
 		}
