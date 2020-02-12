@@ -26,11 +26,11 @@ func pageln(i ...interface{}) {
 	pager := os.Getenv("PAGER")
 	var args []string
 	if pager == "" || pager == "less" {
-		// --raw-control-chars  Honors colors from diff.
+		// --RAW-CONTROL-CHARS  Honors colors from diff. Must be in all caps, otherwise display issues occur.
 		// --quit-if-one-screen Closer to the git experience.
 		// --no-init            Don't clear the screen when exiting.
 		pager = "less"
-		args = []string{"--raw-control-chars", "--quit-if-one-screen", "--no-init"}
+		args = []string{"--RAW-CONTROL-CHARS", "--quit-if-one-screen", "--no-init"}
 	}
 
 	// invoke pager
