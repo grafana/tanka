@@ -45,20 +45,25 @@ func fPageln(r io.Reader) {
 }
 
 func colordiff(d string) io.Reader {
+	exps := map[string]func(s string) bool{
+		"add":  regexp.MustCompile(`^\+.*`).MatchString,
+		"del":  regexp.MustCompile(`^\-.*`).MatchString,
+		"head": regexp.MustCompile(`^diff -u -N.*`).MatchString,
+		"hid":  regexp.MustCompile(`^@.*`).MatchString,
+	}
+
 	buf := bytes.Buffer{}
-
-	fmt.Fprintln(&buf)
-
 	lines := strings.Split(d, "\n")
+
 	for _, l := range lines {
 		switch {
-		case match(l, `^\+.*`):
+		case exps["add"](l):
 			color.New(color.FgGreen).Fprintln(&buf, l)
-		case match(l, `^-.*`):
+		case exps["del"](l):
 			color.New(color.FgRed).Fprintln(&buf, l)
-		case match(l, `^diff -u -N.*`):
+		case exps["head"](l):
 			color.New(color.FgBlue, color.Bold).Fprintln(&buf, l)
-		case match(l, `^@.*`):
+		case exps["hid"](l):
 			color.New(color.FgMagenta, color.Bold).Fprintln(&buf, l)
 		default:
 			fmt.Fprintln(&buf, l)
@@ -66,10 +71,6 @@ func colordiff(d string) io.Reader {
 	}
 
 	return &buf
-}
-
-func match(s, exp string) bool {
-	return regexp.MustCompile(exp).MatchString(s)
 }
 
 // writeJSON writes the given object to the path as a JSON file
