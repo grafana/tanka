@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -88,9 +87,6 @@ func parseEnv(baseDir, rootDir string) (*v1alpha1.Config, error) {
 	config, err := spec.ParseDir(baseDir, name)
 	if err != nil {
 		switch err.(type) {
-		// config is missing
-		case viper.ConfigFileNotFoundError:
-			return nil, kubernetes.ErrorMissingConfig
 		// the config includes deprecated fields
 		case spec.ErrDeprecated:
 			log.Println(err)

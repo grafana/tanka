@@ -9,7 +9,6 @@ import (
 
 	"github.com/posener/complete"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/grafana/tanka/pkg/cli/cmp"
@@ -99,9 +98,6 @@ func setupConfiguration(baseDir string) *v1alpha1.Config {
 	config, err := spec.ParseDir(baseDir, name)
 	if err != nil {
 		switch err.(type) {
-		// just run fine without config. Provider features won't work (apply, show, diff)
-		case viper.ConfigFileNotFoundError:
-			return nil
 		// the config includes deprecated fields
 		case spec.ErrDeprecated:
 			if verbose {

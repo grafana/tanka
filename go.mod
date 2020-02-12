@@ -13,7 +13,6 @@ require (
 	github.com/posener/complete v1.2.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.3
-	github.com/spf13/viper v1.3.2
 	github.com/stretchr/objx v0.2.0
 	github.com/stretchr/testify v1.3.0
 	github.com/thoas/go-funk v0.4.0
