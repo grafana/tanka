@@ -2,7 +2,6 @@ package client
 
 import (
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -23,10 +22,7 @@ func (k Kubectl) Apply(data manifest.List, opts ApplyOpts) error {
 }
 
 func (k Kubectl) apply(data manifest.List, opts ApplyOpts) error {
-	argv := []string{"apply",
-		"--context", k.context.Get("name").MustStr(),
-		"-f", "-",
-	}
+	argv := []string{"-f", "-"}
 	if opts.Force {
 		argv = append(argv, "--force")
 	}
@@ -35,7 +31,7 @@ func (k Kubectl) apply(data manifest.List, opts ApplyOpts) error {
 		argv = append(argv, "--validate=false")
 	}
 
-	cmd := exec.Command("kubectl", argv...)
+	cmd := k.ctl("apply", argv...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

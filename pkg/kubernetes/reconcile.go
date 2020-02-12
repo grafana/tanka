@@ -29,10 +29,6 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 
 	out := make(manifest.List, 0, len(extracted))
 	for _, m := range extracted {
-		if spec.Namespace != "" && !m.Metadata().HasNamespace() {
-			m.Metadata()["namespace"] = spec.Namespace
-		}
-
 		out = append(out, m)
 	}
 

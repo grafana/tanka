@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -41,12 +40,11 @@ func (k Kubectl) GetByLabels(namespace string, labels map[string]interface{}) (m
 }
 
 func (k Kubectl) get(namespace string, sel []string) (manifest.Manifest, error) {
-	argv := append([]string{"get",
+	argv := append([]string{
 		"-o", "json",
 		"-n", namespace,
-		"--context", k.context.Get("name").MustStr(),
 	}, sel...)
-	cmd := exec.Command("kubectl", argv...)
+	cmd := k.ctl("get", argv...)
 
 	var sout, serr bytes.Buffer
 	cmd.Stdout = &sout

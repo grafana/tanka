@@ -33,7 +33,7 @@ type Differ func(manifest.List) (*string, error)
 // New creates a new Kubernetes with an initialized client
 func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	// setup client
-	ctl, err := client.New(s.APIServer)
+	ctl, err := client.New(s.APIServer, s.Namespace)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating client")
 	}

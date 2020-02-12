@@ -22,10 +22,8 @@ func (k Kubectl) DeleteByLabels(namespace string, labels map[string]interface{},
 }
 
 func (k Kubectl) delete(namespace string, sel []string, opts DeleteOpts) error {
-	argv := append([]string{"delete",
-		"-n", namespace,
-		"--context", k.context.Get("name").MustStr(),
-	}, sel...)
+	argv := append([]string{"-n", namespace}, sel...)
+	k.ctl("delete", argv...)
 
 	if opts.Force {
 		argv = append(argv, "--force")
