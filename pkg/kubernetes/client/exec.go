@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -28,9 +29,10 @@ func patchKubeconfig(file string, e []string) []string {
 	// prepend namespace patch to $KUBECONFIG
 	env := newEnv(e)
 	if _, ok := env["KUBECONFIG"]; !ok {
-		env["KUBECONFIG"] = "~/.kube/config" // kubectl default
+		env["KUBECONFIG"] = filepath.Join(homeDir(), ".kube", "config") // kubectl default
 	}
 	env["KUBECONFIG"] = fmt.Sprintf("%s:%s", file, env["KUBECONFIG"])
+
 	return env.render()
 }
 
@@ -53,4 +55,13 @@ func (e environment) render() []string {
 	}
 	sort.Strings(s)
 	return s
+}
+
+func homeDir() string {
+	home, err := os.UserHomeDir()
+	// unable to find homedir. Should never happen on the supported os/arch
+	if err != nil {
+		panic("Unable to find your $HOME directory. This should not have ever happened. Please open an issue on https://github.com/grafana/tanka/issues with your OS and ARCH.")
+	}
+	return home
 }

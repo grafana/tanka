@@ -1,6 +1,8 @@
 package client
 
 import (
+	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +20,9 @@ func TestPatchKubeconfig(t *testing.T) {
 		{
 			name: "none",
 			env:  []string{},
-			want: []string{"KUBECONFIG=" + patchFile + ":~/.kube/config"},
+			want: []string{
+				fmt.Sprintf("KUBECONFIG=%s:%s", patchFile, filepath.Join(homeDir(), ".kube", "config")),
+			},
 		},
 		{
 			name: "custom",
