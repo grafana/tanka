@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
-	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
@@ -51,29 +49,6 @@ func (k Kubectl) Info() (*Info, error) {
 		Context: k.context,
 		Cluster: k.cluster,
 	}, nil
-}
-
-func (k Kubectl) ctl(action string, args ...string) *exec.Cmd {
-	// prepare the arguments
-	argv := []string{action,
-		"--context", k.context.Get("name").MustStr(),
-	}
-	argv = append(argv, args...)
-
-	// prepare the cmd
-	cmd := exec.Command("kubectl", argv...)
-
-	// add the nsPatch file to $KUBECONFIG
-	env := os.Environ()
-	for i, s := range env {
-		// TODO: handle empty $KUBECONFIG
-		if strings.HasPrefix(s, "KUBECONFIG=") {
-			env[i] = fmt.Sprintf("KUBECONFIG=%s:%s", k.nsPatch, strings.TrimPrefix(s, "KUBECONFIG="))
-		}
-	}
-	cmd.Env = env
-
-	return cmd
 }
 
 // Version returns the version of kubectl and the Kubernetes api server
