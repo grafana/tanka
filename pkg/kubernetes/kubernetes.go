@@ -19,8 +19,7 @@ type Kubernetes struct {
 	Spec v1alpha1.Spec
 
 	// Client (kubectl)
-	ctl  client.Client
-	info client.Info
+	ctl client.Client
 
 	// Diffing
 	differs map[string]Differ // List of diff strategies
@@ -38,17 +37,11 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 		return nil, errors.Wrap(err, "creating client")
 	}
 
-	// obtain information about the client (including versions)
-	info, err := ctl.Info()
-	if err != nil {
-		return nil, err
-	}
-
 	// setup diffing
 	if s.DiffStrategy == "" {
 		s.DiffStrategy = "native"
 
-		if info.ServerVersion.LessThan(semver.MustParse("1.13.0")) {
+		if ctl.Info().ServerVersion.LessThan(semver.MustParse("1.13.0")) {
 			s.DiffStrategy = "subset"
 		}
 	}
@@ -56,7 +49,6 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	k := Kubernetes{
 		Spec: s,
 		ctl:  ctl,
-		info: *info,
 		differs: map[string]Differ{
 			"native": ctl.DiffServerSide,
 			"subset": SubsetDiffer(ctl),
@@ -71,12 +63,9 @@ type ApplyOpts client.ApplyOpts
 
 // Apply receives a state object generated using `Reconcile()` and may apply it to the target system
 func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
-	info, err := k.ctl.Info()
-	if err != nil {
-		return err
-	}
 	alert := color.New(color.FgRed, color.Bold).SprintFunc()
 
+	info := k.ctl.Info()
 	if !opts.AutoApprove {
 		if err := cli.Confirm(
 			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
@@ -126,7 +115,7 @@ func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
 
 // Info about the client, etc.
 func (k *Kubernetes) Info() client.Info {
-	return k.info
+	return k.ctl.Info()
 }
 
 func objectspec(m manifest.Manifest) string {

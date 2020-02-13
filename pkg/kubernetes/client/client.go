@@ -31,7 +31,7 @@ type Client interface {
 	// Info returns known informational data about the client. Best effort based,
 	// fields of `Info` that cannot be stocked with valuable data, e.g.
 	// due to an error, shall be left nil.
-	Info() (*Info, error)
+	Info() Info
 }
 
 // Info contains metadata about the client and its environment

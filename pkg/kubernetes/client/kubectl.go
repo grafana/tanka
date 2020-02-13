@@ -21,6 +21,8 @@ type Kubectl struct {
 	context objx.Map
 	cluster objx.Map
 
+	info *Info
+
 	APIServer string
 }
 
@@ -32,11 +34,22 @@ func New(endpoint, namespace string) (*Kubectl, error) {
 	if err := k.setupContext(namespace); err != nil {
 		return nil, errors.Wrap(err, "finding usable context")
 	}
+
+	info, err := k.newInfo()
+	if err != nil {
+		return nil, errors.Wrap(err, "gathering client info")
+	}
+	k.info = info
+
 	return &k, nil
 }
 
 // Info returns known informational data about the client and its environment
-func (k Kubectl) Info() (*Info, error) {
+func (k Kubectl) Info() Info {
+	return *k.info
+}
+
+func (k Kubectl) newInfo() (*Info, error) {
 	client, server, err := k.version()
 	if err != nil {
 		return nil, errors.Wrap(err, "obtaining versions")
@@ -103,14 +116,18 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 
 // FilterWriter is an io.Writer that discards every message that matches at
 // least one of the regular expressions.
-type FilterWriter []*regexp.Regexp
+type FilterWriter struct {
+	buf     string
+	filters []*regexp.Regexp
+}
 
-func (r FilterWriter) Write(p []byte) (n int, err error) {
-	for _, re := range r {
+func (r *FilterWriter) Write(p []byte) (n int, err error) {
+	for _, re := range r.filters {
 		if re.Match(p) {
 			// silently discard
 			return len(p), nil
 		}
 	}
+	r.buf += string(p)
 	return os.Stderr.Write(p)
 }
