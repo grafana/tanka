@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/cli/cmp"
 	"github.com/grafana/tanka/pkg/kubernetes/util"
 	"github.com/grafana/tanka/pkg/tanka"
@@ -103,7 +104,7 @@ func diffCmd() *cobra.Command {
 		}
 
 		if interactive {
-			r := colordiff(*changes)
+			r := cli.Colordiff(*changes)
 			fPageln(r)
 		} else {
 			fmt.Println(*changes)
