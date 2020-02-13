@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"io/ioutil"
@@ -86,7 +86,7 @@ func TestColordiff(t *testing.T) {
 		"", // newline
 	}, "\n")
 
-	r := colordiff(data)
+	r := Colordiff(data)
 	got, err := ioutil.ReadAll(r)
 	require.NoError(t, err)
 

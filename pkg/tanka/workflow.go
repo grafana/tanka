@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
@@ -35,7 +36,8 @@ func Apply(baseDir string, mods ...Modifier) error {
 		tmp := "Warning: There are no differences. Your apply may not do anything at all."
 		diff = &tmp
 	}
-	fmt.Println(*diff)
+	b := cli.Colordiff(*diff)
+	fmt.Print(b.String())
 
 	return kube.Apply(p.Resources, opts.apply)
 }
