@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Masterminds/semver"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/kubernetes/util"
 )
@@ -23,16 +24,15 @@ func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
 
 	raw := bytes.Buffer{}
 	cmd.Stdout = &raw
-	cmd.Stderr = FilterWriter{regexp.MustCompile(`exit status \d`)}
+
+	fw := FilterWriter{filters: []*regexp.Regexp{regexp.MustCompile(`exit status \d`)}}
+	cmd.Stderr = &fw
 
 	cmd.Stdin = strings.NewReader(ready.String())
 
 	err = cmd.Run()
-
-	// kubectl uses exit status 1 to tell us that there is a diff
-	if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 1 {
-	} else if err != nil {
-		return nil, err
+	if diffErr := parseDiffErr(err, fw.buf, k.Info().ClientVersion); diffErr != nil {
+		return nil, diffErr
 	}
 
 	s := raw.String()
@@ -50,6 +50,39 @@ func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
 
 	// no diff -> nil
 	return nil, nil
+}
+
+// parseDiffErr handles the exit status code of `kubectl diff`. It returns err
+// when an error happened, nil otherwise.
+// "Differences found (exit status 1)" is not an error.
+//
+// kubectl >= 1.18:
+// 0: no error, no differences
+// 1: differences found
+// >1: error
+//
+// kubectl < 1.18:
+// 0: no error, no differences
+// 1: error OR differences found
+func parseDiffErr(err error, stderr string, version *semver.Version) error {
+	exitErr, ok := err.(*exec.ExitError)
+	if !ok {
+		// this error is not kubectl related
+		return err
+	}
+
+	// internal kubectl error
+	if exitErr.ExitCode() != 1 {
+		return err
+	}
+
+	// before 1.18 "exit status 1" meant error as well ... so we need to check stderr
+	if version.LessThan(semver.MustParse("1.18.0")) && stderr != "" {
+		return err
+	}
+
+	// differences found is not an error
+	return nil
 }
 
 func separateMissingNamespace(in manifest.List, exists map[string]bool) (ready, missingNamespace manifest.List) {
