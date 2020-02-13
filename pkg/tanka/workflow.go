@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/grafana/tanka/pkg/kubernetes"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 // Apply parses the environment at the given directory (a `baseDir`) and applies
@@ -61,16 +62,17 @@ func Diff(baseDir string, mods ...Modifier) (*string, error) {
 }
 
 // Show parses the environment at the given directory (a `baseDir`) and returns
-// the evaluated jsonnet in yaml form
-func Show(baseDir string, mods ...Modifier) (string, error) {
+// the list of Kubernetes objects.
+// Tip: use the `String()` function on the returned list to get the familiar yaml stream
+func Show(baseDir string, mods ...Modifier) (manifest.List, error) {
 	opts := parseModifiers(mods)
 
 	p, err := parse(baseDir, opts)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return p.Resources.String(), nil
+	return p.Resources, nil
 }
 
 // Eval returns the raw evaluated Jsonnet output (without any transformations)

@@ -129,7 +129,9 @@ func showCmd() *cobra.Command {
 	getExtCode := extCodeParser(cmd.Flags())
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if !interactive && !*allowRedirect {
-			fmt.Fprintln(os.Stderr, "Redirection of the output of tk show is discouraged and disabled by default. Run tk show --dangerous-allow-redirect to enable.")
+			fmt.Fprintln(os.Stderr, `Redirection of the output of tk show is discouraged and disabled by default.
+If you want to export .yaml files for use with other tools, try 'tk export'.
+Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return
 		}
 
@@ -141,7 +143,7 @@ func showCmd() *cobra.Command {
 			log.Fatalln(err)
 		}
 
-		pageln(pretty)
+		pageln(pretty.String())
 	}
 	return cmd
 }
