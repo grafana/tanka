@@ -41,8 +41,12 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	if s.DiffStrategy == "" {
 		s.DiffStrategy = "native"
 
-		if ctl.Info().ServerVersion.LessThan(semver.MustParse("1.13.0")) {
+		versionWithDiff := semver.MustParse("1.13.0")
+		if ctl.Info().ServerVersion.LessThan(versionWithDiff) || ctl.Info().ClientVersion.LessThan(versionWithDiff) {
 			s.DiffStrategy = "subset"
+			if ctl.Info().ServerVersion.GreaterThan(versionWithDiff) || ctl.Info().ServerVersion.Equal(versionWithDiff) {
+				fmt.Println("Consider upgrading your kubectl to at least 1.13 for native diff strategy.")
+			}
 		}
 	}
 
