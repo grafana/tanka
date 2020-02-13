@@ -1,5 +1,55 @@
 # Changelog
 
+## 0.8.0 (2020-02-13)
+
+The next big one is here! Feature packed with environment overriding and `tk export`. Furthermore lots of bugs were fixed, so using Tanka should be much
+smoother now!
+
+#### Highlight: Overriding `vendor` per Environment **([#198](https://github.com/grafana/tanka/pull/198))**
+
+It is now possible, to have a `vendor/` directory managed by `jb` on an
+environment basis: https://tanka.dev/libraries/overriding. This means you can
+test out changes in libraries in single environments (like `dev`), without
+affecting others (like `prod`).
+
+#### Notice:
+
+Changes done in the last release (v0.7.1) can cause indentation changes when
+using `std.manifestYAMLFromJSON()`, related to bumping `gopkg.in/yaml.v2` to
+`gopkg.in/yaml.v3`.  
+Please encourage all your teammembers to upgrade to at least v0.7.1 to avoid
+whitespace-only diffs on your projects.
+
+### Features
+
+- **cli**: `tk export` can be used to write all generated Kubernetes resources
+  to `.yaml` files
+
+### Bug Fixes
+
+- **kubernetes**: Fail on `diff` when `kubectl` had an internal error
+  **([#213](https://github.com/grafana/tanka/pull/213))**
+- **kubernetes**: Stop injecting namespaces into wrong places:  
+  Tanka was injecting the default namespace into resources of all kinds,
+  regardless of whether they actually took one. This caused errors, so we
+  stopped doing this. From now on, the default namespace will only be injected
+  when the resource is actually namespaced.
+  **([#208](https://github.com/grafana/tanka/pull/208))**
+
+* **cli**: `tk diff` colors:  
+  Before, the coloring was unstable when scrolling up and down. We fixed this by
+  pressing CAPS-LOCK.  
+  Furthermore, the output of `tk diff` now also works on light color schemes,
+  without messing up the background color.
+  **([#210](https://github.com/grafana/tanka/pull/210))**
+* **cli**: Proper `--version` output:  
+  The release binaries now show the real semver on `tk --version`, instead of
+  the git commit sha. **([#201](https://github.com/grafana/tanka/pull/201))**
+* **cli**: Print diff on apply again:  
+  While refactoring, we accidentally forgot to dereference a pointer, so that
+  `tk apply` showed a memory address instead of the actual differences, which
+  was kinda pointless. **([#200](https://github.com/grafana/tanka/pull/200))**
+
 ## 0.7.1 (2020-02-06)
 
 This is a smaller release focused on critical bug fixes and some other minor
