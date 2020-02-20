@@ -62,7 +62,7 @@ func writeNamespacePatch(context objx.Map, namespace string) (string, error) {
 
 // Kubeconfig returns the merged $KUBECONFIG of the host
 func Kubeconfig() (map[string]interface{}, error) {
-	cmd := exec.Command("kubectl", "config", "view", "-o", "json")
+	cmd := exec.Command(KubectlPath(), "config", "view", "-o", "json")
 	cfgJSON := bytes.Buffer{}
 	cmd.Stdout = &cfgJSON
 	cmd.Stderr = os.Stderr
@@ -77,7 +77,7 @@ func Kubeconfig() (map[string]interface{}, error) {
 }
 
 func Contexts() ([]string, error) {
-	cmd := exec.Command("kubectl", "config", "get-contexts", "-o=name")
+	cmd := exec.Command(KubectlPath(), "config", "get-contexts", "-o=name")
 	buf := bytes.Buffer{}
 	cmd.Stdout = &buf
 	cmd.Stderr = os.Stderr

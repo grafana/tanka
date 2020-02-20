@@ -29,7 +29,7 @@ func (k Kubectl) delete(namespace string, sel []string, opts DeleteOpts) error {
 		argv = append(argv, "--force")
 	}
 
-	cmd := exec.Command("kubectl", argv...)
+	cmd := exec.Command(KubectlPath(), argv...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

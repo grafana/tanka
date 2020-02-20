@@ -9,6 +9,18 @@ import (
 	"strings"
 )
 
+// KubectlPath returns path to the kubectl binary, allowing to override the
+// default one for e.g. test purposes.
+func KubectlPath() string {
+	path := os.Getenv("TANKA_KUBECTL_PATH")
+
+	if path == "" {
+		path = "kubectl"
+	}
+
+	return path
+}
+
 // ctl returns an `exec.Cmd` for `kubectl`. It also forces the correct context
 // and injects our patched $KUBECONFIG for the default namespace.
 func (k Kubectl) ctl(action string, args ...string) *exec.Cmd {
@@ -19,7 +31,7 @@ func (k Kubectl) ctl(action string, args ...string) *exec.Cmd {
 	argv = append(argv, args...)
 
 	// prepare the cmd
-	cmd := exec.Command("kubectl", argv...)
+	cmd := exec.Command(KubectlPath(), argv...)
 	cmd.Env = patchKubeconfig(k.nsPatch, os.Environ())
 
 	return cmd
