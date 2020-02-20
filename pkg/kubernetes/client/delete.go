@@ -3,7 +3,6 @@ package client
 import (
 	"fmt"
 	"os"
-	"os/exec"
 )
 
 // Delete removes the specified object from the cluster
@@ -29,7 +28,7 @@ func (k Kubectl) delete(namespace string, sel []string, opts DeleteOpts) error {
 		argv = append(argv, "--force")
 	}
 
-	cmd := exec.Command(KubectlPath(), argv...)
+	cmd := KubectlCmd(argv...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
