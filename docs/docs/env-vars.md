@@ -5,5 +5,6 @@ route: "/env-vars"
 
 # Environment Variables
 
-Tanka currently makes use of the following environment variables:
-* `TANKA_KUBECTL_PATH` -- path to the `kubectl` tool, defaults to `"kubectl"`.
+#### `TANKA_KUBECTL_PATH`
+**Description**: Path to the `kubectl` tool executable
+**Default**: `$PATH/kubectl`

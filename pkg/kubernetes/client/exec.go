@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// KubectlCmd returns command a object that will launch kubectl at an appropriate path.
-func KubectlCmd(args ...string) *exec.Cmd {
+// kubectlCmd returns command a object that will launch kubectl at an appropriate path.
+func kubectlCmd(args ...string) *exec.Cmd {
 	binary := "kubectl"
 	if env := os.Getenv("TANKA_KUBECTL_PATH"); env != "" {
 		binary = env
@@ -29,7 +29,7 @@ func (k Kubectl) ctl(action string, args ...string) *exec.Cmd {
 	argv = append(argv, args...)
 
 	// prepare the cmd
-	cmd := KubectlCmd(argv...)
+	cmd := kubectlCmd(argv...)
 	cmd.Env = patchKubeconfig(k.nsPatch, os.Environ())
 
 	return cmd

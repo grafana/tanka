@@ -28,7 +28,7 @@ func (k Kubectl) delete(namespace string, sel []string, opts DeleteOpts) error {
 		argv = append(argv, "--force")
 	}
 
-	cmd := KubectlCmd(argv...)
+	cmd := kubectlCmd(argv...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
