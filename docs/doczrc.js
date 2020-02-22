@@ -40,14 +40,20 @@ export default {
         // "Using libraries",
         // "Creating and structure",
         "Installing and publishing",
-	"Overriding",
+        "Overriding",
       ],
     },
-    "Command-line completion",
-    "Directory structure",
-    "Diff strategies",
+
+    // additional features
     "Output filtering",
-	  
+    "Exporting as YAML",
+    "Command-line completion",
+    "Diff strategies",
+
+    // reference
+    "Directory structure",
+    "Environment variables",
+
     "Frequently asked questions",
     "Known issues",
   ],
