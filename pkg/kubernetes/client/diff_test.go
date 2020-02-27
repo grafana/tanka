@@ -9,22 +9,25 @@ import (
 
 func TestSeparateMissingNamespace(t *testing.T) {
 	cases := []struct {
-		name string
-		td   nsTd
+		name      string
+		td        nsTd
+		namespace string // namespace as defined in spec.json
 
 		missing bool
 	}{
 		// default should always exist
 		{
-			name: "default",
+			name:      "default",
+			namespace: "default",
 			td: newNsTd(func(m manifest.Metadata) {
 				m["namespace"] = "default"
 			}, []string{}),
 			missing: false,
 		},
-		// implcit default (not specfiying an ns at all) also
+		// implicit default (not specfiying an ns at all) also
 		{
-			name: "implicit-default",
+			name:      "implicit-default",
+			namespace: "default",
 			td: newNsTd(func(m manifest.Metadata) {
 				delete(m, "namespace")
 			}, []string{}),
@@ -32,7 +35,8 @@ func TestSeparateMissingNamespace(t *testing.T) {
 		},
 		// custom ns that exists
 		{
-			name: "custom-ns",
+			name:      "custom-ns",
+			namespace: "custom",
 			td: newNsTd(func(m manifest.Metadata) {
 				m["namespace"] = "custom"
 			}, []string{"custom"}),
@@ -40,17 +44,35 @@ func TestSeparateMissingNamespace(t *testing.T) {
 		},
 		// custom ns that does not exist
 		{
-			name: "missing-ns",
+			name:      "missing-ns",
+			namespace: "missing",
 			td: newNsTd(func(m manifest.Metadata) {
 				m["namespace"] = "missing"
 			}, []string{}),
 			missing: true,
 		},
+		// an explicitly created namespace is missing
+		{
+			name:      "explicit-namespace-missing",
+			namespace: "other-namespace",
+			td: newNsTd(func(m manifest.Metadata) {
+				m["kind"] = "Namespace"
+				m["name"] = "explicit-namespace"
+			}, []string{}),
+			missing: true,
+		},
+		// an environment's namespace is missing and resources have no ns defined
+		{
+			name:      "env-namespace-missing",
+			namespace: "env-namespace",
+			td:        newNsTd(func(m manifest.Metadata) {}, []string{}),
+			missing:   true,
+		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ready, missing := separateMissingNamespace(manifest.List{c.td.m}, c.td.ns)
+			ready, missing := separateMissingNamespace(manifest.List{c.td.m}, c.namespace, c.td.ns)
 			if c.missing {
 				assert.Lenf(t, ready, 0, "expected manifest to be missing (ready = 0)")
 				assert.Lenf(t, missing, 1, "expected manifest to be missing (missing = 1)")
