@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -50,12 +49,15 @@ func writeNamespacePatch(context objx.Map, namespace string) (string, error) {
 		return "", err
 	}
 
-	f := filepath.Join(os.TempDir(), "tk-kubectx-namespace.yaml")
-	if err := ioutil.WriteFile(f, []byte(out), 0644); err != nil {
+	f, err := ioutil.TempFile("", "tk-kubectx-namespace-*.yaml")
+	if err != nil {
+		return "", err
+	}
+	if err = ioutil.WriteFile(f.Name(), []byte(out), 0644); err != nil {
 		return "", err
 	}
 
-	return f, nil
+	return f.Name(), nil
 }
 
 // Kubeconfig returns the merged $KUBECONFIG of the host
