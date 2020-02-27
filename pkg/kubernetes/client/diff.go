@@ -14,12 +14,12 @@ import (
 // DiffServerSide takes the desired state and computes the differences on the
 // server, returning them in `diff(1)` format
 func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
-	ns, err := k.Namespaces()
+	existingNamespaces, err := k.Namespaces()
 	if err != nil {
 		return nil, err
 	}
 
-	ready, missing := separateMissingNamespace(data, ns)
+	ready, missing := separateMissingNamespace(data, k.namespace, existingNamespaces)
 	cmd := k.ctl("diff", "-f", "-")
 
 	raw := bytes.Buffer{}
@@ -85,10 +85,12 @@ func parseDiffErr(err error, stderr string, version *semver.Version) error {
 	return nil
 }
 
-func separateMissingNamespace(in manifest.List, exists map[string]bool) (ready, missingNamespace manifest.List) {
+func separateMissingNamespace(in manifest.List, current string, exists map[string]bool) (ready, missingNamespace manifest.List) {
 	for _, r := range in {
 		// namespace does not exist, also ignore implicit default ("")
-		if ns := r.Metadata().Namespace(); ns != "" && !exists[ns] {
+		if ns := r.Metadata().Namespace(); ns != "" && !exists[ns] ||
+			r.Kind() == "Namespace" && !exists[r.Metadata().Name()] ||
+			!exists[current] {
 			missingNamespace = append(missingNamespace, r)
 			continue
 		}

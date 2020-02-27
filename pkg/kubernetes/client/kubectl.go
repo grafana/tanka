@@ -17,9 +17,10 @@ import (
 // Kubectl uses the `kubectl` command to operate on a Kubernetes cluster
 type Kubectl struct {
 	// kubeconfig
-	nsPatch string
-	context objx.Map
-	cluster objx.Map
+	nsPatch   string
+	namespace string
+	context   objx.Map
+	cluster   objx.Map
 
 	info *Info
 
@@ -30,6 +31,7 @@ type Kubectl struct {
 func New(endpoint, namespace string) (*Kubectl, error) {
 	k := Kubectl{
 		APIServer: endpoint,
+		namespace: namespace,
 	}
 	if err := k.setupContext(namespace); err != nil {
 		return nil, errors.Wrap(err, "finding usable context")
