@@ -27,8 +27,9 @@ func statusCmd() *cobra.Command {
 			log.Fatalln(err)
 		}
 
-		fmt.Println("Context:", status.Client.Context.Get("name"))
-		fmt.Println("Cluster:", status.Client.Context.Get("context").MustObjxMap().Get("cluster"))
+		context := status.Client.Kubeconfig.Context
+		fmt.Println("Context:", context.Name)
+		fmt.Println("Cluster:", context.Context.Cluster)
 		fmt.Println("Environment:")
 		for k, v := range structs.Map(status.Env.Spec) {
 			fmt.Printf("  %s: %s\n", k, v)

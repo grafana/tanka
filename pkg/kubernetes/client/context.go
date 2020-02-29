@@ -8,42 +8,36 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/grafana/tanka/pkg/defers"
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
 )
 
-// setupContext makes sure the kubectl client is set up to use the correct
-// context for the cluster IP:
-// - find a context that matches the IP
-// - create a patch for it to set the default namespace
-func (k *Kubectl) setupContext(namespace string) error {
-	if k.context != nil {
-		return nil
-	}
-
-	var err error
-	k.cluster, k.context, err = ContextFromIP(k.APIServer)
+// findContext returns a valid context from $KUBECONFIG that uses the given
+// apiServer endpoint.
+func findContext(endpoint string) (Config, error) {
+	cluster, context, err := ContextFromIP(endpoint)
 	if err != nil {
-		return err
+		return Config{}, err
 	}
 
-	nsPatch, err := writeNamespacePatch(k.context, namespace)
-	if err != nil {
-		return errors.Wrap(err, "creating $KUBECONFIG patch for default namespace")
-	}
-	k.nsPatch = nsPatch
-
-	return nil
+	return Config{
+		Context: *context,
+		Cluster: *cluster,
+	}, nil
 }
 
-func writeNamespacePatch(context objx.Map, namespace string) (string, error) {
-	context.Set("context.namespace", namespace)
+// writeNamespacePatch writes a temporary file that includes only the previosuly
+// discovered context with the `context.namespace` field set to the default
+// namespace from `spec.json`. Adding this file to `$KUBECONFIG` results in
+// `kubectl` picking this up, effectively setting the default namespace.
+func writeNamespacePatch(context Context, defaultNamespace string) (string, error) {
+	context.Context.Namespace = defaultNamespace
 
-	kubectx := map[string]interface{}{
+	patch := map[string]interface{}{
 		"contexts": []interface{}{context},
 	}
-	out, err := json.Marshal(kubectx)
+	out, err := json.Marshal(patch)
 	if err != nil {
 		return "", err
 	}
@@ -52,6 +46,11 @@ func writeNamespacePatch(context objx.Map, namespace string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	defers.Defer(func() {
+		os.RemoveAll(f.Name())
+	})
+
 	if err = ioutil.WriteFile(f.Name(), []byte(out), 0644); err != nil {
 		return "", err
 	}
@@ -60,21 +59,20 @@ func writeNamespacePatch(context objx.Map, namespace string) (string, error) {
 }
 
 // Kubeconfig returns the merged $KUBECONFIG of the host
-func Kubeconfig() (map[string]interface{}, error) {
+func Kubeconfig() (objx.Map, error) {
 	cmd := kubectlCmd("config", "view", "-o", "json")
 	cfgJSON := bytes.Buffer{}
 	cmd.Stdout = &cfgJSON
 	cmd.Stderr = os.Stderr
+
 	if err := cmd.Run(); err != nil {
 		return nil, err
 	}
-	var cfg map[string]interface{}
-	if err := json.Unmarshal(cfgJSON.Bytes(), &cfg); err != nil {
-		return nil, err
-	}
-	return cfg, nil
+
+	return objx.FromJSON(cfgJSON.String())
 }
 
+// Contexts returns a list of context names
 func Contexts() ([]string, error) {
 	cmd := kubectlCmd("config", "get-contexts", "-o=name")
 	buf := bytes.Buffer{}
@@ -87,54 +85,112 @@ func Contexts() ([]string, error) {
 	return strings.Split(buf.String(), "\n"), nil
 }
 
-// ContextFromIP searches the $KUBECONFIG for a context of a cluster that matches the apiServer
-func ContextFromIP(apiServer string) (cluster, context objx.Map, err error) {
-	kubeconfig, err := Kubeconfig()
+// ContextFromIP searches the $KUBECONFIG for a context using a cluster that matches the apiServer
+func ContextFromIP(apiServer string) (*Cluster, *Context, error) {
+	cfg, err := Kubeconfig()
 	if err != nil {
 		return nil, nil, err
 	}
-	cfg := objx.New(kubeconfig)
 
 	// find the correct cluster
-	cluster = find(cfg.Get("clusters").MustMSISlice(), "cluster.server", apiServer)
-	if cluster == nil { // empty map means no result
-		return nil, nil, fmt.Errorf("no cluster that matches the apiServer `%s` was found. Please check your $KUBECONFIG", apiServer)
+	var cluster Cluster
+	clusters, err := tryMSISlice(cfg.Get("clusters"), "clusters")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := find(clusters, "cluster.server", apiServer, &cluster, ErrorNoCluster(apiServer)); err != nil {
+		return nil, nil, err
 	}
 
 	// find a context that uses the cluster
-	context = find(cfg.Get("contexts").MustMSISlice(), "context.cluster", cluster.Get("name").MustStr())
-	if context == nil {
-		return nil, nil, fmt.Errorf("no context that matches the cluster `%s` was found. Please check your $KUBECONFIG", cluster.Get("name").MustStr())
+	var context Context
+	contexts, err := tryMSISlice(cfg.Get("contexts"), "contexts")
+	if err != nil {
+		return nil, nil, err
 	}
 
-	return cluster, context, nil
+	if err := find(contexts, "context.cluster", cluster.Name, &context, ErrorNoContext(cluster.Name)); err != nil {
+		return nil, nil, err
+	}
+
+	return &cluster, &context, nil
 }
 
+// IPFromContext parses $KUBECONFIG, finds the cluster with the given name and
+// returns the cluster's endpoint
 func IPFromContext(name string) (ip string, err error) {
-	kubeconfig, err := Kubeconfig()
+	cfg, err := Kubeconfig()
 	if err != nil {
 		return "", err
 	}
-	cfg := objx.New(kubeconfig)
 
-	// find the context
-	context := find(cfg.Get("contexts").MustMSISlice(), "name", name)
-	if context == nil {
-		return "", fmt.Errorf("no context named `%s` was found. Please check your $KUBECONFIG", name)
+	// find a context with the given name
+	var context Context
+	contexts, err := tryMSISlice(cfg.Get("contexts"), "contexts")
+	if err != nil {
+		return "", err
 	}
 
-	clusterName := context.Get("context.cluster").MustStr()
-	cluster := find(cfg.Get("clusters").MustMSISlice(), "name", clusterName)
-	if cluster == nil { // empty map means no result
-		return "", fmt.Errorf("no cluster named `%s` as required by context `%s` was found. Please check your $KUBECONFIG", clusterName, name)
+	if err := find(contexts, "name", name, &context, ErrorNoContext(name)); err != nil {
+		return "", err
 	}
 
-	return cluster.Get("cluster.server").MustStr(), nil
+	// find the cluster of the context
+	var cluster Cluster
+	clusters, err := tryMSISlice(cfg.Get("clusters"), "clusters")
+	if err != nil {
+		return "", err
+	}
+
+	clusterName := context.Context.Cluster
+	if err := find(clusters, "name", clusterName, &cluster,
+		fmt.Errorf("no cluster named `%s` as required by context `%s` was found. Please check your $KUBECONFIG", clusterName, name),
+	); err != nil {
+		return "", err
+	}
+
+	return cluster.Cluster.Server, nil
 }
 
-func find(list []map[string]interface{}, prop string, expected string) objx.Map {
-	return objx.New(funk.Find(list, func(x map[string]interface{}) bool {
-		got := objx.New(x).Get(prop).MustStr()
-		return got == expected
-	}))
+func tryMSISlice(v *objx.Value, what string) ([]map[string]interface{}, error) {
+	if s := v.MSISlice(); s != nil {
+		return s, nil
+	}
+
+	data, ok := v.Data().([]map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("expected %s to be of type `[]map[string]interface{}`, but got `%T` instead", what, v.Data())
+	}
+	return data, nil
+}
+
+// find attempts to find an object in list whose prop equals expected.
+// If found, the value is unmarshalled to ptr, otherwise errNotFound is returned.
+func find(list []map[string]interface{}, prop string, expected string, ptr interface{}, errNotFound error) error {
+	var findErr error
+	i := funk.Find(list, func(x map[string]interface{}) bool {
+		if findErr != nil {
+			return false
+		}
+
+		got := objx.New(x).Get(prop).Data()
+		str, ok := got.(string)
+		if !ok {
+			findErr = fmt.Errorf("testing whether `%s` is `%s`: unable to parse `%v` as string", prop, expected, got)
+			return false
+		}
+
+		return str == expected
+	})
+	if findErr != nil {
+		return findErr
+	}
+
+	if i == nil {
+		return errNotFound
+	}
+
+	o := objx.New(i).MustJSON()
+	return json.Unmarshal([]byte(o), ptr)
 }
