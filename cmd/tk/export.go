@@ -11,8 +11,9 @@ import (
 
 	"text/template"
 
-	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/spf13/cobra"
+
+	"github.com/grafana/tanka/pkg/tanka"
 )
 
 func exportCmd() *cobra.Command {

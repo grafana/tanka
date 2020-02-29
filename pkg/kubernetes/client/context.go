@@ -8,9 +8,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/grafana/tanka/pkg/defers"
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
+
+	"github.com/grafana/tanka/pkg/defers"
 )
 
 // findContext returns a valid context from $KUBECONFIG that uses the given
