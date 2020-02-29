@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -36,7 +37,9 @@ func fPageln(r io.Reader) {
 
 	// if this fails, just print it
 	if err := cmd.Run(); err != nil {
-		io.Copy(os.Stdout, r)
+		if _, err = io.Copy(os.Stdout, r); err != nil {
+			log.Fatalln("Writing to Stdout:", err)
+		}
 	}
 }
 

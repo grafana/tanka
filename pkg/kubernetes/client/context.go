@@ -27,7 +27,7 @@ func findContext(endpoint string) (Config, error) {
 	}, nil
 }
 
-// writeNamespacePatch writes a temporary file that includes only the previosuly
+// writeNamespacePatch writes a temporary file that includes only the previously
 // discovered context with the `context.namespace` field set to the default
 // namespace from `spec.json`. Adding this file to `$KUBECONFIG` results in
 // `kubectl` picking this up, effectively setting the default namespace.
@@ -51,7 +51,7 @@ func writeNamespacePatch(context Context, defaultNamespace string) (string, erro
 		os.RemoveAll(f.Name())
 	})
 
-	if err = ioutil.WriteFile(f.Name(), []byte(out), 0644); err != nil {
+	if err = ioutil.WriteFile(f.Name(), out, 0644); err != nil {
 		return "", err
 	}
 

@@ -11,7 +11,7 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/native"
 )
 
-// Modifiers allow to set optional paramters on the Jsonnet VM.
+// Modifier allows to set optional parameters on the Jsonnet VM.
 // See jsonnet.With* for this.
 type Modifier func(vm *jsonnet.VM) error
 

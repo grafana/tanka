@@ -70,7 +70,7 @@ func initCmd() *cobra.Command {
 
 func installK8sLib() error {
 	if _, err := exec.LookPath("jb"); err != nil {
-		return errors.New("jsonnet-bundler not found in $PATH. Follow https://tanka.dev/install#jsonnet-bundler for installation instructions.")
+		return errors.New("jsonnet-bundler not found in $PATH. Follow https://tanka.dev/install#jsonnet-bundler for installation instructions")
 	}
 
 	var initialPackages = []string{

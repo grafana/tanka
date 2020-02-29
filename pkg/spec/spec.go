@@ -11,7 +11,10 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
+// APIGroup is the prefix used for `kind`
 const APIGroup = "tanka.dev"
+
+// Specfile is the filename for the environment config
 const Specfile = "spec.json"
 
 // ParseDir parses the given environments `spec.json` into a `v1alpha1.Config`

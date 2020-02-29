@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// ErrBadTargetExp occurs when the regexp compilint fails
 type ErrBadTargetExp struct {
 	inner error
 }
