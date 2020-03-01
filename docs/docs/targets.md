@@ -74,7 +74,7 @@ zsh: no matches found: deployment/.*
 # properly quoted:
 zsh-5.4.2$ tk show . -t 'deployment/.*'
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
+apiVersion: apps/v1
+kind: Deployment
 # ...
 ```
