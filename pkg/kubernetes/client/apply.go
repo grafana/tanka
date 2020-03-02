@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
-	funk "github.com/thoas/go-funk"
 )
 
 // Order in which install different kinds of Kubernetes objects.
@@ -89,10 +88,4 @@ func (k Kubectl) apply(data manifest.List, opts ApplyOpts) error {
 	cmd.Stdin = strings.NewReader(data.String())
 
 	return cmd.Run()
-}
-
-func filterNamespace(in manifest.List) manifest.List {
-	return manifest.List(funk.Filter(in, func(i manifest.Manifest) bool {
-		return strings.ToLower(i.Kind()) == "namespace"
-	}).([]manifest.Manifest))
 }
