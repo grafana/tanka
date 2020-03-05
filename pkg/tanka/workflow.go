@@ -3,8 +3,6 @@ package tanka
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
-
 	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -29,13 +27,15 @@ func Apply(baseDir string, mods ...Modifier) error {
 	}
 
 	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{})
-	if err != nil {
-		return errors.Wrap(err, "diffing")
-	}
-	if diff == nil {
+	switch {
+	case err != nil:
+		// This is not fatal, the diff is not strictly required
+		fmt.Println("Error diffing:", err)
+	case diff == nil:
 		tmp := "Warning: There are no differences. Your apply may not do anything at all."
 		diff = &tmp
 	}
+
 	b := cli.Colordiff(*diff)
 	fmt.Print(b.String())
 
