@@ -4,8 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
@@ -112,6 +116,100 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 		namespaces[m.Metadata().Name()] = true
 	}
 	return namespaces, nil
+}
+
+func parseKubectlTable(table *bytes.Buffer, n int) [][]string {
+	// Process header; that also specifies the number of characters per each column
+	var widths []int
+	var ret [][]string
+
+	// Header
+	header, err := table.ReadString('\n')
+	if err != nil {
+		log.Fatalf("Failed to read kubectl table header!")
+	}
+	r := regexp.MustCompile("[^ ]+ *")
+
+	headerMatches := r.FindAllString(header, n)
+
+	ret = append(ret, []string{})
+	for _, m := range headerMatches {
+		widths = append(widths, len(m))
+		ret[0] = append(ret[0], strings.TrimSpace(m))
+	}
+
+	// Data lines; cut from the string using table header widths
+	for li := 1; ; li++ {
+		line, err := table.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Error reading table from kubectl: %v", err)
+		}
+
+		offset := 0
+		ret = append(ret, []string{})
+		for col := 0; col < n; col++ {
+			upper := offset + widths[col]
+
+			// For last column, use the rest of the line
+			if col == n-1 {
+				upper = len(line)
+			}
+			ret[li] = append(ret[li], strings.TrimSpace(line[offset:upper]))
+			offset = upper
+		}
+	}
+
+	return ret
+}
+
+// APIResourcesLine represents a line from `kubectl api-resources`
+type APIResourcesLine struct {
+	Name       string
+	ShortNames []string
+	APIGroup   string
+	Namespaced bool
+	Kind       string
+}
+
+// APIResources returns a set of supported apiVersion/kinds.
+func (k Kubectl) APIResources() ([]APIResourcesLine, error) {
+	cmd := k.ctl("api-resources")
+
+	var sout bytes.Buffer
+	cmd.Stdout = &sout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	table := parseKubectlTable(&sout, 5)
+	//var list manifest.Manifest
+	var ret []APIResourcesLine
+
+	for _, tl := range table {
+		var cookedLine APIResourcesLine
+		var boolerr error
+
+		cookedLine.Name = tl[0]
+		cookedLine.ShortNames = strings.Split(tl[1], ",")
+		cookedLine.APIGroup = tl[2]
+		cookedLine.Namespaced, boolerr = strconv.ParseBool(tl[3])
+		cookedLine.Kind = tl[4]
+
+		if boolerr != nil {
+			log.Fatalf("Failed to convert '%v' to bool in line '%v': %v", tl[3], tl, boolerr)
+		}
+
+		ret = append(ret, cookedLine)
+	}
+	fmt.Printf("%v\n", ret)
+
+	return ret, nil
 }
 
 // FilterWriter is an io.Writer that discards every message that matches at

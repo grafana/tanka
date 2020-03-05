@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"log"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -14,12 +15,26 @@ import (
 // DiffServerSide takes the desired state and computes the differences on the
 // server, returning them in `diff(1)` format
 func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
+	supportedKinds := make(map[string]bool)
+	supportedResources, err := k.APIResources()
+
+	if err != nil {
+		log.Fatalf("Cannot fetch list of supported resources : %v", err)
+	}
+
+	for i := 0; i < len(supportedResources); i++ {
+		res := supportedResources[i]
+		supportedKinds[res.Kind] = true
+	}
+
+	noUnkRes, unknownResources := separateUnknownResources(data, supportedKinds)
+
 	ns, err := k.Namespaces()
 	if err != nil {
 		return nil, err
 	}
 
-	ready, missing := separateMissingNamespace(data, ns)
+	ready, missingNamespaces := separateMissingNamespace(noUnkRes, ns)
 	cmd := k.ctl("diff", "-f", "-")
 
 	raw := bytes.Buffer{}
@@ -36,6 +51,7 @@ func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
 	}
 
 	s := raw.String()
+	missing := append(missingNamespaces, unknownResources...)
 	for _, r := range missing {
 		d, err := util.DiffStr(util.DiffName(r), "", r.String())
 		if err != nil {
@@ -94,5 +110,29 @@ func separateMissingNamespace(in manifest.List, exists map[string]bool) (ready, 
 		}
 		ready = append(ready, r)
 	}
+	return
+}
+
+func separateUnknownResources(in manifest.List, kinds map[string]bool) (ready, unknown manifest.List) {
+	// Note: Matching kind only is the simplest thing that can be done. A correct solution would
+	// be much more complex, since:
+	// - this would need to take care of api groups and their versions for all supported kinds
+	// - even if a particular Kind version is not supported, it might be possible to convert the resource
+	//
+	// Since these add a lot of complexity for a little benefit, the code currently implements only the
+	// straightforward check, risking that API versions won't cause too much trouble.
+	for i := 0; i < len(in); i++ {
+		kind := in[i].Kind()
+
+		// Validate whether `Kind` is known by the server
+		_, ok := kinds[kind]
+		if !ok {
+			unknown = append(unknown, in[i])
+		} else {
+			ready = append(ready, in[i])
+		}
+
+	}
+
 	return
 }
