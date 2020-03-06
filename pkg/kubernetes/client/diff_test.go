@@ -89,3 +89,58 @@ func newNsTd(f func(m manifest.Metadata), ns []string) nsTd {
 		ns: nsMap,
 	}
 }
+
+func manifestOfKind(kind, apiVersion string) manifest.Manifest {
+	return manifest.Manifest{
+		"apiVersion": apiVersion,
+		"kind":       kind,
+		"metadata":   map[string]interface{}{},
+	}
+}
+
+func TestSeparateUnknownResources(t *testing.T) {
+	cases := []struct {
+		name    string
+		in      manifest.List
+		kinds   map[string]bool
+		ok      manifest.List
+		missing manifest.List
+	}{
+		{
+			name:    "empty",
+			in:      manifest.List{},
+			kinds:   map[string]bool{"Pod": true},
+			ok:      manifest.List{},
+			missing: manifest.List{},
+		},
+		{
+			name:    "all-supported",
+			in:      manifest.List{manifestOfKind("Pod", "v1")},
+			kinds:   map[string]bool{"Pod": true},
+			ok:      manifest.List{manifestOfKind("Pod", "v1")},
+			missing: manifest.List{},
+		},
+		{
+			name:    "one-unsupported",
+			in:      manifest.List{manifestOfKind("Pod", "v1"), manifestOfKind("Custom", "abcd/v1")},
+			kinds:   map[string]bool{"Pod": true},
+			ok:      manifest.List{manifestOfKind("Pod", "v1")},
+			missing: manifest.List{manifestOfKind("Custom", "abcd/v1")},
+		},
+		{
+			name:    "all-unsupported",
+			in:      manifest.List{manifestOfKind("Pod", "v1"), manifestOfKind("Custom", "abcd/v1")},
+			kinds:   map[string]bool{"Deployment": true},
+			ok:      manifest.List{},
+			missing: manifest.List{manifestOfKind("Pod", "v1"), manifestOfKind("Custom", "abcd/v1")},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ready, missing := separateUnknownResources(c.in, c.kinds)
+			assert.ElementsMatch(t, ready, c.ok)
+			assert.ElementsMatch(t, missing, c.missing)
+		})
+	}
+}
