@@ -41,7 +41,7 @@ func (c *Command) Execute() error {
 		return c.parentPtr.Execute()
 	}
 
-	c, args, err := c.find(os.Args[1:])
+	c, args, err := findTarget(c, os.Args[1:])
 	if err != nil {
 		return err
 	}

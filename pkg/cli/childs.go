@@ -15,27 +15,22 @@ func (c *Command) AddChildren(childs ...*Command) {
 	}
 }
 
-// find searches for specified subcommand based on the args.
-func (c *Command) find(args []string) (*Command, []string, error) {
-	var innerfind func(c *Command, innerArgs []string) (*Command, []string, error)
-	innerfind = func(c *Command, innerArgs []string) (*Command, []string, error) {
-		argsWOflags := stripFlags(innerArgs, c)
-		if len(argsWOflags) == 0 {
-			return c, innerArgs, nil
-		}
-		nextSubCmd := argsWOflags[0]
-
-		cmd, ok := c.child(nextSubCmd)
-		switch {
-		case !ok:
-			return nil, nil, c.help(fmt.Errorf("unknown subcommand `%s`", nextSubCmd))
-		case cmd != nil:
-			return innerfind(cmd, argsMinusFirstX(innerArgs, nextSubCmd))
-		}
-		return c, innerArgs, nil
+// findTarget finds the specified (sub)command based on the args
+func findTarget(c *Command, args []string) (*Command, []string, error) {
+	argsWOflags := stripFlags(args, c)
+	if len(argsWOflags) == 0 {
+		return c, args, nil
 	}
+	nextSubCmd := argsWOflags[0]
 
-	return innerfind(c, args)
+	cmd, ok := c.child(nextSubCmd)
+	switch {
+	case !ok:
+		return nil, nil, c.help(fmt.Errorf("unknown subcommand `%s`", nextSubCmd))
+	case cmd != nil:
+		return findTarget(cmd, argsMinusFirstX(args, nextSubCmd))
+	}
+	return c, args, nil
 }
 
 func (c *Command) child(name string) (*Command, bool) {
