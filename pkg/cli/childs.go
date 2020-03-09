@@ -5,13 +5,9 @@ import "fmt"
 // AddChildren adds the supplied commands as subcommands.
 // This command is set as the parent of the new children.
 func (c *Command) AddCommand(childs ...*Command) {
-	if c.children == nil {
-		c.children = make(map[string]*Command)
-	}
-
 	for _, child := range childs {
 		child.parentPtr = c
-		c.children[child.Name()] = child
+		c.children = append(c.children, child)
 	}
 }
 
@@ -34,8 +30,13 @@ func findTarget(c *Command, args []string) (*Command, []string, error) {
 }
 
 func (c *Command) child(name string) (*Command, bool) {
-	child, ok := c.children[name]
-	return child, ok
+	for _, child := range c.children {
+		if child.Name() != name {
+			continue
+		}
+		return child, true
+	}
+	return nil, false
 }
 
 // argsMinusFirstX removes only the first x from args.  Otherwise, commands that look like

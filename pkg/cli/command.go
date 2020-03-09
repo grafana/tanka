@@ -37,7 +37,7 @@ type Command struct {
 	Args Arguments
 
 	// internal fields
-	children  map[string]*Command
+	children  []*Command
 	flags     *pflag.FlagSet
 	parentPtr *Command
 }
@@ -51,10 +51,12 @@ func (c *Command) Execute() error {
 		return c.parentPtr.Execute()
 	}
 
+	// exit if in bash completion context
 	if predict(c) {
 		return nil
 	}
 
+	// find the correct (sub)command
 	c, args, err := findTarget(c, os.Args[1:])
 	if err != nil {
 		return err
@@ -66,10 +68,12 @@ func (c *Command) Execute() error {
 		showHelp = c.Flags().BoolP("help", "h", false, "help for "+c.Name())
 	}
 
+	// parse flags
 	if err := c.Flags().Parse(args); err != nil {
 		return c.help(err)
 	}
 
+	// show help if requested or missing `Run()`
 	switch {
 	case showHelp != nil && *showHelp:
 		fallthrough
@@ -77,10 +81,12 @@ func (c *Command) Execute() error {
 		return helpErr(c)
 	}
 
+	// validate args
 	if err := c.Args.Validate(c.Flags().Args()); err != nil {
 		return c.help(err)
 	}
 
+	// run!
 	return c.Run(c, c.Flags().Args())
 }
 

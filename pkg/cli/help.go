@@ -110,10 +110,10 @@ func (h *helpable) HasChildren() bool {
 }
 
 // Children returns the children of this command.
-func (h *helpable) Children() map[string]*helpable {
-	m := make(map[string]*helpable)
-	for k, c := range h.children {
-		m[k] = c.helpable()
+func (h *helpable) Children() []*helpable {
+	m := make([]*helpable, len(h.children))
+	for i, c := range h.children {
+		m[i] = c.helpable()
 	}
 	return m
 }
