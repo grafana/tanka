@@ -28,9 +28,9 @@ func main() {
 	log.SetFlags(0)
 
 	rootCmd := &cli.Command{
-		Use:   "tk",
-		Short: "tanka <3 jsonnet",
-		// Version:          Version,
+		Use:     "tk",
+		Short:   "tanka <3 jsonnet",
+		Version: Version,
 	}
 
 	// workflow commands

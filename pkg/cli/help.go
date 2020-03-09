@@ -11,6 +11,10 @@ import (
 )
 
 func (c *Command) help(reason error) error {
+	if c.Flags().Lookup("help") == nil {
+		_ = initHelpFlag(c)
+	}
+
 	return ErrHelp{
 		Reason: reason,
 		usage:  c.Usage(),

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -22,6 +23,9 @@ type Command struct {
 	// Long help text, used for full help pages. `Short` is used as a fallback
 	// if unset.
 	Long string
+
+	// Version of the application. Only used on the root command
+	Version string
 
 	// Run is the action that is run when this command is invoked.
 	// The error is returned as-is from `Execute()`.
@@ -51,6 +55,14 @@ func (c *Command) Execute() error {
 		return c.parentPtr.Execute()
 	}
 
+	// add version flag to root command. If `findTarget` switches to a
+	// subcommand afterwards, showVersion will stay nil, causing the version not
+	// to be shown.
+	var showVersion *bool
+	if c.Version != "" {
+		showVersion = c.Flags().Bool("version", false, fmt.Sprintf("version for %s", c.Use))
+	}
+
 	// exit if in bash completion context
 	if predict(c) {
 		return nil
@@ -65,12 +77,19 @@ func (c *Command) Execute() error {
 	// add help flag
 	var showHelp *bool
 	if c.Flags().Lookup("help") == nil {
-		showHelp = c.Flags().BoolP("help", "h", false, "help for "+c.Name())
+		showHelp = initHelpFlag(c)
 	}
 
 	// parse flags
 	if err := c.Flags().Parse(args); err != nil {
 		return c.help(err)
+	}
+
+	// show version if requested. This only happens if findTarget returned the
+	// root command.
+	if showVersion != nil && *showVersion {
+		log.Printf("%s version %s", c.Use, c.Version)
+		return nil
 	}
 
 	// show help if requested or missing `Run()`
@@ -88,6 +107,10 @@ func (c *Command) Execute() error {
 
 	// run!
 	return c.Run(c, c.Flags().Args())
+}
+
+func initHelpFlag(c *Command) *bool {
+	return c.Flags().BoolP("help", "h", false, "help for "+c.Name())
 }
 
 func helpErr(c *Command) error {
