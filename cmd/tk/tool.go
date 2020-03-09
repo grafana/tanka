@@ -4,20 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
-
+	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 )
 
-func toolCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func toolCmd() *cli.Command {
+	cmd := &cli.Command{
 		Short: "handy utilities for working with jsonnet",
 		Use:   "tool [command]",
 	}
@@ -26,97 +24,99 @@ func toolCmd() *cobra.Command {
 	return cmd
 }
 
-func jpathCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func jpathCmd() *cli.Command {
+	cmd := &cli.Command{
 		Short: "print information about the jpath",
 		Use:   "jpath",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cli.Command, args []string) error {
 			pwd, err := os.Getwd()
 			if err != nil {
 				return err
 			}
 			path, base, root, err := jpath.Resolve(pwd)
 			if err != nil {
-				log.Fatalln("Resolving JPATH:", err)
+				return fmt.Errorf("Resolving JPATH: %s", err)
 			}
+
 			fmt.Println("main:", filepath.Join(base, "main.jsonnet"))
 			fmt.Println("rootDir:", root)
 			fmt.Println("baseDir:", base)
 			fmt.Println("jpath:", path)
+
 			return nil
 		},
 	}
 	return cmd
 }
 
-func importsCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func importsCmd() *cli.Command {
+	cmd := &cli.Command{
 		Use:   "imports <directory>",
 		Short: "list all transitive imports of an environment",
-		Args:  cobra.ExactArgs(1),
-		Annotations: map[string]string{
-			"args": "baseDir",
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			var modFiles []string
-			if cmd.Flag("check").Changed {
-				var err error
-				modFiles, err = gitChangedFiles(cmd.Flag("check").Value.String())
-				if err != nil {
-					log.Fatalln("invoking git:", err)
-				}
-			}
-
-			dir, err := filepath.Abs(args[0])
-			if err != nil {
-				log.Fatalln("Loading environment:", err)
-			}
-
-			fi, err := os.Stat(dir)
-			if err != nil {
-				log.Fatalln("Loading environment:", err)
-			}
-
-			if !fi.IsDir() {
-				log.Fatalln("The argument must be an environment's directory, but this does not seem to be the case.")
-			}
-
-			deps, err := jsonnet.TransitiveImports(dir)
-			if err != nil {
-				log.Fatalln("Resolving imports:", err)
-			}
-
-			root, err := gitRoot()
-			if err != nil {
-				log.Fatalln("Invoking git:", err)
-			}
-			if modFiles != nil {
-				for _, m := range modFiles {
-					mod := filepath.Join(root, m)
-					if err != nil {
-						log.Fatalln(err)
-					}
-
-					for _, dep := range deps {
-						if mod == dep {
-							fmt.Printf("Rebuild required. File `%s` imports `%s`, which has been changed in `%s`.\n", args[0], dep, cmd.Flag("check").Value.String())
-							os.Exit(16)
-						}
-					}
-				}
-				fmt.Printf("Rebuild not required, because no imported files have been changed in `%s`.\n", cmd.Flag("check").Value.String())
-				os.Exit(0)
-			}
-
-			s, err := json.Marshal(deps)
-			if err != nil {
-				log.Fatalln("Formatting:", err)
-			}
-			fmt.Println(string(s))
-		},
+		Args:  workflowArgs,
 	}
 
-	cmd.Flags().StringP("check", "c", "", "git commit hash to check against")
+	check := cmd.Flags().StringP("check", "c", "", "git commit hash to check against")
+
+	cmd.Run = func(cmd *cli.Command, args []string) error {
+		var modFiles []string
+		if *check != "" {
+			var err error
+			modFiles, err = gitChangedFiles(*check)
+			if err != nil {
+				return fmt.Errorf("invoking git: %s", err)
+			}
+		}
+
+		dir, err := filepath.Abs(args[0])
+		if err != nil {
+			return fmt.Errorf("Loading environment: %s", err)
+		}
+
+		fi, err := os.Stat(dir)
+		if err != nil {
+			return fmt.Errorf("Loading environment: %s", err)
+		}
+
+		if !fi.IsDir() {
+			return fmt.Errorf("The argument must be an environment's directory, but this does not seem to be the case.")
+		}
+
+		deps, err := jsonnet.TransitiveImports(dir)
+		if err != nil {
+			return fmt.Errorf("Resolving imports: %s", err)
+		}
+
+		root, err := gitRoot()
+		if err != nil {
+			return fmt.Errorf("Invoking git: %s", err)
+		}
+		if modFiles != nil {
+			for _, m := range modFiles {
+				mod := filepath.Join(root, m)
+				if err != nil {
+					return err
+				}
+
+				for _, dep := range deps {
+					if mod == dep {
+						fmt.Printf("Rebuild required. File `%s` imports `%s`, which has been changed in `%s`.\n", args[0], dep, *check)
+						os.Exit(16)
+					}
+				}
+			}
+			fmt.Printf("Rebuild not required, because no imported files have been changed in `%s`.\n", *check)
+			os.Exit(0)
+		}
+
+		s, err := json.Marshal(deps)
+		if err != nil {
+			return fmt.Errorf("Formatting: %s", err)
+		}
+		fmt.Println(string(s))
+
+		return nil
+	}
 
 	return cmd
 }

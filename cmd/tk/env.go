@@ -10,27 +10,26 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/posener/complete"
-	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	"github.com/grafana/tanka/pkg/cli"
-	"github.com/grafana/tanka/pkg/cli/cmp"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-func envCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func envCmd() *cli.Command {
+	cmd := &cli.Command{
 		Use:   "env [action]",
 		Short: "manipulate environments",
 	}
-	cmd.PersistentFlags().Bool("json", false, "output in json format")
+
 	cmd.AddCommand(
 		envAddCmd(),
 		envSetCmd(),
 		envListCmd(),
 		envRemoveCmd(),
 	)
+
 	return cmd
 }
 
@@ -41,24 +40,22 @@ func envSettingsFlags(env *v1alpha1.Config, fs *pflag.FlagSet) {
 	fs.StringVar(&env.Spec.DiffStrategy, "diff-strategy", env.Spec.DiffStrategy, "specify diff-strategy. Automatically detected otherwise.")
 }
 
-func envSetCmd() *cobra.Command {
-	cmd := &cobra.Command{
+var kubectlContexts = cli.PredictFunc(
+	func(complete.Args) []string {
+		c, _ := client.Contexts()
+		return c
+	},
+)
+
+func envSetCmd() *cli.Command {
+	cmd := &cli.Command{
 		Use:   "set",
 		Short: "update properties of an environment",
-		Args:  cobra.ExactArgs(1),
-		Annotations: map[string]string{
-			"args":                      "baseDir",
-			"flags/server-from-context": "kubectlContexts",
+		Args:  cli.ArgsExact(1),
+		Predictors: complete.Flags{
+			"server-from-context": kubectlContexts,
 		},
 	}
-
-	// handler for server-from-context
-	cmp.Handlers.Add("kubectlContexts", complete.PredictFunc(
-		func(complete.Args) []string {
-			c, _ := client.Contexts()
-			return c
-		},
-	))
 
 	// flags
 	tmp := v1alpha1.Config{}
@@ -68,20 +65,20 @@ func envSetCmd() *cobra.Command {
 	name := cmd.Flags().String("name", "", "")
 	_ = cmd.Flags().MarkHidden("name")
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	cmd.Run = func(cmd *cli.Command, args []string) error {
 		if *name != "" {
-			log.Fatalln("It looks like you attempted to rename the environment using `--name`. However, this is not possible with Tanka, because the environments name is inferred from the directories name. To rename the environment, rename its directory instead.")
+			return fmt.Errorf("It looks like you attempted to rename the environment using `--name`. However, this is not possible with Tanka, because the environments name is inferred from the directories name. To rename the environment, rename its directory instead.")
 		}
 
 		path, err := filepath.Abs(args[0])
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		if cmd.Flags().Changed("server-from-context") {
 			server, err := client.IPFromContext(tmp.Spec.APIServer)
 			if err != nil {
-				log.Fatalf("Resolving IP from context: %s", err)
+				return fmt.Errorf("Resolving IP from context: %s", err)
 			}
 			tmp.Spec.APIServer = server
 		}
@@ -101,35 +98,36 @@ func envSetCmd() *cobra.Command {
 		}
 
 		if err := writeJSON(cfg, filepath.Join(path, "spec.json")); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+
+		return nil
 	}
 	return cmd
 }
 
-func envAddCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func envAddCmd() *cli.Command {
+	cmd := &cli.Command{
 		Use:   "add <path>",
 		Short: "create a new environment",
-		Args:  cobra.ExactArgs(1),
-		Annotations: map[string]string{
-			"args": "dirs",
-		},
+		Args:  cli.ArgsExact(1),
 	}
 	cfg := v1alpha1.New()
 	envSettingsFlags(cfg, cmd.Flags())
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	cmd.Run = func(cmd *cli.Command, args []string) error {
 		if cmd.Flags().Changed("server-from-context") {
 			server, err := client.IPFromContext(cfg.Spec.APIServer)
 			if err != nil {
-				log.Fatalf("Resolving IP from context: %s", err)
+				return fmt.Errorf("Resolving IP from context: %s", err)
 			}
 			cfg.Spec.APIServer = server
 		}
 
 		if err := addEnv(args[0], cfg); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+
+		return nil
 	}
 	return cmd
 }
@@ -138,7 +136,7 @@ func envAddCmd() *cobra.Command {
 func addEnv(dir string, cfg *v1alpha1.Config) error {
 	path, err := filepath.Abs(dir)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	if _, err := os.Stat(path); err != nil {
 		// folder does not exist
@@ -161,59 +159,55 @@ func addEnv(dir string, cfg *v1alpha1.Config) error {
 
 	// write spec.json
 	if err := writeJSON(cfg, filepath.Join(path, "spec.json")); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	// write main.jsonnet
 	if err := writeJSON(struct{}{}, filepath.Join(path, "main.jsonnet")); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	return nil
 }
 
-func envRemoveCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:     "remove <path>",
-		Aliases: []string{"rm"},
-		Short:   "delete an environment",
-		Annotations: map[string]string{
-			"args": "baseDir",
-		},
-		Run: func(cmd *cobra.Command, args []string) {
+func envRemoveCmd() *cli.Command {
+	return &cli.Command{
+		Use: "remove <path>",
+		// Aliases: []string{"rm"},
+		Short: "delete an environment",
+		Run: func(cmd *cli.Command, args []string) error {
 			for _, arg := range args {
 				path, err := filepath.Abs(arg)
 				if err != nil {
-					log.Fatalln("parsing environments name:", err)
+					return fmt.Errorf("parsing environments name: %s", err)
 				}
 				if err := cli.Confirm(fmt.Sprintf("Permanently removing the environment located at '%s'.", path), "yes"); err != nil {
-					log.Fatalln(err)
+					return err
 				}
 				if err := os.RemoveAll(path); err != nil {
-					log.Fatalf("Removing '%s': %s", path, err)
+					return fmt.Errorf("Removing '%s': %s", path, err)
 				}
 				fmt.Println("Removed", path)
 			}
+			return nil
 		},
 	}
 }
 
-func envListCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "list",
-		Aliases: []string{"ls"},
-		Short:   "list environments",
-		Args:    cobra.NoArgs,
+func envListCmd() *cli.Command {
+	cmd := &cli.Command{
+		Use: "list",
+		// Aliases: []string{"ls"},
+		Short: "list environments",
+		Args:  cli.ArgsNone(),
 	}
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	useJSON := cmd.Flags().Bool("json", false, "json output")
+
+	cmd.Run = func(cmd *cli.Command, args []string) error {
 		envs := []v1alpha1.Config{}
 		dirs := findBaseDirs()
-		useJSON, err := cmd.Flags().GetBool("json")
-		if err != nil {
-			// this err should never occur. Panic in case
-			panic(err)
-		}
+
 		for _, dir := range dirs {
 			env := setupConfiguration(dir)
 			if env == nil {
@@ -223,13 +217,13 @@ func envListCmd() *cobra.Command {
 			envs = append(envs, *env)
 		}
 
-		if useJSON {
+		if *useJSON {
 			j, err := json.Marshal(envs)
 			if err != nil {
-				log.Fatalln("Formatting as json:", j)
+				return fmt.Errorf("Formatting as json: %s", err)
 			}
 			fmt.Println(string(j))
-			return
+			return nil
 		}
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
@@ -239,6 +233,8 @@ func envListCmd() *cobra.Command {
 			fmt.Fprintf(w, f, e.Metadata.Name, e.Spec.Namespace, e.Spec.APIServer)
 		}
 		w.Flush()
+
+		return nil
 	}
 	return cmd
 }

@@ -2,29 +2,25 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"text/tabwriter"
 
 	"github.com/fatih/structs"
-	"github.com/spf13/cobra"
 
+	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
-func statusCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func statusCmd() *cli.Command {
+	cmd := &cli.Command{
 		Use:   "status <path>",
 		Short: "display an overview of the environment, including contents and metadata.",
-		Args:  cobra.ExactArgs(1),
-		Annotations: map[string]string{
-			"args": "baseDir",
-		},
+		Args:  workflowArgs,
 	}
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	cmd.Run = func(cmd *cli.Command, args []string) error {
 		status, err := tanka.Status(args[0])
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		context := status.Client.Kubeconfig.Context
@@ -43,6 +39,8 @@ func statusCmd() *cobra.Command {
 			fmt.Fprintf(w, f, r.Metadata().Namespace(), r.Kind(), r.Metadata().Name())
 		}
 		w.Flush()
+
+		return nil
 	}
 	return cmd
 }

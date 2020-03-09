@@ -7,11 +7,9 @@ import (
 	"regexp"
 
 	"github.com/posener/complete"
-	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	"github.com/grafana/tanka/pkg/cli"
-	"github.com/grafana/tanka/pkg/cli/cmp"
 	"github.com/grafana/tanka/pkg/kubernetes/util"
 	"github.com/grafana/tanka/pkg/tanka"
 )
@@ -34,22 +32,20 @@ func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	return &v
 }
 
-func applyCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func applyCmd() *cli.Command {
+	cmd := &cli.Command{
 		Use:   "apply <path>",
 		Short: "apply the configuration to the cluster",
-		Args:  cobra.ExactArgs(1),
-		Annotations: map[string]string{
-			"args": "baseDir",
-		},
+		Args:  workflowArgs,
 	}
+
 	vars := workflowFlags(cmd.Flags())
 	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
 	validate := cmd.Flags().Bool("validate", true, "validation of resources (kubectl --validate=false)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	getExtCode := extCodeParser(cmd.Flags())
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	cmd.Run = func(cmd *cli.Command, args []string) error {
 		err := tanka.Apply(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 			tanka.WithExtCode(getExtCode()),
@@ -58,23 +54,20 @@ func applyCmd() *cobra.Command {
 			tanka.WithApplyAutoApprove(*autoApprove),
 		)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	}
 	return cmd
 }
 
-func diffCmd() *cobra.Command {
-	// completion
-	cmp.Handlers.Add("diffStrategy", complete.PredictSet("native", "subset"))
-
-	cmd := &cobra.Command{
+func diffCmd() *cli.Command {
+	cmd := &cli.Command{
 		Use:   "diff <path>",
 		Short: "differences between the configuration and the cluster",
-		Args:  cobra.ExactArgs(1),
-		Annotations: map[string]string{
-			"args":                "baseDir",
-			"flags/diff-strategy": "diffStrategy",
+		Args:  workflowArgs,
+		Predictors: complete.Flags{
+			"diff-strategy": cli.PredictSet("native", "subset"),
 		},
 	}
 
@@ -87,7 +80,7 @@ func diffCmd() *cobra.Command {
 
 	getExtCode := extCodeParser(cmd.Flags())
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	cmd.Run = func(cmd *cli.Command, args []string) error {
 		changes, err := tanka.Diff(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 			tanka.WithExtCode(getExtCode()),
@@ -95,7 +88,7 @@ func diffCmd() *cobra.Command {
 			tanka.WithDiffSummarize(*summarize),
 		)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		if changes == nil {
@@ -111,29 +104,27 @@ func diffCmd() *cobra.Command {
 		}
 
 		os.Exit(ExitStatusDiff)
+		return nil
 	}
 
 	return cmd
 }
 
-func showCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func showCmd() *cli.Command {
+	cmd := &cli.Command{
 		Use:   "show <path>",
 		Short: "jsonnet as yaml",
-		Args:  cobra.ExactArgs(1),
-		Annotations: map[string]string{
-			"args": "baseDir",
-		},
+		Args:  workflowArgs,
 	}
 	vars := workflowFlags(cmd.Flags())
 	allowRedirect := cmd.Flags().Bool("dangerous-allow-redirect", false, "allow redirecting output to a file or a pipe.")
 	getExtCode := extCodeParser(cmd.Flags())
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	cmd.Run = func(cmd *cli.Command, args []string) error {
 		if !interactive && !*allowRedirect {
 			fmt.Fprintln(os.Stderr, `Redirection of the output of tk show is discouraged and disabled by default.
 If you want to export .yaml files for use with other tools, try 'tk export'.
 Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
-			return
+			return nil
 		}
 
 		pretty, err := tanka.Show(args[0],
@@ -141,10 +132,11 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 		)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		pageln(pretty.String())
+		return nil
 	}
 	return cmd
 }

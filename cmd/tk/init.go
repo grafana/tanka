@@ -8,48 +8,47 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/spf13/cobra"
-
+	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 // initCmd creates a new application
-func initCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func initCmd() *cli.Command {
+	cmd := &cli.Command{
 		Use:   "init",
 		Short: "Create the directory structure",
-		Args:  cobra.NoArgs,
+		Args:  cli.ArgsNone(),
 	}
 
 	force := cmd.Flags().BoolP("force", "f", false, "ignore the working directory not being empty")
 	installK8sLibFlag := cmd.Flags().Bool("k8s", true, "set to false to skip installation of k.libsonnet")
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	cmd.Run = func(cmd *cli.Command, args []string) error {
 		failed := false
 
 		files, err := ioutil.ReadDir(".")
 		if err != nil {
-			log.Fatalln("Error listing files:", err)
+			return fmt.Errorf("Error listing files: %s", err)
 		}
 		if len(files) > 0 && !*force {
-			log.Fatalln("Error: directory not empty. Use `-f` to force")
+			return fmt.Errorf("Error: directory not empty. Use `-f` to force")
 		}
 
 		if err := writeNewFile("jsonnetfile.json", "{}"); err != nil {
-			log.Fatalln("Error creating `jsonnetfile.json`:", err)
+			return fmt.Errorf("Error creating `jsonnetfile.json`: %s", err)
 		}
 
 		if err := os.Mkdir("vendor", os.ModePerm); err != nil {
-			log.Fatalln("Error creating `vendor/` folder:", err)
+			return fmt.Errorf("Error creating `vendor/` folder: %s", err)
 		}
 
 		if err := os.Mkdir("lib", os.ModePerm); err != nil {
-			log.Fatalln("Error creating `lib/` folder:", err)
+			return fmt.Errorf("Error creating `lib/` folder: %s", err)
 		}
 
 		cfg := v1alpha1.New()
 		if err := addEnv("environments/default", cfg); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		if *installK8sLibFlag {
@@ -64,6 +63,8 @@ func initCmd() *cobra.Command {
 		if failed {
 			log.Println("Errors occured while initializing the project. Check the above logs for details.")
 		}
+
+		return nil
 	}
 	return cmd
 }
