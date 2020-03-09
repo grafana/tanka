@@ -31,12 +31,23 @@ func findTarget(c *Command, args []string) (*Command, []string, error) {
 
 func (c *Command) child(name string) (*Command, bool) {
 	for _, child := range c.children {
-		if child.Name() != name {
-			continue
+		if child.Name() == name {
+			return child, true
 		}
-		return child, true
+		if child.hasAlias(name) {
+			return child, true
+		}
 	}
 	return nil, false
+}
+
+func (c *Command) hasAlias(name string) bool {
+	for _, a := range c.Aliases {
+		if name == a {
+			return true
+		}
+	}
+	return false
 }
 
 // argsMinusFirstX removes only the first x from args.  Otherwise, commands that look like

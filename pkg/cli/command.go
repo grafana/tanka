@@ -17,6 +17,8 @@ type Command struct {
 	// Usage line. First word must be the command name, everything else is
 	// displayed as-is.
 	Use string
+	// Aliases define alternative names for a command
+	Aliases []string
 
 	// Short help text, used for overviews
 	Short string

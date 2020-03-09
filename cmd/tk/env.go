@@ -172,9 +172,9 @@ func addEnv(dir string, cfg *v1alpha1.Config) error {
 
 func envRemoveCmd() *cli.Command {
 	return &cli.Command{
-		Use: "remove <path>",
-		// Aliases: []string{"rm"},
-		Short: "delete an environment",
+		Use:     "remove <path>",
+		Aliases: []string{"rm"},
+		Short:   "delete an environment",
 		Run: func(cmd *cli.Command, args []string) error {
 			for _, arg := range args {
 				path, err := filepath.Abs(arg)
@@ -196,10 +196,10 @@ func envRemoveCmd() *cli.Command {
 
 func envListCmd() *cli.Command {
 	cmd := &cli.Command{
-		Use: "list",
-		// Aliases: []string{"ls"},
-		Short: "list environments",
-		Args:  cli.ArgsNone(),
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "list environments",
+		Args:    cli.ArgsNone(),
 	}
 
 	useJSON := cmd.Flags().Bool("json", false, "json output")
