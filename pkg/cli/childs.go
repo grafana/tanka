@@ -2,7 +2,7 @@ package cli
 
 import "fmt"
 
-// AddChildren adds the supplied commands as subcommands.
+// AddCommand adds the supplied commands as subcommands.
 // This command is set as the parent of the new children.
 func (c *Command) AddCommand(childs ...*Command) {
 	for _, child := range childs {
