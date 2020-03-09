@@ -28,10 +28,10 @@ Just grab the latest version from there, download it and put somewhere in your
 ## From source
 
 In case the above won't work for you, you can try building the most recent
-code using `go get`:
+release using `go get`:
 
 ```bash
-$ go get -u github.com/grafana/tanka/cmd/tk
+$ GO111MODULE=on go get github.com/grafana/tanka/cmd/tk
 ```
 
 If that won't work either, compile by hand:
