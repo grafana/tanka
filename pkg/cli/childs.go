@@ -21,7 +21,7 @@ func findTarget(c *Command, args []string) (*Command, []string, error) {
 
 	cmd, ok := c.child(nextSubCmd)
 	switch {
-	case !ok:
+	case !ok && c.children != nil:
 		return nil, nil, c.help(fmt.Errorf("unknown subcommand `%s`", nextSubCmd))
 	case cmd != nil:
 		return findTarget(cmd, argsMinusFirstX(args, nextSubCmd))
