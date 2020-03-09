@@ -57,6 +57,9 @@ func (c *Command) Execute() error {
 		return c.parentPtr.Execute()
 	}
 
+	// add subcommand for install CLI completions
+	c.AddCommand(completionCmd(c.Use))
+
 	// add version flag to root command. If `findTarget` switches to a
 	// subcommand afterwards, showVersion will stay nil, causing the version not
 	// to be shown.

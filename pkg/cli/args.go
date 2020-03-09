@@ -59,7 +59,9 @@ func ValidateNone() ValidateFunc {
 
 // PredictNone predicts exactly nothing
 func PredictNone() complete.Predictor {
-	return complete.PredictNothing
+	return PredictFunc(func(args complete.Args) []string {
+		return nil
+	})
 }
 
 // Exact arguments

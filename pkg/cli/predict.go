@@ -1,10 +1,15 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/posener/complete"
+	"github.com/posener/complete/cmd/install"
 	"github.com/spf13/pflag"
 )
 
+// predict attempts to send <TAB> suggestions to bash.
+// Returns false if not running in a completion context
 func predict(c *Command) bool {
 	if c.Args == nil {
 		c.Args = ArgsAny()
@@ -14,6 +19,8 @@ func predict(c *Command) bool {
 	return cmp.Complete()
 }
 
+// createCmd returns the structure of the Command as a `complete.Command` for
+// the posener/complete library, including subcommands and flags.
 func createCmp(c *Command) complete.Command {
 	rootCmp := complete.Command{}
 
@@ -40,8 +47,8 @@ func createCmp(c *Command) complete.Command {
 
 	if c.children != nil {
 		rootCmp.Sub = make(complete.Commands)
-		for _, c := range c.children {
-			rootCmp.Sub[c.Name()] = createCmp(c)
+		for _, child := range c.children {
+			rootCmp.Sub[child.Name()] = createCmp(child)
 		}
 	}
 
@@ -52,4 +59,29 @@ func createCmp(c *Command) complete.Command {
 	}
 
 	return rootCmp
+}
+
+// completionCmd returns a command that installs native completions into the
+// users shell.
+func completionCmd(name string) *Command {
+	cmd := &Command{
+		Use:   "complete",
+		Short: "install CLI completions",
+		Long: fmt.Sprintf(`Registers the %s binary as its own completion handler.
+This allows for richer <TAB> suggestions, because the actual application logic can be used to compute them.
+Installation is done by injecting a line into your shells startup script (.bashrc, .zshrc, .fishrc)`,
+			name),
+		Args: ArgsNone(),
+	}
+
+	del := cmd.Flags().Bool("remove", false, "uninstall completions")
+
+	cmd.Run = func(cmd *Command, args []string) error {
+		if *del {
+			return install.Uninstall(name)
+		}
+		return install.Install(name)
+	}
+
+	return cmd
 }
