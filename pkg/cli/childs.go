@@ -4,7 +4,7 @@ import "fmt"
 
 // AddChildren adds the supplied commands as subcommands.
 // This command is set as the parent of the new children.
-func (c *Command) AddChildren(childs ...*Command) {
+func (c *Command) AddCommand(childs ...*Command) {
 	if c.children == nil {
 		c.children = make(map[string]*Command)
 	}

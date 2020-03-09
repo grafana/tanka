@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/posener/complete"
 	"github.com/spf13/pflag"
 )
 
@@ -26,6 +27,15 @@ type Command struct {
 	// The error is returned as-is from `Execute()`.
 	Run func(cmd *Command, args []string) error
 
+	// Validation + Completion
+	//
+	// Predict contains Predictors for flags. Defaults to
+	// `complete.PredictSomething` if unset.
+	// Use the flags name (not shorthand) as the key.
+	Predictors map[string]complete.Predictor
+	// Args is used to validate and complete positional arguments
+	Args Arguments
+
 	// internal fields
 	children  map[string]*Command
 	flags     *pflag.FlagSet
@@ -39,6 +49,10 @@ func (c *Command) Execute() error {
 	// Execute must be called on the top level command
 	if c.parentPtr != nil {
 		return c.parentPtr.Execute()
+	}
+
+	if predict(c) {
+		return nil
 	}
 
 	c, args, err := findTarget(c, os.Args[1:])
@@ -61,6 +75,10 @@ func (c *Command) Execute() error {
 		fallthrough
 	case c.Run == nil:
 		return helpErr(c)
+	}
+
+	if err := c.Args.Validate(c.Flags().Args()); err != nil {
+		return c.help(err)
 	}
 
 	return c.Run(c, c.Flags().Args())
