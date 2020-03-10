@@ -52,6 +52,12 @@ func (k Kubectl) Info() Info {
 	return k.info
 }
 
+// Close runs final cleanup:
+// - remove the nsPatch file
+func (k Kubectl) Close() error {
+	return os.RemoveAll(k.nsPatch)
+}
+
 // Namespaces of the cluster
 func (k Kubectl) Namespaces() (map[string]bool, error) {
 	cmd := k.ctl("get", "namespaces", "-o", "json")

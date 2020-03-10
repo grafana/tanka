@@ -29,6 +29,9 @@ type Client interface {
 	// fields of `Info` that cannot be stocked with valuable data, e.g.
 	// due to an error, shall be left nil.
 	Info() Info
+
+	// Close may run tasks once the client is no longer needed.
+	Close() error
 }
 
 // ApplyOpts allow to specify additional parameter for apply operations

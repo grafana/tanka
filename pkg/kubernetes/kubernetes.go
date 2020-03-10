@@ -56,6 +56,11 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	return &k, nil
 }
 
+// Close runs final cleanup
+func (k *Kubernetes) Close() error {
+	return k.ctl.Close()
+}
+
 // DiffOpts allow to specify additional parameters for diff operations
 type DiffOpts struct {
 	// Use `diffstat(1)` to create a histogram of the changes instead

@@ -12,7 +12,6 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/grafana/tanka/pkg/cli/cmp"
-	"github.com/grafana/tanka/pkg/defers"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -81,9 +80,6 @@ func main() {
 		}
 		_ = cmd.Help()
 	}
-
-	// run global defers at exit
-	defer defers.Run()
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {

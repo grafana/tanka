@@ -25,6 +25,7 @@ func Apply(baseDir string, mods ...Modifier) error {
 	if err != nil {
 		return err
 	}
+	defer kube.Close()
 
 	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{})
 	switch {
@@ -59,6 +60,7 @@ func Diff(baseDir string, mods ...Modifier) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer kube.Close()
 
 	return kube.Diff(p.Resources, opts.diff)
 }

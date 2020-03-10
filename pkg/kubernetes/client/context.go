@@ -10,8 +10,6 @@ import (
 
 	"github.com/stretchr/objx"
 	funk "github.com/thoas/go-funk"
-
-	"github.com/grafana/tanka/pkg/defers"
 )
 
 // findContext returns a valid context from $KUBECONFIG that uses the given
@@ -47,10 +45,6 @@ func writeNamespacePatch(context Context, defaultNamespace string) (string, erro
 	if err != nil {
 		return "", err
 	}
-
-	defers.Defer(func() {
-		os.RemoveAll(f.Name())
-	})
 
 	if err = ioutil.WriteFile(f.Name(), out, 0644); err != nil {
 		return "", err
