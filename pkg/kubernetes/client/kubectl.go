@@ -7,76 +7,55 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
-	"github.com/stretchr/objx"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 // Kubectl uses the `kubectl` command to operate on a Kubernetes cluster
 type Kubectl struct {
-	// kubeconfig
+	info Info
+
+	// internal fields
 	nsPatch string
-	context objx.Map
-	cluster objx.Map
-
-	info *Info
-
-	APIServer string
 }
 
 // New returns a instance of Kubectl with a correct context already discovered.
-func New(endpoint, namespace string) (*Kubectl, error) {
-	k := Kubectl{
-		APIServer: endpoint,
-	}
-	if err := k.setupContext(namespace); err != nil {
+func New(endpoint, defaultNamespace string) (*Kubectl, error) {
+	k := Kubectl{}
+
+	// discover context
+	var err error
+	k.info.Kubeconfig, err = findContext(endpoint)
+	if err != nil {
 		return nil, errors.Wrap(err, "finding usable context")
 	}
 
-	info, err := k.newInfo()
+	// query versions (requires context)
+	k.info.ClientVersion, k.info.ServerVersion, err = k.version()
 	if err != nil {
-		return nil, errors.Wrap(err, "gathering client info")
+		return nil, errors.Wrap(err, "obtaining versions")
 	}
-	k.info = info
+
+	// set the default namespace by injecting it into the context
+	nsPatch, err := writeNamespacePatch(k.info.Kubeconfig.Context, defaultNamespace)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating $KUBECONFIG patch for default namespace")
+	}
+	k.nsPatch = nsPatch
 
 	return &k, nil
 }
 
 // Info returns known informational data about the client and its environment
 func (k Kubectl) Info() Info {
-	return *k.info
+	return k.info
 }
 
-func (k Kubectl) newInfo() (*Info, error) {
-	client, server, err := k.version()
-	if err != nil {
-		return nil, errors.Wrap(err, "obtaining versions")
-	}
-
-	return &Info{
-		ClientVersion: client,
-		ServerVersion: server,
-
-		Context: k.context,
-		Cluster: k.cluster,
-	}, nil
-}
-
-// Version returns the version of kubectl and the Kubernetes api server
-func (k Kubectl) version() (client, server *semver.Version, err error) {
-	cmd := k.ctl("version", "-o", "json")
-	var buf bytes.Buffer
-	cmd.Stdout = &buf
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return nil, nil, err
-	}
-	vs := objx.MustFromJSON(buf.String())
-	client = semver.MustParse(vs.Get("clientVersion.gitVersion").MustStr())
-	server = semver.MustParse(vs.Get("serverVersion.gitVersion").MustStr())
-	return client, server, nil
+// Close runs final cleanup:
+// - remove the nsPatch file
+func (k Kubectl) Close() error {
+	return os.RemoveAll(k.nsPatch)
 }
 
 // Namespaces of the cluster

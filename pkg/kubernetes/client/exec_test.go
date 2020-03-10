@@ -11,7 +11,6 @@ import (
 const patchFile = "/tmp/tk-nsPatch.yaml"
 
 func TestPatchKubeconfig(t *testing.T) {
-
 	cases := []struct {
 		name string
 		env  []string

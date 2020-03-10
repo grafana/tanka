@@ -1,9 +1,6 @@
 package client
 
 import (
-	"github.com/Masterminds/semver"
-	"github.com/stretchr/objx"
-
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
@@ -32,18 +29,9 @@ type Client interface {
 	// fields of `Info` that cannot be stocked with valuable data, e.g.
 	// due to an error, shall be left nil.
 	Info() Info
-}
 
-// Info contains metadata about the client and its environment
-type Info struct {
-	// version of `kubectl`
-	ClientVersion *semver.Version
-
-	// version of the API server
-	ServerVersion *semver.Version
-
-	// used context and cluster from KUBECONFIG
-	Context, Cluster objx.Map
+	// Close may run tasks once the client is no longer needed.
+	Close() error
 }
 
 // ApplyOpts allow to specify additional parameter for apply operations

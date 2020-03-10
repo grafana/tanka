@@ -4,8 +4,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	funk "github.com/thoas/go-funk"
+
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 // Apply applies the given yaml to the cluster

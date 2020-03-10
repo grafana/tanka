@@ -23,7 +23,7 @@ func DiffName(m manifest.Manifest) string {
 	), "/", "-", -1)
 }
 
-// Diff computes the differences between the strings `is` and `should` using the
+// DiffStr computes the differences between the strings `is` and `should` using the
 // UNIX `diff(1)` utility.
 func DiffStr(name, is, should string) (string, error) {
 	dir, err := ioutil.TempDir("", "diff")

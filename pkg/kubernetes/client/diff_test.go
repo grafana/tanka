@@ -3,8 +3,9 @@ package client
 import (
 	"testing"
 
-	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 func TestSeparateMissingNamespace(t *testing.T) {

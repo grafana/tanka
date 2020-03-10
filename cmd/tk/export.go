@@ -11,8 +11,9 @@ import (
 
 	"text/template"
 
-	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/spf13/cobra"
+
+	"github.com/grafana/tanka/pkg/tanka"
 )
 
 func exportCmd() *cobra.Command {
@@ -57,7 +58,9 @@ func exportCmd() *cobra.Command {
 		// write each to a file
 		for _, m := range res {
 			buf := bytes.Buffer{}
-			tmpl.Execute(&buf, m)
+			if err := tmpl.Execute(&buf, m); err != nil {
+				log.Fatalln("executing name template:", err)
+			}
 			name := strings.Replace(buf.String(), "/", "-", -1)
 
 			data := m.String()

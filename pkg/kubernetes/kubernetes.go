@@ -4,10 +4,8 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/semver"
-	"github.com/fatih/color"
 	"github.com/pkg/errors"
 
-	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/kubernetes/util"
@@ -58,28 +56,9 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	return &k, nil
 }
 
-// ApplyOpts allow set additional parameters for the apply operation
-type ApplyOpts client.ApplyOpts
-
-// Apply receives a state object generated using `Reconcile()` and may apply it to the target system
-func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
-	alert := color.New(color.FgRed, color.Bold).SprintFunc()
-
-	info := k.ctl.Info()
-	if !opts.AutoApprove {
-		if err := cli.Confirm(
-			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
-				alert(k.Spec.Namespace),
-				alert(info.Cluster.Get("name").MustStr()),
-				alert(info.Cluster.Get("cluster.server").MustStr()),
-				alert(info.Context.Get("name").MustStr()),
-			),
-			"yes",
-		); err != nil {
-			return err
-		}
-	}
-	return k.ctl.Apply(state, client.ApplyOpts(opts))
+// Close runs final cleanup
+func (k *Kubernetes) Close() error {
+	return k.ctl.Close()
 }
 
 // DiffOpts allow to specify additional parameters for diff operations

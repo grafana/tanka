@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver"
+
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/kubernetes/util"
 )

@@ -18,6 +18,7 @@ func (e ErrDeprecated) Error() string {
 	return buf
 }
 
+// ErrMistypedField occurs that the field of the given name has the wrong type
 type ErrMistypedField struct {
 	name string
 	t    interface{}
@@ -27,6 +28,8 @@ func (e ErrMistypedField) Error() string {
 	return fmt.Sprintf("`%s` is of type %T but should be string", e.name, e.t)
 }
 
+// ErrNoSpec means that the given directory has no spec.json
+// This must not be fatal, some operations work without
 type ErrNoSpec struct {
 	name string
 }
