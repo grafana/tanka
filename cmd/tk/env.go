@@ -51,7 +51,7 @@ func envSetCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "set",
 		Short: "update properties of an environment",
-		Args:  cli.ArgsExact(1),
+		Args:  workflowArgs,
 		Predictors: complete.Flags{
 			"server-from-context": kubectlContexts,
 		},
@@ -175,6 +175,7 @@ func envRemoveCmd() *cli.Command {
 		Use:     "remove <path>",
 		Aliases: []string{"rm"},
 		Short:   "delete an environment",
+		Args:    workflowArgs,
 		Run: func(cmd *cli.Command, args []string) error {
 			for _, arg := range args {
 				path, err := filepath.Abs(arg)

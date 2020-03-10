@@ -94,9 +94,9 @@ func ArgsAny() Arguments {
 	}
 }
 
-// PredictAny predicts anything (usually files and directories)
+// PredictAny predicts any files/directories
 func PredictAny() complete.Predictor {
-	return complete.PredictAnything
+	return complete.PredictFiles("*")
 }
 
 // ValidateAny always approves

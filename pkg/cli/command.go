@@ -106,6 +106,9 @@ func (c *Command) Execute() error {
 	}
 
 	// validate args
+	if c.Args == nil {
+		c.Args = ArgsAny()
+	}
 	if err := c.Args.Validate(c.Flags().Args()); err != nil {
 		return c.help(err)
 	}
