@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -94,7 +95,10 @@ func ContextFromIP(apiServer string) (*Cluster, *Context, error) {
 		return nil, nil, err
 	}
 
-	if err := find(clusters, "cluster.server", apiServer, &cluster, ErrorNoCluster(apiServer)); err != nil {
+	err = find(clusters, "cluster.server", apiServer, &cluster)
+	if err == ErrorNoMatch {
+		return nil, nil, ErrorNoCluster(apiServer)
+	} else if err != nil {
 		return nil, nil, err
 	}
 
@@ -105,7 +109,10 @@ func ContextFromIP(apiServer string) (*Cluster, *Context, error) {
 		return nil, nil, err
 	}
 
-	if err := find(contexts, "context.cluster", cluster.Name, &context, ErrorNoContext(cluster.Name)); err != nil {
+	err = find(contexts, "context.cluster", cluster.Name, &context)
+	if err == ErrorNoMatch {
+		return nil, nil, ErrorNoContext(cluster.Name)
+	} else if err != nil {
 		return nil, nil, err
 	}
 
@@ -127,7 +134,10 @@ func IPFromContext(name string) (ip string, err error) {
 		return "", err
 	}
 
-	if err := find(contexts, "name", name, &context, ErrorNoContext(name)); err != nil {
+	err = find(contexts, "name", name, &context)
+	if err == ErrorNoMatch {
+		return "", ErrorNoContext(name)
+	} else if err != nil {
 		return "", err
 	}
 
@@ -139,9 +149,10 @@ func IPFromContext(name string) (ip string, err error) {
 	}
 
 	clusterName := context.Context.Cluster
-	if err := find(clusters, "name", clusterName, &cluster,
-		fmt.Errorf("no cluster named `%s` as required by context `%s` was found. Please check your $KUBECONFIG", clusterName, name),
-	); err != nil {
+	err = find(clusters, "name", clusterName, &cluster)
+	if err == ErrorNoMatch {
+		return "", fmt.Errorf("no cluster named `%s` as required by context `%s` was found. Please check your $KUBECONFIG", clusterName, name)
+	} else if err != nil {
 		return "", err
 	}
 
@@ -160,9 +171,12 @@ func tryMSISlice(v *objx.Value, what string) ([]map[string]interface{}, error) {
 	return data, nil
 }
 
+// ErrorNoMatch occurs when no item matched had the expected value
+var ErrorNoMatch error = errors.New("no matches found")
+
 // find attempts to find an object in list whose prop equals expected.
 // If found, the value is unmarshalled to ptr, otherwise errNotFound is returned.
-func find(list []map[string]interface{}, prop string, expected string, ptr interface{}, errNotFound error) error {
+func find(list []map[string]interface{}, prop string, expected string, ptr interface{}) error {
 	var findErr error
 	i := funk.Find(list, func(x map[string]interface{}) bool {
 		if findErr != nil {
@@ -183,7 +197,7 @@ func find(list []map[string]interface{}, prop string, expected string, ptr inter
 	}
 
 	if i == nil {
-		return errNotFound
+		return ErrorNoMatch
 	}
 
 	o := objx.New(i).MustJSON()
