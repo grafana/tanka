@@ -72,6 +72,10 @@ type DiffOpts struct {
 
 // Diff takes the desired state and returns the differences from the cluster
 func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
+	if _, err := k.ctl.Resources(); err != nil {
+		return nil, err
+	}
+
 	strategy := k.Spec.DiffStrategy
 	if opts.Strategy != "" {
 		strategy = opts.Strategy
