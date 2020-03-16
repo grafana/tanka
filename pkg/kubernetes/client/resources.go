@@ -38,7 +38,7 @@ type Resource struct {
 
 // Resources returns all API resources known to the server
 func (k Kubectl) Resources() (Resources, error) {
-	cmd := k.ctl("api-resources")
+	cmd := k.ctl("api-resources", "--cached")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = os.Stderr

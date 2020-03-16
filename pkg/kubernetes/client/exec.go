@@ -32,6 +32,10 @@ func (k Kubectl) ctl(action string, args ...string) *exec.Cmd {
 	cmd := kubectlCmd(argv...)
 	cmd.Env = patchKubeconfig(k.nsPatch, os.Environ())
 
+	if os.Getenv("TANKA_KUBECTL_TRACE") != "" {
+		fmt.Println(cmd.String())
+	}
+
 	return cmd
 }
 

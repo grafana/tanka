@@ -9,18 +9,11 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
-	"github.com/grafana/tanka/pkg/kubernetes/util"
 )
 
 // DiffServerSide takes the desired state and computes the differences on the
 // server, returning them in `diff(1)` format
 func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
-	ns, err := k.Namespaces()
-	if err != nil {
-		return nil, err
-	}
-
-	ready, missing := separateMissingNamespace(data, ns)
 	cmd := k.ctl("diff", "-f", "-")
 
 	raw := bytes.Buffer{}
@@ -29,28 +22,19 @@ func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
 	fw := FilterWriter{filters: []*regexp.Regexp{regexp.MustCompile(`exit status \d`)}}
 	cmd.Stderr = &fw
 
-	cmd.Stdin = strings.NewReader(ready.String())
+	cmd.Stdin = strings.NewReader(data.String())
 
-	err = cmd.Run()
+	err := cmd.Run()
 	if diffErr := parseDiffErr(err, fw.buf, k.Info().ClientVersion); diffErr != nil {
 		return nil, diffErr
 	}
 
 	s := raw.String()
-	for _, r := range missing {
-		d, err := util.DiffStr(util.DiffName(r), "", r.String())
-		if err != nil {
-			return nil, err
-		}
-		s += d
+	if s == "" {
+		return nil, nil
 	}
 
-	if s != "" {
-		return &s, nil
-	}
-
-	// no diff -> nil
-	return nil, nil
+	return &s, nil
 }
 
 // parseDiffErr handles the exit status code of `kubectl diff`. It returns err
@@ -84,16 +68,4 @@ func parseDiffErr(err error, stderr string, version *semver.Version) error {
 
 	// differences found is not an error
 	return nil
-}
-
-func separateMissingNamespace(in manifest.List, exists map[string]bool) (ready, missingNamespace manifest.List) {
-	for _, r := range in {
-		// namespace does not exist, also ignore implicit default ("")
-		if ns := r.Metadata().Namespace(); ns != "" && !exists[ns] {
-			missingNamespace = append(missingNamespace, r)
-			continue
-		}
-		ready = append(ready, r)
-	}
-	return
 }

@@ -6,20 +6,48 @@ import (
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/kubernetes/util"
+	"github.com/pkg/errors"
 )
 
 // Diff takes the desired state and returns the differences from the cluster
 func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
-	if _, err := k.ctl.Resources(); err != nil {
-		return nil, err
+	// required for separating
+	namespaces, err := k.ctl.Namespaces()
+	if err != nil {
+		return nil, errors.Wrap(err, "listing namespaces")
+	}
+	resources, err := k.ctl.Resources()
+	if err != nil {
+		return nil, errors.Wrap(err, "listing known api-resources")
 	}
 
-	differ, err := k.differ(opts.Strategy)
+	// separate resources in groups
+	//
+	// soon: resources that have unmet dependencies that will be met during
+	// apply. These will be diffed statically, because checking with the cluster
+	// would cause an error
+	//
+	// live: all other resources
+	live, soon := separate(state, k.Spec.Namespace, separateOpts{
+		namespaces: namespaces,
+		resources:  resources,
+	})
+
+	// differ for live resources
+	liveDiff, err := k.differ(opts.Strategy)
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := differ(state)
+	// reports all resources as new
+	staticDiff := StaticDiffer(true)
+
+	// run the diff
+	d, err := multiDiff{
+		{differ: liveDiff, state: live},
+		{differ: staticDiff, state: soon},
+	}.diff()
+
 	switch {
 	case err != nil:
 		return nil, err
@@ -104,4 +132,53 @@ func (k *Kubernetes) differ(override string) (Differ, error) {
 	}
 
 	return d, nil
+}
+
+func StaticDiffer(create bool) Differ {
+	return func(state manifest.List) (*string, error) {
+		s := ""
+		for _, m := range state {
+			is, should := m.String(), ""
+			if create {
+				is, should = should, is
+			}
+
+			d, err := util.DiffStr(util.DiffName(m), is, should)
+			if err != nil {
+				return nil, err
+			}
+			s += d
+		}
+
+		if s == "" {
+			return nil, nil
+		}
+
+		return &s, nil
+	}
+}
+
+type multiDiff []struct {
+	differ Differ
+	state  manifest.List
+}
+
+func (m multiDiff) diff() (*string, error) {
+	diff := ""
+	for _, d := range m {
+		s, err := d.differ(d.state)
+		if err != nil {
+			return nil, err
+		}
+
+		if s == nil {
+			continue
+		}
+		diff += *s
+	}
+
+	if diff == "" {
+		return nil, nil
+	}
+	return &diff, nil
 }
