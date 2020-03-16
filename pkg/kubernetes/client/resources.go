@@ -61,21 +61,26 @@ func UnmarshalTable(raw string, ptr interface{}) error {
 	raw = strings.TrimSpace(raw)
 
 	lines := strings.Split(raw, "\n")
-	if len(lines) < 2 {
-		return errors.New("table has less than 2 lines. No content found")
+	if len(lines) == 0 {
+		return ErrorNoHeader
 	}
 
 	headerStr := lines[0]
+	// headers are ALL-CAPS
+	if !regexp.MustCompile(`^[A-Z\s]+$`).MatchString(headerStr) {
+		return ErrorNoHeader
+	}
+
 	lines = lines[1:]
 
 	spc := regexp.MustCompile(`[A-Z]+\s*`)
 	header := spc.FindAllString(headerStr, -1)
 
-	var tbl []map[string]string
+	tbl := make([]map[string]string, 0, len(lines))
 	for _, l := range lines {
 		elems := splitRow(l, header)
 		if len(elems) != len(header) {
-			return fmt.Errorf("header and row have different element count: %v != %v", len(header), len(elems))
+			return ErrorElementsMismatch{Header: len(header), Row: len(elems)}
 		}
 
 		row := make(map[string]string)
@@ -92,6 +97,19 @@ func UnmarshalTable(raw string, ptr interface{}) error {
 	}
 
 	return json.Unmarshal(j, ptr)
+}
+
+// ErrorNoHeader occurs when the table lacks an ALL-CAPS header
+var ErrorNoHeader = fmt.Errorf("table has no header")
+
+// ErrorElementsMismatch occurs when a row has a different count of elements
+// than it's header
+type ErrorElementsMismatch struct {
+	Header, Row int
+}
+
+func (e ErrorElementsMismatch) Error() string {
+	return fmt.Sprintf("header and row have different element count: %v != %v", e.Header, e.Row)
 }
 
 func splitRow(s string, header []string) (elems []string) {
