@@ -29,7 +29,7 @@ func (r Resources) Namespaced(m manifest.Manifest) bool {
 
 // Resource is a Kubernetes API Resource
 type Resource struct {
-	ApiGroup   string `json:"APIGROUP"`
+	APIGroup   string `json:"APIGROUP"`
 	Kind       string `json:"KIND"`
 	Name       string `json:"NAME"`
 	Namespaced bool   `json:"NAMESPACED,string"`

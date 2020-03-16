@@ -134,6 +134,8 @@ func (k *Kubernetes) differ(override string) (Differ, error) {
 	return d, nil
 }
 
+// StaticDiffer returns a differ that reports all resources as either created or
+// deleted.
 func StaticDiffer(create bool) Differ {
 	return func(state manifest.List) (*string, error) {
 		s := ""
@@ -158,6 +160,8 @@ func StaticDiffer(create bool) Differ {
 	}
 }
 
+// multiDiff runs multiple differs (in series). In the future it might be worth
+// parallelizing this.
 type multiDiff []struct {
 	differ Differ
 	state  manifest.List

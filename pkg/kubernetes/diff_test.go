@@ -110,10 +110,10 @@ func TestSeparate(t *testing.T) {
 	// static set of resources for this test (usually obtained using
 	// `client.Resources()`)
 	staticResources := client.Resources{
-		{ApiGroup: "", Kind: "Namespace", Namespaced: false},
-		{ApiGroup: "apps/v1", Kind: "Deployment", Namespaced: true},
-		{ApiGroup: "rbac.authorization.k8s.io/v1", Kind: "ClusterRole", Namespaced: false},
-		{ApiGroup: "rbac.authorization.k8s.io/v1", Kind: "ClusterRoleBinding", Namespaced: false},
+		{APIGroup: "", Kind: "Namespace", Namespaced: false},
+		{APIGroup: "apps/v1", Kind: "Deployment", Namespaced: true},
+		{APIGroup: "rbac.authorization.k8s.io/v1", Kind: "ClusterRole", Namespaced: false},
+		{APIGroup: "rbac.authorization.k8s.io/v1", Kind: "ClusterRoleBinding", Namespaced: false},
 	}
 
 	for _, c := range cases {

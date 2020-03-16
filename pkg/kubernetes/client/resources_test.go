@@ -20,10 +20,10 @@ func TestUnmarshalTable(t *testing.T) {
 			name: "normal",
 			tbl:  strings.TrimSpace(tblNormal),
 			want: &Resources{
-				{ApiGroup: "apps", Name: "Deployment", Namespaced: true},
-				{ApiGroup: "networking", Name: "Ingress", Namespaced: true},
-				{ApiGroup: "", Name: "Namespace", Namespaced: false},
-				{ApiGroup: "extensions", Name: "DaemonSet", Namespaced: true},
+				{APIGroup: "apps", Name: "Deployment", Namespaced: true},
+				{APIGroup: "networking", Name: "Ingress", Namespaced: true},
+				{APIGroup: "", Name: "Namespace", Namespaced: false},
+				{APIGroup: "extensions", Name: "DaemonSet", Namespaced: true},
 			},
 			dest: &Resources{},
 		},
@@ -32,7 +32,7 @@ func TestUnmarshalTable(t *testing.T) {
 			tbl:  strings.TrimSpace(tblEmpty),
 			want: &Resources{},
 			dest: &Resources{
-				{ApiGroup: "apps", Name: "Deployment", Namespaced: true},
+				{APIGroup: "apps", Name: "Deployment", Namespaced: true},
 			},
 		},
 		{
