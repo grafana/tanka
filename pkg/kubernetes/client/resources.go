@@ -19,11 +19,9 @@ type Resources []Resource
 // Namespaced returns whether a resource is namespace-specific or cluster-wide
 func (r Resources) Namespaced(m manifest.Manifest) bool {
 	for _, res := range r {
-		if !m.Kind() == res.Kind {
-			continue
+		if m.Kind() == res.Kind {
+			return res.Namespaced
 		}
-
-		return true
 	}
 
 	return false
