@@ -24,6 +24,7 @@ type Client interface {
 
 	// Namespaces the cluster currently has
 	Namespaces() (map[string]bool, error)
+	// Resources returns all known api-resources of the cluster
 	Resources() (Resources, error)
 
 	// Info returns known informational data about the client. Best effort based,
