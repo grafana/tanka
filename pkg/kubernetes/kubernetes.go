@@ -7,7 +7,6 @@ import (
 
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
-	"github.com/grafana/tanka/pkg/kubernetes/util"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
@@ -67,28 +66,6 @@ type DiffOpts struct {
 
 	// Set the diff-strategy. If unset, the value set in the spec is used
 	Strategy string
-}
-
-// Diff takes the desired state and returns the differences from the cluster
-func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
-	strategy := k.Spec.DiffStrategy
-	if opts.Strategy != "" {
-		strategy = opts.Strategy
-	}
-
-	d, err := k.differs[strategy](state)
-	switch {
-	case err != nil:
-		return nil, err
-	case d == nil:
-		return nil, nil
-	}
-
-	if opts.Summarize {
-		return util.Diffstat(*d)
-	}
-
-	return d, nil
 }
 
 // Info about the client, etc.
