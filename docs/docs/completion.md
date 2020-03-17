@@ -9,10 +9,10 @@ Tanka supports CLI completion for `bash`, `zsh` and `fish`.
 
 ```bash
 # Install
-$ tk --install-completion
+$ tk complete
 
 # Uninstall
-$ tk --uninstall-completion
+$ tk complete --remove
 ```
 
 As tanka is its own completion handler, it needs to hook into your shell's

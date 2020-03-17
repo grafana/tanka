@@ -1,17 +1,15 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/posener/complete"
-	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/grafana/tanka/pkg/cli/cmp"
+	"github.com/go-clix/cli"
+
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -29,16 +27,12 @@ var (
 
 func main() {
 	log.SetFlags(0)
-	rootCmd := &cobra.Command{
-		Use:              "tk",
-		Short:            "tanka <3 jsonnet",
-		Version:          Version,
-		TraverseChildren: true,
-	}
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 
-	// Subcommands
-	cobra.EnableCommandSorting = false
+	rootCmd := &cli.Command{
+		Use:     "tk",
+		Short:   "tanka <3 jsonnet",
+		Version: Version,
+	}
 
 	// workflow commands
 	rootCmd.AddCommand(
@@ -60,30 +54,9 @@ func main() {
 		toolCmd(),
 	)
 
-	// completion
-	cmp.Handlers.Add("baseDir", complete.PredictFunc(
-		func(complete.Args) []string {
-			return findBaseDirs()
-		},
-	))
-
-	c := complete.New("tk", cmp.Create(rootCmd))
-	c.InstallName = "install-completion"
-	c.UninstallName = "uninstall-completion"
-	fs := &flag.FlagSet{}
-	c.AddFlags(fs)
-	rootCmd.Flags().AddGoFlagSet(fs)
-
-	rootCmd.Run = func(cmd *cobra.Command, args []string) {
-		if c.Complete() {
-			return
-		}
-		_ = cmd.Help()
-	}
-
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln("Ouch:", err)
+		log.Fatalln(err)
 	}
 }
 

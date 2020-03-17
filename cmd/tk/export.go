@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,39 +12,40 @@ import (
 
 	"text/template"
 
-	"github.com/spf13/cobra"
+	"github.com/go-clix/cli"
 
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
-func exportCmd() *cobra.Command {
-	cmd := &cobra.Command{
+func exportCmd() *cli.Command {
+	args := workflowArgs
+	args.Validator = cli.ValidateExact(2)
+
+	cmd := &cli.Command{
 		Use:   "export <environment> <outputDir>",
 		Short: "write each resources as a YAML file",
-		Args:  cobra.ExactArgs(2),
-		Annotations: map[string]string{
-			"args": "baseDir",
-		},
+		Args:  args,
 	}
+
 	vars := workflowFlags(cmd.Flags())
 	getExtCode := extCodeParser(cmd.Flags())
 	format := cmd.Flags().String("format", "{{.apiVersion}}.{{.kind}}-{{.metadata.name}}", "https://tanka.dev/exporting#filenames")
 
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	cmd.Run = func(cmd *cli.Command, args []string) error {
 		// dir must be empty
 		to := args[1]
 		empty, err := dirEmpty(to)
 		if err != nil {
-			log.Fatalln("Checking target dir:", err)
+			return fmt.Errorf("Checking target dir: %s", err)
 		}
 		if !empty {
-			log.Fatalln("Target dir", to, "not empty. Aborting.")
+			return fmt.Errorf("Target dir `%s` not empty. Aborting.", to)
 		}
 
 		// exit early if the template is bad
 		tmpl, err := template.New("").Parse(*format)
 		if err != nil {
-			log.Fatalln("Parsing name format:", err)
+			return fmt.Errorf("Parsing name format: %s", err)
 		}
 
 		// get the manifests
@@ -52,7 +54,7 @@ func exportCmd() *cobra.Command {
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 		)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		// write each to a file
@@ -65,9 +67,11 @@ func exportCmd() *cobra.Command {
 
 			data := m.String()
 			if err := ioutil.WriteFile(filepath.Join(to, name+".yaml"), []byte(data), 0644); err != nil {
-				log.Fatalln("Writing manifest:", err)
+				return fmt.Errorf("Writing manifest: %s", err)
 			}
 		}
+
+		return nil
 	}
 	return cmd
 }
