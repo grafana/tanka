@@ -60,29 +60,31 @@ func (c *Command) Execute() error {
 	// add subcommand for install CLI completions
 	c.AddCommand(completionCmd(c.Use))
 
-	// add version flag to root command. If `findTarget` switches to a
-	// subcommand afterwards, showVersion will stay nil, causing the version not
-	// to be shown.
-	var showVersion *bool
-	if c.Version != "" {
-		showVersion = c.Flags().Bool("version", false, fmt.Sprintf("version for %s", c.Use))
-	}
-
 	// exit if in bash completion context
 	if predict(c) {
 		return nil
 	}
 
 	// find the correct (sub)command
-	c, args, err := findTarget(c, os.Args[1:])
+	command, args, err := findTarget(c, os.Args[1:])
 	if err != nil {
 		return err
 	}
 
+	return command.execute(args)
+}
+
+func (c *Command) execute(args []string) error {
 	// add help flag
 	var showHelp *bool
 	if c.Flags().Lookup("help") == nil {
 		showHelp = initHelpFlag(c)
+	}
+
+	// add version flag, but only to the root command.
+	var showVersion *bool
+	if c.parentPtr == nil && c.Version != "" {
+		showVersion = c.Flags().Bool("version", false, fmt.Sprintf("version for %s", c.Use))
 	}
 
 	// parse flags
@@ -90,8 +92,7 @@ func (c *Command) Execute() error {
 		return c.help(err)
 	}
 
-	// show version if requested. This only happens if findTarget returned the
-	// root command.
+	// show version if requested.
 	if showVersion != nil && *showVersion {
 		log.Printf("%s version %s", c.Use, c.Version)
 		return nil
