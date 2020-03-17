@@ -25,12 +25,12 @@ func (e ErrorUnknownResource) Error() string {
 type ErrorNoContext string
 
 func (e ErrorNoContext) Error() string {
-	return fmt.Sprintf("no context named `%s` was found. Please check your $KUBECONFIG", e)
+	return fmt.Sprintf("no context named `%s` was found. Please check your $KUBECONFIG", string(e))
 }
 
 // ErrorNoCluster means that the cluster that was searched for couldn't be found
 type ErrorNoCluster string
 
 func (e ErrorNoCluster) Error() string {
-	return fmt.Sprintf("no cluster that matches the apiServer `%s` was found. Please check your $KUBECONFIG", e)
+	return fmt.Sprintf("no cluster that matches the apiServer `%s` was found. Please check your $KUBECONFIG", string(e))
 }
