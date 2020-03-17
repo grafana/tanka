@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/semver"
-	"github.com/pkg/errors"
 
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -32,7 +31,7 @@ func New(s v1alpha1.Spec) (*Kubernetes, error) {
 	// setup client
 	ctl, err := client.New(s.APIServer, s.Namespace)
 	if err != nil {
-		return nil, errors.Wrap(err, "creating client")
+		return nil, err
 	}
 
 	// setup diffing
