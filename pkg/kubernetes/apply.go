@@ -5,9 +5,9 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/term"
 )
 
 // ApplyOpts allow set additional parameters for the apply operation
@@ -20,7 +20,7 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 	cluster := k.ctl.Info().Kubeconfig.Cluster
 	context := k.ctl.Info().Kubeconfig.Context
 	if !opts.AutoApprove {
-		if err := cli.Confirm(
+		if err := term.Confirm(
 			fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
 				alert(k.Spec.Namespace),
 				alert(cluster.Name),

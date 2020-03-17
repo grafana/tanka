@@ -9,9 +9,11 @@ import (
 	"github.com/posener/complete"
 	"github.com/spf13/pflag"
 
-	"github.com/grafana/tanka/pkg/cli"
+	"github.com/go-clix/cli"
+
 	"github.com/grafana/tanka/pkg/kubernetes/util"
 	"github.com/grafana/tanka/pkg/tanka"
+	"github.com/grafana/tanka/pkg/term"
 )
 
 // special exit codes for tk diff
@@ -97,7 +99,7 @@ func diffCmd() *cli.Command {
 		}
 
 		if interactive {
-			r := cli.Colordiff(*changes)
+			r := term.Colordiff(*changes)
 			fPageln(r)
 		} else {
 			fmt.Println(*changes)

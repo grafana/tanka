@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/grafana/tanka/pkg/cli"
+	"github.com/go-clix/cli"
 	"github.com/posener/complete"
 )
 

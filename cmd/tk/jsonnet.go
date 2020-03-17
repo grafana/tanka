@@ -8,7 +8,8 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/grafana/tanka/pkg/cli"
+	"github.com/go-clix/cli"
+
 	"github.com/grafana/tanka/pkg/tanka"
 )
 

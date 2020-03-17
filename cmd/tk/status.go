@@ -7,7 +7,8 @@ import (
 
 	"github.com/fatih/structs"
 
-	"github.com/grafana/tanka/pkg/cli"
+	"github.com/go-clix/cli"
+
 	"github.com/grafana/tanka/pkg/tanka"
 )
 

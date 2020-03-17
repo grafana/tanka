@@ -6,10 +6,11 @@ require (
 	github.com/Masterminds/semver v1.4.2
 	github.com/fatih/color v1.7.0
 	github.com/fatih/structs v1.1.0
+	github.com/go-clix/cli v0.1.0
 	github.com/google/go-jsonnet v0.14.1-0.20200127133145-399a61ca3178
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/posener/complete v1.2.1
+	github.com/posener/complete v1.2.3
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/objx v0.2.0
 	github.com/stretchr/testify v1.4.0

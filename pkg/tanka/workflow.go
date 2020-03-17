@@ -3,9 +3,9 @@ package tanka
 import (
 	"fmt"
 
-	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/term"
 )
 
 // Apply parses the environment at the given directory (a `baseDir`) and applies
@@ -37,7 +37,7 @@ func Apply(baseDir string, mods ...Modifier) error {
 		diff = &tmp
 	}
 
-	b := cli.Colordiff(*diff)
+	b := term.Colordiff(*diff)
 	fmt.Print(b.String())
 
 	return kube.Apply(p.Resources, opts.apply)

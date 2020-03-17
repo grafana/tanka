@@ -8,13 +8,14 @@ import (
 	"path/filepath"
 	"text/tabwriter"
 
+	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
 	"github.com/posener/complete"
 	"github.com/spf13/pflag"
 
-	"github.com/grafana/tanka/pkg/cli"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/grafana/tanka/pkg/term"
 )
 
 func envCmd() *cli.Command {
@@ -182,7 +183,7 @@ func envRemoveCmd() *cli.Command {
 				if err != nil {
 					return fmt.Errorf("parsing environments name: %s", err)
 				}
-				if err := cli.Confirm(fmt.Sprintf("Permanently removing the environment located at '%s'.", path), "yes"); err != nil {
+				if err := term.Confirm(fmt.Sprintf("Permanently removing the environment located at '%s'.", path), "yes"); err != nil {
 					return err
 				}
 				if err := os.RemoveAll(path); err != nil {
