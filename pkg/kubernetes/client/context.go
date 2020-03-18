@@ -46,6 +46,7 @@ func writeNamespacePatch(context Context, defaultNamespace string) (string, erro
 	if err != nil {
 		return "", err
 	}
+
 	if err = ioutil.WriteFile(f.Name(), out, 0644); err != nil {
 		return "", err
 	}
