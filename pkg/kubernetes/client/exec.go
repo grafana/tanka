@@ -41,8 +41,7 @@ func patchKubeconfig(file string, e []string) []string {
 	if _, ok := env["KUBECONFIG"]; !ok {
 		env["KUBECONFIG"] = filepath.Join(homeDir(), ".kube", "config") // kubectl default
 	}
-	env["KUBECONFIG"] = fmt.Sprintf("%s:%s", file, env["KUBECONFIG"])
-
+	env["KUBECONFIG"] = fmt.Sprintf("%s%s%s", file, string(os.PathListSeparator), env["KUBECONFIG"])
 	return env.render()
 }
 
