@@ -31,18 +31,18 @@ func New(endpoint, defaultNamespace string) (*Kubectl, error) {
 		return nil, errors.Wrap(err, "finding usable context")
 	}
 
-	// query versions (requires context)
-	k.info.ClientVersion, k.info.ServerVersion, err = k.version()
-	if err != nil {
-		return nil, errors.Wrap(err, "obtaining versions")
-	}
-
 	// set the default namespace by injecting it into the context
 	nsPatch, err := writeNamespacePatch(k.info.Kubeconfig.Context, defaultNamespace)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating $KUBECONFIG patch for default namespace")
 	}
 	k.nsPatch = nsPatch
+
+	// query versions (requires context)
+	k.info.ClientVersion, k.info.ServerVersion, err = k.version()
+	if err != nil {
+		return nil, errors.Wrap(err, "obtaining versions")
+	}
 
 	return &k, nil
 }
