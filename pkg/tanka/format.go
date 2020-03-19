@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -22,17 +23,26 @@ type FormatOpts struct {
 	// will be reformatted in place.
 	OutFn OutFn
 
-	// Whether to report changes in the return error. Make sure to set OutFn to
-	// something non-nil if you don't want your files reformatted in-place.
+	// Test specifies whether to report changes in the return error. Make sure
+	// to set OutFn to something non-nil if you don't want your files
+	// reformatted in-place.
 	Test bool
+
+	// PrintNames causes all filenames to be printed
+	PrintNames bool
 }
 
 // OutFn is a function that receives the reformatted file for further action,
 // like persisting to disc
 type OutFn func(name, content string) error
 
-// Format takes files or directories, searches all Jsonnet files and
-// reformats them.
+// VerboseFn is used for printing additional information. Expected to behave
+// similar to fmt.Println
+type VerboseFn func(...interface{})
+
+// Format takes files or directories, searches all Jsonnet files and reformats
+// them. In case all files are already properly formatted, ErrorAlreadyFormatted
+// is returned.
 func Format(fds []string, opts *FormatOpts) error {
 	var paths []string
 	for _, f := range fds {
@@ -50,6 +60,11 @@ func Format(fds []string, opts *FormatOpts) error {
 			return ioutil.WriteFile(name, []byte(content), 0644)
 		}
 	}
+	// no verbose fn? then not verbose
+	printFn := func(...interface{}) (int, error) { return 0, nil }
+	if opts.PrintNames {
+		printFn = fmt.Println
+	}
 
 	var changed []string
 	for _, p := range paths {
@@ -64,7 +79,10 @@ func Format(fds []string, opts *FormatOpts) error {
 		}
 
 		if string(content) != formatted {
+			printFn("fmt", p)
 			changed = append(changed, p)
+		} else {
+			printFn("ok ", p)
 		}
 
 		if err := outFn(p, formatted); err != nil {
@@ -72,8 +90,14 @@ func Format(fds []string, opts *FormatOpts) error {
 		}
 	}
 
-	if opts.Test && len(changed) != 0 {
+	if opts.Test && len(changed) > 0 {
+		printFn() // newline to separate from verbose output
 		return ErrorNotFormatted{Files: changed}
+	}
+
+	if len(changed) == 0 {
+		printFn() // newline to separate from verbose output
+		return ErrorAlreadyFormatted
 	}
 
 	return nil
@@ -121,6 +145,11 @@ func findFiles(target string, excludes []glob.Glob) ([]string, error) {
 
 	return files, nil
 }
+
+// ErrorAlreadyFormatted means that all found Jsonnet files are already
+// formatted and no action was required. This is purely informative and not
+// fatal.
+var ErrorAlreadyFormatted = errors.New("All specified files were already formatted. No changes were made")
 
 // ErrorNotFormatted means that one or more files need to be reformatted
 type ErrorNotFormatted struct {
