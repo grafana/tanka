@@ -149,7 +149,7 @@ func findFiles(target string, excludes []glob.Glob) ([]string, error) {
 // ErrorAlreadyFormatted means that all found Jsonnet files are already
 // formatted and no action was required. This is purely informative and not
 // fatal.
-var ErrorAlreadyFormatted = errors.New("All specified files were already formatted. No changes were made")
+var ErrorAlreadyFormatted = errors.New("All discovered files were already formatted. No changes were made")
 
 // ErrorNotFormatted means that one or more files need to be reformatted
 type ErrorNotFormatted struct {

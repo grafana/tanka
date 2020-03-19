@@ -80,7 +80,7 @@ func installK8sLib() error {
 		"github.com/grafana/jsonnet-libs/ksonnet-util",
 	}
 
-	if err := writeNewFile("lib/k.libsonnet", `import "ksonnet.beta.4/k.libsonnet"`); err != nil {
+	if err := writeNewFile("lib/k.libsonnet", "import 'ksonnet.beta.4/k.libsonnet'\n"); err != nil {
 		return err
 	}
 
