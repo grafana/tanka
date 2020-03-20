@@ -30,9 +30,9 @@ type FormatOpts struct {
 // like persisting to disc
 type OutFn func(name, content string) error
 
-// Format takes a list of files and directories, processes them and returns
+// FormatFiles takes a list of files and directories, processes them and returns
 // which files were reformatted and perhaps an error.
-func Format(fds []string, opts *FormatOpts) ([]string, error) {
+func FormatFiles(fds []string, opts *FormatOpts) ([]string, error) {
 	var paths []string
 	for _, f := range fds {
 		fs, err := findFiles(f, opts.Excludes)
@@ -63,10 +63,7 @@ func Format(fds []string, opts *FormatOpts) ([]string, error) {
 			return nil, err
 		}
 
-		formatted, err := formatter.Format(p, string(content), formatter.DefaultOptions())
-		if err != nil {
-			return nil, err
-		}
+		formatted, err := Format(p, string(content))
 
 		if string(content) != formatted {
 			printFn("fmt", p)
@@ -81,6 +78,12 @@ func Format(fds []string, opts *FormatOpts) ([]string, error) {
 	}
 
 	return changed, nil
+}
+
+// Format takes a file's name and contents and returns them in properly
+// formatted. The file does not have to exist on disk.
+func Format(filename string, content string) (string, error) {
+	return formatter.Format(filename, content, formatter.DefaultOptions())
 }
 
 // findFiles takes a file / directory and finds all Jsonnet files
