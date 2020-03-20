@@ -18,20 +18,20 @@ type FormatOpts struct {
 	// files
 	Excludes []glob.Glob
 
-	// OutFn receives the reformatted file and it's name. If left nil, the file
-	// will be reformatted in place.
+	// OutFn receives the formatted file and it's name. If left nil, the file
+	// will be formatted in place.
 	OutFn OutFn
 
 	// PrintNames causes all filenames to be printed
 	PrintNames bool
 }
 
-// OutFn is a function that receives the reformatted file for further action,
+// OutFn is a function that receives the formatted file for further action,
 // like persisting to disc
 type OutFn func(name, content string) error
 
 // FormatFiles takes a list of files and directories, processes them and returns
-// which files were reformatted and perhaps an error.
+// which files were formatted and perhaps an error.
 func FormatFiles(fds []string, opts *FormatOpts) ([]string, error) {
 	var paths []string
 	for _, f := range fds {
