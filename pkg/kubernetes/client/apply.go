@@ -2,7 +2,6 @@ package client
 
 import (
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -48,25 +47,7 @@ var kindOrder = []string{
 
 // Apply applies the given yaml to the cluster
 func (k Kubectl) Apply(data manifest.List, opts ApplyOpts) error {
-	// sort the manifests into a sane install order
-	sort.SliceStable(data, func(i, j int) bool {
-		var io, jo int
-
-		// anything that is not in kindOrder will get to the end of the install list.
-		for io = 0; io < len(kindOrder); io++ {
-			if data[i].Kind() == kindOrder[io] {
-				break
-			}
-		}
-
-		for jo = 0; jo < len(kindOrder); jo++ {
-			if data[j].Kind() == kindOrder[jo] {
-				break
-			}
-		}
-
-		return io < jo
-	})
+	// Manifests have already been pre-sorted during the Reconcile phase.
 	return k.apply(data, opts)
 }
 
