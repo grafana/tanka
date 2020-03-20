@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/go-clix/cli"
@@ -53,19 +54,30 @@ func fmtCmd() *cli.Command {
 			}
 		}
 
-		err := tanka.Format(args, &tanka.FormatOpts{
+		changed, err := tanka.Format(args, &tanka.FormatOpts{
 			Excludes:   globs,
 			OutFn:      outFn,
-			Test:       *test,
 			PrintNames: *verbose,
 		})
-		if errors.Is(err, tanka.ErrorAlreadyFormatted) {
-			fmt.Println(err)
-		} else if _, ok := err.(tanka.ErrorNotFormatted); ok {
-			fmt.Println(err)
-			os.Exit(16)
-		} else if err != nil {
+		if err != nil {
 			return err
+		}
+
+		if *verbose {
+			log.Println()
+		}
+
+		switch {
+		case *test && len(changed) > 0:
+			log.Println("The following files are not properly formatted:")
+			for _, s := range changed {
+				log.Println(s)
+			}
+			os.Exit(16)
+		case len(changed) == 0:
+			log.Println("All discovered files are already formatted. No changes were made")
+		case len(changed) > 0:
+			log.Printf("Reformatted %v files", len(changed))
 		}
 
 		return nil
