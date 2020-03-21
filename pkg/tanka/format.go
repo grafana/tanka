@@ -51,9 +51,9 @@ func FormatFiles(fds []string, opts *FormatOpts) ([]string, error) {
 	}
 
 	// print each file?
-	printFn := func(...interface{}) (int, error) { return 0, nil }
+	printFn := func(...interface{}) { return }
 	if opts.PrintNames {
-		printFn = fmt.Println
+		printFn = func(i ...interface{}) { fmt.Println(i...) }
 	}
 
 	var changed []string
@@ -64,6 +64,9 @@ func FormatFiles(fds []string, opts *FormatOpts) ([]string, error) {
 		}
 
 		formatted, err := Format(p, string(content))
+		if err != nil {
+			return nil, err
+		}
 
 		if string(content) != formatted {
 			printFn("fmt", p)
