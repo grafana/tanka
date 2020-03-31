@@ -14,6 +14,44 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
+// Order in which install different kinds of Kubernetes objects.
+// Inspired by https://github.com/helm/helm/blob/8c84a0bc0376650bc3d7334eef0c46356c22fa36/pkg/releaseutil/kind_sorter.go
+var kindOrder = []string{
+	"Namespace",
+	"NetworkPolicy",
+	"ResourceQuota",
+	"LimitRange",
+	"PodSecurityPolicy",
+	"PodDisruptionBudget",
+	"ServiceAccount",
+	"Secret",
+	"ConfigMap",
+	"StorageClass",
+	"PersistentVolume",
+	"PersistentVolumeClaim",
+	"CustomResourceDefinition",
+	"ClusterRole",
+	"ClusterRoleList",
+	"ClusterRoleBinding",
+	"ClusterRoleBindingList",
+	"Role",
+	"RoleList",
+	"RoleBinding",
+	"RoleBindingList",
+	"Service",
+	"DaemonSet",
+	"Pod",
+	"ReplicationController",
+	"ReplicaSet",
+	"Deployment",
+	"HorizontalPodAutoscaler",
+	"StatefulSet",
+	"Job",
+	"CronJob",
+	"Ingress",
+	"APIService",
+}
+
 // Reconcile extracts kubernetes Manifests from raw evaluated jsonnet <kind>/<name>,
 // provided the manifests match the given regular expressions. It finds each manifest by
 // recursively walking the jsonnet structure.
@@ -49,9 +87,33 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 
 	// Stable output order
 	sort.SliceStable(out, func(i int, j int) bool {
+		var io, jo int
+
+		// anything that is not in kindOrder will get to the end of the install list.
+		for io = 0; io < len(kindOrder); io++ {
+			if out[i].Kind() == kindOrder[io] {
+				break
+			}
+		}
+
+		for jo = 0; jo < len(kindOrder); jo++ {
+			if out[j].Kind() == kindOrder[jo] {
+				break
+			}
+		}
+
+		// If Kind of both objects are at different indexes of kindOrder, sort by them
+		if io != jo {
+			return io < jo
+		}
+
+		// If the Kinds themselves are different (e.g. both of the Kinds are not in
+		// the kindOrder), order alphabetically.
 		if out[i].Kind() != out[j].Kind() {
 			return out[i].Kind() < out[j].Kind()
 		}
+
+		// Otherwise, order the objects by name.
 		return out[i].Metadata().Name() < out[j].Metadata().Name()
 	})
 
