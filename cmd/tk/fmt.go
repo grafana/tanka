@@ -57,7 +57,8 @@ func fmtCmd() *cli.Command {
 			outFn = func(name, content string) error { return nil }
 		case *stdout:
 			outFn = func(name, content string) error {
-				fmt.Printf("// %s\n%s\n", name, content)
+				fmt.Printf("// %s\n%s", name, content)
+				log.Println() // some spacing
 				return nil
 			}
 		}
