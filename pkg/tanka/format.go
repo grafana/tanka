@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 
 	"github.com/gobwas/glob"
+	"github.com/google/go-jsonnet/formatter"
 	"github.com/karrick/godirwalk"
 	"github.com/pkg/errors"
-	"github.com/sh0rez/go-jsonnet/formatter"
 )
 
 // FormatOpts modify the behaviour of Format
