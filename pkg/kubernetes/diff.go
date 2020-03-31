@@ -3,10 +3,11 @@ package kubernetes
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/kubernetes/util"
-	"github.com/pkg/errors"
 )
 
 // Diff takes the desired state and returns the differences from the cluster

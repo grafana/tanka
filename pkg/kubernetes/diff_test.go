@@ -3,9 +3,10 @@ package kubernetes
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
-	"github.com/stretchr/testify/assert"
 )
 
 // TestSeparate checks that separate properly separates resources:
