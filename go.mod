@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/semver v1.4.2
 	github.com/fatih/color v1.9.0
 	github.com/fatih/structs v1.1.0
-	github.com/go-clix/cli v0.1.0
+	github.com/go-clix/cli v0.1.1
 	github.com/gobwas/glob v0.2.3
 	github.com/google/go-jsonnet v0.15.1-0.20200315133840-3a245f70d44f
 	github.com/karrick/godirwalk v1.15.5
