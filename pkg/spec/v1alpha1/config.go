@@ -1,5 +1,7 @@
 package v1alpha1
 
+import "strings"
+
 // New creates a new Config object with internal values already set
 func New() *Config {
 	c := Config{}
@@ -31,9 +33,14 @@ type Metadata struct {
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
+func (m Metadata) NameLabel() string {
+	return strings.Replace(m.Name, "/", ".", -1)
+}
+
 // Spec defines Kubernetes properties
 type Spec struct {
 	APIServer    string `json:"apiServer"`
 	Namespace    string `json:"namespace"`
 	DiffStrategy string `json:"diffStrategy,omitempty"`
+	Prune        bool   `json:"prune,omitempty"`
 }

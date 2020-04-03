@@ -28,7 +28,7 @@ func Status(baseDir string, mods ...Modifier) (*Info, error) {
 		return nil, err
 	}
 
-	r.Env.Spec.DiffStrategy = kube.Spec.DiffStrategy
+	r.Env.Spec.DiffStrategy = kube.Env.Spec.DiffStrategy
 
 	return &Info{
 		Env:       r.Env,

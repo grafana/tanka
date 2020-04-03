@@ -3,7 +3,9 @@ package tanka
 import (
 	"fmt"
 
+	"github.com/fatih/color"
 	"github.com/grafana/tanka/pkg/kubernetes"
+	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/term"
 )
@@ -11,9 +13,6 @@ import (
 // Apply parses the environment at the given directory (a `baseDir`) and applies
 // the evaluated jsonnet to the Kubernetes cluster defined in the environments
 // `spec.json`.
-// NOTE: This function prints on screen in default configuration.
-// Use the `WithWarnWriter` modifier to change that. The `WithApply*` modifiers
-// may be used to further influence the behavior.
 func Apply(baseDir string, mods ...Modifier) error {
 	opts := parseModifiers(mods)
 
@@ -27,6 +26,7 @@ func Apply(baseDir string, mods ...Modifier) error {
 	}
 	defer kube.Close()
 
+	// show diff
 	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{})
 	switch {
 	case err != nil:
@@ -40,7 +40,27 @@ func Apply(baseDir string, mods ...Modifier) error {
 	b := term.Colordiff(*diff)
 	fmt.Print(b.String())
 
+	// prompt for confirmation
+	if err := applyPrompt(p.Env.Spec.Namespace, kube.Info()); err != nil {
+		return err
+	}
+
 	return kube.Apply(p.Resources, opts.apply)
+}
+
+// applyPrompt asks the user for confirmation before apply
+func applyPrompt(namespace string, info client.Info) error {
+	alert := color.New(color.FgRed, color.Bold).SprintFunc()
+
+	return term.Confirm(
+		fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
+			alert(namespace),
+			alert(info.Kubeconfig.Cluster.Name),
+			alert(info.Kubeconfig.Cluster.Cluster.Server),
+			alert(info.Kubeconfig.Context.Name),
+		),
+		"yes",
+	)
 }
 
 // Diff parses the environment at the given directory (a `baseDir`) and returns
@@ -63,6 +83,22 @@ func Diff(baseDir string, mods ...Modifier) (*string, error) {
 	defer kube.Close()
 
 	return kube.Diff(p.Resources, opts.diff)
+}
+
+func Prune(baseDir string, mods ...Modifier) error {
+	opts := parseModifiers(mods)
+
+	p, err := parse(baseDir, opts)
+	if err != nil {
+		return err
+	}
+	kube, err := p.newKube()
+	if err != nil {
+		return err
+	}
+	defer kube.Close()
+
+	return kube.Prune(p.Resources)
 }
 
 // Show parses the environment at the given directory (a `baseDir`) and returns

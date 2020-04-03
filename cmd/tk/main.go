@@ -39,6 +39,7 @@ func main() {
 		applyCmd(),
 		showCmd(),
 		diffCmd(),
+		pruneCmd(),
 	)
 
 	rootCmd.AddCommand(

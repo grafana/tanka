@@ -63,6 +63,23 @@ func applyCmd() *cli.Command {
 	return cmd
 }
 
+func pruneCmd() *cli.Command {
+	cmd := &cli.Command{
+		Use:   "prune <path>",
+		Short: "delete resources removed from Jsonnet",
+		Args:  workflowArgs,
+	}
+
+	getExtCode := extCodeParser(cmd.Flags())
+	cmd.Run = func(cmd *cli.Command, args []string) error {
+		return tanka.Prune(args[0],
+			tanka.WithExtCode(getExtCode()),
+		)
+	}
+
+	return cmd
+}
+
 func diffCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "diff <path>",

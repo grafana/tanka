@@ -8,7 +8,7 @@ import (
 type Client interface {
 	// Get the specified object(s) from the cluster
 	Get(namespace, kind, name string) (manifest.Manifest, error)
-	GetByLabels(namespace string, labels map[string]interface{}) (manifest.List, error)
+	GetByLabels(namespace, kind string, labels map[string]string) (manifest.List, error)
 
 	// Apply the configuration to the cluster. `data` must contain a plaintext
 	// format that is `kubectl-apply(1)` compatible

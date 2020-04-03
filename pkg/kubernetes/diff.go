@@ -29,7 +29,7 @@ func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
 	// would cause an error
 	//
 	// live: all other resources
-	live, soon := separate(state, k.Spec.Namespace, separateOpts{
+	live, soon := separate(state, k.Env.Spec.Namespace, separateOpts{
 		namespaces: namespaces,
 		resources:  resources,
 	})
@@ -119,7 +119,7 @@ func (e ErrorDiffStrategyUnknown) Error() string {
 }
 
 func (k *Kubernetes) differ(override string) (Differ, error) {
-	strategy := k.Spec.DiffStrategy
+	strategy := k.Env.Spec.DiffStrategy
 	if override != "" {
 		strategy = override
 	}
