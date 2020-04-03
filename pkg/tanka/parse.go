@@ -56,9 +56,9 @@ func parse(dir string, opts *options) (*ParseResult, error) {
 
 func applyLabels(state manifest.List, env *v1alpha1.Config) {
 	for _, manifest := range state {
-		labels := manifest.Metadata().Labels()
-		labels["app.kubernetes.io/managed-by"] = "tanka"
-		labels["tanka.dev/environment"] = env.Metadata.Name
+		meta := manifest.Metadata()
+		meta.SetLabel("app.kubernetes.io/managed-by", "tanka")
+		meta.SetLabel("tanka.dev/environment", env.Metadata.Name)
 	}
 }
 
