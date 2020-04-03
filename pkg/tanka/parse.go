@@ -38,28 +38,16 @@ func parse(dir string, opts *options) (*ParseResult, error) {
 		return nil, err
 	}
 
-	rec, err := kubernetes.Reconcile(raw, env.Spec, opts.targets)
+	rec, err := kubernetes.Reconcile(raw, env, opts.targets)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "reconciling")
-	}
-
-	if opts.applyLabels {
-		applyLabels(rec, env)
 	}
 
 	return &ParseResult{
 		Resources: rec,
 		Env:       env,
 	}, nil
-}
-
-func applyLabels(state manifest.List, env *v1alpha1.Config) {
-	for _, manifest := range state {
-		meta := manifest.Metadata()
-		meta.SetLabel("app.kubernetes.io/managed-by", "tanka")
-		meta.SetLabel("tanka.dev/environment", env.Metadata.NameLabel())
-	}
 }
 
 // eval returns the raw evaluated Jsonnet and the parsed env used for evaluation

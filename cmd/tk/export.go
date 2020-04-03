@@ -52,7 +52,6 @@ func exportCmd() *cli.Command {
 		res, err := tanka.Show(args[0],
 			tanka.WithExtCode(getExtCode()),
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
-			tanka.WithLabels(*vars.applyLabels),
 		)
 		if err != nil {
 			return err

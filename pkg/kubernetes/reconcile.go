@@ -52,6 +52,12 @@ var kindOrder = []string{
 	"APIService",
 }
 
+const (
+	LabelPrefix      = "tanka.dev"
+	LabelEnvironment = LabelPrefix + "/environment"
+	LabelManagedBy   = "app.kubernetes.io/managed-by"
+)
+
 // Reconcile extracts kubernetes Manifests from raw evaluated jsonnet <kind>/<name>,
 // provided the manifests match the given regular expressions. It finds each manifest by
 // recursively walking the jsonnet structure.
@@ -59,7 +65,7 @@ var kindOrder = []string{
 // In addition, we sort the manifests to ensure the order is consistent in each
 // show/diff/apply cycle. This isn't necessary, but it does help users by producing
 // consistent diffs.
-func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp.Regexp) (state manifest.List, err error) {
+func Reconcile(raw map[string]interface{}, env *v1alpha1.Config, targets []*regexp.Regexp) (state manifest.List, err error) {
 	extracted, err := extract(raw)
 	if err != nil {
 		return nil, errors.Wrap(err, "flattening manifests")
@@ -83,6 +89,13 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 			return false
 		}).([]manifest.Manifest)
 		out = manifest.List(tmp)
+	}
+
+	// apply labels
+	for _, manifest := range out {
+		meta := manifest.Metadata()
+		meta.Labels()[LabelManagedBy] = "tanka"
+		meta.Labels()[LabelEnvironment] = env.Metadata.NameLabel()
 	}
 
 	// Stable output order

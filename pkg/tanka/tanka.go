@@ -26,9 +26,6 @@ type options struct {
 	// target regular expressions to limit the working set
 	targets []*regexp.Regexp
 
-	// whether to add tanka metadata labels
-	applyLabels bool
-
 	// additional options for diff
 	diff kubernetes.DiffOpts
 	// additional options for apply
@@ -91,12 +88,5 @@ func WithApplyValidate(b bool) Modifier {
 func WithApplyAutoApprove(b bool) Modifier {
 	return func(opts *options) {
 		opts.apply.AutoApprove = b
-	}
-}
-
-// WithLabels allows control over whether tanka adds labels to resources or not
-func WithLabels(b bool) Modifier {
-	return func(opts *options) {
-		opts.applyLabels = b
 	}
 }
