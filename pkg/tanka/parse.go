@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"path/filepath"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -59,7 +58,7 @@ func applyLabels(state manifest.List, env *v1alpha1.Config) {
 	for _, manifest := range state {
 		meta := manifest.Metadata()
 		meta.SetLabel("app.kubernetes.io/managed-by", "tanka")
-		meta.SetLabel("tanka.dev/environment", strings.Replace(env.Metadata.Name, "/", ".", -1))
+		meta.SetLabel("tanka.dev/environment", env.Metadata.NameLabel())
 	}
 }
 
