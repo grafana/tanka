@@ -25,12 +25,14 @@ const (
 )
 
 type workflowFlagVars struct {
-	targets []string
+	targets     []string
+	applyLabels *bool
 }
 
 func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
 	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects (Format: <type>/<name>)")
+	v.applyLabels = fs.BoolP("label", "l", false, "Apply tanka metadata labels to all resources")
 	return &v
 }
 
@@ -51,6 +53,7 @@ func applyCmd() *cli.Command {
 		err := tanka.Apply(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithLabels(*vars.applyLabels),
 			tanka.WithApplyForce(*force),
 			tanka.WithApplyValidate(*validate),
 			tanka.WithApplyAutoApprove(*autoApprove),
@@ -86,6 +89,7 @@ func diffCmd() *cli.Command {
 		changes, err := tanka.Diff(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithLabels(*vars.applyLabels),
 			tanka.WithDiffStrategy(*diffStrategy),
 			tanka.WithDiffSummarize(*summarize),
 		)
@@ -132,6 +136,7 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 		pretty, err := tanka.Show(args[0],
 			tanka.WithExtCode(getExtCode()),
 			tanka.WithTargets(stringsToRegexps(vars.targets)...),
+			tanka.WithLabels(*vars.applyLabels),
 		)
 		if err != nil {
 			return err

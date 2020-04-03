@@ -47,8 +47,10 @@ func Parse(data []byte, name string) (*v1alpha1.Config, error) {
 		return nil, errors.Wrap(err, "parsing spec.json")
 	}
 
-	// set the name field
-	config.Metadata.Name = name
+	// set the name field if not given in spec
+	if config.Metadata.Name == "" {
+		config.Metadata.Name = name
+	}
 
 	if err := handleDeprecated(config, data); err != nil {
 		return config, err
