@@ -64,10 +64,17 @@ func TestReconcile(t *testing.T) {
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
 			config := v1alpha1.New()
+			config.Metadata.Name = "testdata"
 			config.Spec = c.spec
-			got, err := Reconcile(c.deep.(map[string]interface{}), *config, c.targets)
 
+			for i, m := range c.flat {
+				m.Metadata().Labels()[LabelEnvironment] = config.Metadata.NameLabel()
+				c.flat[i] = m
+			}
+
+			got, err := Reconcile(c.deep.(map[string]interface{}), *config, c.targets)
 			require.Equal(t, c.err, err)
+
 			assert.ElementsMatch(t, c.flat, got)
 		})
 	}
