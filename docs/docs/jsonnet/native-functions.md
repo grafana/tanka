@@ -32,8 +32,8 @@ parseJSON(string json) Object
 
 ```jsonnet
 {
-  parseJsonArray: std.native('parseJson')('[0, 1, 2]'),
-  parseJsonObject: std.native('parseJson')('{ "foo": "bar" }'),
+  array: std.native('parseJson')('[0, 1, 2]'),
+  object: std.native('parseJson')('{ "foo": "bar" }'),
 }
 ```
 
