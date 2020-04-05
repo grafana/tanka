@@ -26,7 +26,7 @@ To use them in your code, you need to access them using `std.native` from the st
 parseJSON(string json) Object
 ```
 
-`parseJSON` wraps `json.Unmarshal` to convert a json string into a dict.
+`parseJSON` parses a json string and returns the respective Jsonnet type (`Object`, `Array`,  etc).
 
 ### Examples
 
