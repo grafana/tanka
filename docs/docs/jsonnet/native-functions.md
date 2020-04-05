@@ -12,7 +12,7 @@ To use them in your code, you need to access them using `std.native` from the st
 
 ```jsonnet
 {
-  deployment:  std.native('<name>')('<arguments>'),
+  someField:  std.native('<name>')(<arguments>),
 }
 ```
 
