@@ -41,8 +41,8 @@ Evaluating with Tanka results in the JSON:
 
 ```json
 {
-  "parseJsonArray": [0, 1, 2],
-  "parseJsonObject": {
+  "array": [0, 1, 2],
+  "object": {
     "foo": "bar"
   }
 }
