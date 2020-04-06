@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -11,17 +12,22 @@ import (
 
 // Get retrieves a single Kubernetes object from the cluster
 func (k Kubectl) Get(namespace, kind, name string) (manifest.Manifest, error) {
-	return k.get(namespace, kind, []string{name}, "")
+	return k.get(namespace, kind, []string{name}, getOpts{})
 }
 
-// GetByLabels retrieves all objects matched by the given labels from the cluster
+// GetByLabels retrieves all objects matched by the given labels from the cluster.
+// Set namespace to empty string for --all-namespaces
 func (k Kubectl) GetByLabels(namespace, kind string, labels map[string]string) (manifest.List, error) {
 	lArgs := make([]string, 0, len(labels))
 	for k, v := range labels {
 		lArgs = append(lArgs, fmt.Sprintf("-l=%s=%s", k, v))
 	}
 
-	list, err := k.get(namespace, kind, lArgs, "")
+	var opts getOpts
+	if namespace == "" {
+		opts.allNamespaces = true
+	}
+	list, err := k.get(namespace, kind, lArgs, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +38,9 @@ func (k Kubectl) GetByLabels(namespace, kind string, labels map[string]string) (
 // GetByState returns the full object, including runtime fields for each
 // resource in the state
 func (k Kubectl) GetByState(data manifest.List) (manifest.List, error) {
-	list, err := k.get("", "", []string{"-f", "-"}, data.String())
+	list, err := k.get("", "", []string{"-f", "-"}, getOpts{
+		stdin: data.String(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -40,49 +48,61 @@ func (k Kubectl) GetByState(data manifest.List) (manifest.List, error) {
 	return unwrapList(list)
 }
 
-func (k Kubectl) get(namespace, kind string, sel []string, stdin string) (manifest.Manifest, error) {
-	// build flags
-	argv := []string{"-o", "json"}
-	switch { // set namespace, unless reading from stdin
-	case stdin != "":
-		break
-	case namespace == "":
+type getOpts struct {
+	allNamespaces bool
+	stdin         string
+}
+
+func (k Kubectl) get(namespace, kind string, selector []string, opts getOpts) (manifest.Manifest, error) {
+	// build cli flags and args
+	argv := []string{
+		"-o", "json",
+	}
+
+	if opts.allNamespaces {
 		argv = append(argv, "--all-namespaces")
-	default:
+	} else if namespace != "" {
 		argv = append(argv, "-n", namespace)
 	}
+
 	if kind != "" {
 		argv = append(argv, kind)
 	}
-	argv = append(argv, sel...)
 
+	argv = append(argv, selector...)
+
+	// setup command environment
 	cmd := k.ctl("get", argv...)
-
 	var sout, serr bytes.Buffer
 	cmd.Stdout = &sout
 	cmd.Stderr = &serr
-	if stdin != "" {
-		cmd.Stdin = strings.NewReader(stdin)
+	if opts.stdin != "" {
+		cmd.Stdin = strings.NewReader(opts.stdin)
 	}
 
+	// run command
 	if err := cmd.Run(); err != nil {
-		if strings.HasPrefix(serr.String(), "Error from server (NotFound)") {
-			return nil, ErrorNotFound{serr.String()}
-		}
-		if strings.HasPrefix(serr.String(), "error: the server doesn't have a resource type") {
-			return nil, ErrorUnknownResource{serr.String()}
-		}
-
-		fmt.Print(serr.String())
-		return nil, err
+		return nil, parseGetErr(err, serr.String())
 	}
 
+	// parse result
 	var m manifest.Manifest
 	if err := json.Unmarshal(sout.Bytes(), &m); err != nil {
 		return nil, err
 	}
 
 	return m, nil
+}
+
+func parseGetErr(err error, stderr string) error {
+	if strings.HasPrefix(stderr, "Error from server (NotFound)") {
+		return ErrorNotFound{stderr}
+	}
+	if strings.HasPrefix(stderr, "error: the server doesn't have a resource type") {
+		return ErrorUnknownResource{stderr}
+	}
+
+	return errors.New(strings.TrimPrefix(fmt.Sprintf("%s\n%s", stderr, err), "\n"))
 }
 
 func unwrapList(list manifest.Manifest) (manifest.List, error) {
