@@ -9,6 +9,7 @@ type Client interface {
 	// Get the specified object(s) from the cluster
 	Get(namespace, kind, name string) (manifest.Manifest, error)
 	GetByLabels(namespace, kind string, labels map[string]string) (manifest.List, error)
+	GetByState(data manifest.List) (manifest.List, error)
 
 	// Apply the configuration to the cluster. `data` must contain a plaintext
 	// format that is `kubectl-apply(1)` compatible
@@ -20,7 +21,6 @@ type Client interface {
 
 	// Delete the specified object(s) from the cluster
 	Delete(namespace, kind, name string, opts DeleteOpts) error
-	DeleteByLabels(namespace string, labels map[string]interface{}, opts DeleteOpts) error
 
 	// Namespaces the cluster currently has
 	Namespaces() (map[string]bool, error)

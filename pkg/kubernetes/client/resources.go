@@ -38,7 +38,7 @@ type Resource struct {
 }
 
 func (r Resource) FQN() string {
-	return strings.TrimPrefix(r.Kind+"."+r.APIGroup, ".")
+	return strings.TrimSuffix(r.Kind+"."+r.APIGroup, ".")
 }
 
 // Resources returns all API resources known to the server

@@ -88,6 +88,7 @@ func Diff(baseDir string, mods ...Modifier) (*string, error) {
 func Prune(baseDir string, mods ...Modifier) error {
 	opts := parseModifiers(mods)
 
+	// parse jsonnet, init k8s client
 	p, err := parse(baseDir, opts)
 	if err != nil {
 		return err
@@ -97,6 +98,12 @@ func Prune(baseDir string, mods ...Modifier) error {
 		return err
 	}
 	defer kube.Close()
+
+	// find orphaned resources
+	// orphaned, err := kube.Orphaned(p.Resources)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return kube.Prune(p.Resources)
 }
