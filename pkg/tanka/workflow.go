@@ -28,7 +28,7 @@ func Apply(baseDir string, mods ...Modifier) error {
 	defer kube.Close()
 
 	// show diff
-	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{})
+	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{Strategy: opts.diff.Strategy})
 	switch {
 	case err != nil:
 		// This is not fatal, the diff is not strictly required
@@ -42,19 +42,20 @@ func Apply(baseDir string, mods ...Modifier) error {
 	fmt.Print(b.String())
 
 	// prompt for confirmation
-	if err := applyPrompt(p.Env.Spec.Namespace, kube.Info()); err != nil {
+	if opts.apply.AutoApprove {
+	} else if err := confirmPrompt("Applying to", p.Env.Spec.Namespace, kube.Info()); err != nil {
 		return err
 	}
 
 	return kube.Apply(p.Resources, opts.apply)
 }
 
-// applyPrompt asks the user for confirmation before apply
-func applyPrompt(namespace string, info client.Info) error {
+// confirmPrompt asks the user for confirmation before apply
+func confirmPrompt(action, namespace string, info client.Info) error {
 	alert := color.New(color.FgRed, color.Bold).SprintFunc()
 
 	return term.Confirm(
-		fmt.Sprintf(`Applying to namespace '%s' of cluster '%s' at '%s' using context '%s'.`,
+		fmt.Sprintf(`%s namespace '%s' of cluster '%s' at '%s' using context '%s'.`, action,
 			alert(namespace),
 			alert(info.Kubeconfig.Cluster.Name),
 			alert(info.Kubeconfig.Cluster.Cluster.Server),
@@ -84,29 +85,6 @@ func Diff(baseDir string, mods ...Modifier) (*string, error) {
 	defer kube.Close()
 
 	return kube.Diff(p.Resources, opts.diff)
-}
-
-func Prune(baseDir string, mods ...Modifier) error {
-	opts := parseModifiers(mods)
-
-	// parse jsonnet, init k8s client
-	p, err := parse(baseDir, opts)
-	if err != nil {
-		return err
-	}
-	kube, err := p.newKube()
-	if err != nil {
-		return err
-	}
-	defer kube.Close()
-
-	// find orphaned resources
-	// orphaned, err := kube.Orphaned(p.Resources)
-	// if err != nil {
-	// 	return err
-	// }
-
-	return kube.Prune(p.Resources)
 }
 
 // Show parses the environment at the given directory (a `baseDir`) and returns

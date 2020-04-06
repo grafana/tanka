@@ -17,33 +17,6 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 	return k.ctl.Apply(state, client.ApplyOpts(opts))
 }
 
-func (k *Kubernetes) Prune(state manifest.List) error {
-	orphaned, err := k.Orphaned(state)
-	if err != nil {
-		return err
-	}
-
-	for _, m := range orphaned {
-		fmt.Println(m.Metadata().Namespace(), m.APIVersion(), m.Kind(), m.Metadata().Name())
-	}
-	return nil
-}
-
-func (k *Kubernetes) uids(state manifest.List) (map[string]bool, error) {
-	uids := make(map[string]bool)
-
-	live, err := k.ctl.GetByState(state)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, m := range live {
-		uids[m.Metadata().UID()] = true
-	}
-
-	return uids, nil
-}
-
 // Orphaned returns previously created resources that are missing from the
 // local state. It uses UIDs to safely identify objects.
 func (k *Kubernetes) Orphaned(state manifest.List) (manifest.List, error) {
@@ -98,6 +71,8 @@ func (k *Kubernetes) Orphaned(state manifest.List) (manifest.List, error) {
 		// type.
 		if m.APIVersion() == "v1" && m.Kind() == "ComponentStatus" {
 			continue
+		} else if m.APIVersion() == "v1" && m.Kind() == "Endpoints" {
+			continue
 		}
 
 		// record and skip from now on
@@ -106,4 +81,19 @@ func (k *Kubernetes) Orphaned(state manifest.List) (manifest.List, error) {
 	}
 
 	return orphaned, nil
+}
+
+func (k *Kubernetes) uids(state manifest.List) (map[string]bool, error) {
+	uids := make(map[string]bool)
+
+	live, err := k.ctl.GetByState(state)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range live {
+		uids[m.Metadata().UID()] = true
+	}
+
+	return uids, nil
 }
