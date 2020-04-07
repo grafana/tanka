@@ -17,6 +17,9 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 	return k.ctl.Apply(state, client.ApplyOpts(opts))
 }
 
+// AnnoationLastApplied is the last-applied-configuration annotation used by kubectl
+const AnnotationLastApplied = "kubectl.kubernetes.io/last-applied-configuration"
+
 // Orphaned returns previously created resources that are missing from the
 // local state. It uses UIDs to safely identify objects.
 func (k *Kubernetes) Orphaned(state manifest.List) (manifest.List, error) {
@@ -65,13 +68,8 @@ func (k *Kubernetes) Orphaned(state manifest.List) (manifest.List, error) {
 			continue
 		}
 
-		// ComponentStatus resource is broken in Kubernetes versions
-		// below 1.17, it will be returned even if the label does not
-		// match. Ignoring it here is fine, as it is an internal object
-		// type.
-		if m.APIVersion() == "v1" && m.Kind() == "ComponentStatus" {
-			continue
-		} else if m.APIVersion() == "v1" && m.Kind() == "Endpoints" {
+		// skip objects not created explicitely
+		if _, ok := m.Metadata().Annotations()[AnnotationLastApplied]; !ok {
 			continue
 		}
 

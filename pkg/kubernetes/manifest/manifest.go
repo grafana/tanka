@@ -140,32 +140,39 @@ func (m Metadata) UID() string {
 	return uid
 }
 
-// HasLabels returns whether the manifest has labels
-func (m Metadata) HasLabels() bool {
-	_, ok := m["labels"].(map[string]string)
-	return ok
-}
-
 // Labels of the manifest
 func (m Metadata) Labels() map[string]string {
-	if !m.HasLabels() {
-		m["labels"] = make(map[string]string)
-	}
-	return m["labels"].(map[string]string)
-}
-
-// HasAnnotations returns whether the manifest has annotations
-func (m Metadata) HasAnnotations() bool {
-	_, ok := m["annotations"].(map[string]string)
-	return ok
+	return safeStringMap(m, "labels")
 }
 
 // Annotations of the manifest
 func (m Metadata) Annotations() map[string]string {
-	if !m.HasAnnotations() {
-		m["annotations"] = make(map[string]string)
+	return safeStringMap(m, "annotations")
+}
+
+// safeStringMap safely returns a string map:
+// - returns if map[string]string
+// - converts if map[string]interface{}
+// - zeroes if anything else
+func safeStringMap(m map[string]interface{}, key string) map[string]string {
+	switch t := m[key].(type) {
+	case map[string]string:
+		return t
+	case map[string]interface{}:
+		mss := make(map[string]string)
+		for k, v := range t {
+			s, ok := v.(string)
+			if !ok {
+				continue
+			}
+			mss[k] = s
+		}
+		m[key] = mss
+		return m[key].(map[string]string)
+	default:
+		m[key] = make(map[string]string)
+		return m[key].(map[string]string)
 	}
-	return m["annotations"].(map[string]string)
 }
 
 // List of individual Manifests
