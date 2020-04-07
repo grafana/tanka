@@ -12,7 +12,7 @@ bug fixes.
 #### :rotating_light: Alert: `kubectl diff` changes resources :rotating_light:
 
 The recently released `kubectl` version `v1.18.0` includes a **critical issue**
-that results `kubectl diff` (and so `tk diff` as well) to **apply** the changes.
+that causes `kubectl diff` (and so `tk diff` as well) to **apply** the changes.
 
 This can be very **harmful**, so Tanka decided to require you to **downgrade**
 to `v1.17.x`, until the fix in `kubectl` version `v1.18.1` is released.
@@ -24,7 +24,7 @@ to `v1.17.x`, until the fix in `kubectl` version `v1.18.1` is released.
 
 Since `jsonnetfmt` was [rewritten in Go
 recently](https://github.com/google/go-jsonnet/pull/388), Tanka now ships it as
-`tk fmt`. Just run `tk fmt .` it to keep all Jsonnet files recursively formatted.
+`tk fmt`. Just run `tk fmt .` to keep all Jsonnet files recursively formatted.
 
 #### :rocket: Highlight: Sorting during apply
 
