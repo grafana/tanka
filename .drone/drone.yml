@@ -69,6 +69,7 @@ steps:
   settings:
     api_key:
       from_secret: GITHUB_TOKEN
+    draft: true
     files: dist/*
     note: "This is release ${DRONE_TAG} of Tanka (`tk`). Check out the [CHANGELOG](CHANGELOG.md) for detailed release notes.\n## Install instructions\n\n#### Binary:\n```bash\n# download the binary (adapt os and arch as needed)\n$ curl -fSL -o \"/usr/local/bin/tk\" \"https://github.com/grafana/tanka/releases/download/${DRONE_TAG}/tk-linux-amd64\"\n\n# make it executable\n$ chmod a+x \"/usr/local/bin/tk\"\n\n# have fun :)\n$ tk --help\n```\n\n#### Docker container:\nhttps://hub.docker.com/r/grafana/tanka\n```bash\n$ docker pull grafana/tanka:${DRONE_TAG#v}\n```\n"
     title: ${DRONE_TAG}

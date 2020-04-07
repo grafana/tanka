@@ -75,6 +75,7 @@ local docker(arch) = pipeline('docker-' + arch) {
           note: importstr 'release-note.md',
           api_key: { from_secret: 'GITHUB_TOKEN' },
           files: 'dist/*',
+          draft: true,
         },
       },
     ],
