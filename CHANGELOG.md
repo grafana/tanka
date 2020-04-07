@@ -1,5 +1,82 @@
 # Changelog
 
+## 0.9.0 (2020-04-07)
+
+**This release includes a critical fix, update ASAP**.
+
+Another Tanka release is here, just in time for Easter. Enjoy the built-in
+[formatter](#sparkles-highlight-jsonnet-formatter-tk-fmt), much [more
+intelligent apply](#rocket-highlight-sorting-during-apply) and several important
+bug fixes.
+
+#### :rotating_light: Alert: `kubectl diff` changes resources :rotating_light:
+
+The recently released `kubectl` version `v1.18.0` includes a **critical issue**
+that results `kubectl diff` (and so `tk diff` as well) to **apply** the changes.
+
+This can be very **harmful**, so Tanka decided to require you to **downgrade**
+to `v1.17.x`, until the fix in `kubectl` version `v1.18.1` is released.
+
+- Upstream issue: https://github.com/kubernetes/kubernetes/issues/89762)
+- Unreleased fix: https://github.com/kubernetes/kubernetes/pull/89795
+
+#### :sparkles: Highlight: Jsonnet formatter (`tk fmt`)
+
+Since `jsonnetfmt` was [rewritten in Go
+recently](https://github.com/google/go-jsonnet/pull/388), Tanka now ships it as
+`tk fmt`. Just run `tk fmt .` it to keep all Jsonnet files recursively formatted.
+
+#### :rocket: Highlight: Sorting during apply
+
+When using `tk apply`, Tanka now automatically **sorts** your objects
+based on **dependencies** between them, so that for example
+`CustomResourceDefinitions` created before being used, all in the same run. No
+more partly failed applies!
+
+### Features
+
+- **kubernetes** :sparkles:: Objects are now sorted by dependency before `apply`
+  **([#244](https://github.com/grafana/tanka/pull/244))**
+- **cli**: Env var `TANKA_KUBECTL_PATH` can now be used to set a custom
+  `kubectl` binary
+  **([#221](https://github.com/grafana/tanka/pull/221))**
+- **jsonnet** :sparkles: : Bundle `jsonnetfmt` as `tk fmt`
+  **([#241](https://github.com/grafana/tanka/pull/241))**
+
+* **docker**: The Docker image now includes GNU `less`, instead of the BusyBox
+  one **([#232](https://github.com/grafana/tanka/pull/232))**
+* **docker**: Added `kubectl`, `jsonnet-bundler`, `coreutils`, `git` and
+  `diffutils` to the Docker image, so Tanka can be fully used in there.
+  **([#243](https://github.com/grafana/tanka/pull/243))**
+
+### Bug Fixes
+
+- **cli**: The diff shown on `tk apply` is now colored again
+  **([#216](https://github.com/grafana/tanka/pull/216))**
+
+* **client**: The namespace patch file saved to a temporary location is now
+  removed after run **([#225](https://github.com/grafana/tanka/pull/225))**
+* **client**: Scanning for the correct context won't panic anymore, but print a
+  proper error **([#228](https://github.com/grafana/tanka/pull/228))**
+* **client**: Use `os.PathListSeparator` during context patching, so that Tanka
+  also works on non-UNIX platforms (e.g. Windows)
+  **([#242](https://github.com/grafana/tanka/pull/242))**
+
+- **kubernetes** :rotating_light:: Refuse to diff on `kubectl` version `v1.18.0`, because of
+  above mentioned unfixed issue
+  **([#254](https://github.com/grafana/tanka/pull/254))**
+- **kubernetes**: Apply no longer aborts when diff fails
+  **([#231](https://github.com/grafana/tanka/pull/231))**
+- **kubernetes** :sparkles:: Namespaces that will be created in the same run are now
+  properly handled during `diff`
+  **([#237](https://github.com/grafana/tanka/pull/237))**
+
+### Other
+
+- **cli**: Migrates from `spf13/cobra` to much smaller `go-clix/cli`. This cuts
+  our dependencies to a minimum.
+  **([#235](https://github.com/grafana/tanka/pull/235))**
+
 ## 0.8.0 (2020-02-13)
 
 The next big one is here! Feature packed with environment overriding and `tk export`. Furthermore lots of bugs were fixed, so using Tanka should be much
