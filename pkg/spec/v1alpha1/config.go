@@ -42,4 +42,5 @@ type Spec struct {
 	APIServer    string `json:"apiServer"`
 	Namespace    string `json:"namespace"`
 	DiffStrategy string `json:"diffStrategy,omitempty"`
+	InjectLabels bool   `json:"injectLabels,omitempty"`
 }

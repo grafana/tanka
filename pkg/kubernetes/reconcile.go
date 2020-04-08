@@ -72,8 +72,11 @@ func Reconcile(raw map[string]interface{}, cfg v1alpha1.Config, targets []*regex
 
 	out := make(manifest.List, 0, len(extracted))
 	for _, m := range extracted {
+
 		// inject tanka.dev/environment label
-		m.Metadata().Labels()[LabelEnvironment] = cfg.Metadata.NameLabel()
+		if cfg.Spec.InjectLabels {
+			m.Metadata().Labels()[LabelEnvironment] = cfg.Metadata.NameLabel()
+		}
 
 		out = append(out, m)
 	}

@@ -23,6 +23,12 @@ const AnnotationLastApplied = "kubectl.kubernetes.io/last-applied-configuration"
 // Orphaned returns previously created resources that are missing from the
 // local state. It uses UIDs to safely identify objects.
 func (k *Kubernetes) Orphaned(state manifest.List) (manifest.List, error) {
+	if !k.Env.Spec.InjectLabels {
+		return nil, fmt.Errorf(`spec.injectLabels is set to false in your spec.json. Tanka needs to add
+a label to your resources to reliably detect which were removed from Jsonnet.
+See https://tanka.dev/garbage-collection for more details.`)
+	}
+
 	apiResources, err := k.ctl.Resources()
 	if err != nil {
 		return nil, err
