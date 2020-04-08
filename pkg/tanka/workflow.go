@@ -37,8 +37,11 @@ func Apply(baseDir string, mods ...Modifier) error {
 		diff = &tmp
 	}
 
-	b := term.Colordiff(*diff)
-	fmt.Print(b.String())
+	// in case of non-fatal error diff may be nil
+	if diff != nil {
+		b := term.Colordiff(*diff)
+		fmt.Print(b.String())
+	}
 
 	return kube.Apply(p.Resources, opts.apply)
 }
