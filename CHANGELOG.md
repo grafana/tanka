@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.1 (2020-04-08)
+
+Small patch release to fix a `panic` issue with `tk apply`.
+
+### Bug Fixes
+
+- **kubernetes**: don't panic on failed diff
+  **([#256](https://github.com/grafana/tanka/pull/256))**
+
 ## 0.9.0 (2020-04-07)
 
 **This release includes a critical fix, update ASAP**.
