@@ -47,10 +47,12 @@ export default {
     // additional features
     "Output filtering",
     "Exporting as YAML",
+    "Garbage collection",
     "Command-line completion",
     "Diff strategies",
 
     // reference
+    "Configuration Reference",
     "Directory structure",
     "Environment variables",
 
