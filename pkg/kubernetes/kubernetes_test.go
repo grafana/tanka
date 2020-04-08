@@ -29,6 +29,14 @@ func TestReconcile(t *testing.T) {
 			flat: mapToList(testDataRegular().Flat),
 		},
 		{
+			name: "injectLabels",
+			deep: testDataRegular().Deep,
+			flat: mapToList(testDataRegular().Flat),
+			spec: v1alpha1.Spec{
+				InjectLabels: true,
+			},
+		},
+		{
 			name: "targets",
 			deep: testDataDeep().Deep,
 			flat: manifest.List{
@@ -67,9 +75,11 @@ func TestReconcile(t *testing.T) {
 			config.Metadata.Name = "testdata"
 			config.Spec = c.spec
 
-			for i, m := range c.flat {
-				m.Metadata().Labels()[LabelEnvironment] = config.Metadata.NameLabel()
-				c.flat[i] = m
+			if config.Spec.InjectLabels {
+				for i, m := range c.flat {
+					m.Metadata().Labels()[LabelEnvironment] = config.Metadata.NameLabel()
+					c.flat[i] = m
+				}
 			}
 
 			got, err := Reconcile(c.deep.(map[string]interface{}), *config, c.targets)
