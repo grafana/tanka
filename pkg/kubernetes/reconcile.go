@@ -113,6 +113,11 @@ func Reconcile(raw map[string]interface{}, spec v1alpha1.Spec, targets []*regexp
 			return out[i].Kind() < out[j].Kind()
 		}
 
+		// If namespaces differ, sort by the namespace.
+		if out[i].Metadata().Namespace() != out[j].Metadata().Namespace() {
+			return out[i].Metadata().Namespace() < out[j].Metadata().Namespace()
+		}
+
 		// Otherwise, order the objects by name.
 		return out[i].Metadata().Name() < out[j].Metadata().Name()
 	})
