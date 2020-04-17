@@ -59,24 +59,18 @@ func TestExtract(t *testing.T) {
 }
 
 func mkobj(kind string, name string, ns string) map[string]interface{} {
-	if ns == "" {
-		return map[string]interface{}{
-			"kind":       kind,
-			"apiVersion": "apiversion",
-			"metadata": map[string]interface{}{
-				"name": name,
-			},
-		}
-	}
-
-	return map[string]interface{}{
+	ret := map[string]interface{}{
 		"kind":       kind,
 		"apiVersion": "apiversion",
 		"metadata": map[string]interface{}{
-			"name":      name,
-			"namespace": ns,
+			"name": name,
 		},
 	}
+	if ns != "" {
+		ret["metadata"].(map[string]interface{})["namespace"] = ns
+	}
+
+	return ret
 }
 
 func TestReconcileSorting(t *testing.T) {
@@ -93,7 +87,6 @@ func TestReconcileSorting(t *testing.T) {
 				"b": mkobj("Deployment", "deployment", "default"),
 				"c": mkobj("CustomResourceDefinition", "crd", ""),
 			},
-			targets: nil,
 			state: manifest.List{
 				mkobj("CustomResourceDefinition", "crd", ""),
 				mkobj("Service", "service", "default"),
@@ -107,7 +100,6 @@ func TestReconcileSorting(t *testing.T) {
 				"b": mkobj("C", "c", "default"),
 				"c": mkobj("A", "a", "default"),
 			},
-			targets: nil,
 			state: manifest.List{
 				mkobj("A", "a", "default"),
 				mkobj("B", "b", "default"),
@@ -121,7 +113,6 @@ func TestReconcileSorting(t *testing.T) {
 				"b": mkobj("Service", "service", "default"),
 				"c": mkobj("Service", "service", "default1"),
 			},
-			targets: nil,
 			state: manifest.List{
 				mkobj("Service", "service", "default"),
 				mkobj("Service", "service", "default1"),
@@ -135,7 +126,6 @@ func TestReconcileSorting(t *testing.T) {
 				"b": mkobj("Service", "service", "default"),
 				"c": mkobj("Service", "service1", "default"),
 			},
-			targets: nil,
 			state: manifest.List{
 				mkobj("Service", "service", "default"),
 				mkobj("Service", "service1", "default"),
@@ -149,11 +139,40 @@ func TestReconcileSorting(t *testing.T) {
 				"b": mkobj("CustomResourceDefinition", "crd", ""),
 				"c": mkobj("CustomResourceDefinition", "crd1", ""),
 			},
-			targets: nil,
 			state: manifest.List{
 				mkobj("CustomResourceDefinition", "crd", ""),
 				mkobj("CustomResourceDefinition", "crd1", ""),
 				mkobj("CustomResourceDefinition", "crd2", ""),
+			},
+		},
+		{
+			raw: map[string]interface{}{
+				"a": mkobj("Deployment", "b", "a"),
+				"b": mkobj("ConfigMap", "a", "a"),
+				"c": mkobj("Issuer", "a", "a"),
+				"d": mkobj("Service", "b", "a"),
+				"e": mkobj("Service", "a", "a"),
+				"f": mkobj("Deployment", "a", "a"),
+				"g": mkobj("ConfigMap", "a", "b"),
+				"h": mkobj("Issuer", "b", "a"),
+				"i": mkobj("Service", "b", "b"),
+				"j": mkobj("Deployment", "a", "b"),
+				"k": mkobj("ConfigMap", "b", "a"),
+				"l": mkobj("Issuer", "a", "b"),
+			},
+			state: manifest.List{
+				mkobj("ConfigMap", "a", "a"),
+				mkobj("ConfigMap", "b", "a"),
+				mkobj("ConfigMap", "a", "b"),
+				mkobj("Service", "a", "a"),
+				mkobj("Service", "b", "a"),
+				mkobj("Service", "b", "b"),
+				mkobj("Deployment", "a", "a"),
+				mkobj("Deployment", "b", "a"),
+				mkobj("Deployment", "a", "b"),
+				mkobj("Issuer", "a", "a"),
+				mkobj("Issuer", "b", "a"),
+				mkobj("Issuer", "a", "b"),
 			},
 		},
 	}
