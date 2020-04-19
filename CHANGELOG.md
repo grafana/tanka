@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.2 (2020-04-19)
+
+Mini-release to fix an issue with our Makefile (required for packaging). No
+changes in functionality.
+
+### Bug Fixes
+
+- **build**: Enable `static` Makefile target on all operating systems
+  ([#262](https://github.com/grafana/tanka/pull/262))
+
 ## 0.9.1 (2020-04-08)
 
 Small patch release to fix a `panic` issue with `tk apply`.
