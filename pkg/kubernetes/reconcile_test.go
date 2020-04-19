@@ -4,10 +4,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/grafana/tanka/pkg/kubernetes/manifest"
-	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 func TestExtract(t *testing.T) {
