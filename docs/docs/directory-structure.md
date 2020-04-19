@@ -53,8 +53,8 @@ When talking about directories, Tanka uses the following terms:
 
 | Term      | Description                              | Identifier file                   |
 | --------- | ---------------------------------------- | --------------------------------- |
-| `baseDir` | The root of your project                 | `jsonnetfile.json` or `tkrc.yaml` |
-| `rootDir` | The directory of the current environment | `main.jsonnet`                    |
+| `rootDir` | The root of your project                 | `jsonnetfile.json` or `tkrc.yaml` |
+| `baseDir` | The directory of the current environment | `main.jsonnet`                    |
 
 Regardless what subdirectory of the project you are in, Tanka will always be
 able to identify both directories, by searching for the identifier files in the
