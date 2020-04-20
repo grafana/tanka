@@ -12,7 +12,7 @@ import (
 
 // Kubernetes exposes methods to work with the Kubernetes orchestrator
 type Kubernetes struct {
-	Spec v1alpha1.Spec
+	Env v1alpha1.Config
 
 	// Client (kubectl)
 	ctl client.Client
@@ -26,25 +26,25 @@ type Kubernetes struct {
 type Differ func(manifest.List) (*string, error)
 
 // New creates a new Kubernetes with an initialized client
-func New(s v1alpha1.Spec) (*Kubernetes, error) {
+func New(env v1alpha1.Config) (*Kubernetes, error) {
 	// setup client
-	ctl, err := client.New(s.APIServer, s.Namespace)
+	ctl, err := client.New(env.Spec.APIServer, env.Spec.Namespace)
 	if err != nil {
 		return nil, err
 	}
 
 	// setup diffing
-	if s.DiffStrategy == "" {
-		s.DiffStrategy = "native"
+	if env.Spec.DiffStrategy == "" {
+		env.Spec.DiffStrategy = "native"
 
 		if ctl.Info().ServerVersion.LessThan(semver.MustParse("1.13.0")) {
-			s.DiffStrategy = "subset"
+			env.Spec.DiffStrategy = "subset"
 		}
 	}
 
 	k := Kubernetes{
-		Spec: s,
-		ctl:  ctl,
+		Env: env,
+		ctl: ctl,
 		differs: map[string]Differ{
 			"native": ctl.DiffServerSide,
 			"subset": SubsetDiffer(ctl),

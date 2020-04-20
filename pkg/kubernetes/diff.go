@@ -37,7 +37,7 @@ Please downgrade kubectl until https://github.com/kubernetes/kubernetes/issues/8
 	// would cause an error
 	//
 	// live: all other resources
-	live, soon := separate(state, k.Spec.Namespace, separateOpts{
+	live, soon := separate(state, k.Env.Spec.Namespace, separateOpts{
 		namespaces: namespaces,
 		resources:  resources,
 	})
@@ -127,7 +127,7 @@ func (e ErrorDiffStrategyUnknown) Error() string {
 }
 
 func (k *Kubernetes) differ(override string) (Differ, error) {
-	strategy := k.Spec.DiffStrategy
+	strategy := k.Env.Spec.DiffStrategy
 	if override != "" {
 		strategy = override
 	}

@@ -29,6 +29,14 @@ func TestReconcile(t *testing.T) {
 			flat: mapToList(testDataRegular().Flat),
 		},
 		{
+			name: "injectLabels",
+			deep: testDataRegular().Deep,
+			flat: mapToList(testDataRegular().Flat),
+			spec: v1alpha1.Spec{
+				InjectLabels: true,
+			},
+		},
+		{
 			name: "targets",
 			deep: testDataDeep().Deep,
 			flat: manifest.List{
@@ -64,10 +72,19 @@ func TestReconcile(t *testing.T) {
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
 			config := v1alpha1.New()
+			config.Metadata.Name = "testdata"
 			config.Spec = c.spec
-			got, err := Reconcile(c.deep.(map[string]interface{}), config.Spec, c.targets)
 
+			if config.Spec.InjectLabels {
+				for i, m := range c.flat {
+					m.Metadata().Labels()[LabelEnvironment] = config.Metadata.NameLabel()
+					c.flat[i] = m
+				}
+			}
+
+			got, err := Reconcile(c.deep.(map[string]interface{}), *config, c.targets)
 			require.Equal(t, c.err, err)
+
 			assert.ElementsMatch(t, c.flat, got)
 		})
 	}
@@ -76,7 +93,7 @@ func TestReconcile(t *testing.T) {
 func TestReconcileOrder(t *testing.T) {
 	got := make([]manifest.List, 10)
 	for i := 0; i < 10; i++ {
-		r, err := Reconcile(testDataDeep().Deep.(map[string]interface{}), v1alpha1.New().Spec, nil)
+		r, err := Reconcile(testDataDeep().Deep.(map[string]interface{}), *v1alpha1.New(), nil)
 		require.NoError(t, err)
 		got[i] = r
 	}

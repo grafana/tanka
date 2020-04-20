@@ -63,6 +63,28 @@ func applyCmd() *cli.Command {
 	return cmd
 }
 
+func pruneCmd() *cli.Command {
+	cmd := &cli.Command{
+		Use:   "prune <path>",
+		Short: "delete resources removed from Jsonnet",
+		Args:  workflowArgs,
+	}
+
+	getExtCode := extCodeParser(cmd.Flags())
+	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	force := cmd.Flags().Bool("force", false, "force deleting (kubectl delete --force)")
+
+	cmd.Run = func(cmd *cli.Command, args []string) error {
+		return tanka.Prune(args[0],
+			tanka.WithExtCode(getExtCode()),
+			tanka.WithApplyAutoApprove(*autoApprove),
+			tanka.WithApplyForce(*force),
+		)
+	}
+
+	return cmd
+}
+
 func diffCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "diff <path>",

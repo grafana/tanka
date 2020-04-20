@@ -34,11 +34,16 @@ type Resource struct {
 	Name       string `json:"NAME"`
 	Namespaced bool   `json:"NAMESPACED,string"`
 	Shortnames string `json:"SHORTNAMES"`
+	Verbs      string `json:"VERBS"`
+}
+
+func (r Resource) FQN() string {
+	return strings.TrimSuffix(r.Kind+"."+r.APIGroup, ".")
 }
 
 // Resources returns all API resources known to the server
 func (k Kubectl) Resources() (Resources, error) {
-	cmd := k.ctl("api-resources", "--cached")
+	cmd := k.ctl("api-resources", "--cached", "--output=wide")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = os.Stderr

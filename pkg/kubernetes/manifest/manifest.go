@@ -132,30 +132,47 @@ func (m Metadata) Namespace() string {
 	return m["namespace"].(string)
 }
 
-// HasLabels returns whether the manifest has labels
-func (m Metadata) HasLabels() bool {
-	return m2o(m).Get("labels").IsMSI()
+func (m Metadata) UID() string {
+	uid, ok := m["uid"].(string)
+	if !ok {
+		return ""
+	}
+	return uid
 }
 
 // Labels of the manifest
-func (m Metadata) Labels() map[string]interface{} {
-	if !m.HasLabels() {
-		return make(map[string]interface{})
-	}
-	return m["labels"].(map[string]interface{})
-}
-
-// HasAnnotations returns whether the manifest has annotations
-func (m Metadata) HasAnnotations() bool {
-	return m2o(m).Get("annotations").IsMSI()
+func (m Metadata) Labels() map[string]string {
+	return safeStringMap(m, "labels")
 }
 
 // Annotations of the manifest
-func (m Metadata) Annotations() map[string]interface{} {
-	if !m.HasAnnotations() {
-		return make(map[string]interface{})
+func (m Metadata) Annotations() map[string]string {
+	return safeStringMap(m, "annotations")
+}
+
+// safeStringMap safely returns a string map:
+// - returns if map[string]string
+// - converts if map[string]interface{}
+// - zeroes if anything else
+func safeStringMap(m map[string]interface{}, key string) map[string]string {
+	switch t := m[key].(type) {
+	case map[string]string:
+		return t
+	case map[string]interface{}:
+		mss := make(map[string]string)
+		for k, v := range t {
+			s, ok := v.(string)
+			if !ok {
+				continue
+			}
+			mss[k] = s
+		}
+		m[key] = mss
+		return m[key].(map[string]string)
+	default:
+		m[key] = make(map[string]string)
+		return m[key].(map[string]string)
 	}
-	return m["annotations"].(map[string]interface{})
 }
 
 // List of individual Manifests

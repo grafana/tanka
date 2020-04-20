@@ -3,7 +3,10 @@ package tanka
 import (
 	"fmt"
 
+	"github.com/fatih/color"
+
 	"github.com/grafana/tanka/pkg/kubernetes"
+	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/term"
 )
@@ -11,9 +14,6 @@ import (
 // Apply parses the environment at the given directory (a `baseDir`) and applies
 // the evaluated jsonnet to the Kubernetes cluster defined in the environments
 // `spec.json`.
-// NOTE: This function prints on screen in default configuration.
-// Use the `WithWarnWriter` modifier to change that. The `WithApply*` modifiers
-// may be used to further influence the behavior.
 func Apply(baseDir string, mods ...Modifier) error {
 	opts := parseModifiers(mods)
 
@@ -27,7 +27,8 @@ func Apply(baseDir string, mods ...Modifier) error {
 	}
 	defer kube.Close()
 
-	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{})
+	// show diff
+	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{Strategy: opts.diff.Strategy})
 	switch {
 	case err != nil:
 		// This is not fatal, the diff is not strictly required
@@ -43,7 +44,28 @@ func Apply(baseDir string, mods ...Modifier) error {
 		fmt.Print(b.String())
 	}
 
+	// prompt for confirmation
+	if opts.apply.AutoApprove {
+	} else if err := confirmPrompt("Applying to", p.Env.Spec.Namespace, kube.Info()); err != nil {
+		return err
+	}
+
 	return kube.Apply(p.Resources, opts.apply)
+}
+
+// confirmPrompt asks the user for confirmation before apply
+func confirmPrompt(action, namespace string, info client.Info) error {
+	alert := color.New(color.FgRed, color.Bold).SprintFunc()
+
+	return term.Confirm(
+		fmt.Sprintf(`%s namespace '%s' of cluster '%s' at '%s' using context '%s'.`, action,
+			alert(namespace),
+			alert(info.Kubeconfig.Cluster.Name),
+			alert(info.Kubeconfig.Cluster.Cluster.Server),
+			alert(info.Kubeconfig.Context.Name),
+		),
+		"yes",
+	)
 }
 
 // Diff parses the environment at the given directory (a `baseDir`) and returns
