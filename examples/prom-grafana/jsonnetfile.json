@@ -1,5 +1,5 @@
 {
-  "goImportStyle": false,
+  "version": 1,
   "dependencies": [
     {
       "source": {
@@ -19,5 +19,6 @@
       },
       "version": "master"
     }
-  ]
+  ],
+  "legacyImports": true
 }
