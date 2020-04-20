@@ -179,7 +179,7 @@ func TestReconcileSorting(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		res, err := Reconcile(test.raw, v1alpha1.New().Spec, test.targets)
+		res, err := Reconcile(test.raw, *v1alpha1.New(), test.targets)
 
 		require.NoError(t, err)
 		require.Equal(t, test.state, res)
