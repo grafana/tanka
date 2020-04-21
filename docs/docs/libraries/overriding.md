@@ -28,7 +28,7 @@ For example, if `/vendor/foo/bar.libsonnet` contained an error, you could create
 >
 > ```jsonnet
 > // in /lib/foo/bar.libsonnet:
-> import "../vendor/foo/bar.libsonnet" + {
+> (import "../../vendor/foo/bar.libsonnet") + {
 >   foo+: {
 >     bar: "fixed"
 >   }
