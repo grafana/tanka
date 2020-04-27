@@ -53,7 +53,7 @@ Tanka's behavior can be customized per Environment using a file called `spec.jso
 It is possible to access above data from Jsonnet:
 
 ```jsonnet
-local tk = import "tk.libsonnet";
+local tk = import "tk";
 
 {
   // The cluster IP
