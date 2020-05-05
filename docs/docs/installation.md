@@ -17,9 +17,39 @@ prerequesites:
 - (recommended) `jb`: [#Jsonnet-bundler](#jsonnet-bundler), the Jsonnet package
   manager
 
-## Precompiled binaries (recommended)
+## Using a package manager (recommended)
 
-We provide pre-compiled binaries for Tanka at
+We maintain Tanka packages for some operation systems. Installing these is
+recommeded, as updates are automatically distributed.
+
+### macOS
+
+Tanka is in
+[`Homebrew/homebrew-core`](https://github.com/Homebrew/homebrew-core/blob/master/Formula/tanka.rb),
+so you can just install it using `brew`:
+
+```bash
+$ brew install tanka
+```
+
+### ArchLinux
+
+We maintain two AUR packages, one building [from
+source](https://aur.archlinux.org/packages/tanka/) and another one using a
+[pre-compiled binary](https://aur.archlinux.org/packages/tanka-bin/). These can
+be installed using any AUR helper, e.g. `yay`:
+
+```bash
+# from source:
+$ yay tanka
+
+# using pre-compiled binary:
+$ yay tanka-bin
+```
+
+## Precompiled binaries
+
+For all other operating systems, we provide pre-compiled binaries for Tanka at
 https://github.com/grafana/tanka/releases.
 
 Just grab the latest version from there, download it and put somewhere in your
