@@ -71,7 +71,12 @@ func initCmd() *cli.Command {
 }
 
 func installK8sLib() error {
-	if _, err := exec.LookPath("jb"); err != nil {
+	jbBinary := "jb"
+	if env := os.Getenv("TANKA_JB_PATH"); env != "" {
+		jbBinary = env
+	}
+
+	if _, err := exec.LookPath(jbBinary); err != nil {
 		return errors.New("jsonnet-bundler not found in $PATH. Follow https://tanka.dev/install#jsonnet-bundler for installation instructions")
 	}
 
