@@ -1,5 +1,57 @@
 # Changelog
 
+## 0.10.0 (2020-05-07)
+
+New month, new release! And this one ships with a long awaited feature:
+
+#### :sparkles: Garbage collection
+
+Tanka can finally clean up behind itself. By optionally attaching a
+`tanka.dev/environment` label to each resource it creates, we can find these
+afterwards and purge those removed from the Jsonnet code. No more dangling
+resources!
+
+> :warning: Keep in mind this is still experimental!
+
+To get started, enable labeling in your environment's `spec.json`:
+
+```diff
+  "spec": {
++   "injectLabels": true,
+  }
+```
+
+Don't forget to `tk apply` afterwards! From now on, Tanka can clean up using `tk prune`.
+
+Docs: https://tanka.dev/garbage-collection
+
+#### :boat: Logo
+
+Tanka now has it's very own logo, and here it is:
+
+<img src="docs/img/logo.svg" width="400px" />
+
+#### :package: Package managers
+
+Tanka is now present in some package managers, notably `brew` for macOS and the
+AUR of ArchLinux! See the updated [install
+instructions](https://tanka.dev/install#using-a-package-manager-recommended) to
+make sure to use these if possible.
+
+### Features:
+
+- **cli**: `TANKA_JB_PATH` environment variable introduced to set the `jb`
+  binary if required **([#272](https://github.com/grafana/tanka/pull/272))**.
+  Thanks [@qckzr](https://github.com/qckzr)
+
+* **kubernetes**: Garbage collection
+  **([#251](https://github.com/grafana/tanka/pull/251))**
+
+### Bug Fixes
+
+- **kubernetes**: Resource sorting is now deterministic
+  **([#259](https://github.com/grafana/tanka/pull/259))**
+
 ## 0.9.2 (2020-04-19)
 
 Mini-release to fix an issue with our Makefile (required for packaging). No
