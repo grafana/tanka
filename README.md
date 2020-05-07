@@ -30,7 +30,7 @@
 # Grafana Tanka
 
 <img
-  src="https://raw.githubusercontent.com/grafana/tanka/logo/master/img/example.png"
+  src="https://raw.githubusercontent.com/grafana/tanka/master/docs/img/example.png"
   width="50%"
   align="right"
 />
