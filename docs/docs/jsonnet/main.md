@@ -119,7 +119,7 @@ local list = {
   items: [
     {
       apiVersion: "v1",
-      kind: "Service,
+      kind: "Service",
       /* ... */
     }
     /* ... */
