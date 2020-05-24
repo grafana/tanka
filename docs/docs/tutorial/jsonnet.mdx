@@ -287,7 +287,7 @@ This allows us to make sure that you will never accidentally apply to the wrong
 cluster.
 
 > **Note**: Tanka won't create the namespace for you -- you need to include it in
-> Jsonnet:
+> Jsonnet by adding it to `environments/default/main.jsonnet`:
 > ```jsonnet
 > {
 >   my_namespace: {
