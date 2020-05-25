@@ -1,8 +1,8 @@
-/** @jsx jsx */
-import { jsx, Flex } from "theme-ui"
-import { Link, useConfig } from "docz"
-
 import * as styles from "gatsby-theme-docz/src/components/Logo/styles"
+
+/** @jsx jsx */
+import { Flex, jsx } from "theme-ui"
+import { Link, useConfig } from "docz"
 
 export const Logo = () => {
   const config = useConfig()
@@ -17,7 +17,7 @@ export const Logo = () => {
           lineHeight: "1.2",
         }}
       >
-        <span>{config.title}</span>
+        <span>Grafana Tanka</span>
         <span sx={{ fontSize: "0.7em" }}>{config.description}</span>
       </Link>
     </Flex>

@@ -1,0 +1,32 @@
+---
+route: /
+title: Introduction
+
+seoTitle: "Grafana Tanka: Define. Reuse. Override."
+description: >
+  Grafana Tanka is the robust configuration utility for your Kubernetes cluster, powered by the Jsonnet language.
+---
+
+import { Highlights } from "./home"
+import { Catcher } from "../src/components/home"
+
+<Catcher />
+
+## Highlights
+
+<Highlights
+  elems={{
+    Clean:
+      "The Jsonnet language expresses your Kubernetes apps more obviously than YAML ever did",
+    Reusable:
+      "Build application libraries, import them anywhere and even share them on GitHub!",
+    Concise:
+      "Using the Kubernetes library, you will never see boilerplate again!",
+    Confidence:
+      "Stop guessing and use powerful diff to know the exact changes in advance",
+    "Production ready":
+      "Tanka deploys Grafana Cloud and many more production setups",
+    "Open Source":
+      "Just like the popular Grafana and Loki projects, Tanka is fully open-source",
+  }}
+/>

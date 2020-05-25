@@ -50,7 +50,7 @@ module.exports = {
         short_name: "Tanka",
         start_url: "/",
         display: `standalone`,
-        icon: `img/tk_black.png`,
+        icon: `img/logo_black.svg`,
         background_color: "#ffffff",
         theme_color: "#000000",
       },

@@ -1,9 +1,9 @@
-/** @jsx jsx */
-import { jsx } from "theme-ui"
+import { ChevronDown, ChevronUp } from "gatsby-theme-docz/src/components/Icons"
 import React, { useState } from "react"
 
 import ThemeStyles from "gatsby-theme-docz/src/theme/styles"
-import { ChevronDown, ChevronUp } from "gatsby-theme-docz/src/components/Icons"
+/** @jsx jsx */
+import { jsx } from "theme-ui"
 
 export const Code = props => (
   <code
@@ -18,15 +18,20 @@ export const Code = props => (
 )
 
 // Smart codeblock: shows only first 25 lines, if longer an expand button
-export const CodeBlock = props => (
-  <Code>
-    {React.Children.toArray(props.children).length > 20 ? (
-      <LongCode>{props.children}</LongCode>
-    ) : (
-      props.children
-    )}
-  </Code>
-)
+export const CodeBlock = props => {
+  const lines = React.Children.toArray(props.children).reduce((n, c) => {
+    if (c?.props?.className === "vscode-highlight-line") {
+      return n + 1
+    }
+    return n
+  }, 0)
+
+  return (
+    <Code>
+      {lines > 20 ? <LongCode>{props.children}</LongCode> : props.children}
+    </Code>
+  )
+}
 
 export const Pre = props => (
   <pre

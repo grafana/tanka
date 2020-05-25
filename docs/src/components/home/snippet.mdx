@@ -1,0 +1,14 @@
+```jsonnet
+local k = import "k.libsonnet";
+
+{
+    grafana: k.apps.v1.deployment.new(
+        name="grafana",
+        replicas=1,
+        containers=[k.core.v1.container.new(
+            name="grafana",
+            image="grafana/grafana",
+        )]
+    )
+}
+```
