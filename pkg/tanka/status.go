@@ -19,11 +19,11 @@ type Info struct {
 func Status(baseDir string, mods ...Modifier) (*Info, error) {
 	opts := parseModifiers(mods)
 
-	r, err := parse(baseDir, opts)
+	r, err := load(baseDir, opts)
 	if err != nil {
 		return nil, err
 	}
-	kube, err := r.newKube()
+	kube, err := r.connect()
 	if err != nil {
 		return nil, err
 	}

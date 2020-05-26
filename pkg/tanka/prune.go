@@ -13,11 +13,11 @@ func Prune(baseDir string, mods ...Modifier) error {
 	opts := parseModifiers(mods)
 
 	// parse jsonnet, init k8s client
-	p, err := parse(baseDir, opts)
+	p, err := load(baseDir, opts)
 	if err != nil {
 		return err
 	}
-	kube, err := p.newKube()
+	kube, err := p.connect()
 	if err != nil {
 		return err
 	}

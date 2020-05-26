@@ -31,7 +31,9 @@ func ParseDir(baseDir, name string) (*v1alpha1.Config, error) {
 	data, err := ioutil.ReadFile(filepath.Join(baseDir, Specfile))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, ErrNoSpec{name}
+			c := v1alpha1.New()
+			c.Metadata.Name = name
+			return c, ErrNoSpec{name}
 		}
 		return nil, err
 	}
