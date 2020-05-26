@@ -61,7 +61,7 @@ func load(dir string, opts *options) (*loaded, error) {
 		return nil, err
 	}
 
-	rec, err := process.Process(raw, *env, process.RegExps(opts.targets))
+	rec, err := process.Process(raw, *env, opts.targets)
 	if err != nil {
 		return nil, err
 	}

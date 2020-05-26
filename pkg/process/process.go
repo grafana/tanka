@@ -1,9 +1,13 @@
 package process
 
 import (
-	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+)
+
+const (
+	MetadataPrefix   = "tanka.dev"
+	LabelEnvironment = MetadataPrefix + "/environment"
 )
 
 // Process converts the raw Jsonnet evaluation result (JSON tree) into a flat
@@ -42,7 +46,7 @@ func Label(list manifest.List, cfg v1alpha1.Config) manifest.List {
 	for i, m := range list {
 		// inject tanka.dev/environment label
 		if cfg.Spec.InjectLabels {
-			m.Metadata().Labels()[kubernetes.LabelEnvironment] = cfg.Metadata.NameLabel()
+			m.Metadata().Labels()[LabelEnvironment] = cfg.Metadata.NameLabel()
 		}
 		list[i] = m
 	}

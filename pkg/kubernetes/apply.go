@@ -7,6 +7,7 @@ import (
 
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/process"
 )
 
 // ApplyOpts allow set additional parameters for the apply operation
@@ -60,7 +61,7 @@ See https://tanka.dev/garbage-collection for more details.`)
 	fmt.Print("fetching previously created resources .. ")
 	// get all resources matching our label
 	matched, err := k.ctl.GetByLabels("", kinds, map[string]string{
-		LabelEnvironment: k.Env.Metadata.NameLabel(),
+		process.LabelEnvironment: k.Env.Metadata.NameLabel(),
 	})
 	if err != nil {
 		return nil, err

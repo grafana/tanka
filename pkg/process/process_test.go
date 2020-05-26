@@ -3,7 +3,6 @@ package process
 import (
 	"testing"
 
-	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/testify/assert"
@@ -75,7 +74,7 @@ func TestProcess(t *testing.T) {
 
 			if config.Spec.InjectLabels {
 				for i, m := range c.flat {
-					m.Metadata().Labels()[kubernetes.LabelEnvironment] = config.Metadata.NameLabel()
+					m.Metadata().Labels()[LabelEnvironment] = config.Metadata.NameLabel()
 					c.flat[i] = m
 				}
 			}
