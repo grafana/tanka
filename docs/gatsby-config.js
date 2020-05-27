@@ -64,12 +64,7 @@ module.exports = {
 
     {
       resolve: `gatsby-plugin-algolia-docsearch`,
-      options: {
-        apiKey: "e2f75fb0b87b42319211c9e8e07ab3b6", // required
-        indexName: "grafana_tanka", // required
-        inputSelector: "#algolia-docsearch", // required
-        debug: false, // (bool) Optional. Default `false`
-      },
+      options: require("./algolia.json"),
     },
   ],
 }
