@@ -6375,6 +6375,13 @@ gatsby-page-utils@^0.2.7:
     lodash "^4.17.15"
     micromatch "^3.1.10"
 
+gatsby-plugin-algolia-docsearch@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-algolia-docsearch/-/gatsby-plugin-algolia-docsearch-1.0.5.tgz#d6dea17deda8c8bf9ac8cd3e1fb8f6bf6591db01"
+  integrity sha512-2oylL3ioy22Cu24zP8SpanK09SlP8i3p1j9CQ2rTXJgdNmsK2QhqymaLOGBvzGDMpPRn1qJszlNz/EUNAHafjg==
+  dependencies:
+    "@babel/runtime" "^7.0.0"
+
 gatsby-plugin-alias-imports@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/gatsby-plugin-alias-imports/-/gatsby-plugin-alias-imports-1.0.5.tgz#44c0856d77acb74b58b89ec725dadd8f5d5b327d"

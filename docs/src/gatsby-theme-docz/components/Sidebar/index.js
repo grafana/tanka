@@ -12,6 +12,8 @@ import { NavGroup } from "gatsby-theme-docz/src/components/NavGroup"
 import { NavLink } from "gatsby-theme-docz/src/components/NavLink"
 import { NavSearch } from "gatsby-theme-docz/src/components/NavSearch"
 
+import { Algolia } from "./algolia"
+
 export const Sidebar = React.forwardRef((props, ref) => {
   const [query, setQuery] = useState("")
   const menus = useMenus({ query })
@@ -39,11 +41,9 @@ export const Sidebar = React.forwardRef((props, ref) => {
             alt=""
           ></img>
         </Link>
-        <NavSearch
-          placeholder="Type to search..."
-          value={query}
-          onChange={handleChange}
-        />
+
+        <Algolia />
+
         {menus &&
           menus
             .filter(e => {
