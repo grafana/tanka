@@ -1,0 +1,14 @@
+If you happen to have a local [Go](https://golang.org) toolchain, you can also build Tanka from source using `go get`:
+
+```bash
+$ cd /tmp
+$ GO111MODULE=on go get github.com/grafana/tanka/cmd/tk
+```
+
+If that does not work for whatever reason (Go modules, etc), clone and compile manually:
+
+```bash
+$ git clone https://github.com/grafana/tanka
+$ cd tanka
+$ make install
+```

@@ -1,6 +1,6 @@
 /** @jsx jsx */
 import { jsx } from "theme-ui"
-import React from "react"
+import React from "react" // eslint-disable-line no-unused-vars
 import { useDocs } from "docz"
 
 const spacing = "7em"
