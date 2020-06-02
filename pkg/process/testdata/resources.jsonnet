@@ -1,4 +1,4 @@
-local k = (import "./k8s.libsonnet");
+local k = (import './k8s.libsonnet');
 {
   deployment: k.deployment(),
   service: k.service(),

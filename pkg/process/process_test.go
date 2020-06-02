@@ -1,18 +1,15 @@
-package kubernetes
+package process
 
 import (
-	"regexp"
 	"testing"
 
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/grafana/tanka/pkg/kubernetes/manifest"
-	"github.com/grafana/tanka/pkg/kubernetes/util"
-	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-func TestReconcile(t *testing.T) {
+func TestProcess(t *testing.T) {
 	tests := []struct {
 		name string
 		spec v1alpha1.Spec
@@ -20,7 +17,7 @@ func TestReconcile(t *testing.T) {
 		deep interface{}
 		flat manifest.List
 
-		targets []*regexp.Regexp
+		targets Matchers
 		err     error
 	}{
 		{
@@ -43,7 +40,7 @@ func TestReconcile(t *testing.T) {
 				testDataDeep().Flat[".app.web.backend.server.grafana.deployment"],
 				testDataDeep().Flat[".app.web.frontend.nodejs.express.service"],
 			},
-			targets: util.MustCompileTargetExps(
+			targets: MustStrExps(
 				`deployment/grafana`,
 				`service/frontend`,
 			),
@@ -55,7 +52,7 @@ func TestReconcile(t *testing.T) {
 				testDataDeep().Flat[".app.web.backend.server.grafana.deployment"],
 				testDataDeep().Flat[".app.web.frontend.nodejs.express.deployment"],
 			},
-			targets: util.MustCompileTargetExps(`deployment/.*`),
+			targets: MustStrExps(`deployment/.*`),
 		},
 		{
 			name: "targets-caseInsensitive",
@@ -63,7 +60,7 @@ func TestReconcile(t *testing.T) {
 			flat: manifest.List{
 				testDataDeep().Flat[".app.web.backend.server.grafana.deployment"],
 			},
-			targets: util.MustCompileTargetExps(
+			targets: MustStrExps(
 				`DePlOyMeNt/GrAfAnA`,
 			),
 		},
@@ -82,24 +79,11 @@ func TestReconcile(t *testing.T) {
 				}
 			}
 
-			got, err := Reconcile(c.deep.(map[string]interface{}), *config, c.targets)
+			got, err := Process(c.deep.(map[string]interface{}), *config, c.targets)
 			require.Equal(t, c.err, err)
 
 			assert.ElementsMatch(t, c.flat, got)
 		})
-	}
-}
-
-func TestReconcileOrder(t *testing.T) {
-	got := make([]manifest.List, 10)
-	for i := 0; i < 10; i++ {
-		r, err := Reconcile(testDataDeep().Deep.(map[string]interface{}), *v1alpha1.New(), nil)
-		require.NoError(t, err)
-		got[i] = r
-	}
-
-	for i := 1; i < 10; i++ {
-		require.Equal(t, got[0], got[i])
 	}
 }
 
@@ -109,4 +93,17 @@ func mapToList(ms map[string]manifest.Manifest) manifest.List {
 		l = append(l, m)
 	}
 	return l
+}
+
+func TestProcessOrder(t *testing.T) {
+	got := make([]manifest.List, 10)
+	for i := 0; i < 10; i++ {
+		r, err := Process(testDataDeep().Deep.(map[string]interface{}), *v1alpha1.New(), nil)
+		require.NoError(t, err)
+		got[i] = r
+	}
+
+	for i := 1; i < 10; i++ {
+		require.Equal(t, got[0], got[i])
+	}
 }

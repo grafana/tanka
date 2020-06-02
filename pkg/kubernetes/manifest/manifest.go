@@ -3,6 +3,7 @@ package manifest
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -70,6 +71,14 @@ func (m Manifest) Verify() error {
 // Kind returns the kind of the API object
 func (m Manifest) Kind() string {
 	return m["kind"].(string)
+}
+
+// KindName returns kind and metadata.name in the `<kind>/<name>` format
+func (m Manifest) KindName() string {
+	return fmt.Sprintf("%s/%s",
+		m.Kind(),
+		m.Metadata().Name(),
+	)
 }
 
 // APIVersion returns the version of the API this object uses

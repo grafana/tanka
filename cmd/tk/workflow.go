@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 
 	"github.com/posener/complete"
 	"github.com/spf13/pflag"
 
 	"github.com/go-clix/cli"
 
-	"github.com/grafana/tanka/pkg/kubernetes/util"
+	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
 )
@@ -49,7 +48,7 @@ func applyCmd() *cli.Command {
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		err := tanka.Apply(args[0],
-			tanka.WithTargets(stringsToRegexps(vars.targets)...),
+			tanka.WithTargets(stringsToRegexps(vars.targets)),
 			tanka.WithExtCode(getExtCode()),
 			tanka.WithApplyForce(*force),
 			tanka.WithApplyValidate(*validate),
@@ -106,7 +105,7 @@ func diffCmd() *cli.Command {
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		changes, err := tanka.Diff(args[0],
-			tanka.WithTargets(stringsToRegexps(vars.targets)...),
+			tanka.WithTargets(stringsToRegexps(vars.targets)),
 			tanka.WithExtCode(getExtCode()),
 			tanka.WithDiffStrategy(*diffStrategy),
 			tanka.WithDiffSummarize(*summarize),
@@ -153,7 +152,7 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 
 		pretty, err := tanka.Show(args[0],
 			tanka.WithExtCode(getExtCode()),
-			tanka.WithTargets(stringsToRegexps(vars.targets)...),
+			tanka.WithTargets(stringsToRegexps(vars.targets)),
 		)
 		if err != nil {
 			return err
@@ -165,8 +164,8 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 	return cmd
 }
 
-func stringsToRegexps(exps []string) []*regexp.Regexp {
-	regexs, err := util.CompileTargetExps(exps)
+func stringsToRegexps(exps []string) process.Matchers {
+	regexs, err := process.StrExps(exps...)
 	if err != nil {
 		log.Fatalln(err)
 	}

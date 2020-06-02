@@ -2,6 +2,7 @@ package tanka
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"path/filepath"
 
@@ -11,50 +12,77 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-// ParseResult contains the environments config and the manifests of this
-// particular env
-type ParseResult struct {
+// loaded is the final result of all processing stages:
+// 1. jpath.Resolve: Consruct import paths
+// 2. parseSpec: load spec.json
+// 3. evalJsonnet: evaluate Jsonnet to JSON
+// 4. process.Process: post-processing
+//
+// Also connect() is provided to connect to the cluster for live operations
+type loaded struct {
 	Env       *v1alpha1.Config
 	Resources manifest.List
 }
 
-func (p *ParseResult) newKube() (*kubernetes.Kubernetes, error) {
-	kube, err := kubernetes.New(*p.Env)
+// connect opens a connection to the backing Kubernetes cluster.
+func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
+	env := *p.Env
+
+	// check env is complete
+	s := ""
+	if env.Spec.APIServer == "" {
+		s += "  * spec.apiServer: No Kubernetes cluster endpoint specified"
+	}
+	if env.Spec.Namespace == "" {
+		s += "  * spec.namespace: Default namespace missing"
+	}
+	if s != "" {
+		return nil, fmt.Errorf("Your Environment's spec.json seems incomplete:\n%s\n\nPlease see https://tanka.dev/config for reference", s)
+	}
+
+	// connect client
+	kube, err := kubernetes.New(env)
 	if err != nil {
 		return nil, errors.Wrap(err, "connecting to Kubernetes")
 	}
+
 	return kube, nil
 }
 
-// parse loads the `spec.json`, evaluates the jsonnet and returns both, the
-// kubernetes object and the reconciled manifests
-func parse(dir string, opts *options) (*ParseResult, error) {
+// load runs all processing stages described at the Processed type
+func load(dir string, opts *options) (*loaded, error) {
 	raw, env, err := eval(dir, opts.extCode)
 	if err != nil {
 		return nil, err
 	}
 
-	rec, err := kubernetes.Reconcile(raw, *env, opts.targets)
-
+	rec, err := process.Process(raw, *env, opts.targets)
 	if err != nil {
-		return nil, errors.Wrap(err, "reconciling")
+		return nil, err
 	}
 
-	return &ParseResult{
+	return &loaded{
 		Resources: rec,
 		Env:       env,
 	}, nil
 }
 
-// eval returns the raw evaluated Jsonnet and the parsed env used for evaluation
+// eval runs all processing stages describe at the Processed type apart from
+// post-processing, thus returning the raw Jsonnet result.
 func eval(dir string, extCode map[string]string) (raw map[string]interface{}, env *v1alpha1.Config, err error) {
-	baseDir, env, err := loadDir(dir)
+	_, baseDir, rootDir, err := jpath.Resolve(dir)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "loading environment")
+		return nil, nil, errors.Wrap(err, "resolving jpath")
+	}
+
+	env, err = parseSpec(baseDir, rootDir)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	raw, err = evalJsonnet(baseDir, env, extCode)
@@ -65,22 +93,9 @@ func eval(dir string, extCode map[string]string) (raw map[string]interface{}, en
 	return raw, env, nil
 }
 
-func loadDir(dir string) (baseDir string, env *v1alpha1.Config, err error) {
-	_, baseDir, rootDir, err := jpath.Resolve(dir)
-	if err != nil {
-		return "", nil, errors.Wrap(err, "resolving jpath")
-	}
-
-	env, err = parseEnv(baseDir, rootDir)
-	if err != nil {
-		return "", nil, err
-	}
-	return baseDir, env, nil
-}
-
 // parseEnv parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
-func parseEnv(baseDir, rootDir string) (*v1alpha1.Config, error) {
+func parseSpec(baseDir, rootDir string) (*v1alpha1.Config, error) {
 	// name of the environment: relative path from rootDir
 	name, _ := filepath.Rel(rootDir, baseDir)
 
@@ -90,6 +105,9 @@ func parseEnv(baseDir, rootDir string) (*v1alpha1.Config, error) {
 		// the config includes deprecated fields
 		case spec.ErrDeprecated:
 			log.Println(err)
+		// spec.json missing. we can still work with the default value
+		case spec.ErrNoSpec:
+			return config, nil
 		// some other error
 		default:
 			return nil, errors.Wrap(err, "reading spec.json")

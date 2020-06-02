@@ -5,9 +5,8 @@
 package tanka
 
 import (
-	"regexp"
-
 	"github.com/grafana/tanka/pkg/kubernetes"
+	"github.com/grafana/tanka/pkg/process"
 )
 
 // parseModifiers parses all modifiers into an options struct
@@ -24,7 +23,7 @@ type options struct {
 	extCode map[string]string
 
 	// target regular expressions to limit the working set
-	targets []*regexp.Regexp
+	targets process.Matchers
 
 	// additional options for diff
 	diff kubernetes.DiffOpts
@@ -46,7 +45,7 @@ func WithExtCode(code map[string]string) Modifier {
 
 // WithTargets allows to submit regular expressions to limit the working set of
 // objects (https://tanka.dev/output-filtering/).
-func WithTargets(t ...*regexp.Regexp) Modifier {
+func WithTargets(t process.Matchers) Modifier {
 	return func(opts *options) {
 		opts.targets = t
 	}

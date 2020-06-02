@@ -51,7 +51,7 @@ func exportCmd() *cli.Command {
 		// get the manifests
 		res, err := tanka.Show(args[0],
 			tanka.WithExtCode(getExtCode()),
-			tanka.WithTargets(stringsToRegexps(vars.targets)...),
+			tanka.WithTargets(stringsToRegexps(vars.targets)),
 		)
 		if err != nil {
 			return err

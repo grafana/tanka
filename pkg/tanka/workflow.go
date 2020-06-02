@@ -17,18 +17,18 @@ import (
 func Apply(baseDir string, mods ...Modifier) error {
 	opts := parseModifiers(mods)
 
-	p, err := parse(baseDir, opts)
+	l, err := load(baseDir, opts)
 	if err != nil {
 		return err
 	}
-	kube, err := p.newKube()
+	kube, err := l.connect()
 	if err != nil {
 		return err
 	}
 	defer kube.Close()
 
 	// show diff
-	diff, err := kube.Diff(p.Resources, kubernetes.DiffOpts{Strategy: opts.diff.Strategy})
+	diff, err := kube.Diff(l.Resources, kubernetes.DiffOpts{Strategy: opts.diff.Strategy})
 	switch {
 	case err != nil:
 		// This is not fatal, the diff is not strictly required
@@ -46,11 +46,11 @@ func Apply(baseDir string, mods ...Modifier) error {
 
 	// prompt for confirmation
 	if opts.apply.AutoApprove {
-	} else if err := confirmPrompt("Applying to", p.Env.Spec.Namespace, kube.Info()); err != nil {
+	} else if err := confirmPrompt("Applying to", l.Env.Spec.Namespace, kube.Info()); err != nil {
 		return err
 	}
 
-	return kube.Apply(p.Resources, opts.apply)
+	return kube.Apply(l.Resources, opts.apply)
 }
 
 // confirmPrompt asks the user for confirmation before apply
@@ -77,17 +77,17 @@ func confirmPrompt(action, namespace string, info client.Info) error {
 func Diff(baseDir string, mods ...Modifier) (*string, error) {
 	opts := parseModifiers(mods)
 
-	p, err := parse(baseDir, opts)
+	l, err := load(baseDir, opts)
 	if err != nil {
 		return nil, err
 	}
-	kube, err := p.newKube()
+	kube, err := l.connect()
 	if err != nil {
 		return nil, err
 	}
 	defer kube.Close()
 
-	return kube.Diff(p.Resources, opts.diff)
+	return kube.Diff(l.Resources, opts.diff)
 }
 
 // Show parses the environment at the given directory (a `baseDir`) and returns
@@ -96,12 +96,12 @@ func Diff(baseDir string, mods ...Modifier) (*string, error) {
 func Show(baseDir string, mods ...Modifier) (manifest.List, error) {
 	opts := parseModifiers(mods)
 
-	p, err := parse(baseDir, opts)
+	l, err := load(baseDir, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	return p.Resources, nil
+	return l.Resources, nil
 }
 
 // Eval returns the raw evaluated Jsonnet output (without any transformations)
