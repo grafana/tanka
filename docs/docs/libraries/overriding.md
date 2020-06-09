@@ -24,7 +24,7 @@ For example, if `/vendor/foo/bar.libsonnet` contained an error, you could create
 `/lib/foo/bar.libsonnet` and fix it there.
 
 > **Tip:** Instead of copying the file to the new location and making the edits,
-> use a relative import and [patching](/tutorial/environments#patching):
+> use an absolute import and [patching](/tutorial/environments#patching):
 >
 > ```jsonnet
 > // in /lib/foo/bar.libsonnet:
@@ -34,6 +34,13 @@ For example, if `/vendor/foo/bar.libsonnet` contained an error, you could create
 >   }
 > }
 > ```
+
+> **Important:** If the file you override is not the one you directly import,
+> but imported by another file first, you need to take care of that as well.
+> Because Jsonnet first looks if files are locally present before considering
+> the [import paths](/libraries/import-paths), you need to make sure your
+> override is actually picked up, for example by copying the one you actually
+> next to your override.
 
 ## Per environment
 
