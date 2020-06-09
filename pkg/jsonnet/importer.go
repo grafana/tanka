@@ -83,8 +83,7 @@ func tkLoader(importedFrom, importedPath string) (contents *jsonnet.Contents, fo
 		return nil, "", nil
 	}
 
-	s := jsonnet.MakeContents(tkLibsonnet)
-	return &s, filepath.Join(locationInternal, "tk.libsonnet"), nil
+	return &tkLibsonnet, filepath.Join(locationInternal, "tk.libsonnet"), nil
 }
 
 // newFileLoader returns an importLoader that uses jsonnet.FileImporter to source
