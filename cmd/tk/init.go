@@ -60,7 +60,7 @@ func initCmd() *cli.Command {
 			}
 		}
 
-		fmt.Println("Directory structure set up! Remember to configure the API endpoint:\n`tk env set environments/default --server=127.0.0.1:6443`")
+		fmt.Println("Directory structure set up! Remember to configure the API endpoint:\n`tk env set environments/default --server=https://127.0.0.1:6443`")
 		if failed {
 			log.Println("Errors occured while initializing the project. Check the above logs for details.")
 		}
