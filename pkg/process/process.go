@@ -2,6 +2,7 @@ package process
 
 import (
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/kubernetes/resources"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
@@ -26,6 +27,9 @@ func Process(raw map[string]interface{}, cfg v1alpha1.Config, exprs Matchers) (m
 	for _, m := range extracted {
 		out = append(out, m)
 	}
+
+	// Inject metadata.namespace
+	out = Namespace(out, cfg.Spec.Namespace, resources.StaticStore)
 
 	// tanka.dev/** labels
 	out = Label(out, cfg)

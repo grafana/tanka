@@ -3,9 +3,9 @@ package process
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -64,6 +64,30 @@ func TestProcess(t *testing.T) {
 				`DePlOyMeNt/GrAfAnA`,
 			),
 		},
+		{
+			name: "force-namespace",
+			spec: v1alpha1.Spec{Namespace: "tanka"},
+			deep: testDataFlat().Deep,
+			flat: func() manifest.List {
+				f := testDataFlat().Flat["."]
+				f.Metadata()["namespace"] = "tanka"
+				return manifest.List{f}
+			}(),
+		},
+		{
+			name: "custom-namespace",
+			spec: v1alpha1.Spec{Namespace: "tanka"},
+			deep: func() map[string]interface{} {
+				d := testDataFlat().Deep.(map[string]interface{})
+				d["metadata"].(map[string]interface{})["namespace"] = "custom"
+				return d
+			}(),
+			flat: func() manifest.List {
+				f := testDataFlat().Flat["."]
+				f.Metadata()["namespace"] = "custom"
+				return manifest.List{f}
+			}(),
+		},
 	}
 
 	for _, c := range tests {
@@ -82,7 +106,11 @@ func TestProcess(t *testing.T) {
 			got, err := Process(c.deep.(map[string]interface{}), *config, c.targets)
 			require.Equal(t, c.err, err)
 
-			assert.ElementsMatch(t, c.flat, got)
+			Sort(c.flat)
+			Sort(got)
+			if diff := cmp.Diff(c.flat, got); diff != "" {
+				t.Errorf("Process() mismatch:\n%s", diff)
+			}
 		})
 	}
 }
