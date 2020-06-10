@@ -8,41 +8,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/grafana/tanka/pkg/kubernetes/resources"
 	"github.com/pkg/errors"
-
-	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
-// Resources the Kubernetes API knows
-type Resources []Resource
-
-// Namespaced returns whether a resource is namespace-specific or cluster-wide
-func (r Resources) Namespaced(m manifest.Manifest) bool {
-	for _, res := range r {
-		if m.Kind() == res.Kind {
-			return res.Namespaced
-		}
-	}
-
-	return false
-}
-
-// Resource is a Kubernetes API Resource
-type Resource struct {
-	APIGroup   string `json:"APIGROUP"`
-	Kind       string `json:"KIND"`
-	Name       string `json:"NAME"`
-	Namespaced bool   `json:"NAMESPACED,string"`
-	Shortnames string `json:"SHORTNAMES"`
-	Verbs      string `json:"VERBS"`
-}
-
-func (r Resource) FQN() string {
-	return strings.TrimSuffix(r.Kind+"."+r.APIGroup, ".")
-}
-
 // Resources returns all API resources known to the server
-func (k Kubectl) Resources() (Resources, error) {
+func (k Kubectl) Resources() (resources.Store, error) {
 	cmd := k.ctl("api-resources", "--cached", "--output=wide")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -52,7 +23,7 @@ func (k Kubectl) Resources() (Resources, error) {
 		return nil, err
 	}
 
-	var res Resources
+	var res resources.Store
 	if err := UnmarshalTable(out.String(), &res); err != nil {
 		return nil, errors.Wrap(err, "parsing table")
 	}

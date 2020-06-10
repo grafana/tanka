@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/kubernetes/resources"
 )
 
 // TestSeparate checks that separate properly separates resources:
@@ -110,7 +110,7 @@ func TestSeparate(t *testing.T) {
 
 	// static set of resources for this test (usually obtained using
 	// `client.Resources()`)
-	staticResources := client.Resources{
+	staticResources := resources.Store{
 		{APIGroup: "", Kind: "Namespace", Namespaced: false},
 		{APIGroup: "apps/v1", Kind: "Deployment", Namespaced: true},
 		{APIGroup: "rbac.authorization.k8s.io/v1", Kind: "ClusterRole", Namespaced: false},

@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/grafana/tanka/pkg/kubernetes/resources"
 )
 
 func TestUnmarshalTable(t *testing.T) {
@@ -19,19 +21,19 @@ func TestUnmarshalTable(t *testing.T) {
 		{
 			name: "normal",
 			tbl:  strings.TrimSpace(tblNormal),
-			want: &Resources{
+			want: &resources.Store{
 				{APIGroup: "apps", Name: "Deployment", Namespaced: true},
 				{APIGroup: "networking", Name: "Ingress", Namespaced: true},
 				{APIGroup: "", Name: "Namespace", Namespaced: false},
 				{APIGroup: "extensions", Name: "DaemonSet", Namespaced: true},
 			},
-			dest: &Resources{},
+			dest: &resources.Store{},
 		},
 		{
 			name: "empty",
 			tbl:  strings.TrimSpace(tblEmpty),
-			want: &Resources{},
-			dest: &Resources{
+			want: &resources.Store{},
+			dest: &resources.Store{
 				{APIGroup: "apps", Name: "Deployment", Namespaced: true},
 			},
 		},

@@ -6,8 +6,8 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 
-	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/kubernetes/resources"
 	"github.com/grafana/tanka/pkg/kubernetes/util"
 )
 
@@ -73,7 +73,7 @@ Please downgrade kubectl until https://github.com/kubernetes/kubernetes/issues/8
 
 type separateOpts struct {
 	namespaces map[string]bool
-	resources  client.Resources
+	resources  resources.Store
 }
 
 func separate(state manifest.List, defaultNs string, opts separateOpts) (live manifest.List, soon manifest.List) {
