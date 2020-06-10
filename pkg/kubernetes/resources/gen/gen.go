@@ -43,6 +43,8 @@ var StaticStore = %s
 	if err := ioutil.WriteFile("static_gen.go", []byte(content), 0644); err != nil {
 		log.Fatalln(err)
 	}
+
+	run("gofmt", "-s", "-w", "static_gen.go")
 }
 
 func run(a string, b ...string) string {
