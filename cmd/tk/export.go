@@ -32,6 +32,12 @@ func exportCmd() *cli.Command {
 	format := cmd.Flags().String("format", "{{.apiVersion}}.{{.kind}}-{{.metadata.name}}", "https://tanka.dev/exporting#filenames")
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
 
+	templateFuncMap := template.FuncMap{
+		"lower": func(s string) string {
+			return strings.ToLower(s)
+		},
+	}
+
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		// dir must be empty
 		to := args[1]
@@ -44,7 +50,7 @@ func exportCmd() *cli.Command {
 		}
 
 		// exit early if the template is bad
-		tmpl, err := template.New("").Parse(*format)
+		tmpl, err := template.New("").Funcs(templateFuncMap).Parse(*format)
 		if err != nil {
 			return fmt.Errorf("Parsing name format: %s", err)
 		}
