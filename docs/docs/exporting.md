@@ -52,3 +52,19 @@ loki-distributor-Deployment
 loki-loki-ConfigMap
 loki-ingester-Service
 ```
+
+You can optionally use the template function `lower` for lower-casing fields, e.g. in the above example
+
+```bash
+... --format='{{.metadata.labels.app}}-{{.metadata.name}}-{{.kind | lower}}'
+```
+
+would yield
+
+```
+loki-distributor-deployment
+```
+
+etc.
+
+You can also use a different file extension by providing `--extension='yml'`, for example.
