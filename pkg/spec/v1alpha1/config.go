@@ -33,6 +33,17 @@ type Metadata struct {
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
+// Has and Get make Metadata a simple wrapper for labels.Labels to use our map in their querier
+func (m Metadata) Has(label string) (exists bool) {
+	_, exists = m.Labels[label]
+	return exists
+}
+
+// Get implements Get for labels.Labels interface
+func (m Metadata) Get(label string) (value string) {
+	return m.Labels[label]
+}
+
 func (m Metadata) NameLabel() string {
 	return strings.Replace(m.Name, "/", ".", -1)
 }
