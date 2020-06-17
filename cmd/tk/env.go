@@ -206,6 +206,8 @@ func envListCmd() *cli.Command {
 
 	useJSON := cmd.Flags().Bool("json", false, "json output")
 
+	useNames := cmd.Flags().Bool("names", false, "plain names output")
+
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		envs := []v1alpha1.Config{}
 		dirs := findBaseDirs()
@@ -225,6 +227,11 @@ func envListCmd() *cli.Command {
 				return fmt.Errorf("Formatting as json: %s", err)
 			}
 			fmt.Println(string(j))
+			return nil
+		} else if *useNames {
+			for _, e := range envs {
+				fmt.Println(e.Metadata.Name)
+			}
 			return nil
 		}
 
