@@ -206,7 +206,7 @@ func envListCmd() *cli.Command {
 	}
 
 	useJSON := cmd.Flags().Bool("json", false, "json output")
-	labelSelector := cmd.Flags().StringP("selector", "l", "", "label selector to narrow down environments")
+	labelSelector := cmd.Flags().StringP("selector", "l", "", "Label selector. Uses the same syntax as kubectl does")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		envs := []v1alpha1.Config{}
