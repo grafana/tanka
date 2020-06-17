@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/posener/complete"
 	"github.com/spf13/pflag"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -205,12 +206,22 @@ func envListCmd() *cli.Command {
 	}
 
 	useJSON := cmd.Flags().Bool("json", false, "json output")
+	labelSelector := cmd.Flags().StringP("selector", "l", "", "Label selector. Uses the same syntax as kubectl does")
 
 	useNames := cmd.Flags().Bool("names", false, "plain names output")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		envs := []v1alpha1.Config{}
 		dirs := findBaseDirs()
+		var selector labels.Selector
+		var err error
+
+		if *labelSelector != "" {
+			selector, err = labels.Parse(*labelSelector)
+			if err != nil {
+				return err
+			}
+		}
 
 		for _, dir := range dirs {
 			env := setupConfiguration(dir)
@@ -218,7 +229,9 @@ func envListCmd() *cli.Command {
 				log.Printf("Could not setup configuration from %q", dir)
 				continue
 			}
-			envs = append(envs, *env)
+			if selector == nil || selector.Empty() || selector.Matches(env.Metadata) {
+				envs = append(envs, *env)
+			}
 		}
 
 		if *useJSON {
