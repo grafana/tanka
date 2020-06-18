@@ -44,24 +44,29 @@ func TransitiveImports(dir string) ([]string, error) {
 		return nil, errors.Wrap(err, "creating Jsonnet AST")
 	}
 
-	imports := make([]string, 0)
-	if err = importRecursive(&imports, vm, node, "main.jsonnet"); err != nil {
+	imports := make(map[string]bool)
+	if err = importRecursive(imports, vm, node, "main.jsonnet"); err != nil {
 		return nil, err
 	}
 
-	uniq := append(uniqueStringSlice(imports), mainFile)
-	for i := range uniq {
-		uniq[i], _ = filepath.Rel(rootDir, uniq[i])
+	paths := make([]string, 0, len(imports)+1)
+	for k := range imports {
+		paths = append(paths, k)
 	}
-	sort.Strings(uniq)
+	paths = append(paths, mainFile)
 
-	return uniq, nil
+	for i := range paths {
+		paths[i], _ = filepath.Rel(rootDir, paths[i])
+	}
+	sort.Strings(paths)
+
+	return paths, nil
 }
 
 // importRecursive takes a Jsonnet VM and recursively imports the AST. Every
 // found import is added to the `list` string slice, which will ultimately
 // contain all recursive imports
-func importRecursive(list *[]string, vm *jsonnet.VM, node ast.Node, currentPath string) error {
+func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, currentPath string) error {
 	switch node := node.(type) {
 	// we have an `import`
 	case *ast.Import:
@@ -73,7 +78,11 @@ func importRecursive(list *[]string, vm *jsonnet.VM, node ast.Node, currentPath 
 		}
 
 		abs, _ := filepath.Abs(foundAt)
-		*list = append(*list, abs)
+		if list[abs] {
+			return nil
+		}
+
+		list[abs] = true
 
 		if err := importRecursive(list, vm, contents, foundAt); err != nil {
 			return err
@@ -89,7 +98,11 @@ func importRecursive(list *[]string, vm *jsonnet.VM, node ast.Node, currentPath 
 		}
 
 		abs, _ := filepath.Abs(foundAt)
-		*list = append(*list, abs)
+		if list[abs] {
+			return nil
+		}
+
+		list[abs] = true
 
 	// neither `import` nor `importstr`, probably object or similar: try children
 	default:
