@@ -2,6 +2,7 @@ package jsonnet
 
 import (
 	"io/ioutil"
+	"log"
 	"path/filepath"
 	"sort"
 
@@ -59,11 +60,10 @@ func TransitiveImports(dir string) ([]string, error) {
 
 		// Try to resolve any symlinks; use the original path as a last resort
 		p, err := filepath.EvalSymlinks(k)
-		if err == nil {
-			paths = append(paths, p)
-			continue
+		if err != nil {
+			log.Fatalln("Failed to resolve symlink: ", err)
 		}
-		paths = append(paths, k)
+		paths = append(paths, p)
 
 	}
 	paths = append(paths, mainFile)
