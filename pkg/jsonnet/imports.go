@@ -21,6 +21,11 @@ func TransitiveImports(dir string) ([]string, error) {
 		return nil, err
 	}
 
+	dir, err = filepath.EvalSymlinks(dir)
+	if err != nil {
+		return nil, err
+	}
+
 	mainFile := filepath.Join(dir, "main.jsonnet")
 
 	sonnet, err := ioutil.ReadFile(mainFile)
