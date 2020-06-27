@@ -14,9 +14,9 @@ To accomplish this, it appends the `tanka.dev/environment: <name>` label to each
 resource. This is used to identify those which are missing from the local state in the
 future.
 
-Because the label causes a `diff` for every single object in your cluster and
-not everybody wants this, it needs to be explicitly enabled. To do so, add the
-following field to your `spec.json`:
+Because the label causes a `diff` for every single object in your environment and
+not everybody wants this, it needs to be explicitly enabled. To do so, apply the
+following diff to your `spec.json`:
 
 ```diff
 {
