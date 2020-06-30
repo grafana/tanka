@@ -3,9 +3,9 @@ package process
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -64,6 +64,14 @@ func TestProcess(t *testing.T) {
 				`DePlOyMeNt/GrAfAnA`,
 			),
 		},
+		{
+			name: "unwrap-list",
+			deep: loadFixture("list").Deep,
+			flat: manifest.List{
+				loadFixture("list").Flat["foo.items[0]"],
+				loadFixture("list").Flat["foo.items[1]"],
+			},
+		},
 	}
 
 	for _, c := range tests {
@@ -82,7 +90,10 @@ func TestProcess(t *testing.T) {
 			got, err := Process(c.deep.(map[string]interface{}), *config, c.targets)
 			require.Equal(t, c.err, err)
 
-			assert.ElementsMatch(t, c.flat, got)
+			Sort(c.flat)
+			if s := cmp.Diff(c.flat, got); s != "" {
+				t.Error(s)
+			}
 		})
 	}
 }

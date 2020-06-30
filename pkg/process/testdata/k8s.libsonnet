@@ -34,4 +34,9 @@
     kind: 'Namespace',
     metadata: { name: name },
   },
+  list(items, kind=""):: {
+    apiVersion: "v1",
+    kind: "%sList" % kind,
+    items: items,
+  }
 }
