@@ -2,6 +2,7 @@ package process
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/stretchr/objx"
@@ -67,13 +68,18 @@ func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) e
 		return nil
 	}
 
-	for key, value := range obj {
-		path := append(path, key)
+	keys := make([]string, 0, len(obj))
+	for k := range obj {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 
-		if value == nil { // result from false if condition in Jsonnet
+	for _, key := range keys {
+		path := append(path, key)
+		if obj[key] == nil { // result from false if condition in Jsonnet
 			continue
 		}
-		err := walkJSON(value, extracted, path)
+		err := walkJSON(obj[key], extracted, path)
 		if err != nil {
 			return err
 		}
