@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/pkg/errors"
 
@@ -55,6 +56,12 @@ func Parse(data []byte, name string) (*v1alpha1.Config, error) {
 	if err := handleDeprecated(config, data); err != nil {
 		return config, err
 	}
+
+	// default apiServer URL to https
+	if !regexp.MustCompile("^.+://").MatchString(config.Spec.APIServer) {
+		config.Spec.APIServer = "https://" + config.Spec.APIServer
+	}
+
 	return config, nil
 }
 
