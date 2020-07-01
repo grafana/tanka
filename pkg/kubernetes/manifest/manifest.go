@@ -41,30 +41,33 @@ func (m Manifest) String() string {
 // Verify checks whether the manifest is correctly structured
 func (m Manifest) Verify() error {
 	o := m2o(m)
-	var err SchemaError
+	fields := make(map[string]bool)
 
 	if !o.Get("kind").IsStr() {
-		err.add("kind")
+		fields["kind"] = true
 	}
 	if !o.Get("apiVersion").IsStr() {
-		err.add("apiVersion")
+		fields["apiVersion"] = true
 	}
 
 	// Lists don't have `metadata`
 	if !m.IsList() {
 		if !o.Get("metadata").IsMSI() {
-			err.add("metadata")
+			fields["metadata"] = true
 		}
 		if !o.Get("metadata.name").IsStr() {
-			err.add("metadata.name")
+			fields["metadata.name"] = true
 		}
 	}
 
-	if len(err.fields) == 0 {
+	if len(fields) == 0 {
 		return nil
 	}
 
-	return &err
+	return &SchemaError{
+		Fields:   fields,
+		Manifest: m,
+	}
 }
 
 // IsList returns whether the manifest is a List type, containing other

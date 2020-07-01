@@ -80,7 +80,8 @@ func Unwrap(manifests map[string]manifest.Manifest) error {
 
 			var e *manifest.SchemaError
 			if errors.As(i.Verify(), &e) {
-				return e.WithName(name + " has")
+				e.Name = name
+				return e
 			}
 
 			manifests[name] = i
