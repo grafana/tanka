@@ -72,6 +72,30 @@ func TestProcess(t *testing.T) {
 				loadFixture("list").Flat["foo.items[1]"],
 			},
 		},
+		{
+			name: "force-namespace",
+			spec: v1alpha1.Spec{Namespace: "tanka"},
+			deep: testDataFlat().Deep,
+			flat: func() manifest.List {
+				f := testDataFlat().Flat["."]
+				f.Metadata()["namespace"] = "tanka"
+				return manifest.List{f}
+			}(),
+		},
+		{
+			name: "custom-namespace",
+			spec: v1alpha1.Spec{Namespace: "tanka"},
+			deep: func() map[string]interface{} {
+				d := testDataFlat().Deep.(map[string]interface{})
+				d["metadata"].(map[string]interface{})["namespace"] = "custom"
+				return d
+			}(),
+			flat: func() manifest.List {
+				f := testDataFlat().Flat["."]
+				f.Metadata()["namespace"] = "custom"
+				return manifest.List{f}
+			}(),
+		},
 	}
 
 	for _, c := range tests {
