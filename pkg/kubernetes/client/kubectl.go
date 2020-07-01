@@ -3,7 +3,6 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
 	"regexp"
 
@@ -76,18 +75,13 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 		return nil, err
 	}
 
-	items, ok := list["items"].([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("listing namespaces: expected items to be an object, but got %T instead", list["items"])
+	items, err := list.Items()
+	if err != nil {
+		return nil, err
 	}
 
 	namespaces := make(map[string]bool)
-	for _, i := range items {
-		m, err := manifest.New(i.(map[string]interface{}))
-		if err != nil {
-			return nil, err
-		}
-
+	for _, m := range items {
 		namespaces[m.Metadata().Name()] = true
 	}
 	return namespaces, nil

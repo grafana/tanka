@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
@@ -42,30 +41,67 @@ func (m Manifest) String() string {
 // Verify checks whether the manifest is correctly structured
 func (m Manifest) Verify() error {
 	o := m2o(m)
-	var err SchemaError
+	fields := make(map[string]bool)
 
 	if !o.Get("kind").IsStr() {
-		err.add("kind")
+		fields["kind"] = true
 	}
 	if !o.Get("apiVersion").IsStr() {
-		err.add("apiVersion")
+		fields["apiVersion"] = true
 	}
 
 	// Lists don't have `metadata`
-	if !strings.HasSuffix(m.Kind(), "List") {
+	if !m.IsList() {
 		if !o.Get("metadata").IsMSI() {
-			err.add("metadata")
+			fields["metadata"] = true
 		}
 		if !o.Get("metadata.name").IsStr() {
-			err.add("metadata.name")
+			fields["metadata.name"] = true
 		}
 	}
 
-	if len(err.fields) == 0 {
+	if len(fields) == 0 {
 		return nil
 	}
 
-	return &err
+	return &SchemaError{
+		Fields:   fields,
+		Manifest: m,
+	}
+}
+
+// IsList returns whether the manifest is a List type, containing other
+// manifests as children. Code based on
+// https://github.com/kubernetes/apimachinery/blob/61490fe38e784592212b24b9878306b09be45ab0/pkg/apis/meta/v1/unstructured/unstructured.go#L54
+func (m Manifest) IsList() bool {
+	items, ok := m["items"]
+	if !ok {
+		return false
+	}
+	_, ok = items.([]interface{})
+	return ok
+}
+
+// Items returns list items if the manifest is of List type
+func (m Manifest) Items() (List, error) {
+	if !m.IsList() {
+		return nil, fmt.Errorf("Attempt to unwrap non-list object '%s' of kind '%s'", m.Metadata().Name(), m.Kind())
+	}
+
+	// This is safe, IsList() asserts this
+	items := m["items"].([]interface{})
+	list := make(List, 0, len(items))
+	for _, i := range items {
+		child, ok := i.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("Unwrapped list item is not an object, but '%T'", child)
+		}
+
+		m := Manifest(child)
+		list = append(list, m)
+	}
+
+	return list, nil
 }
 
 // Kind returns the kind of the API object

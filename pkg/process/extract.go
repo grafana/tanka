@@ -1,6 +1,7 @@
 package process
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -60,8 +61,10 @@ func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) e
 	// This looks like a kubernetes manifest, so make one and return it
 	if isKubernetesManifest(obj) {
 		m, err := manifest.NewFromObj(obj)
-		if err != nil {
-			return err.(*manifest.SchemaError).WithName(path.Full())
+		var e *manifest.SchemaError
+		if errors.As(err, &e) {
+			e.Name = path.Full()
+			return e
 		}
 
 		extracted[path.Full()] = m
