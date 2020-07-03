@@ -14,13 +14,10 @@ import (
 // Kubectl uses the `kubectl` command to operate on a Kubernetes cluster
 type Kubectl struct {
 	info Info
-
-	// internal fields
-	nsPatch string
 }
 
 // New returns a instance of Kubectl with a correct context already discovered.
-func New(endpoint, defaultNamespace string) (*Kubectl, error) {
+func New(endpoint string) (*Kubectl, error) {
 	k := Kubectl{}
 
 	// discover context
@@ -29,13 +26,6 @@ func New(endpoint, defaultNamespace string) (*Kubectl, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "finding usable context")
 	}
-
-	// set the default namespace by injecting it into the context
-	nsPatch, err := writeNamespacePatch(k.info.Kubeconfig.Context, defaultNamespace)
-	if err != nil {
-		return nil, errors.Wrap(err, "creating $KUBECONFIG patch for default namespace")
-	}
-	k.nsPatch = nsPatch
 
 	// query versions (requires context)
 	k.info.ClientVersion, k.info.ServerVersion, err = k.version()
@@ -52,9 +42,8 @@ func (k Kubectl) Info() Info {
 }
 
 // Close runs final cleanup:
-// - remove the nsPatch file
 func (k Kubectl) Close() error {
-	return os.RemoveAll(k.nsPatch)
+	return nil
 }
 
 // Namespaces of the cluster

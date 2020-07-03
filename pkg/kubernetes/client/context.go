@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -25,33 +24,6 @@ func findContext(endpoint string) (Config, error) {
 		Context: *context,
 		Cluster: *cluster,
 	}, nil
-}
-
-// writeNamespacePatch writes a temporary file that includes only the previously
-// discovered context with the `context.namespace` field set to the default
-// namespace from `spec.json`. Adding this file to `$KUBECONFIG` results in
-// `kubectl` picking this up, effectively setting the default namespace.
-func writeNamespacePatch(context Context, defaultNamespace string) (string, error) {
-	context.Context.Namespace = defaultNamespace
-
-	patch := map[string]interface{}{
-		"contexts": []interface{}{context},
-	}
-	out, err := json.Marshal(patch)
-	if err != nil {
-		return "", err
-	}
-
-	f, err := ioutil.TempFile("", "tk-kubectx-namespace-*.yaml")
-	if err != nil {
-		return "", err
-	}
-
-	if err = ioutil.WriteFile(f.Name(), out, 0644); err != nil {
-		return "", err
-	}
-
-	return f.Name(), nil
 }
 
 // Kubeconfig returns the merged $KUBECONFIG of the host
