@@ -27,8 +27,12 @@ type options struct {
 
 	// additional options for diff
 	diff kubernetes.DiffOpts
+
 	// additional options for apply
 	apply kubernetes.ApplyOpts
+
+	// additional options for delete
+	delete kubernetes.DeleteOpts
 }
 
 // Modifier allow to influence the behavior of certain `tanka.*` actions. They

@@ -84,6 +84,35 @@ func pruneCmd() *cli.Command {
 	return cmd
 }
 
+func deleteCmd() *cli.Command {
+	cmd := &cli.Command{
+		Use:   "delete <path>",
+		Short: "delete the environment from the cluster",
+		Args:  workflowArgs,
+	}
+
+	vars := workflowFlags(cmd.Flags())
+	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
+	validate := cmd.Flags().Bool("validate", true, "validation of resources (kubectl --validate=false)")
+	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	getExtCode := extCodeParser(cmd.Flags())
+
+	cmd.Run = func(cmd *cli.Command, args []string) error {
+		err := tanka.Delete(args[0],
+			tanka.WithTargets(stringsToRegexps(vars.targets)),
+			tanka.WithExtCode(getExtCode()),
+			tanka.WithApplyForce(*force),
+			tanka.WithApplyValidate(*validate),
+			tanka.WithApplyAutoApprove(*autoApprove),
+		)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return cmd
+}
+
 func diffCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "diff <path>",

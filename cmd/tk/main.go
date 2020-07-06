@@ -40,6 +40,7 @@ func main() {
 		showCmd(),
 		diffCmd(),
 		pruneCmd(),
+		deleteCmd(),
 	)
 
 	rootCmd.AddCommand(
