@@ -17,6 +17,11 @@ import (
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
+// BelRune is a string of the Ascii character BEL which made computers ring in ancient times
+// We use it as "magic" char for the subfolder creation as it is a non printable character and thereby will never be
+// in a valid filepath by accident. Only when we include it.
+const BelRune = string(rune(7))
+
 func exportCmd() *cli.Command {
 	args := workflowArgs
 	args.Validator = cli.ValidateExact(2)
@@ -50,7 +55,11 @@ func exportCmd() *cli.Command {
 		}
 
 		// exit early if the template is bad
-		tmpl, err := template.New("").Funcs(templateFuncMap).Parse(*format)
+
+		// Replace all os.path separators in string with BelRune for creating subfolders
+		replacedFormat := strings.Replace(*format, string(os.PathSeparator), BelRune, -1)
+
+		tmpl, err := template.New("").Funcs(templateFuncMap).Parse(replacedFormat)
 		if err != nil {
 			return fmt.Errorf("Parsing name format: %s", err)
 		}
@@ -70,11 +79,21 @@ func exportCmd() *cli.Command {
 			if err := tmpl.Execute(&buf, m); err != nil {
 				log.Fatalln("executing name template:", err)
 			}
-			name := strings.Replace(buf.String(), "/", "-", -1)
+
+			// Replace all os.path separators in string in order to not accidentally create subfolders
+			name := strings.Replace(buf.String(), string(os.PathSeparator), "-", -1)
+			// Replace the BEL character inserted with a path separator again in order to create a subfolder
+			name = strings.Replace(name, BelRune, string(os.PathSeparator), -1)
+
+			// Create all subfolders in path
+			path := filepath.Join(to, name+"."+*extension)
+			if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+				return fmt.Errorf("creating filepath '%s': %s", filepath.Dir(path), err)
+			}
 
 			data := m.String()
-			if err := ioutil.WriteFile(filepath.Join(to, name+"."+*extension), []byte(data), 0644); err != nil {
-				return fmt.Errorf("Writing manifest: %s", err)
+			if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+				return fmt.Errorf("writing manifest: %s", err)
 			}
 		}
 
