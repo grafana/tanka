@@ -90,6 +90,45 @@ func Diff(baseDir string, mods ...Modifier) (*string, error) {
 	return kube.Diff(l.Resources, opts.diff)
 }
 
+// Delete parses the environment at the given directory (a `baseDir`) and deletes
+// the generated objects from the Kubernetes cluster defined in the environment's
+// `spec.json`.
+func Delete(baseDir string, mods ...Modifier) error {
+	opts := parseModifiers(mods)
+
+	l, err := load(baseDir, opts)
+	if err != nil {
+		return err
+	}
+	kube, err := l.connect()
+	if err != nil {
+		return err
+	}
+	defer kube.Close()
+
+	// show diff
+	// static differ will never fail and always return something if input is not nil
+	diff, err := kubernetes.StaticDiffer(false)(l.Resources)
+
+	if err != nil {
+		fmt.Println("Error diffing:", err)
+	}
+
+	// in case of non-fatal error diff may be nil
+	if diff != nil {
+		b := term.Colordiff(*diff)
+		fmt.Print(b.String())
+	}
+
+	// prompt for confirmation
+	if opts.apply.AutoApprove {
+	} else if err := confirmPrompt("Deleting from", l.Env.Spec.Namespace, kube.Info()); err != nil {
+		return err
+	}
+
+	return kube.Delete(l.Resources, opts.apply)
+}
+
 // Show parses the environment at the given directory (a `baseDir`) and returns
 // the list of Kubernetes objects.
 // Tip: use the `String()` function on the returned list to get the familiar yaml stream

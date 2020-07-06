@@ -27,6 +27,7 @@ type options struct {
 
 	// additional options for diff
 	diff kubernetes.DiffOpts
+
 	// additional options for apply
 	apply kubernetes.ApplyOpts
 }
