@@ -50,6 +50,7 @@ export default {
     "Garbage collection",
     "Command-line completion",
     "Diff strategies",
+    "Namespaces",
 
     // reference
     "Configuration Reference",
