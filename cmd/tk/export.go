@@ -36,6 +36,7 @@ func exportCmd() *cli.Command {
 	getExtCode := extCodeParser(cmd.Flags())
 	format := cmd.Flags().String("format", "{{.apiVersion}}.{{.kind}}-{{.metadata.name}}", "https://tanka.dev/exporting#filenames")
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
+	force := cmd.Flags().Bool("force", false, "force operation, even if the output dir is not empty")
 
 	templateFuncMap := template.FuncMap{
 		"lower": func(s string) string {
@@ -50,8 +51,8 @@ func exportCmd() *cli.Command {
 		if err != nil {
 			return fmt.Errorf("Checking target dir: %s", err)
 		}
-		if !empty {
-			return fmt.Errorf("Target dir `%s` not empty. Aborting.", to)
+		if !empty && !*force {
+			return fmt.Errorf("Output dir `%s` not empty. Aborting.", to)
 		}
 
 		// exit early if the template is bad
