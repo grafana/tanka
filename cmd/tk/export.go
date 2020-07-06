@@ -36,7 +36,7 @@ func exportCmd() *cli.Command {
 	getExtCode := extCodeParser(cmd.Flags())
 	format := cmd.Flags().String("format", "{{.apiVersion}}.{{.kind}}-{{.metadata.name}}", "https://tanka.dev/exporting#filenames")
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
-	force := cmd.Flags().Bool("force", false, "force operation, even if the output dir is not empty")
+	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
 
 	templateFuncMap := template.FuncMap{
 		"lower": func(s string) string {
@@ -51,8 +51,8 @@ func exportCmd() *cli.Command {
 		if err != nil {
 			return fmt.Errorf("Checking target dir: %s", err)
 		}
-		if !empty && !*force {
-			return fmt.Errorf("Output dir `%s` not empty. Aborting.", to)
+		if !empty && !*merge {
+			return fmt.Errorf("Output dir `%s` not empty. Pass --merge to ignore this", to)
 		}
 
 		// exit early if the template is bad
@@ -88,10 +88,18 @@ func exportCmd() *cli.Command {
 
 			// Create all subfolders in path
 			path := filepath.Join(to, name+"."+*extension)
+
+			// Abort if already exists
+			if ok, err := fileExists(path); err != nil {
+				return err
+			} else if !ok {
+				return fmt.Errorf("File '%s' already exists. Aborting", path)
+			}
+
+			// Write file
 			if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 				return fmt.Errorf("creating filepath '%s': %s", filepath.Dir(path), err)
 			}
-
 			data := m.String()
 			if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
 				return fmt.Errorf("writing manifest: %s", err)
@@ -101,6 +109,14 @@ func exportCmd() *cli.Command {
 		return nil
 	}
 	return cmd
+}
+
+func fileExists(name string) (bool, error) {
+	_, err := os.Stat(name)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return err != nil, err
 }
 
 func dirEmpty(dir string) (bool, error) {
