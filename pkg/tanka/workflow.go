@@ -106,16 +106,9 @@ func Delete(baseDir string, mods ...Modifier) error {
 	}
 	defer kube.Close()
 
-	// The list of objects is sorted so that it applies correctly; to delete it, we need to reverse the order.
-	reversed := make(manifest.List, 0, len(l.Resources))
-
-	for i := len(l.Resources) - 1; i >= 0; i-- {
-		reversed = append(reversed, l.Resources[i])
-	}
-
 	// show diff
 	// static differ will never fail and always return something if input is not nil
-	diff, err := kubernetes.StaticDiffer(false)(reversed)
+	diff, err := kubernetes.StaticDiffer(false)(l.Resources)
 
 	// in case of non-fatal error diff may be nil
 	if diff != nil {
@@ -129,7 +122,7 @@ func Delete(baseDir string, mods ...Modifier) error {
 		return err
 	}
 
-	return kube.Delete(reversed, kubernetes.DeleteOpts(opts.apply))
+	return kube.Delete(l.Resources, kubernetes.DeleteOpts(opts.apply))
 }
 
 // Show parses the environment at the given directory (a `baseDir`) and returns
