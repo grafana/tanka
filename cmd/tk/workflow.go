@@ -92,7 +92,7 @@ func deleteCmd() *cli.Command {
 	}
 
 	vars := workflowFlags(cmd.Flags())
-	force := cmd.Flags().Bool("force", false, "force applying (kubectl delete --force)")
+	force := cmd.Flags().Bool("force", false, "force deleting (kubectl delete --force)")
 	validate := cmd.Flags().Bool("validate", true, "validation of resources (kubectl --validate=false)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	getExtCode := extCodeParser(cmd.Flags())

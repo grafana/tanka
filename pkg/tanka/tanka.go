@@ -30,10 +30,6 @@ type options struct {
 
 	// additional options for apply
 	apply kubernetes.ApplyOpts
-
-	// additional options for delete
-	// this is type-aliased to kubernetes.ApplyOpts and will be removed.
-	delete kubernetes.DeleteOpts
 }
 
 // Modifier allow to influence the behavior of certain `tanka.*` actions. They

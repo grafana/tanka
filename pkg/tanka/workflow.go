@@ -110,6 +110,10 @@ func Delete(baseDir string, mods ...Modifier) error {
 	// static differ will never fail and always return something if input is not nil
 	diff, err := kubernetes.StaticDiffer(false)(l.Resources)
 
+	if err != nil {
+		fmt.Println("Error diffing:", err)
+	}
+
 	// in case of non-fatal error diff may be nil
 	if diff != nil {
 		b := term.Colordiff(*diff)
@@ -122,7 +126,7 @@ func Delete(baseDir string, mods ...Modifier) error {
 		return err
 	}
 
-	return kube.Delete(l.Resources, kubernetes.DeleteOpts(opts.apply))
+	return kube.Delete(l.Resources, opts.apply)
 }
 
 // Show parses the environment at the given directory (a `baseDir`) and returns

@@ -50,5 +50,5 @@ func Prune(baseDir string, mods ...Modifier) error {
 	}
 
 	// delete resources
-	return kube.Delete(orphaned, kubernetes.DeleteOpts(opts.apply))
+	return kube.Delete(orphaned, opts.apply)
 }
