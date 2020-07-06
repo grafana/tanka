@@ -32,6 +32,7 @@ type options struct {
 	apply kubernetes.ApplyOpts
 
 	// additional options for delete
+	// this is type-aliased to kubernetes.ApplyOpts and will be removed.
 	delete kubernetes.DeleteOpts
 }
 

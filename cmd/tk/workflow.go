@@ -87,12 +87,12 @@ func pruneCmd() *cli.Command {
 func deleteCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "delete <path>",
-		Short: "delete the environment from the cluster",
+		Short: "delete the environment from cluster",
 		Args:  workflowArgs,
 	}
 
 	vars := workflowFlags(cmd.Flags())
-	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
+	force := cmd.Flags().Bool("force", false, "force applying (kubectl delete --force)")
 	validate := cmd.Flags().Bool("validate", true, "validation of resources (kubectl --validate=false)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	getExtCode := extCodeParser(cmd.Flags())
