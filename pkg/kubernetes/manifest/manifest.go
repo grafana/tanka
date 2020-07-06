@@ -38,25 +38,37 @@ func (m Manifest) String() string {
 	return string(y)
 }
 
+var (
+	ErrInvalidStr = fmt.Errorf("Missing or not of string type")
+	ErrInvalidMap = fmt.Errorf("Missing or not an object")
+)
+
 // Verify checks whether the manifest is correctly structured
 func (m Manifest) Verify() error {
 	o := m2o(m)
-	fields := make(map[string]bool)
+	fields := make(map[string]error)
 
 	if !o.Get("kind").IsStr() {
-		fields["kind"] = true
+		fields["kind"] = ErrInvalidStr
 	}
 	if !o.Get("apiVersion").IsStr() {
-		fields["apiVersion"] = true
+		fields["apiVersion"] = ErrInvalidStr
 	}
 
 	// Lists don't have `metadata`
 	if !m.IsList() {
 		if !o.Get("metadata").IsMSI() {
-			fields["metadata"] = true
+			fields["metadata"] = ErrInvalidMap
 		}
 		if !o.Get("metadata.name").IsStr() {
-			fields["metadata.name"] = true
+			fields["metadata.name"] = ErrInvalidStr
+		}
+
+		if err := verifyMSS(o.Get("metadata.labels").Data()); err != nil {
+			fields["metadata.labels"] = err
+		}
+		if err := verifyMSS(o.Get("metadata.annotations").Data()); err != nil {
+			fields["metadata.annotations"] = err
 		}
 	}
 
@@ -67,6 +79,27 @@ func (m Manifest) Verify() error {
 	return &SchemaError{
 		Fields:   fields,
 		Manifest: m,
+	}
+}
+
+// verifyMSS checks that ptr is either nil or a string map
+func verifyMSS(ptr interface{}) error {
+	if ptr == nil {
+		return nil
+	}
+
+	switch t := ptr.(type) {
+	case map[string]string:
+		return nil
+	case map[string]interface{}:
+		for k, v := range t {
+			if _, ok := v.(string); !ok {
+				return fmt.Errorf("Contains non-string field '%s' of type '%T'", k, v)
+			}
+		}
+		return nil
+	default:
+		return fmt.Errorf("Must be object, but got '%T' instead", ptr)
 	}
 }
 
