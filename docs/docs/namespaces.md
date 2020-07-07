@@ -7,7 +7,7 @@ route: /namespaces
 
 When using Tanka, namespaces are handled slightly different compared to
 `kubectl`, because environments offer more granular control than contexts used
-by `kubectl` do.
+by `kubectl`.
 
 ## Default namespaces
 

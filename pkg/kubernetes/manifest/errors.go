@@ -14,6 +14,12 @@ type SchemaError struct {
 	Manifest Manifest
 }
 
+var (
+	redf    = color.New(color.FgRed, color.Bold, color.Underline).Sprintf
+	yellowf = color.New(color.FgYellow).Sprintf
+	bluef   = color.New(color.FgBlue, color.Bold).Sprintf
+)
+
 // Error returns the fields the manifest at the path is missing
 func (s *SchemaError) Error() string {
 	if s.Name == "" {
@@ -37,10 +43,6 @@ func (s *SchemaError) Error() string {
 
 	return msg
 }
-
-var redf = color.New(color.FgRed, color.Bold, color.Underline).Sprintf
-var yellowf = color.New(color.FgYellow).Sprintf
-var bluef = color.New(color.FgBlue, color.Bold).Sprintf
 
 // SampleString is used for displaying code samples for error messages. It
 // truncates the output to 10 lines
