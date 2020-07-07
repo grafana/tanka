@@ -42,7 +42,11 @@ done
 
 Also, to use a more granular subset of your environments, you can now use
 `--selector` / `-l` to match against `metadata.labels` of defined in your
-`spec.json`
+`spec.json`:
+
+```bash
+$ tk env list -l status=dev
+```
 
 ### Features
 
@@ -52,7 +56,7 @@ Also, to use a more granular subset of your environments, you can now use
 - **cli**: `tk delete` command to teardown environments
   **([#313](https://github.com/grafana/tanka/pull/313))**
 
-* **cli**: Support different file-extensions that `.yaml` for `tk export`
+* **cli**: Support different file-extensions than `.yaml` for `tk export`
   **([#294](https://github.com/grafana/tanka/pull/394))** (**@marthjod**)
 * **cli**: Support creating sub-directories in `tk export`
   **([#300](https://github.com/grafana/tanka/pull/300))** (**@simonfrey**)
