@@ -90,9 +90,9 @@ func exportCmd() *cli.Command {
 			path := filepath.Join(to, name+"."+*extension)
 
 			// Abort if already exists
-			if ok, err := fileExists(path); err != nil {
+			if exists, err := fileExists(path); err != nil {
 				return err
-			} else if !ok {
+			} else if exists {
 				return fmt.Errorf("File '%s' already exists. Aborting", path)
 			}
 
@@ -116,7 +116,10 @@ func fileExists(name string) (bool, error) {
 	if os.IsNotExist(err) {
 		return false, nil
 	}
-	return err != nil, err
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func dirEmpty(dir string) (bool, error) {
