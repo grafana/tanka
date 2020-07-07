@@ -35,6 +35,9 @@ func Process(raw map[string]interface{}, cfg v1alpha1.Config, exprs Matchers) (m
 		out = append(out, m)
 	}
 
+	// set default namespace
+	out = Namespace(out, cfg.Spec.Namespace)
+
 	// tanka.dev/** labels
 	out = Label(out, cfg)
 

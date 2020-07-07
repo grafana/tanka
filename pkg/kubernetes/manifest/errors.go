@@ -3,33 +3,42 @@ package manifest
 import (
 	"fmt"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 // SchemaError means that some expected fields were missing
 type SchemaError struct {
-	Fields   map[string]bool
+	Fields   map[string]error
 	Name     string
 	Manifest Manifest
 }
 
+var (
+	redf    = color.New(color.FgRed, color.Bold, color.Underline).Sprintf
+	yellowf = color.New(color.FgYellow).Sprintf
+	bluef   = color.New(color.FgBlue, color.Bold).Sprintf
+)
+
 // Error returns the fields the manifest at the path is missing
 func (s *SchemaError) Error() string {
-	fields := make([]string, 0, len(s.Fields))
-	for k, missing := range s.Fields {
-		if !missing {
-			continue
-		}
-		fields = append(fields, k)
-	}
-
 	if s.Name == "" {
 		s.Name = "Resource"
 	}
 
-	msg := fmt.Sprintf("%s has missing or invalid fields: %s", s.Name, strings.Join(fields, ", "))
+	msg := fmt.Sprintf("%s has missing or invalid fields:\n", redf(s.Name))
+
+	for k, err := range s.Fields {
+		if err == nil {
+			continue
+		}
+
+		msg += fmt.Sprintf("  - %s: %s\n", yellowf(k), err)
+	}
 
 	if s.Manifest != nil {
-		msg += fmt.Sprintf(":\n\n%s\n\nPlease check above object.", SampleString(s.Manifest.String()).Indent(2))
+		msg += bluef("\nPlease check below object:\n")
+		msg += SampleString(s.Manifest.String()).Indent(2)
 	}
 
 	return msg
