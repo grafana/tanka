@@ -1,5 +1,83 @@
 # Changelog
 
+## 0.11.0 (2020-07-07)
+
+2 months later and here we are with another release! Packed with many
+detail-improvements, this is what we want to highlight:
+
+#### :sparkles: Enhanced Kubernetes resource handling
+
+From now on, Tanka handles the resources it extracts from your Jsonnet output in
+an enhanced way:
+
+1. **Lists**: Contents of lists, such as `RoleBindingList` are automatically
+   flattened into the resource stream Tanka works with. This makes sure they are
+   properly labeled for garbage collection, etc.
+2. **Default namespaces**: While you could always define the default namespace
+   (the one for resources without an explicit one) in `spec.json`, this
+   information is now also persisted into the YAML returned by `tk show` and `tk export`.
+   See https://tanka.dev/namespaces for more information.
+
+#### :hammer: More powerful exporting
+
+`tk export` can now do even more than just writing YAML files to disk:
+
+1. `--extension` can be used to control the file-extension (defaults to `.yaml`)
+2. When you put a `/` in your `--format` for the filename, Tanka creates a
+   directory or you. This allows e.g. sorting by namespace:
+   `--format='{{.metadata.namespace}}/{{.kind}}-{{.metadata.name}}'`
+3. Using `--merge`, you can export multiple environments into the same directory
+   tree, so you get the full YAML picture of your entire cluster!
+
+#### :fax: Easier shell scripting
+
+The `tk env list` command now has a `--names` option making it easy to operate on multiple environments:
+
+```bash
+# diff all environments:
+for e in $(tk env list --names); do
+  tk diff $e;
+done
+```
+
+Also, to use a more granular subset of your environments, you can now use
+`--selector` / `-l` to match against `metadata.labels` of defined in your
+`spec.json`
+
+### Features
+
+- **cli**: `tk env list` now supports label selectors, similar to `kubectl get -l` **([#295](https://github.com/grafana/tanka/pull/295))**
+- **cli**: If `spec.apiServer` of `spec.json` lacks a protocol, it now defaults
+  to `https` **([#289](https://github.com/grafana/tanka/pull/289))**
+- **cli**: `tk delete` command to teardown environments
+  **([#313](https://github.com/grafana/tanka/pull/313))**
+
+* **cli**: Support different file-extensions that `.yaml` for `tk export`
+  **([#294](https://github.com/grafana/tanka/pull/394))** (**@marthjod**)
+* **cli**: Support creating sub-directories in `tk export`
+  **([#300](https://github.com/grafana/tanka/pull/300))** (**@simonfrey**)
+* **cli**: Allow writing into existing folders during `tk export`
+  **([#314](https://github.com/grafana/tanka/pull/314))**
+
+- **tooling**: `tk tool imports` now follows symbolic links
+  **([#302](https://github.com/grafana/tanka/pull/302))**,
+  **([#303](https://github.com/grafana/tanka/pull/303))**
+
+* **process**: `List` types are now unwrapped by Tanka itself
+  **([#306](https://github.com/grafana/tanka/pull/306))**
+* **process**: Automatically set `metadata.namespace` to the value of
+  `spec.namespace` if not set from Jsonnet
+  **([#312](https://github.com/grafana/tanka/pull/312))**
+
+### Bug Fixes
+
+- **jsonnet**: Using `import "tk"` twice no longer panics
+  **([#290](https://github.com/grafana/tanka/pull/290))**
+- **tooling**: `tk tool imports` no longer gets stuck when imports are recursive
+  **([#298](https://github.com/grafana/tanka/pull/298))**
+- **process**: Fully deterministic recursion, so that error messages are
+  consistent **([#307](https://github.com/grafana/tanka/pull/307))**
+
 ## 0.10.0 (2020-05-07)
 
 New month, new release! And this one ships with a long awaited feature:
