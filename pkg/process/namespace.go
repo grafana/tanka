@@ -14,44 +14,33 @@ const (
 // This helps us to know which objects we should NOT apply namespaces to automatically.
 // We can add to this list periodically if new types are added. There is no reason not to add popular CRD types here as well.
 // Alternatively, library authors can add annotations to control namespacing for a type as well.
-var clusterWideKinds = []string{
-	"APIService",
-	"CertificateSigningRequest",
-	"ClusterRole",
-	"ClusterRoleBinding",
-	"ComponentStatus",
-	"CSIDriver",
-	"CSINode",
-	"CustomResourceDefinition",
-	"MutatingWebhookConfiguration",
-	"Namespace",
-	"Node",
-	"NodeMetrics",
-	"PersistentVolume",
-	"PodSecurityPolicy",
-	"PriorityClass",
-	"RuntimeClass",
-	"SelfSubjectAccessReview",
-	"SelfSubjectRulesReview",
-	"StorageClass",
-	"SubjectAccessReview",
-	"TokenReview",
-	"ValidatingWebhookConfiguration",
-	"VolumeAttachment",
+var clusterWideKinds = map[string]bool{
+	"APIService":                     true,
+	"CertificateSigningRequest":      true,
+	"ClusterRole":                    true,
+	"ClusterRoleBinding":             true,
+	"ComponentStatus":                true,
+	"CSIDriver":                      true,
+	"CSINode":                        true,
+	"CustomResourceDefinition":       true,
+	"MutatingWebhookConfiguration":   true,
+	"Namespace":                      true,
+	"Node":                           true,
+	"NodeMetrics":                    true,
+	"PersistentVolume":               true,
+	"PodSecurityPolicy":              true,
+	"PriorityClass":                  true,
+	"RuntimeClass":                   true,
+	"SelfSubjectAccessReview":        true,
+	"SelfSubjectRulesReview":         true,
+	"StorageClass":                   true,
+	"SubjectAccessReview":            true,
+	"TokenReview":                    true,
+	"ValidatingWebhookConfiguration": true,
+	"VolumeAttachment":               true,
 
 	// cert-manager
-	"ClusterIssuer",
-}
-
-// clusterWideMap is a generated lookup table on top of clusterWideKinds
-var clusterWideMap = buildClusterWideMap()
-
-func buildClusterWideMap() map[string]bool {
-	m := make(map[string]bool, len(clusterWideKinds))
-	for _, k := range clusterWideKinds {
-		m[k] = true
-	}
-	return m
+	"ClusterIssuer": true,
 }
 
 // Namespace injects the default namespace of the environment into each
@@ -64,7 +53,7 @@ func Namespace(list manifest.List, def string) manifest.List {
 
 	for i, m := range list {
 		namespaced := true
-		if clusterWideMap[m.Kind()] {
+		if clusterWideKinds[m.Kind()] {
 			namespaced = false
 		}
 		// check for annotation override
