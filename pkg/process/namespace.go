@@ -12,8 +12,8 @@ const (
 
 // This is a list of "cluster-wide" resources harvested from `kubectl api-resources --namespaced=false`
 // This helps us to know which objects we should NOT apply namespaces to automatically.
-// We can add to this list periodically if new types are added. There is no reason not to add popular CRD types here as well.
-// Alternatively, library authors can add annotations to control namespacing for a type as well.
+// We can add to this list periodically if new types are added.
+// This only applies to built-in kubernetes types. CRDs will need to be handled with annotations.
 var clusterWideKinds = map[string]bool{
 	"APIService":                     true,
 	"CertificateSigningRequest":      true,
@@ -38,9 +38,6 @@ var clusterWideKinds = map[string]bool{
 	"TokenReview":                    true,
 	"ValidatingWebhookConfiguration": true,
 	"VolumeAttachment":               true,
-
-	// cert-manager
-	"ClusterIssuer": true,
 }
 
 // Namespace injects the default namespace of the environment into each

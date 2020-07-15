@@ -34,7 +34,10 @@ Some resources in Kubernetes are cluster-wide, meaning they don't belong to a si
 Tanka will make an attempt to not add namespaces to *known* cluster-wide types. 
 It does this with a short list of types in [the source code](https://github.com/grafana/tanka/blob/master/pkg/process/namespace.go).
 
-In case this ever becomes a problem, you can **override this** behavior
+Tanka cannot feasably maintain this list for all known custom resource types. In that case, those resources will have namespaces added to their manifests,
+and kubectl should happily apply them as non-namespaced resources.
+
+If this presents a problem for your workflow, you can **override this** behavior
 per-resource, by setting the `tanka.dev/namespaced` annotation to `"false"`
 (must be of `string` type):
 
