@@ -31,12 +31,13 @@ legit cases where it's handy to have them span multiple namespaces, for example:
 
 Some resources in Kubernetes are cluster-wide, meaning they don't belong to a single namespace at all.
 
-To Tanka these appear as _Scenario 1 (see above)_, so it will set the default
-namespace. In reality however, this is **not a problem**, because `kubectl`
-discards this information silently. We made this design-choice, because it
-simplifies our code a lot.
+Tanka will make an attempt to not add namespaces to *known* cluster-wide types. 
+It does this with a short list of types in [the source code](https://github.com/grafana/tanka/blob/master/pkg/process/namespace.go).
 
-In case this ever becomes a problem, you can **override this** behavior
+Tanka cannot feasably maintain this list for all known custom resource types. In those cases, resources will have namespaces added to their manifests,
+and kubectl should happily apply them as non-namespaced resources.
+
+If this presents a problem for your workflow, you can **override this** behavior
 per-resource, by setting the `tanka.dev/namespaced` annotation to `"false"`
 (must be of `string` type):
 
