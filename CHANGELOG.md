@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.11.1 (2020-07-17)
+
+This is a minor release with one bugfix and one minor feature.
+
+### Features
+
+* **process**: With 0.11.0, tanka started automatically adding namespaces to *all* manifests it processed. We updated this to *not*
+    add a namespace to cluster-wide object types in order to make handling of these resources more consistent in different workflows. **([#320](https://github.com/grafana/tanka/pull/320))**
+
+### Bug Fixes
+
+- **export**: Fix inverted logic while checking if a file already exists. This broke `tk export` entirely.
+  **([#317](https://github.com/grafana/tanka/pull/317))**
+
+
 ## 0.11.0 (2020-07-07)
 
 2 months later and here we are with another release! Packed with many
