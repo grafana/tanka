@@ -8,6 +8,6 @@ import (
 
 func TestEvalJsonnet(t *testing.T) {
 	m := make(map[string]string)
-	_,e:=evalJsonnet("./testdata/",v1alpha1.New(),m)
-	assert.NoError(t,e)
+	_, e := evalJsonnet("./testdata/", v1alpha1.New(), m)
+	assert.NoError(t, e)
 }
