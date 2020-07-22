@@ -140,9 +140,9 @@ func evalJsonnet(baseDir string, env *v1alpha1.Config, extCode map[string]string
 		return nil, err
 	}
 
-	var dict interface{}
-	if err := json.Unmarshal([]byte(raw), &dict); err != nil {
+	var data interface{}
+	if err := json.Unmarshal([]byte(raw), &data); err != nil {
 		return nil, err
 	}
-	return dict, nil
+	return data, nil
 }

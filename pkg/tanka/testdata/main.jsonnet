@@ -1,7 +1,0 @@
-[
-    [
-        {
-            testCase:"nestedArray"
-        }
-    ]
-]
