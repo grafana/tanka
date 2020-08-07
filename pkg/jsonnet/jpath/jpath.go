@@ -67,7 +67,7 @@ func findRoot(start string) (dir string, err error) {
   // root path based on os
 	var stop string
 	if runtime.GOOS == "windows" {
-	  stop = "C:\\"
+	   stop = "C:\\"
 	} else {
 		stop = "/"
 	}
