@@ -1,3 +1,3 @@
 {
-            testCase:"object",
+  testCase: 'object',
 }
