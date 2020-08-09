@@ -7,12 +7,12 @@ import (
 )
 
 func TestEvalJsonnet(t *testing.T) {
-
-	tableTest := []struct {
+	cases := []struct {
 		baseDir  string
 		expected interface{}
 	}{
-		{baseDir: "./testdata/cases/array/",
+		{
+			baseDir: "./testdata/cases/array/",
 			expected: []interface{}{
 				[]interface{}{
 					map[string]interface{}{"testCase": "nestedArray[0][0]"},
@@ -24,14 +24,15 @@ func TestEvalJsonnet(t *testing.T) {
 				},
 			},
 		},
-		{baseDir: "./testdata/cases/object/",
+		{
+			baseDir: "./testdata/cases/object/",
 			expected: map[string]interface{}{
 				"testCase": "object",
 			},
 		},
 	}
 
-	for _, test := range tableTest {
+	for _, test := range cases {
 		m := make(map[string]string)
 		data, e := evalJsonnet(test.baseDir, v1alpha1.New(), m)
 		assert.NoError(t, e)
