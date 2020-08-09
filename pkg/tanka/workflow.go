@@ -147,7 +147,7 @@ func Show(baseDir string, mods ...Modifier) (manifest.List, error) {
 func Eval(dir string, mods ...Modifier) (raw map[string]interface{}, err error) {
 	opts := parseModifiers(mods)
 
-	r, _, err := eval(dir, opts.extCode)
+	r, _, err := eval(dir, opts.mainfile, opts.extCode)
 	if err != nil {
 		return nil, err
 	}

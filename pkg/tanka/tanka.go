@@ -25,6 +25,9 @@ type options struct {
 	// target regular expressions to limit the working set
 	targets process.Matchers
 
+	// main file path into evaluation
+	mainfile string
+
 	// additional options for diff
 	diff kubernetes.DiffOpts
 
@@ -88,5 +91,12 @@ func WithApplyValidate(b bool) Modifier {
 func WithApplyAutoApprove(b bool) Modifier {
 	return func(opts *options) {
 		opts.apply.AutoApprove = b
+	}
+}
+
+// WithMainfile allows to pass the entrypoint into evaluation
+func WithMainfile(main string) Modifier {
+	return func(opts *options) {
+		opts.mainfile = main
 	}
 }

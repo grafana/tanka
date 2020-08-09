@@ -24,12 +24,14 @@ const (
 )
 
 type workflowFlagVars struct {
-	targets []string
+	targets  []string
+	mainfile string
 }
 
 func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
 	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects (Format: <type>/<name>)")
+	fs.StringVarP(&v.mainfile, "mainfile", "m", "main.jsonnet", "entrypoint into the evaluation")
 	return &v
 }
 
@@ -49,6 +51,7 @@ func applyCmd() *cli.Command {
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		err := tanka.Apply(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)),
+			tanka.WithMainfile(vars.mainfile),
 			tanka.WithExtCode(getExtCode()),
 			tanka.WithApplyForce(*force),
 			tanka.WithApplyValidate(*validate),
@@ -135,6 +138,7 @@ func diffCmd() *cli.Command {
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		changes, err := tanka.Diff(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)),
+			tanka.WithMainfile(vars.mainfile),
 			tanka.WithExtCode(getExtCode()),
 			tanka.WithDiffStrategy(*diffStrategy),
 			tanka.WithDiffSummarize(*summarize),
@@ -181,6 +185,7 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 
 		pretty, err := tanka.Show(args[0],
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithMainfile(vars.mainfile),
 			tanka.WithTargets(stringsToRegexps(vars.targets)),
 		)
 		if err != nil {

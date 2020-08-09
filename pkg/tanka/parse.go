@@ -56,7 +56,7 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 
 // load runs all processing stages described at the Processed type
 func load(dir string, opts *options) (*loaded, error) {
-	raw, env, err := eval(dir, opts.extCode)
+	raw, env, err := eval(dir, opts.mainfile, opts.extCode)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func load(dir string, opts *options) (*loaded, error) {
 
 // eval runs all processing stages describe at the Processed type apart from
 // post-processing, thus returning the raw Jsonnet result.
-func eval(dir string, extCode map[string]string) (raw map[string]interface{}, env *v1alpha1.Config, err error) {
+func eval(dir string, mainFile string, extCode map[string]string) (raw map[string]interface{}, env *v1alpha1.Config, err error) {
 	_, baseDir, rootDir, err := jpath.Resolve(dir)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "resolving jpath")
@@ -85,7 +85,7 @@ func eval(dir string, extCode map[string]string) (raw map[string]interface{}, en
 		return nil, nil, err
 	}
 
-	raw, err = evalJsonnet(baseDir, env, extCode)
+	raw, err = evalJsonnet(baseDir, mainFile, env, extCode)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 	}
@@ -119,7 +119,7 @@ func parseSpec(baseDir, rootDir string) (*v1alpha1.Config, error) {
 
 // evalJsonnet evaluates the jsonnet environment at the given directory starting with
 // `main.jsonnet`
-func evalJsonnet(baseDir string, env *v1alpha1.Config, extCode map[string]string) (map[string]interface{}, error) {
+func evalJsonnet(baseDir string, mainFile string, env *v1alpha1.Config, extCode map[string]string) (map[string]interface{}, error) {
 	jsonEnv, err := json.Marshal(env)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshalling environment config")
@@ -133,7 +133,7 @@ func evalJsonnet(baseDir string, env *v1alpha1.Config, extCode map[string]string
 	}
 
 	raw, err := jsonnet.EvaluateFile(
-		filepath.Join(baseDir, "main.jsonnet"),
+		filepath.Join(baseDir, mainFile),
 		ext...,
 	)
 	if err != nil {

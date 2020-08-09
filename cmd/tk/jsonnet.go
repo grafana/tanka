@@ -25,6 +25,7 @@ func evalCmd() *cli.Command {
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		raw, err := tanka.Eval(args[0],
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithMainfile("main.jsonnet"),
 		)
 
 		if err != nil {
