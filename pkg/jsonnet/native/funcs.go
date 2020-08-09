@@ -29,6 +29,8 @@ func Funcs() []*jsonnet.NativeFunction {
 		escapeStringRegex(),
 		regexMatch(),
 		regexSubst(),
+
+		helmTemplate(),
 	}
 }
 
