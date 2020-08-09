@@ -188,3 +188,23 @@ func TestRegexSubstInvalid(t *testing.T) {
 	assert.Empty(t, ret)
 	assert.NotEmpty(t, err)
 }
+
+func TestTemplateRender(t *testing.T) {
+	template := "My name is {{.name}}"
+	values := map[string]interface{}{"name": "Tom"}
+	ret, err, callerr := callNative("template", []interface{}{template, values})
+
+	assert.Empty(t, callerr)
+	assert.Equal(t, "My name is Tom", ret)
+	assert.Empty(t, err)
+}
+
+func TestTemplateInvalid(t *testing.T) {
+	template := "My name is {{{.name}}"
+	values := map[string]interface{}{"name": "Tom"}
+	ret, err, callerr := callNative("template", []interface{}{template, values})
+
+	assert.Empty(t, callerr)
+	assert.Empty(t, ret)
+	assert.NotEmpty(t, err)
+}

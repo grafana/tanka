@@ -220,3 +220,29 @@ Evaluating with Tanka results in the JSON:
   "substituted": "poem"
 }
 ```
+
+## template
+
+### Signature
+
+```ts
+template(string templateString, map values) string
+```
+
+`template` renders a Go template using the values provided.
+
+### Examples
+
+```jsonnet
+{
+  rendered: std.native('template')('My name is {{.name}}.', 'Tom'),
+}
+```
+
+Evaluating with Tanka results in the JSON:
+
+```json
+{
+  "rendered": "My name is Tom."
+}
+```

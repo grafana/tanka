@@ -6,6 +6,7 @@ import (
 	"io"
 	"regexp"
 	"strings"
+	"text/template"
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
@@ -29,6 +30,9 @@ func Funcs() []*jsonnet.NativeFunction {
 		escapeStringRegex(),
 		regexMatch(),
 		regexSubst(),
+
+		// Template rendering
+		templateRender(),
 	}
 }
 
@@ -153,6 +157,27 @@ func regexSubst() *jsonnet.NativeFunction {
 				return "", err
 			}
 			return r.ReplaceAllString(src, repl), nil
+		},
+	}
+}
+
+// templateRender renders a template with values from jsonnet
+func templateRender() *jsonnet.NativeFunction {
+	return &jsonnet.NativeFunction{
+		Name:   "template",
+		Params: ast.Identifiers{"template", "values"},
+		Func: func(data []interface{}) (interface{}, error) {
+			templateString, values := data[0].(string), data[1].(interface{})
+			tmpl, err := template.New("template").Parse(templateString)
+			if err != nil {
+				return nil, err
+			}
+			buf := bytes.Buffer{}
+			err = tmpl.Execute(&buf, values)
+			if err != nil {
+				return nil, err
+			}
+			return buf.String(), nil
 		},
 	}
 }
