@@ -144,7 +144,7 @@ func Show(baseDir string, mods ...Modifier) (manifest.List, error) {
 }
 
 // Eval returns the raw evaluated Jsonnet output (without any transformations)
-func Eval(dir string, mods ...Modifier) (raw map[string]interface{}, err error) {
+func Eval(dir string, mods ...Modifier) (raw interface{}, err error) {
 	opts := parseModifiers(mods)
 
 	r, _, err := eval(dir, opts.extCode)

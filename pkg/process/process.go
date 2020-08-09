@@ -18,7 +18,7 @@ const (
 // - tanka.dev/** labels
 // - filtering
 // - best-effort sorting
-func Process(raw map[string]interface{}, cfg v1alpha1.Config, exprs Matchers) (manifest.List, error) {
+func Process(raw interface{}, cfg v1alpha1.Config, exprs Matchers) (manifest.List, error) {
 	// Scan for everything that looks like a Kubernetes object
 	extracted, err := Extract(raw)
 	if err != nil {
