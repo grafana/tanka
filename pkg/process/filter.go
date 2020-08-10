@@ -9,10 +9,14 @@ import (
 )
 
 // Filter returns all elements of the list that match at least one expression
+// and are not ignored
 func Filter(list manifest.List, exprs Matchers) manifest.List {
 	out := make(manifest.List, 0, len(list))
 	for _, m := range list {
 		if !exprs.MatchString(m.KindName()) {
+			continue
+		}
+		if exprs.IgnoreString(m.KindName()) {
 			continue
 		}
 		out = append(out, m)
@@ -26,7 +30,13 @@ type Matcher interface {
 	MatchString(string) bool
 }
 
+// Ignorer is like matcher, but for explicitely ignoring resources
+type Ignorer interface {
+	IgnoreString(string) bool
+}
+
 // Matchers is a collection of multiple expressions.
+// A matcher may also implement Ignorer to explicitely ignore fields
 type Matchers []Matcher
 
 // MatchString returns whether at least one expression (OR) matches the string
@@ -34,6 +44,18 @@ func (e Matchers) MatchString(s string) bool {
 	b := false
 	for _, exp := range e {
 		b = b || exp.MatchString(s)
+	}
+	return b
+}
+
+func (e Matchers) IgnoreString(s string) bool {
+	b := false
+	for _, exp := range e {
+		i, ok := exp.(Ignorer)
+		if !ok {
+			continue
+		}
+		b = b || i.IgnoreString(s)
 	}
 	return b
 }
@@ -50,10 +72,19 @@ func RegExps(rs []*regexp.Regexp) Matchers {
 func StrExps(strs ...string) (Matchers, error) {
 	exps := make(Matchers, 0, len(strs))
 	for _, raw := range strs {
-		s := fmt.Sprintf(`(?i)^%s$`, raw)
+		// trim exlamation mark, not supported by regex
+		s := fmt.Sprintf(`(?i)^%s$`, strings.TrimPrefix(raw, "!"))
+
+		// create regexp matcher
+		var exp Matcher
 		exp, err := regexp.Compile(s)
 		if err != nil {
 			return nil, ErrBadExpr{err}
+		}
+
+		// if negative (!), invert regex behaviour
+		if strings.HasPrefix(raw, "!") {
+			exp = NegMatcher{exp: exp}
 		}
 		exps = append(exps, exp)
 	}
@@ -75,4 +106,17 @@ type ErrBadExpr struct {
 
 func (e ErrBadExpr) Error() string {
 	return fmt.Sprintf("%s.\nSee https://tanka.dev/output-filtering/#regular-expressions for details on regular expressions.", strings.Title(e.inner.Error()))
+}
+
+// NexMatcher is a matcher that inverts the original behaviour
+type NegMatcher struct {
+	exp Matcher
+}
+
+func (n NegMatcher) MatchString(s string) bool {
+	return true
+}
+
+func (n NegMatcher) IgnoreString(s string) bool {
+	return n.exp.MatchString(s)
 }
