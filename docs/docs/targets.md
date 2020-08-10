@@ -78,3 +78,14 @@ apiVersion: apps/v1
 kind: Deployment
 # ...
 ```
+
+## Excluding
+
+Sometimes it may be desirably to exclude a single object, instead of including all others.
+
+To do so, prepend the regular expression with an exclamation mark (`!`), like so:
+
+```bash
+# filter out all Deployments
+$ tk show . -t '!deployment/.*'
+```

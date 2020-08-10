@@ -65,6 +65,15 @@ func TestProcess(t *testing.T) {
 			),
 		},
 		{
+			name: "targets-negative",
+			deep: testDataDeep().Deep,
+			flat: manifest.List{
+				testDataDeep().Flat[".app.web.frontend.nodejs.express.service"],
+				testDataDeep().Flat[".app.namespace"],
+			},
+			targets: MustStrExps(`!deployment/.*`),
+		},
+		{
 			name: "unwrap-list",
 			deep: loadFixture("list").Deep,
 			flat: manifest.List{
