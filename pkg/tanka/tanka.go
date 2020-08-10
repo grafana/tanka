@@ -21,6 +21,7 @@ func parseModifiers(mods []Modifier) *options {
 type options struct {
 	// `std.extVar`
 	extCode map[string]string
+	tlaCode map[string]string
 
 	// target regular expressions to limit the working set
 	targets process.Matchers
@@ -39,6 +40,12 @@ type Modifier func(*options)
 
 // WithExtCode allows to pass external variables (jsonnet code) to the VM
 func WithExtCode(code map[string]string) Modifier {
+	return func(opts *options) {
+		opts.extCode = code
+	}
+}
+
+func WithTLACode(code map[string]string) Modifier {
 	return func(opts *options) {
 		opts.extCode = code
 	}
