@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	yaml "gopkg.in/yaml.v3"
 
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -93,60 +92,55 @@ func subsetDiff(c client.Client, m manifest.Manifest) (*difference, error) {
 		return nil, errors.Wrap(err, "getting state from cluster")
 	}
 
-	should, err := yaml.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
+	should := m.String()
 
-	is, err := yaml.Marshal(subset(m, rawIs))
-	if err != nil {
-		return nil, err
-	}
-	if string(is) == "{}\n" {
-		is = []byte("")
+	sub := subset(m, rawIs)
+	is := manifest.Manifest(sub).String()
+	if is == "{}\n" {
+		is = ""
 	}
 
 	return &difference{
 		name:   name,
-		live:   string(is),
-		merged: string(should),
+		live:   is,
+		merged: should,
 	}, nil
 }
 
-// subset removes all keys from is, that are not present in should.
-// It makes is a subset of should.
+// subset removes all keys from big, that are not present in small.
+// It makes big a subset of small.
 // Kubernetes returns more keys than we can know about.
 // This means, we need to remove all keys from the kubectl output, that are not present locally.
-func subset(should, is map[string]interface{}) map[string]interface{} {
-	if should["namespace"] != nil {
-		is["namespace"] = should["namespace"]
+func subset(small, big map[string]interface{}) map[string]interface{} {
+	if small["namespace"] != nil {
+		big["namespace"] = small["namespace"]
 	}
 
 	// just ignore the apiVersion for now, too much bloat
-	if should["apiVersion"] != nil && is["apiVersion"] != nil {
-		is["apiVersion"] = should["apiVersion"]
+	if small["apiVersion"] != nil && big["apiVersion"] != nil {
+		big["apiVersion"] = small["apiVersion"]
 	}
 
-	for k, v := range is {
-		if should[k] == nil {
-			delete(is, k)
+	for k, v := range big {
+		if _, ok := small[k]; !ok {
+			delete(big, k)
 			continue
 		}
 
 		switch b := v.(type) {
 		case map[string]interface{}:
-			if a, ok := should[k].(map[string]interface{}); ok {
-				is[k] = subset(a, b)
+			if a, ok := small[k].(map[string]interface{}); ok {
+				big[k] = subset(a, b)
 			}
 		case []map[string]interface{}:
 			for i := range b {
-				if a, ok := should[k].([]map[string]interface{}); ok {
+				if a, ok := small[k].([]map[string]interface{}); ok {
 					b[i] = subset(a[i], b[i])
 				}
 			}
 		case []interface{}:
 			for i := range b {
-				if a, ok := should[k].([]interface{}); ok {
+				if a, ok := small[k].([]interface{}); ok {
 					if i >= len(a) {
 						// slice in config shorter than in live. Abort, as there are no entries to diff anymore
 						break
@@ -168,5 +162,5 @@ func subset(should, is map[string]interface{}) map[string]interface{} {
 			}
 		}
 	}
-	return is
+	return big
 }
