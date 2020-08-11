@@ -33,7 +33,7 @@ func exportCmd() *cli.Command {
 	}
 
 	vars := workflowFlags(cmd.Flags())
-	getExtCode := extCodeParser(cmd.Flags())
+	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
 	format := cmd.Flags().String("format", "{{.apiVersion}}.{{.kind}}-{{.metadata.name}}", "https://tanka.dev/exporting#filenames")
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
 	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
@@ -68,6 +68,7 @@ func exportCmd() *cli.Command {
 		// get the manifests
 		res, err := tanka.Show(args[0],
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithTLACode(getTLACode()),
 			tanka.WithTargets(stringsToRegexps(vars.targets)),
 		)
 		if err != nil {

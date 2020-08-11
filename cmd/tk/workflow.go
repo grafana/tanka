@@ -44,12 +44,14 @@ func applyCmd() *cli.Command {
 	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
 	validate := cmd.Flags().Bool("validate", true, "validation of resources (kubectl --validate=false)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
-	getExtCode := extCodeParser(cmd.Flags())
+
+	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		err := tanka.Apply(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)),
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithTLACode(getTLACode()),
 			tanka.WithApplyForce(*force),
 			tanka.WithApplyValidate(*validate),
 			tanka.WithApplyAutoApprove(*autoApprove),
@@ -69,13 +71,14 @@ func pruneCmd() *cli.Command {
 		Args:  workflowArgs,
 	}
 
-	getExtCode := extCodeParser(cmd.Flags())
+	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	force := cmd.Flags().Bool("force", false, "force deleting (kubectl delete --force)")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		return tanka.Prune(args[0],
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithTLACode(getTLACode()),
 			tanka.WithApplyAutoApprove(*autoApprove),
 			tanka.WithApplyForce(*force),
 		)
@@ -95,12 +98,13 @@ func deleteCmd() *cli.Command {
 	force := cmd.Flags().Bool("force", false, "force deleting (kubectl delete --force)")
 	validate := cmd.Flags().Bool("validate", true, "validation of resources (kubectl --validate=false)")
 	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
-	getExtCode := extCodeParser(cmd.Flags())
+	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		err := tanka.Delete(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)),
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithTLACode(getTLACode()),
 			tanka.WithApplyForce(*force),
 			tanka.WithApplyValidate(*validate),
 			tanka.WithApplyAutoApprove(*autoApprove),
@@ -130,12 +134,13 @@ func diffCmd() *cli.Command {
 		summarize    = cmd.Flags().BoolP("summarize", "s", false, "quick summary of the differences, hides file contents")
 	)
 
-	getExtCode := extCodeParser(cmd.Flags())
+	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		changes, err := tanka.Diff(args[0],
 			tanka.WithTargets(stringsToRegexps(vars.targets)),
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithTLACode(getTLACode()),
 			tanka.WithDiffStrategy(*diffStrategy),
 			tanka.WithDiffSummarize(*summarize),
 		)
@@ -170,7 +175,7 @@ func showCmd() *cli.Command {
 	}
 	vars := workflowFlags(cmd.Flags())
 	allowRedirect := cmd.Flags().Bool("dangerous-allow-redirect", false, "allow redirecting output to a file or a pipe.")
-	getExtCode := extCodeParser(cmd.Flags())
+	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		if !interactive && !*allowRedirect {
 			fmt.Fprintln(os.Stderr, `Redirection of the output of tk show is discouraged and disabled by default.
@@ -181,6 +186,7 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 
 		pretty, err := tanka.Show(args[0],
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithTLACode(getTLACode()),
 			tanka.WithTargets(stringsToRegexps(vars.targets)),
 		)
 		if err != nil {

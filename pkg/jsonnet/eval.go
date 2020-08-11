@@ -55,3 +55,11 @@ func WithExtCode(key, code string) Modifier {
 		return nil
 	}
 }
+
+// WithTLA allows to set the given code as a top level argument
+func WithTLA(key, code string) Modifier {
+	return func(vm *jsonnet.VM) error {
+		vm.TLACode(key, code)
+		return nil
+	}
+}

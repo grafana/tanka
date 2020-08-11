@@ -6,9 +6,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/spf13/pflag"
-
 	"github.com/go-clix/cli"
+	"github.com/spf13/pflag"
 
 	"github.com/grafana/tanka/pkg/tanka"
 )
@@ -20,11 +19,12 @@ func evalCmd() *cli.Command {
 		Args:  workflowArgs,
 	}
 
-	getExtCode := extCodeParser(cmd.Flags())
+	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		raw, err := tanka.Eval(args[0],
 			tanka.WithExtCode(getExtCode()),
+			tanka.WithTLACode(getTLACode()),
 		)
 
 		if err != nil {
@@ -43,29 +43,37 @@ func evalCmd() *cli.Command {
 	return cmd
 }
 
-func extCodeParser(fs *pflag.FlagSet) func() map[string]string {
+func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[string]string) {
 	// need to use StringArray instead of StringSlice, because pflag attempts to
 	// parse StringSlice using the csv parser, which breaks when passing objects
-	values := fs.StringArrayP("extCode", "e", nil, "Inject any Jsonnet from the outside (Format: key=<code>)")
-	strs := fs.StringArray("extVar", nil, "Inject a string from the outside (Format: key=value)")
+	extCode := fs.StringArray("ext-code", nil, "Set code value of extVar (Format: key=<code>)")
+	extStr := fs.StringArrayP("ext-str", "V", nil, "Set string value of extVar (Format: key=value)")
 
-	return func() map[string]string {
-		m := make(map[string]string)
-		for _, s := range *values {
-			split := strings.SplitN(s, "=", 2)
-			if len(split) != 2 {
-				log.Fatalf("extCode argument has wrong format: `%s`. Expected `key=<code>`", s)
-			}
-			m[split[0]] = split[1]
-		}
+	tlaCode := fs.StringArray("tla-code", nil, "Set code value of top level function (Format: key=<code>)")
+	tlaStr := fs.StringArrayP("tla-str", "A", nil, "Set string value of top level function (Format: key=value)")
 
-		for _, s := range *strs {
-			split := strings.SplitN(s, "=", 2)
-			if len(split) != 2 {
-				log.Fatalf("extCode argument has wrong format: `%s`. Expected `key=<value>`", s)
+	newParser := func(kind string, code, str *[]string) func() map[string]string {
+		return func() map[string]string {
+			m := make(map[string]string)
+			for _, s := range *code {
+				split := strings.SplitN(s, "=", 2)
+				if len(split) != 2 {
+					log.Fatalf(kind+"-code argument has wrong format: `%s`. Expected `key=<code>`", s)
+				}
+				m[split[0]] = split[1]
 			}
-			m[split[0]] = fmt.Sprintf(`"%s"`, split[1])
+
+			for _, s := range *str {
+				split := strings.SplitN(s, "=", 2)
+				if len(split) != 2 {
+					log.Fatalf(kind+"-str argument has wrong format: `%s`. Expected `key=<value>`", s)
+				}
+				m[split[0]] = fmt.Sprintf(`"%s"`, split[1])
+			}
+			return m
 		}
-		return m
 	}
+
+	return newParser("ext", extCode, extStr),
+		newParser("tla", tlaCode, tlaStr)
 }
