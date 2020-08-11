@@ -220,7 +220,7 @@ func (m Metadata) UID() string {
 
 // Labels of the manifest
 func (m Metadata) Labels() map[string]interface{} {
-	return safeMSI(m, "annotations")
+	return safeMSI(m, "labels")
 }
 
 // Annotations of the manifest
