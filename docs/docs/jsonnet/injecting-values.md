@@ -23,7 +23,7 @@ Jsonnet is a superset of JSON, it treats any JSON as valid Jsonnet. Because many
 systems can be told to output their data in JSON format, this provides a pretty
 good interface between those.
 
-For example, your deployment pipeline could acquire secrets from systems such as
+For example, your build tooling like `make` could acquire secrets from systems such as
 [Vault](https://www.vaultproject.io/), etc. and write that into `secrets.json`.
 
 ```jsonnet
