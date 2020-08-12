@@ -100,13 +100,9 @@ func parseYamlToMap(yamlFile []byte) (map[string]interface{}, error) {
 		}
 
 		// create a map of resources for ease of use in jsonnet
+		name := normalizeName(fmt.Sprintf("%s_%s", kindName.Metadata.Name, kindName.Kind))
 		if jsonDoc != nil {
-			files[normalizeName(
-				fmt.Sprintf("%s_%s",
-					kindName.Metadata.Name,
-					kindName.Kind,
-				),
-			)] = jsonDoc
+			files[name] = jsonDoc
 		}
 	}
 	return files, nil
