@@ -77,10 +77,10 @@ func parseYamlToMap(yamlFile []byte) (map[string]interface{}, error) {
 
 		// Unmarshal name and kind
 		kindName := struct {
-			Kind     string `json:"kind",omitempty`
+			Kind     string `json:"kind"`
 			Metadata struct {
-				Name string `json:"name",omitempty`
-			} `json:"metadata",omitempty`
+				Name string `json:"name"`
+			} `json:"metadata"`
 		}{}
 		if err := json.Unmarshal(jsonRaw, &kindName); err != nil {
 			return nil, errors.Wrap(err, "subtracting kind/name through unmarshaling")
