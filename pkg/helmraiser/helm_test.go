@@ -1,4 +1,4 @@
-package native
+package helmraiser
 
 import (
 	"strings"

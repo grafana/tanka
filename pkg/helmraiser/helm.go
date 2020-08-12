@@ -1,4 +1,4 @@
-package native
+package helmraiser
 
 import (
 	"bytes"
@@ -109,7 +109,7 @@ func parseYamlToMap(yamlFile []byte) (map[string]interface{}, error) {
 
 // helmTemplate wraps and runs `helm template`
 // returns the generated manifests in a map
-func helmTemplate() *jsonnet.NativeFunction {
+func HelmTemplate() *jsonnet.NativeFunction {
 	return &jsonnet.NativeFunction{
 		Name: "helmTemplate",
 		// Lines up with `helm template [NAME] [CHART] [flags]` except 'conf' is a bit more elaborate
