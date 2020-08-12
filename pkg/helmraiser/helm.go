@@ -16,28 +16,29 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-var deferTempFiles []string
+func confToArgs(conf map[string]interface{}) ([]string, []string, error) {
+	var args []string
+	var tempFiles []string
 
-func confToArgs(conf map[string]interface{}, args *[]string) error {
 	// create file and append to args
 	if val, ok := conf["values"]; ok {
 		if len(val.(map[string]interface{})) > 0 {
 			valuesYaml, err := yaml.Marshal(val.(interface{}))
 			if err != nil {
-				return err
+				return nil, nil, err
 			}
 			tmpFile, err := ioutil.TempFile(os.TempDir(), "tanka-")
 			if err != nil {
-				return errors.Wrap(err, "cannot create temporary values.yaml")
+				return nil, nil, errors.Wrap(err, "cannot create temporary values.yaml")
 			}
-			deferTempFiles = append(deferTempFiles, tmpFile.Name())
+			tempFiles = append(tempFiles, tmpFile.Name())
 			if _, err = tmpFile.Write(valuesYaml); err != nil {
-				return errors.Wrap(err, "failed to write to temporary values.yaml")
+				return nil, tempFiles, errors.Wrap(err, "failed to write to temporary values.yaml")
 			}
 			if err := tmpFile.Close(); err != nil {
-				return err
+				return nil, tempFiles, err
 			}
-			*args = append(*args, fmt.Sprintf("--values=%s", tmpFile.Name()))
+			args = append(args, fmt.Sprintf("--values=%s", tmpFile.Name()))
 		}
 	}
 
@@ -48,10 +49,14 @@ func confToArgs(conf map[string]interface{}, args *[]string) error {
 		for _, f := range dataFlags {
 			flags = append(flags, f.(string))
 		}
-		*args = append(*args, flags...)
+		args = append(args, flags...)
 	}
 
-	return nil
+	if len(args) == 0 {
+		args = nil
+	}
+
+	return args, tempFiles, nil
 }
 
 func parseYamlToMap(yamlFile []byte) (map[string]interface{}, error) {
@@ -125,11 +130,15 @@ func HelmTemplate() *jsonnet.NativeFunction {
 				chart,
 			}
 
-			if err := confToArgs(conf, &args); err != nil {
+			confArgs, tempFiles, err := confToArgs(conf)
+			if err != nil {
 				return "", nil
 			}
-			for _, file := range deferTempFiles {
+			for _, file := range tempFiles {
 				defer os.Remove(file)
+			}
+			if confArgs != nil {
+				args = append(args, confArgs...)
 			}
 
 			// convert the values map into a yaml file

@@ -1,65 +1,40 @@
 package helmraiser
 
 import (
-	"strings"
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConfToArgs_noargs_noconf(t *testing.T) {
-	args := []string{}
 	conf := map[string]interface{}{}
-
-	err := confToArgs(conf, &args)
-
-	assert.Equal(t, []string{}, args)
-	assert.Nil(t, err)
-}
-
-func TestConfToArgs_noargs_emptyconf(t *testing.T) {
-	args := []string{}
-	conf := map[string]interface{}{
-		"values": map[string]interface{}{},
-		"flags":  []interface{}{},
+	args, tempFiles, err := confToArgs(conf)
+	for _, file := range tempFiles {
+		defer os.Remove(file)
 	}
 
-	err := confToArgs(conf, &args)
-
-	assert.Equal(t, []string{}, args)
+	assert.Equal(t, []string(nil), args)
 	assert.Nil(t, err)
 }
 
 func TestConfToArgs_args_emptyconf(t *testing.T) {
-	args := []string{
-		"helm",
-		"template",
-		"name",
-		"chart",
-	}
 	conf := map[string]interface{}{
 		"values": map[string]interface{}{},
 		"flags":  []interface{}{},
 	}
 
-	err := confToArgs(conf, &args)
+	args, tempFiles, err := confToArgs(conf)
+	for _, file := range tempFiles {
+		defer os.Remove(file)
+	}
 
-	assert.Equal(t, []string{
-		"helm",
-		"template",
-		"name",
-		"chart",
-	}, args)
+	assert.Equal(t, []string(nil), args)
 	assert.Nil(t, err)
 }
 
 func TestConfToArgs_args_flags(t *testing.T) {
-	args := []string{
-		"helm",
-		"template",
-		"name",
-		"chart",
-	}
 	conf := map[string]interface{}{
 		"flags": []interface{}{
 			"--version=v0.1",
@@ -67,13 +42,12 @@ func TestConfToArgs_args_flags(t *testing.T) {
 		},
 	}
 
-	err := confToArgs(conf, &args)
+	args, tempFiles, err := confToArgs(conf)
+	for _, file := range tempFiles {
+		defer os.Remove(file)
+	}
 
 	assert.Equal(t, []string{
-		"helm",
-		"template",
-		"name",
-		"chart",
 		"--version=v0.1",
 		"--random=arg",
 	}, args)
@@ -81,32 +55,23 @@ func TestConfToArgs_args_flags(t *testing.T) {
 }
 
 func TestConfToArgs_args_values(t *testing.T) {
-	args := []string{
-		"helm",
-		"template",
-		"name",
-		"chart",
-	}
 	conf := map[string]interface{}{
 		"values": map[string]interface{}{
 			"hasValues": "yes",
 		},
 	}
 
-	err := confToArgs(conf, &args)
+	args, tempFiles, err := confToArgs(conf)
+	for _, file := range tempFiles {
+		defer os.Remove(file)
+	}
 
-	assert.FileExists(t, strings.Split(args[len(args)-1], "=")[1])
-	assert.Regexp(t, "^--values=/", args[len(args)-1])
+	assert.FileExists(t, tempFiles[0])
+	assert.Equal(t, []string{fmt.Sprintf("--values=%s", tempFiles[0])}, args)
 	assert.Nil(t, err)
 }
 
 func TestConfToArgs_args_flagsvalues(t *testing.T) {
-	args := []string{
-		"helm",
-		"template",
-		"name",
-		"chart",
-	}
 	conf := map[string]interface{}{
 		"values": map[string]interface{}{
 			"hasValues": "yes",
@@ -117,9 +82,16 @@ func TestConfToArgs_args_flagsvalues(t *testing.T) {
 		},
 	}
 
-	err := confToArgs(conf, &args)
+	args, tempFiles, err := confToArgs(conf)
+	for _, file := range tempFiles {
+		defer os.Remove(file)
+	}
 
-	assert.Equal(t, 7, len(args))
+	assert.Equal(t, []string{
+		fmt.Sprintf("--values=%s", tempFiles[0]),
+		"--version=v0.1",
+		"--random=arg",
+	}, args)
 	assert.Nil(t, err)
 }
 
