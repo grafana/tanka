@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConfToArgs_noargs_noconf(t *testing.T) {
+func TestConfToArgs_noconf(t *testing.T) {
 	conf := HelmConf{}
 	args, tempFiles, err := confToArgs(conf)
 	for _, file := range tempFiles {
@@ -19,7 +19,7 @@ func TestConfToArgs_noargs_noconf(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestConfToArgs_args_emptyconf(t *testing.T) {
+func TestConfToArgs_emptyconf(t *testing.T) {
 	conf := HelmConf{
 		Values: map[string]interface{}{},
 		Flags:  []string{},
@@ -34,7 +34,7 @@ func TestConfToArgs_args_emptyconf(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestConfToArgs_args_flags(t *testing.T) {
+func TestConfToArgs_flags(t *testing.T) {
 	conf := HelmConf{
 		Flags: []string{
 			"--version=v0.1",
@@ -54,7 +54,7 @@ func TestConfToArgs_args_flags(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestConfToArgs_args_values(t *testing.T) {
+func TestConfToArgs_values(t *testing.T) {
 	conf := HelmConf{
 		Values: map[string]interface{}{
 			"hasValues": "yes",
@@ -71,7 +71,7 @@ func TestConfToArgs_args_values(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestConfToArgs_args_flagsvalues(t *testing.T) {
+func TestConfToArgs_flagsvalues(t *testing.T) {
 	conf := HelmConf{
 		Values: map[string]interface{}{
 			"hasValues": "yes",
@@ -100,15 +100,17 @@ func TestParseYamlToMap_basic(t *testing.T) {
 kind: testKind
 metadata:
   name: testName`)
-	m, err := parseYamlToMap(yamlFile)
+	actual, err := parseYamlToMap(yamlFile)
 
 	expected := map[string]interface{}{
-		"kind": "testKind",
-		"metadata": map[string]interface{}{
-			"name": "testName",
+		"testname_testkind": map[string]interface{}{
+			"kind": "testKind",
+			"metadata": map[string]interface{}{
+				"name": "testName",
+			},
 		},
 	}
-	assert.Equal(t, expected, m["testname_testkind"])
+	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
@@ -117,15 +119,17 @@ func TestParseYamlToMap_dash(t *testing.T) {
 kind: testKind
 metadata:
   name: test-Name`)
-	m, err := parseYamlToMap(yamlFile)
+	actual, err := parseYamlToMap(yamlFile)
 
 	expected := map[string]interface{}{
-		"kind": "testKind",
-		"metadata": map[string]interface{}{
-			"name": "test-Name",
+		"test_name_testkind": map[string]interface{}{
+			"kind": "testKind",
+			"metadata": map[string]interface{}{
+				"name": "test-Name",
+			},
 		},
 	}
-	assert.Equal(t, expected, m["test_name_testkind"])
+	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
@@ -134,23 +138,54 @@ func TestParseYamlToMap_colon(t *testing.T) {
 kind: testKind
 metadata:
   name: test:Name`)
-	m, err := parseYamlToMap(yamlFile)
+	actual, err := parseYamlToMap(yamlFile)
 
 	expected := map[string]interface{}{
-		"kind": "testKind",
-		"metadata": map[string]interface{}{
-			"name": "test:Name",
+		"test_name_testkind": map[string]interface{}{
+			"kind": "testKind",
+			"metadata": map[string]interface{}{
+				"name": "test:Name",
+			},
 		},
 	}
-	assert.Equal(t, expected, m["test_name_testkind"])
+	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
 
 func TestParseYamlToMap_empty(t *testing.T) {
 	yamlFile := []byte(`---`)
-	m, err := parseYamlToMap(yamlFile)
+	actual, err := parseYamlToMap(yamlFile)
 
 	expected := map[string]interface{}{}
-	assert.Equal(t, expected, m)
+	assert.Equal(t, expected, actual)
+	assert.Nil(t, err)
+}
+
+func TestParseYamlToMap_multiple_files(t *testing.T) {
+	yamlFile := []byte(`---
+kind: testKind
+metadata:
+  name: testName
+---
+kind: testKind
+metadata:
+  name: testName2`)
+	actual, err := parseYamlToMap(yamlFile)
+
+	expected := map[string]interface{}{
+		"testname_testkind": map[string]interface{}{
+			"kind": "testKind",
+			"metadata": map[string]interface{}{
+				"name": "testName",
+			},
+		},
+		"testname2_testkind": map[string]interface{}{
+			"kind": "testKind",
+			"metadata": map[string]interface{}{
+				"name": "testName2",
+			},
+		},
+	}
+	assert.Equal(t, expected, actual)
 	assert.Nil(t, err)
 }
