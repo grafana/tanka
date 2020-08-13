@@ -16,41 +16,37 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-func confToArgs(conf map[string]interface{}) ([]string, []string, error) {
+type HelmConf struct {
+	Values map[string]interface{}
+	Flags  []string
+}
+
+func confToArgs(conf HelmConf) ([]string, []string, error) {
 	var args []string
 	var tempFiles []string
 
 	// create file and append to args
-	if val, ok := conf["values"]; ok {
-		if len(val.(map[string]interface{})) > 0 {
-			valuesYaml, err := yaml.Marshal(val.(interface{}))
-			if err != nil {
-				return nil, nil, err
-			}
-			tmpFile, err := ioutil.TempFile(os.TempDir(), "tanka-")
-			if err != nil {
-				return nil, nil, errors.Wrap(err, "cannot create temporary values.yaml")
-			}
-			tempFiles = append(tempFiles, tmpFile.Name())
-			if _, err = tmpFile.Write(valuesYaml); err != nil {
-				return nil, tempFiles, errors.Wrap(err, "failed to write to temporary values.yaml")
-			}
-			if err := tmpFile.Close(); err != nil {
-				return nil, tempFiles, err
-			}
-			args = append(args, fmt.Sprintf("--values=%s", tmpFile.Name()))
+	if len(conf.Values) != 0 {
+		valuesYaml, err := yaml.Marshal(conf.Values)
+		if err != nil {
+			return nil, nil, err
 		}
+		tmpFile, err := ioutil.TempFile(os.TempDir(), "tanka-")
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "cannot create temporary values.yaml")
+		}
+		tempFiles = append(tempFiles, tmpFile.Name())
+		if _, err = tmpFile.Write(valuesYaml); err != nil {
+			return nil, tempFiles, errors.Wrap(err, "failed to write to temporary values.yaml")
+		}
+		if err := tmpFile.Close(); err != nil {
+			return nil, tempFiles, err
+		}
+		args = append(args, fmt.Sprintf("--values=%s", tmpFile.Name()))
 	}
 
 	// append custom flags to args
-	if val, ok := conf["flags"]; ok {
-		dataFlags := val.([]interface{})
-		flags := make([]string, 0)
-		for _, f := range dataFlags {
-			flags = append(flags, f.(string))
-		}
-		args = append(args, flags...)
-	}
+	args = append(args, conf.Flags...)
 
 	if len(args) == 0 {
 		args = nil
@@ -117,7 +113,15 @@ func HelmTemplate() *jsonnet.NativeFunction {
 		Params: ast.Identifiers{"name", "chart", "conf"},
 		Func: func(data []interface{}) (interface{}, error) {
 			name, chart := data[0].(string), data[1].(string)
-			conf := data[2].(map[string]interface{})
+
+			c, err := json.Marshal(data[2])
+			if err != nil {
+				return "", err
+			}
+			var conf HelmConf
+			if err := json.Unmarshal(c, &conf); err != nil {
+				return "", err
+			}
 
 			// the basic arguments to make this work
 			args := []string{

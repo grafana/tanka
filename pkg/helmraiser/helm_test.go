@@ -9,7 +9,7 @@ import (
 )
 
 func TestConfToArgs_noargs_noconf(t *testing.T) {
-	conf := map[string]interface{}{}
+	conf := HelmConf{}
 	args, tempFiles, err := confToArgs(conf)
 	for _, file := range tempFiles {
 		defer os.Remove(file)
@@ -20,9 +20,9 @@ func TestConfToArgs_noargs_noconf(t *testing.T) {
 }
 
 func TestConfToArgs_args_emptyconf(t *testing.T) {
-	conf := map[string]interface{}{
-		"values": map[string]interface{}{},
-		"flags":  []interface{}{},
+	conf := HelmConf{
+		Values: map[string]interface{}{},
+		Flags:  []string{},
 	}
 
 	args, tempFiles, err := confToArgs(conf)
@@ -35,8 +35,8 @@ func TestConfToArgs_args_emptyconf(t *testing.T) {
 }
 
 func TestConfToArgs_args_flags(t *testing.T) {
-	conf := map[string]interface{}{
-		"flags": []interface{}{
+	conf := HelmConf{
+		Flags: []string{
 			"--version=v0.1",
 			"--random=arg",
 		},
@@ -55,8 +55,8 @@ func TestConfToArgs_args_flags(t *testing.T) {
 }
 
 func TestConfToArgs_args_values(t *testing.T) {
-	conf := map[string]interface{}{
-		"values": map[string]interface{}{
+	conf := HelmConf{
+		Values: map[string]interface{}{
 			"hasValues": "yes",
 		},
 	}
@@ -72,11 +72,11 @@ func TestConfToArgs_args_values(t *testing.T) {
 }
 
 func TestConfToArgs_args_flagsvalues(t *testing.T) {
-	conf := map[string]interface{}{
-		"values": map[string]interface{}{
+	conf := HelmConf{
+		Values: map[string]interface{}{
 			"hasValues": "yes",
 		},
-		"flags": []interface{}{
+		Flags: []string{
 			"--version=v0.1",
 			"--random=arg",
 		},
