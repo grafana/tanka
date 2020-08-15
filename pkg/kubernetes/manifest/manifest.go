@@ -219,37 +219,22 @@ func (m Metadata) UID() string {
 }
 
 // Labels of the manifest
-func (m Metadata) Labels() map[string]string {
-	return safeStringMap(m, "labels")
+func (m Metadata) Labels() map[string]interface{} {
+	return safeMSI(m, "labels")
 }
 
 // Annotations of the manifest
-func (m Metadata) Annotations() map[string]string {
-	return safeStringMap(m, "annotations")
+func (m Metadata) Annotations() map[string]interface{} {
+	return safeMSI(m, "annotations")
 }
 
-// safeStringMap safely returns a string map:
-// - returns if map[string]string
-// - converts if map[string]interface{}
-// - zeroes if anything else
-func safeStringMap(m map[string]interface{}, key string) map[string]string {
+func safeMSI(m map[string]interface{}, key string) map[string]interface{} {
 	switch t := m[key].(type) {
-	case map[string]string:
-		return t
 	case map[string]interface{}:
-		mss := make(map[string]string)
-		for k, v := range t {
-			s, ok := v.(string)
-			if !ok {
-				continue
-			}
-			mss[k] = s
-		}
-		m[key] = mss
-		return m[key].(map[string]string)
+		return t
 	default:
-		m[key] = make(map[string]string)
-		return m[key].(map[string]string)
+		m[key] = make(map[string]interface{})
+		return m[key].(map[string]interface{})
 	}
 }
 
