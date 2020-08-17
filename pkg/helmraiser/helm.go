@@ -141,8 +141,13 @@ func HelmTemplate() *jsonnet.NativeFunction {
 				args = append(args, confArgs...)
 			}
 
+			helmBinary := "helm"
+			if hc := os.Getenv("TANKA_HELM_BIN"); hc != "" {
+				helmBinary = hc
+			}
+
 			// convert the values map into a yaml file
-			cmd := exec.Command("helm", args...)
+			cmd := exec.Command(helmBinary, args...)
 			buf := bytes.Buffer{}
 			cmd.Stdout = &buf
 			cmd.Stderr = os.Stderr
