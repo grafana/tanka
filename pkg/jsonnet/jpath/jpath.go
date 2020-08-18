@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 var (
@@ -63,14 +64,20 @@ func Resolve(workdir string) (path []string, base, root string, err error) {
 // - tkrc.yaml is considered first, for a jb-independent way of marking the root
 // - if it is not present (default), jsonnetfile.json is used.
 func findRoot(start string) (dir string, err error) {
+	// root path based on os
+	stop := "/"
+	if runtime.GOOS == "windows" {
+		stop = filepath.VolumeName(start) + "\\"
+	}
+
 	// try tkrc.yaml first
-	root, err := FindParentFile("tkrc.yaml", start, "/")
+	root, err := FindParentFile("tkrc.yaml", start, stop)
 	if err == nil {
 		return root, nil
 	}
 
 	// otherwise use jsonnetfile.json
-	root, err = FindParentFile("jsonnetfile.json", start, "/")
+	root, err = FindParentFile("jsonnetfile.json", start, stop)
 	if err != nil {
 		if _, ok := err.(ErrorFileNotFound); ok {
 			return "", ErrorNoRoot
