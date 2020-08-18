@@ -152,7 +152,7 @@ func HelmTemplate() *jsonnet.NativeFunction {
 			cmd.Stdout = &buf
 			cmd.Stderr = os.Stderr
 			if err := cmd.Run(); err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("while running helm %s", strings.Join(args, " ")))
+				return nil, fmt.Errorf("running 'helm %s': %w", strings.Join(args, " "), err)
 			}
 
 			return parseYamlToMap(buf.Bytes())
