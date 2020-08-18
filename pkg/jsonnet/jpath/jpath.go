@@ -64,12 +64,10 @@ func Resolve(workdir string) (path []string, base, root string, err error) {
 // - tkrc.yaml is considered first, for a jb-independent way of marking the root
 // - if it is not present (default), jsonnetfile.json is used.
 func findRoot(start string) (dir string, err error) {
-  // root path based on os
-	var stop string
+	// root path based on os
+	stop := "/"
 	if runtime.GOOS == "windows" {
-	  stop = filepath.VolumeName(start) + "\\"
-	} else {
-		stop = "/"
+		stop = filepath.VolumeName(start) + "\\"
 	}
 
 	// try tkrc.yaml first
