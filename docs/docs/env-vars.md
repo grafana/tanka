@@ -19,3 +19,8 @@ route: "/env-vars"
 
 **Description**: Print all calls to `kubectl`  
 **Default**: `false`
+
+### TANKA_HELM_PATH
+
+**Description**: Path to the `helm` executable
+**Default**: `$PATH/helm`
