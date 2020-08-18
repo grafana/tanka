@@ -142,7 +142,7 @@ func HelmTemplate() *jsonnet.NativeFunction {
 			}
 
 			helmBinary := "helm"
-			if hc := os.Getenv("TANKA_HELM_BIN"); hc != "" {
+			if hc := os.Getenv("TANKA_HELM_PATH"); hc != "" {
 				helmBinary = hc
 			}
 
