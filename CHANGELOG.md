@@ -2,7 +2,7 @@
 
 > ## 0.12-alpha1 (2020-08-19)
 >
-> :rotating_light: This is a pre-release. It is not tested and will contain issues
+> :rotating_light: This is a pre-release. It is not tested and may contain issues
 > of major kind, possibly causing data loss.  
 > :rotating_light: **DO NOT USE IN PRODUCTION**.
 >
