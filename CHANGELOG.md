@@ -1,5 +1,28 @@
 # Changelog
 
+> ## 0.12-alpha1 (2020-08-19)
+>
+> :rotating_light: This is a pre-release. It is not tested and will contain issues
+> of major kind, possibly causing data loss.  
+> :rotating_light: **DO NOT USE IN PRODUCTION**.
+>
+> ### Features
+>
+> - **k8s, jsonnet**: Support for [Helm](https://helm.sh). In combination with
+>   [`helm-util`](https://github.com/grafana/jsonnet-libs/tree/master/helm-util),
+>   Tanka can now load resources from Helm Charts.
+>   **([#336](https://github.com/grafana/tanka/pull/336))**
+> - **jsonnet**: Top Level Arguments can now be specified using `--tla-str` and `--tla-code` **([#340](https://github.com/grafana/tanka/pull/340))**
+> - **cli**: Filtering (`-t`) now supports negative expressions (`-t !deployment/.*`) to exclude resources
+>   **([#339](https://github.com/grafana/tanka/pull/339))**
+>
+> ### Bug Fixes
+>
+> - **jsonnet**: Import path resolution now works on Windows
+>   **([#331](https://github.com/grafana/tanka/pull/331))**
+> - **jsonnet**: Arrays are now supported at the top level
+>   **([#321](https://github.com/grafana/tanka/pull/321))**
+
 ## 0.11.1 (2020-07-17)
 
 This is a minor release with one bugfix and one minor feature.
