@@ -89,7 +89,7 @@ func installK8sLib() error {
 		return err
 	}
 
-	cmd := exec.Command("jb", append([]string{"install"}, initialPackages...)...)
+	cmd := exec.Command(jbBinary, append([]string{"install"}, initialPackages...)...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
