@@ -174,15 +174,12 @@ func (m *Manifest) UnmarshalJSON(data []byte) error {
 	return m.Verify()
 }
 
-// UnmarshalYAML validates the Manifest during yaml parsing
+// UnmarshalYAML makes sure nobody uses YAML. The YAML parser uses a richer
+// typeset than the JSON parser (including int instead of float, etc). This
+// breaks both assumptions in the code of this package, but also is incompatible
+// to certain features of `google/go-jsonnet`
 func (m *Manifest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type tmp Manifest
-	var t tmp
-	if err := unmarshal(&t); err != nil {
-		return err
-	}
-	*m = Manifest(t)
-	return m.Verify()
+	panic("package manifest is incompatible with the inner workings of the gopkg.in/yaml. Please use JSON instead.")
 }
 
 // Metadata is the metadata object from the Manifest
