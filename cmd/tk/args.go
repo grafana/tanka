@@ -7,10 +7,11 @@ import (
 
 var workflowArgs = cli.Args{
 	Validator: cli.ValidateExact(1),
-	Predictor: cli.PredictFunc(func(complete.Args) []string {
+	Predictor: cli.PredictFunc(func(args complete.Args) []string {
 		if dirs := findBaseDirs(); len(dirs) != 0 {
 			return dirs
 		}
-		return []string{""}
+
+		return complete.PredictDirs("*").Predict(args)
 	}),
 }
