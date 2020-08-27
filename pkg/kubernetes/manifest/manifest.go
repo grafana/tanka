@@ -176,13 +176,17 @@ func (m *Manifest) UnmarshalJSON(data []byte) error {
 
 // UnmarshalYAML validates the Manifest during yaml parsing
 func (m *Manifest) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type tmp Manifest
-	var t tmp
-	if err := unmarshal(&t); err != nil {
+	var tmp map[string]interface{}
+	if err := unmarshal(&tmp); err != nil {
 		return err
 	}
-	*m = Manifest(t)
-	return m.Verify()
+
+	data, err := json.Marshal(tmp)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(data, m)
 }
 
 // Metadata is the metadata object from the Manifest
