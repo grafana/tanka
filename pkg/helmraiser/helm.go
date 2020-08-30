@@ -20,7 +20,7 @@ import (
 // Helm provides actions on Helm charts.
 type Helm struct{}
 
-func (h Helm) run(action string, args ...string) *exec.Cmd {
+func (h Helm) cmd(action string, args ...string) *exec.Cmd {
 	argv := []string{action}
 	argv = append(argv, args...)
 
@@ -86,7 +86,7 @@ func (h Helm) Template(name, chart string, opts TemplateOpts) (manifest.List, er
 	args := []string{name, chart}
 	args = append(args, confArgs...)
 
-	cmd := h.run("template", args...)
+	cmd := h.cmd("template", args...)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = os.Stderr
