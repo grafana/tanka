@@ -31,7 +31,7 @@ func Funcs() []*jsonnet.NativeFunction {
 		regexMatch(),
 		regexSubst(),
 
-		helmraiser.HelmTemplate(),
+		helmraiser.NativeFunc(),
 	}
 }
 
