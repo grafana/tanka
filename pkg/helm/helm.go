@@ -46,6 +46,7 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 		"--version", version,
 		"--destination", opts.Destination,
 		"--repository-config", repoFile,
+		"--untar",
 	)
 
 	return cmd.Run()
