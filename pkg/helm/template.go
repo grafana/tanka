@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"strings"
 
 	jsonnet "github.com/google/go-jsonnet"
@@ -16,24 +15,6 @@ import (
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v3"
 )
-
-// Helm provides actions on Helm charts.
-type Helm struct{}
-
-func (h Helm) cmd(action string, args ...string) *exec.Cmd {
-	argv := []string{action}
-	argv = append(argv, args...)
-
-	return helmCmd(argv...)
-}
-
-func helmCmd(args ...string) *exec.Cmd {
-	binary := "helm"
-	if env := os.Getenv("TANKA_HELM_PATH"); env != "" {
-		binary = env
-	}
-	return exec.Command(binary, args...)
-}
 
 // TemplateOpts defines additional parameters that can be passed to the
 // Helm.Template action
@@ -74,7 +55,7 @@ func confToArgs(conf TemplateOpts) ([]string, []string, error) {
 
 // Template expands a Helm Chart into a regular manifest.List using the `helm
 // template` command
-func (h Helm) Template(name, chart string, opts TemplateOpts) (manifest.List, error) {
+func (h ExecHelm) Template(name, chart string, opts TemplateOpts) (manifest.List, error) {
 	confArgs, tmpFiles, err := confToArgs(opts)
 	if err != nil {
 		return nil, err
@@ -139,7 +120,8 @@ func NativeFunc() *jsonnet.NativeFunction {
 				return "", err
 			}
 
-			var h Helm
+			// TODO: Define Template on the Helm interface instead
+			var h ExecHelm
 			list, err := h.Template(name, chart, conf)
 			if err != nil {
 				return nil, err
