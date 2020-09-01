@@ -26,11 +26,11 @@ func EvaluateFile(jsonnetFile string, mods ...Modifier) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "resolving jpath")
 	}
-	return Evaluate(string(bytes), jpath, mods...)
+	return Evaluate(jsonnetFile, string(bytes), jpath, mods...)
 }
 
 // Evaluate renders the given jsonnet into a string
-func Evaluate(sonnet string, jpath []string, mods ...Modifier) (string, error) {
+func Evaluate(filename, sonnet string, jpath []string, mods ...Modifier) (string, error) {
 	vm := jsonnet.MakeVM()
 	vm.Importer(NewExtendedImporter(jpath))
 
