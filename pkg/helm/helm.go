@@ -1,4 +1,4 @@
-package helmraiser
+package helm
 
 import (
 	"bytes"
