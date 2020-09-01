@@ -21,4 +21,5 @@ require (
 	gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v3 v3.0.0-20191010095647-fc94e3f71652
 	k8s.io/apimachinery v0.18.3
+	sigs.k8s.io/yaml v1.2.0
 )

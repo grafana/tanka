@@ -9,7 +9,7 @@ import (
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
-	"github.com/grafana/tanka/pkg/helmraiser"
+	"github.com/grafana/tanka/pkg/helm"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v3"
 )
@@ -31,7 +31,7 @@ func Funcs() []*jsonnet.NativeFunction {
 		regexMatch(),
 		regexSubst(),
 
-		helmraiser.NativeFunc(),
+		helm.NativeFunc(),
 	}
 }
 
