@@ -44,7 +44,7 @@ func Evaluate(filename, sonnet string, jpath []string, mods ...Modifier) (string
 		vm.NativeFunction(nf)
 	}
 
-	return vm.EvaluateSnippet("main.jsonnet", sonnet)
+	return vm.EvaluateSnippet(filename, sonnet)
 }
 
 // WithExtCode allows to make the supplied snippet available to Jsonnet as an
