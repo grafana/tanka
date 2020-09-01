@@ -122,5 +122,5 @@ func loadChartfile() (*helm.Charts, error) {
 		return nil, err
 	}
 
-	return helm.Load(wd)
+	return helm.LoadChartfile(wd)
 }

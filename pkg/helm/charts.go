@@ -14,8 +14,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Load opens a Chartfile tree
-func Load(projectRoot string) (*Charts, error) {
+// LoadChartfile opens a Chartfile tree
+func LoadChartfile(projectRoot string) (*Charts, error) {
 	// make sure project root is valid
 	abs, err := filepath.Abs(projectRoot)
 	if err != nil {
@@ -164,7 +164,7 @@ func InitChartfile(path string) (*Charts, error) {
 		return nil, err
 	}
 
-	return Load(filepath.Dir(path))
+	return LoadChartfile(filepath.Dir(path))
 }
 
 // write saves a Chartfile to dest
