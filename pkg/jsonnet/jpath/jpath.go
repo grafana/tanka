@@ -13,7 +13,7 @@ var (
 	ErrorNoRoot = errors.New("could not locate a tkrc.yaml or jsonnetfile.json in the parent directories, which is required to identify the project root.\nRefer to https://tanka.dev/directory-structure for more information")
 
 	// ErrorNoBase means no baseDir was found in the parents
-	ErrorNoBase = errors.New("could not locate a main.jsonnet in the parent directories, which is required as the entrypoint for the evaluation.\nRefer to https://tanka.dev/directory-structure for more information")
+	ErrorNoBase = errors.New("could not locate entrypoint (usually main.jsonnet) in the parent directories, which is required as the entrypoint for the evaluation.\nRefer to https://tanka.dev/directory-structure for more information")
 )
 
 // ErrorFileNotFound means that the searched file was not found
@@ -27,7 +27,7 @@ func (e ErrorFileNotFound) Error() string {
 
 // Resolve the given directory and resolves the jPath around it. This means it:
 // - figures out the project root (the one with .jsonnetfile, vendor/ and lib/)
-// - figures out the environments base directory (the one with the main.jsonnet)
+// - figures out the environments base directory (usually the main.jsonnet)
 //
 // It then constructs a jPath with the base directory, vendor/ and lib/.
 // This results in predictable imports, as it doesn't matter whether the user called
@@ -38,12 +38,17 @@ func Resolve(workdir string) (path []string, base, root string, err error) {
 		return nil, "", "", err
 	}
 
-	root, err = FindRoot(workdir)
+	entrypoint, err := GetEntrypoint(workdir)
 	if err != nil {
 		return nil, "", "", err
 	}
 
-	base, err = FindParentFile("main.jsonnet", workdir, root)
+	root, err = findRoot(filepath.Dir(entrypoint))
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	base, err = FindParentFile(filepath.Base(entrypoint), filepath.Dir(entrypoint), root)
 	if err != nil {
 		if _, ok := err.(ErrorFileNotFound); ok {
 			return nil, "", "", ErrorNoBase
@@ -112,4 +117,16 @@ func dirContainsFile(files []os.FileInfo, filename string) bool {
 		}
 	}
 	return false
+}
+
+func GetEntrypoint(dir string) (string, error) {
+	filename := "main.jsonnet"
+	stat, err := os.Stat(dir)
+	if err != nil {
+		return "", err
+	}
+	if !stat.IsDir() {
+		dir, filename = filepath.Split(dir)
+	}
+	return filepath.Join(dir, filename), nil
 }
