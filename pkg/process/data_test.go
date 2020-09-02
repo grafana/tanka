@@ -17,12 +17,13 @@ type testData struct {
 }
 
 func loadFixture(name string) testData {
-	raw, err := ioutil.ReadFile("./testdata/td" + strings.Title(name) + ".jsonnet")
+	filename := "./testdata/td" + strings.Title(name) + ".jsonnet"
+	raw, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(fmt.Sprint("loading fixture:", err))
 	}
 
-	data, err := jsonnet.Evaluate(string(raw), []string{"./testdata"})
+	data, err := jsonnet.Evaluate(filename, string(raw), []string{"./testdata"})
 	if err != nil {
 		panic(fmt.Sprint("loading fixture:", err))
 	}
