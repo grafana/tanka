@@ -17,7 +17,7 @@ func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
 	if k.ctl.Info().ClientVersion.Equal(semver.MustParse("1.18.0")) {
 		return nil, fmt.Errorf(`You seem to be using kubectl 1.18.0, which contains an unfixed issue
 that makes 'kubectl diff' modify resources in your cluster.
-Please downgrade kubectl until https://github.com/kubernetes/kubernetes/issues/89762 is fixed.`)
+Please upgrade kubectl to at least version 1.18.1.`)
 	}
 
 	// required for separating
