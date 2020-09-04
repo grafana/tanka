@@ -153,12 +153,8 @@ func diffCmd() *cli.Command {
 			os.Exit(ExitStatusClean)
 		}
 
-		if interactive {
-			r := term.Colordiff(*changes)
-			fPageln(r)
-		} else {
-			fmt.Println(*changes)
-		}
+		r := term.Colordiff(*changes)
+		fPageln(r)
 
 		os.Exit(ExitStatusDiff)
 		return nil
