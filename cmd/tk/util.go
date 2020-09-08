@@ -5,47 +5,41 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 )
 
-func pageln(i ...interface{}) {
-	fPageln(strings.NewReader(fmt.Sprint(i...)))
+func pageln(i ...interface{}) error {
+	return fPageln(strings.NewReader(fmt.Sprint(i...)))
 }
 
 // fPageln invokes the systems pager with the supplied data.
 // If the PAGER environment variable is empty, no pager is used.
 // If the PAGER environment variable is unset, use less with posix flags.
-func fPageln(r io.Reader) {
-	pagerEnv, ok := os.LookupEnv("PAGER")
+func fPageln(r io.Reader) error {
+	pager, ok := os.LookupEnv("PAGER")
 	if !ok {
 		// --RAW-CONTROL-CHARS  Honors colors from diff. Must be in all caps, otherwise display issues occur.
 		// --quit-if-one-screen Closer to the git experience.
 		// --no-init            Don't clear the screen when exiting.
-		pagerEnv = "less --RAW-CONTROL-CHARS --quit-if-one-screen--no-init"
+		pager = "less --RAW-CONTROL-CHARS --quit-if-one-screen --no-init"
 	}
 
-	pager := strings.Split(pagerEnv, " ")
-
-	if interactive && len(pager) > 0 {
-		pagerCmd := pager[0]
-		pagerArgs := strings.Split(os.Getenv("PAGER"), " ")[1:len(pager)]
-
-		cmd := exec.Command(pagerCmd, pagerArgs...)
+	if interactive && pager != "" {
+		cmd := exec.Command("sh", "-c", pager)
 		cmd.Stdin = r
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
-		if err := cmd.Run(); err != nil {
-			if _, err = io.Copy(os.Stdout, r); err != nil {
-				log.Fatalln("Writing to Stdout:", err)
-			}
+		err := cmd.Run()
+		if err == nil {
+			return nil
 		}
-	} else {
-		fmt.Println(r)
 	}
+
+	_, err := io.Copy(os.Stdout, r)
+	return err
 }
 
 // writeJSON writes the given object to the path as a JSON file
