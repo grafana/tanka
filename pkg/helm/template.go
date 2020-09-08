@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	jsonnet "github.com/google/go-jsonnet"
@@ -18,9 +19,14 @@ import (
 
 // TemplateOpts defines additional parameters that can be passed to the
 // Helm.Template action
+// TODO: Isolate between Helm.Template and NativeFunc
 type TemplateOpts struct {
-	Values map[string]interface{}
-	Flags  []string
+	// general
+	Values map[string]interface{} `json:"values"`
+	Flags  []string               `json:"flags"`
+
+	// native func related
+	CalledFrom string `json:"calledFrom"`
 }
 
 func confToArgs(conf TemplateOpts) ([]string, []string, error) {
@@ -93,11 +99,15 @@ func (h ExecHelm) Template(name, chart string, opts TemplateOpts) (manifest.List
 }
 
 // NativeFunc returns a jsonnet native function that provides the same
-// functionality as `Helm.Template` of this package
+// functionality as `Helm.Template` of this package. Charts are required to be
+// present on the local filesystem, at a relative location to the file that
+// calls `helm.template()` / `std.native('helmTemplate')`. This guarantees
+// hermeticity
 func NativeFunc() *jsonnet.NativeFunction {
 	return &jsonnet.NativeFunction{
 		Name: "helmTemplate",
-		// Lines up with `helm template [NAME] [CHART] [flags]` except 'conf' is a bit more elaborate
+		// Similar to `helm template [NAME] [CHART] [flags]` except 'conf' is a
+		// bit more elaborate and chart is a local path
 		Params: ast.Identifiers{"name", "chart", "conf"},
 		Func: func(data []interface{}) (interface{}, error) {
 			name, ok := data[0].(string)
@@ -105,7 +115,7 @@ func NativeFunc() *jsonnet.NativeFunction {
 				return nil, fmt.Errorf("First argument 'name' must be of 'string' type, got '%T' instead", data[0])
 			}
 
-			chart, ok := data[1].(string)
+			chartpath, ok := data[1].(string)
 			if !ok {
 				return nil, fmt.Errorf("Second argument 'chart' must be of 'string' type, got '%T' instead", data[1])
 			}
@@ -118,6 +128,20 @@ func NativeFunc() *jsonnet.NativeFunction {
 			var conf TemplateOpts
 			if err := json.Unmarshal(c, &conf); err != nil {
 				return "", err
+			}
+
+			// Charts are only allowed at relative paths. Use conf.CalledFrom to find the callers directory
+			if conf.CalledFrom == "" {
+				// TODO: rephrase and move lengthy explanation to website
+				return nil, fmt.Errorf("helmTemplate: 'conf.calledFrom' is unset or empty.\nHowever, Tanka must know where helmTemplate was called from, to resolve the Helm Chart relative to that.\n")
+			}
+			callerDir := filepath.Dir(conf.CalledFrom)
+
+			// resolve the Chart relative to the caller
+			chart := filepath.Join(callerDir, chartpath)
+			if _, err := os.Stat(chart); err != nil {
+				// TODO: add website link for explanation
+				return nil, fmt.Errorf("helmTemplate: Failed to find a Chart at '%s': %s", chart, err)
 			}
 
 			// TODO: Define Template on the Helm interface instead
