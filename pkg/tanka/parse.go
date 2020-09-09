@@ -85,7 +85,9 @@ func eval(dir string, extCode map[string]string) (raw interface{}, env *v1alpha1
 		return nil, nil, err
 	}
 
-	raw, err = evalJsonnet(baseDir, env, extCode)
+	raw, err = evalJsonnet(baseDir, env, jsonnet.Opts{
+		ExtCode: extCode,
+	})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 	}
@@ -119,27 +121,21 @@ func parseSpec(baseDir, rootDir string) (*v1alpha1.Config, error) {
 
 // evalJsonnet evaluates the jsonnet environment at the given directory starting with
 // `main.jsonnet`
-func evalJsonnet(baseDir string, env *v1alpha1.Config, extCode map[string]string) (interface{}, error) {
+func evalJsonnet(baseDir string, env *v1alpha1.Config, opts jsonnet.Opts) (interface{}, error) {
+	// make env spec accessible from Jsonnet
 	jsonEnv, err := json.Marshal(env)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshalling environment config")
 	}
+	opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
 
-	ext := []jsonnet.Modifier{
-		jsonnet.WithExtCode(spec.APIGroup+"/environment", string(jsonEnv)),
-	}
-	for k, v := range extCode {
-		ext = append(ext, jsonnet.WithExtCode(k, v))
-	}
-
-	raw, err := jsonnet.EvaluateFile(
-		filepath.Join(baseDir, "main.jsonnet"),
-		ext...,
-	)
+	// evaluate Jsonnet
+	raw, err := jsonnet.EvaluateFile(filepath.Join(baseDir, "main.jsonnet"), opts)
 	if err != nil {
 		return nil, err
 	}
 
+	// parse result
 	var data interface{}
 	if err := json.Unmarshal([]byte(raw), &data); err != nil {
 		return nil, err
