@@ -5,6 +5,7 @@
 package tanka
 
 import (
+	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/process"
 )
@@ -20,8 +21,7 @@ func parseModifiers(mods []Modifier) *options {
 
 type options struct {
 	// `std.extVar`
-	extCode map[string]string
-	tlaCode map[string]string
+	jsonnet jsonnet.Opts
 
 	// target regular expressions to limit the working set
 	targets process.Matchers
@@ -41,13 +41,13 @@ type Modifier func(*options)
 // WithExtCode allows to pass external variables (jsonnet code) to the VM
 func WithExtCode(code map[string]string) Modifier {
 	return func(opts *options) {
-		opts.extCode = code
+		opts.jsonnet.ExtCode = code
 	}
 }
 
 func WithTLACode(code map[string]string) Modifier {
 	return func(opts *options) {
-		opts.extCode = code
+		opts.jsonnet.TLACode = code
 	}
 }
 

@@ -56,7 +56,7 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 
 // load runs all processing stages described at the Processed type
 func load(dir string, opts *options) (*loaded, error) {
-	raw, env, err := eval(dir, opts.extCode)
+	raw, env, err := eval(dir, opts.jsonnet)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func load(dir string, opts *options) (*loaded, error) {
 
 // eval runs all processing stages describe at the Processed type apart from
 // post-processing, thus returning the raw Jsonnet result.
-func eval(dir string, extCode map[string]string) (raw interface{}, env *v1alpha1.Config, err error) {
+func eval(dir string, opts jsonnet.Opts) (raw interface{}, env *v1alpha1.Config, err error) {
 	_, baseDir, rootDir, err := jpath.Resolve(dir)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "resolving jpath")
@@ -85,9 +85,7 @@ func eval(dir string, extCode map[string]string) (raw interface{}, env *v1alpha1
 		return nil, nil, err
 	}
 
-	raw, err = evalJsonnet(baseDir, env, jsonnet.Opts{
-		ExtCode: extCode,
-	})
+	raw, err = evalJsonnet(baseDir, env, opts)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 	}
@@ -130,7 +128,8 @@ func evalJsonnet(baseDir string, env *v1alpha1.Config, opts jsonnet.Opts) (inter
 	opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
 
 	// evaluate Jsonnet
-	raw, err := jsonnet.EvaluateFile(filepath.Join(baseDir, "main.jsonnet"), opts)
+	mainFile := filepath.Join(baseDir, "main.jsonnet")
+	raw, err := jsonnet.EvaluateFile(mainFile, opts)
 	if err != nil {
 		return nil, err
 	}
