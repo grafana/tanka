@@ -16,9 +16,7 @@ type Info struct {
 }
 
 // Status returns information about the particular environment
-func Status(baseDir string, mods ...Modifier) (*Info, error) {
-	opts := parseModifiers(mods)
-
+func Status(baseDir string, opts Opts) (*Info, error) {
 	r, err := load(baseDir, opts)
 	if err != nil {
 		return nil, err

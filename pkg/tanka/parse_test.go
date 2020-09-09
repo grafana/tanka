@@ -1,9 +1,10 @@
 package tanka
 
 import (
+	"testing"
+
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestEvalJsonnet(t *testing.T) {

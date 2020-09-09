@@ -55,13 +55,13 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 }
 
 // load runs all processing stages described at the Processed type
-func load(dir string, opts *options) (*loaded, error) {
-	raw, env, err := eval(dir, opts.extCode)
+func load(dir string, opts Opts) (*loaded, error) {
+	raw, env, err := eval(dir, opts.ExtCode)
 	if err != nil {
 		return nil, err
 	}
 
-	rec, err := process.Process(raw, *env, opts.targets)
+	rec, err := process.Process(raw, *env, opts.Filters)
 	if err != nil {
 		return nil, err
 	}
