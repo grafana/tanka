@@ -40,26 +40,19 @@ func applyCmd() *cli.Command {
 		Args:  workflowArgs,
 	}
 
-	vars := workflowFlags(cmd.Flags())
-	force := cmd.Flags().Bool("force", false, "force applying (kubectl apply --force)")
-	validate := cmd.Flags().Bool("validate", true, "validation of resources (kubectl --validate=false)")
-	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	var opts tanka.ApplyOpts
+	cmd.Flags().BoolVar(&opts.Force, "force", false, "force applying (kubectl apply --force)")
+	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
+	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 
-	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
+	vars := workflowFlags(cmd.Flags())
+	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		err := tanka.Apply(args[0],
-			tanka.WithTargets(stringsToRegexps(vars.targets)),
-			tanka.WithExtCode(getExtCode()),
-			tanka.WithTLACode(getTLACode()),
-			tanka.WithApplyForce(*force),
-			tanka.WithApplyValidate(*validate),
-			tanka.WithApplyAutoApprove(*autoApprove),
-		)
-		if err != nil {
-			return err
-		}
-		return nil
+		opts.Filters = stringsToRegexps(vars.targets)
+		opts.JsonnetOpts = getJsonnetOpts()
+
+		return tanka.Apply(args[0], opts)
 	}
 	return cmd
 }
@@ -71,17 +64,15 @@ func pruneCmd() *cli.Command {
 		Args:  workflowArgs,
 	}
 
-	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
-	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
-	force := cmd.Flags().Bool("force", false, "force deleting (kubectl delete --force)")
+	var opts tanka.PruneOpts
+	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
+	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		return tanka.Prune(args[0],
-			tanka.WithExtCode(getExtCode()),
-			tanka.WithTLACode(getTLACode()),
-			tanka.WithApplyAutoApprove(*autoApprove),
-			tanka.WithApplyForce(*force),
-		)
+		opts.JsonnetOpts = getJsonnetOpts()
+
+		return tanka.Prune(args[0], opts)
 	}
 
 	return cmd
@@ -94,25 +85,19 @@ func deleteCmd() *cli.Command {
 		Args:  workflowArgs,
 	}
 
+	var opts tanka.DeleteOpts
+	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
+	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
+	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+
 	vars := workflowFlags(cmd.Flags())
-	force := cmd.Flags().Bool("force", false, "force deleting (kubectl delete --force)")
-	validate := cmd.Flags().Bool("validate", true, "validation of resources (kubectl --validate=false)")
-	autoApprove := cmd.Flags().Bool("dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
-	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
+	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		err := tanka.Delete(args[0],
-			tanka.WithTargets(stringsToRegexps(vars.targets)),
-			tanka.WithExtCode(getExtCode()),
-			tanka.WithTLACode(getTLACode()),
-			tanka.WithApplyForce(*force),
-			tanka.WithApplyValidate(*validate),
-			tanka.WithApplyAutoApprove(*autoApprove),
-		)
-		if err != nil {
-			return err
-		}
-		return nil
+		opts.Filters = stringsToRegexps(vars.targets)
+		opts.JsonnetOpts = getJsonnetOpts()
+
+		return tanka.Delete(args[0], opts)
 	}
 	return cmd
 }
@@ -127,23 +112,18 @@ func diffCmd() *cli.Command {
 		},
 	}
 
-	// flags
-	var (
-		vars         = workflowFlags(cmd.Flags())
-		diffStrategy = cmd.Flags().String("diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
-		summarize    = cmd.Flags().BoolP("summarize", "s", false, "quick summary of the differences, hides file contents")
-	)
+	var opts tanka.DiffOpts
+	cmd.Flags().StringVar(&opts.Strategy, "diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
+	cmd.Flags().BoolVarP(&opts.Summarize, "summarize", "s", false, "print summary of the differences, not the actual contents")
 
-	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
+	vars := workflowFlags(cmd.Flags())
+	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		changes, err := tanka.Diff(args[0],
-			tanka.WithTargets(stringsToRegexps(vars.targets)),
-			tanka.WithExtCode(getExtCode()),
-			tanka.WithTLACode(getTLACode()),
-			tanka.WithDiffStrategy(*diffStrategy),
-			tanka.WithDiffSummarize(*summarize),
-		)
+		opts.Filters = stringsToRegexps(vars.targets)
+		opts.JsonnetOpts = getJsonnetOpts()
+
+		changes, err := tanka.Diff(args[0], opts)
 		if err != nil {
 			return err
 		}
@@ -173,9 +153,12 @@ func showCmd() *cli.Command {
 		Short: "jsonnet as yaml",
 		Args:  workflowArgs,
 	}
-	vars := workflowFlags(cmd.Flags())
+
 	allowRedirect := cmd.Flags().Bool("dangerous-allow-redirect", false, "allow redirecting output to a file or a pipe.")
-	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
+
+	vars := workflowFlags(cmd.Flags())
+	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		if !interactive && !*allowRedirect {
 			fmt.Fprintln(os.Stderr, `Redirection of the output of tk show is discouraged and disabled by default.
@@ -184,11 +167,11 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return nil
 		}
 
-		pretty, err := tanka.Show(args[0],
-			tanka.WithExtCode(getExtCode()),
-			tanka.WithTLACode(getTLACode()),
-			tanka.WithTargets(stringsToRegexps(vars.targets)),
-		)
+		pretty, err := tanka.Show(args[0], tanka.Opts{
+			JsonnetOpts: getJsonnetOpts(),
+			Filters:     stringsToRegexps(vars.targets),
+		})
+
 		if err != nil {
 			return err
 		}

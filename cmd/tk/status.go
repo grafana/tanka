@@ -18,8 +18,13 @@ func statusCmd() *cli.Command {
 		Short: "display an overview of the environment, including contents and metadata.",
 		Args:  workflowArgs,
 	}
+
+	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		status, err := tanka.Status(args[0])
+		status, err := tanka.Status(args[0], tanka.Opts{
+			JsonnetOpts: getJsonnetOpts(),
+		})
 		if err != nil {
 			return err
 		}
