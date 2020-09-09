@@ -86,6 +86,13 @@ func (h ExecHelm) Template(name, chart string, opts TemplateOpts) (manifest.List
 			}
 			return nil, errors.Wrap(err, "Parsing Helm output")
 		}
+
+		// Helm might return "empty" elements in the YAML stream that consist
+		// only of comments. Ignore these
+		if len(m) == 0 {
+			continue
+		}
+
 		list = append(list, m)
 	}
 
@@ -129,7 +136,7 @@ func NativeFunc() *jsonnet.NativeFunction {
 
 			out := make(map[string]interface{})
 			for _, m := range list {
-				name := fmt.Sprintf("%s_%s", m.Kind(), m.Metadata().Name())
+				name := fmt.Sprintf("%s_%s", m.Metadata().Name(), m.Kind())
 				name = normalizeName(name)
 
 				out[name] = map[string]interface{}(m)
