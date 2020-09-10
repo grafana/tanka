@@ -3,7 +3,6 @@ package process
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
@@ -18,12 +17,12 @@ type testData struct {
 
 func loadFixture(name string) testData {
 	filename := "./testdata/td" + strings.Title(name) + ".jsonnet"
-	raw, err := ioutil.ReadFile(filename)
-	if err != nil {
-		panic(fmt.Sprint("loading fixture:", err))
-	}
 
-	data, err := jsonnet.Evaluate(filename, string(raw), []string{"./testdata"})
+	vm := jsonnet.MakeVM(jsonnet.Opts{
+		ImportPaths: []string{"./testdata"},
+	})
+
+	data, err := vm.EvaluateFile(filename)
 	if err != nil {
 		panic(fmt.Sprint("loading fixture:", err))
 	}

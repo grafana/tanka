@@ -37,6 +37,8 @@ github.com/google/go-cmp v0.5.2-0.20200818193711-d2fcc899bdc2 h1:CZtx9gNen+kr3Pu
 github.com/google/go-cmp v0.5.2-0.20200818193711-d2fcc899bdc2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-jsonnet v0.15.1-0.20200331184325-4f4aa80dd785 h1:+dlQ7fPoeAqO0U9V+94golo/rW1/V2Pn+v8aPp3ljRM=
 github.com/google/go-jsonnet v0.15.1-0.20200331184325-4f4aa80dd785/go.mod h1:sOcuej3UW1vpPTZOr8L7RQimqai1a57bt5j22LzGZCw=
+github.com/google/go-jsonnet v0.16.1-0.20200908152747-b70cbd441a39 h1:noLRnY1ESguFGDPxXvIcESe2rG63f+ZSbSGYfVa6iHo=
+github.com/google/go-jsonnet v0.16.1-0.20200908152747-b70cbd441a39/go.mod h1:sOcuej3UW1vpPTZOr8L7RQimqai1a57bt5j22LzGZCw=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/gofuzz v1.1.0 h1:Hsa8mG0dQ46ij8Sl2AYJDUv1oA9/d6Vk+3LG99Oe02g=
 github.com/google/gofuzz v1.1.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=

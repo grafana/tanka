@@ -5,6 +5,7 @@
 package tanka
 
 import (
+	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/process"
 )
 
@@ -16,11 +17,4 @@ type Opts struct {
 	Filters process.Matchers
 }
 
-// JsonnetOpts specify additional properties for the Jsonnet VM
-type JsonnetOpts struct {
-	// ExtCode are values available using `std.extVar`
-	ExtCode map[string]string
-
-	// TLACode are values set onto top level arguments
-	TLACode map[string]string
-}
+type JsonnetOpts = jsonnet.Opts

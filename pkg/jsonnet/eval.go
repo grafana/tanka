@@ -1,7 +1,6 @@
 package jsonnet
 
 import (
-	"io/ioutil"
 	"path/filepath"
 
 	jsonnet "github.com/google/go-jsonnet"
@@ -15,51 +14,63 @@ import (
 // See jsonnet.With* for this.
 type Modifier func(vm *jsonnet.VM) error
 
-// EvaluateFile opens the file, reads it into memory and evaluates it afterwards (`Evaluate()`)
-func EvaluateFile(jsonnetFile string, mods ...Modifier) (string, error) {
-	bytes, err := ioutil.ReadFile(jsonnetFile)
-	if err != nil {
-		return "", err
+// InjectedCode holds data that is "late-bound" into the VM
+type InjectedCode map[string]string
+
+// Set allows to set values on an InjectedCode, even when it is nil
+func (i *InjectedCode) Set(key, value string) {
+	if *i == nil {
+		*i = make(InjectedCode)
 	}
 
-	jpath, _, _, err := jpath.Resolve(filepath.Dir(jsonnetFile))
-	if err != nil {
-		return "", errors.Wrap(err, "resolving jpath")
-	}
-	return Evaluate(jsonnetFile, string(bytes), jpath, mods...)
+	(*i)[key] = value
 }
 
-// Evaluate renders the given jsonnet into a string
-func Evaluate(filename, sonnet string, jpath []string, mods ...Modifier) (string, error) {
-	vm := jsonnet.MakeVM()
-	vm.Importer(NewExtendedImporter(jpath))
+// Opts are additional properties for the Jsonnet VM
+type Opts struct {
+	ExtCode     InjectedCode
+	TLACode     InjectedCode
+	ImportPaths []string
+}
 
-	for _, mod := range mods {
-		if err := mod(vm); err != nil {
-			return "", err
-		}
+// MakeVM returns a Jsonnet VM with some extensions of Tanka, including:
+// - extended importer
+// - extCode and tlaCode applied
+// - native functions registered
+func MakeVM(opts Opts) *jsonnet.VM {
+	vm := jsonnet.MakeVM()
+	vm.Importer(NewExtendedImporter(opts.ImportPaths))
+
+	for k, v := range opts.ExtCode {
+		vm.ExtCode(k, v)
+	}
+	for k, v := range opts.TLACode {
+		vm.TLACode(k, v)
 	}
 
 	for _, nf := range native.Funcs() {
 		vm.NativeFunction(nf)
 	}
 
-	return vm.EvaluateSnippet(filename, sonnet)
+	return vm
 }
 
-// WithExtCode allows to make the supplied snippet available to Jsonnet as an
-// ext var
-func WithExtCode(key, code string) Modifier {
-	return func(vm *jsonnet.VM) error {
-		vm.ExtCode(key, code)
-		return nil
+// EvaluateFile evaluates the Jsonnet code in the given file and returns the
+// result in JSON form. It disregards opts.ImportPaths in favor of automatically
+// resolving these according to the specified file.
+func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
+	jpath, _, _, err := jpath.Resolve(filepath.Dir(jsonnetFile))
+	if err != nil {
+		return "", errors.Wrap(err, "resolving import paths")
 	}
+	opts.ImportPaths = jpath
+
+	vm := MakeVM(opts)
+	return vm.EvaluateFile(jsonnetFile)
 }
 
-// WithTLA allows to set the given code as a top level argument
-func WithTLA(key, code string) Modifier {
-	return func(vm *jsonnet.VM) error {
-		vm.TLACode(key, code)
-		return nil
-	}
+// Evaluate renders the given jsonnet into a string
+func Evaluate(filename, data string, opts Opts) (string, error) {
+	vm := jsonnet.MakeVM()
+	return vm.EvaluateAnonymousSnippet(filename, data)
 }

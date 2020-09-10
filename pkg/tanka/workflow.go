@@ -184,7 +184,7 @@ func Show(baseDir string, opts Opts) (manifest.List, error) {
 
 // Eval returns the raw evaluated Jsonnet output (without any transformations)
 func Eval(dir string, opts Opts) (raw interface{}, err error) {
-	r, _, err := eval(dir, opts.JsonnetOpts.ExtCode)
+	r, _, err := eval(dir, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}

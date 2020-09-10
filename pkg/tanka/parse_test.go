@@ -3,6 +3,7 @@ package tanka
 import (
 	"testing"
 
+	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/testify/assert"
 )
@@ -34,8 +35,7 @@ func TestEvalJsonnet(t *testing.T) {
 	}
 
 	for _, test := range cases {
-		m := make(map[string]string)
-		data, e := evalJsonnet(test.baseDir, v1alpha1.New(), m)
+		data, e := evalJsonnet(test.baseDir, v1alpha1.New(), jsonnet.Opts{})
 		assert.NoError(t, e)
 		assert.Equal(t, test.expected, data)
 	}
