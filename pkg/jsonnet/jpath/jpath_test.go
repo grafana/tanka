@@ -12,7 +12,7 @@ import (
 )
 
 func TestResolvePrecedence(t *testing.T) {
-	s, err := jsonnet.EvaluateFile(filepath.Join("./testdata/precedence/environments/default/main.jsonnet"))
+	s, err := jsonnet.EvaluateFile(filepath.Join("./testdata/precedence/environments/default/main.jsonnet"), jsonnet.Opts{})
 	require.NoError(t, err)
 
 	want := map[string]string{

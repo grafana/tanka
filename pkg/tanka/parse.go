@@ -56,7 +56,7 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 
 // load runs all processing stages described at the Processed type
 func load(dir string, opts *options) (*loaded, error) {
-	raw, env, err := eval(dir, opts.extCode)
+	raw, env, err := eval(dir, opts.jsonnet)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func load(dir string, opts *options) (*loaded, error) {
 
 // eval runs all processing stages describe at the Processed type apart from
 // post-processing, thus returning the raw Jsonnet result.
-func eval(dir string, extCode map[string]string) (raw interface{}, env *v1alpha1.Config, err error) {
+func eval(dir string, opts jsonnet.Opts) (raw interface{}, env *v1alpha1.Config, err error) {
 	_, baseDir, rootDir, err := jpath.Resolve(dir)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "resolving jpath")
@@ -85,7 +85,7 @@ func eval(dir string, extCode map[string]string) (raw interface{}, env *v1alpha1
 		return nil, nil, err
 	}
 
-	raw, err = evalJsonnet(baseDir, env, extCode)
+	raw, err = evalJsonnet(baseDir, env, opts)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 	}
@@ -119,27 +119,22 @@ func parseSpec(baseDir, rootDir string) (*v1alpha1.Config, error) {
 
 // evalJsonnet evaluates the jsonnet environment at the given directory starting with
 // `main.jsonnet`
-func evalJsonnet(baseDir string, env *v1alpha1.Config, extCode map[string]string) (interface{}, error) {
+func evalJsonnet(baseDir string, env *v1alpha1.Config, opts jsonnet.Opts) (interface{}, error) {
+	// make env spec accessible from Jsonnet
 	jsonEnv, err := json.Marshal(env)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshalling environment config")
 	}
+	opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
 
-	ext := []jsonnet.Modifier{
-		jsonnet.WithExtCode(spec.APIGroup+"/environment", string(jsonEnv)),
-	}
-	for k, v := range extCode {
-		ext = append(ext, jsonnet.WithExtCode(k, v))
-	}
-
-	raw, err := jsonnet.EvaluateFile(
-		filepath.Join(baseDir, "main.jsonnet"),
-		ext...,
-	)
+	// evaluate Jsonnet
+	mainFile := filepath.Join(baseDir, "main.jsonnet")
+	raw, err := jsonnet.EvaluateFile(mainFile, opts)
 	if err != nil {
 		return nil, err
 	}
 
+	// parse result
 	var data interface{}
 	if err := json.Unmarshal([]byte(raw), &data); err != nil {
 		return nil, err
