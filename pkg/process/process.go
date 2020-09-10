@@ -42,7 +42,7 @@ func Process(raw interface{}, cfg v1alpha1.Config, exprs Matchers) (manifest.Lis
 	out = Label(out, cfg)
 
 	// arbitrary labels and annotations from spec
-	out = ApplyDefaults(out, cfg)
+	out = ResourceDefaults(out, cfg)
 
 	// Perhaps filter for kind/name expressions
 	if len(exprs) > 0 {
@@ -68,7 +68,7 @@ func Label(list manifest.List, cfg v1alpha1.Config) manifest.List {
 	return list
 }
 
-func ApplyDefaults(list manifest.List, cfg v1alpha1.Config) manifest.List {
+func ResourceDefaults(list manifest.List, cfg v1alpha1.Config) manifest.List {
 	for i, m := range list {
 		for k, v := range cfg.Spec.ResourceDefaults.Annotations {
 			annotations := m.Metadata().Annotations()

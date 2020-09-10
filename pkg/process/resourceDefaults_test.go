@@ -82,7 +82,7 @@ func TestResourceDefaults(t *testing.T) {
 				expected.Labels()[k] = v
 			}
 
-			result := ApplyDefaults(manifest.List{before}, cfg)
+			result := ResourceDefaults(manifest.List{before}, cfg)
 			actual := result[0]
 			if diff := cmp.Diff(expected, actual.Metadata()); diff != "" {
 				t.Error(diff)

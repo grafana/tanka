@@ -57,7 +57,7 @@ type Spec struct {
 	ResourceDefaults ResourceDefaults `json:"resourceDefaults,omitempty"`
 }
 
-// ResourceDefaults should be inserted in any manifests that tanka processes.
+// ResourceDefaults will be inserted in any manifests that tanka processes.
 type ResourceDefaults struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
