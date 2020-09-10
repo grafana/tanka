@@ -35,6 +35,7 @@ github.com/google/go-cmp v0.3.0 h1:crn/baboCvb5fXaQ0IJ1SGTsTVrWpDsCWC8EGETZijY=
 github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
 github.com/google/go-cmp v0.5.2-0.20200818193711-d2fcc899bdc2 h1:CZtx9gNen+kr3PuC/JQff3n1pJbgpy7Wr3hzjnupqdw=
 github.com/google/go-cmp v0.5.2-0.20200818193711-d2fcc899bdc2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+github.com/google/go-cmp v0.5.2 h1:X2ev0eStA3AbceY54o37/0PQ/UWqKEiiO2dKL5OPaFM=
 github.com/google/go-jsonnet v0.15.1-0.20200331184325-4f4aa80dd785 h1:+dlQ7fPoeAqO0U9V+94golo/rW1/V2Pn+v8aPp3ljRM=
 github.com/google/go-jsonnet v0.15.1-0.20200331184325-4f4aa80dd785/go.mod h1:sOcuej3UW1vpPTZOr8L7RQimqai1a57bt5j22LzGZCw=
 github.com/google/go-jsonnet v0.16.1-0.20200908152747-b70cbd441a39 h1:noLRnY1ESguFGDPxXvIcESe2rG63f+ZSbSGYfVa6iHo=
