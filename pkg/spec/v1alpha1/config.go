@@ -50,9 +50,15 @@ func (m Metadata) NameLabel() string {
 
 // Spec defines Kubernetes properties
 type Spec struct {
-	APIServer    string            `json:"apiServer"`
-	Namespace    string            `json:"namespace"`
-	DiffStrategy string            `json:"diffStrategy,omitempty"`
-	InjectLabels bool              `json:"injectLabels,omitempty"`
-	Annotations  map[string]string `json:"annotations,omitempty"`
+	APIServer        string           `json:"apiServer"`
+	Namespace        string           `json:"namespace"`
+	DiffStrategy     string           `json:"diffStrategy,omitempty"`
+	InjectLabels     bool             `json:"injectLabels,omitempty"`
+	ResourceDefaults ResourceDefaults `json:"resourceDefaults,omitempty"`
+}
+
+// ResourceDefaults should be inserted in any manifests that tanka processes.
+type ResourceDefaults struct {
+	Annotations map[string]string `json:"annotations,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty"`
 }

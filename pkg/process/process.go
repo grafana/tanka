@@ -41,8 +41,8 @@ func Process(raw interface{}, cfg v1alpha1.Config, exprs Matchers) (manifest.Lis
 	// tanka.dev/** labels
 	out = Label(out, cfg)
 
-	// arbitrary annotations from spec
-	out = Annotate(out, cfg)
+	// arbitrary labels and annotations from spec
+	out = ApplyDefaults(out, cfg)
 
 	// Perhaps filter for kind/name expressions
 	if len(exprs) > 0 {
@@ -68,14 +68,22 @@ func Label(list manifest.List, cfg v1alpha1.Config) manifest.List {
 	return list
 }
 
-func Annotate(list manifest.List, cfg v1alpha1.Config) manifest.List {
+func ApplyDefaults(list manifest.List, cfg v1alpha1.Config) manifest.List {
 	for i, m := range list {
-		for k, v := range cfg.Spec.Annotations {
+		for k, v := range cfg.Spec.ResourceDefaults.Annotations {
 			annotations := m.Metadata().Annotations()
 			if _, ok := annotations[k]; !ok {
 				annotations[k] = v
 			}
 		}
+
+		for k, v := range cfg.Spec.ResourceDefaults.Labels {
+			labels := m.Metadata().Labels()
+			if _, ok := labels[k]; !ok {
+				labels[k] = v
+			}
+		}
+
 		list[i] = m
 	}
 	return list
