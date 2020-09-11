@@ -16,7 +16,7 @@ func pageln(i ...interface{}) error {
 
 // fPageln invokes the systems pager with the supplied data.
 // If the PAGER environment variable is empty, no pager is used.
-// If the PAGER environment variable is unset, use less with posix flags.
+// If the PAGER environment variable is unset, use GNU less with convenience flags.
 func fPageln(r io.Reader) error {
 	pager, ok := os.LookupEnv("PAGER")
 	if !ok {
