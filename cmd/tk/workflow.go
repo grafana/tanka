@@ -191,11 +191,7 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return err
 		}
 
-		if err := pageln(pretty.String()); err != nil {
-			return err
-		}
-
-		return nil
+		return pageln(pretty.String())
 	}
 	return cmd
 }
