@@ -153,11 +153,9 @@ func diffCmd() *cli.Command {
 			os.Exit(ExitStatusClean)
 		}
 
-		if interactive {
-			r := term.Colordiff(*changes)
-			fPageln(r)
-		} else {
-			fmt.Println(*changes)
+		r := term.Colordiff(*changes)
+		if err := fPageln(r); err != nil {
+			return err
 		}
 
 		os.Exit(ExitStatusDiff)
@@ -193,8 +191,7 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return err
 		}
 
-		pageln(pretty.String())
-		return nil
+		return pageln(pretty.String())
 	}
 	return cmd
 }
