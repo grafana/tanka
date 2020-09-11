@@ -128,12 +128,20 @@ func evalJsonnet(baseDir string, env *v1alpha1.Config, opts jsonnet.Opts) (inter
 	opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
 
 	// evaluate Jsonnet
+	var raw string
 	mainFile := filepath.Join(baseDir, "main.jsonnet")
-	raw, err := jsonnet.EvaluateFile(mainFile, opts)
-	if err != nil {
-		return nil, err
+	if opts.EvalPattern != "" {
+		evalScript := fmt.Sprintf("(import '%s').%s", mainFile, opts.EvalPattern)
+		raw, err = jsonnet.Evaluate(mainFile, evalScript, opts)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		raw, err = jsonnet.EvaluateFile(mainFile, opts)
+		if err != nil {
+			return nil, err
+		}
 	}
-
 	// parse result
 	var data interface{}
 	if err := json.Unmarshal([]byte(raw), &data); err != nil {

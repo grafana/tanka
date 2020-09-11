@@ -19,12 +19,16 @@ func evalCmd() *cli.Command {
 		Args:  workflowArgs,
 	}
 
+	evalPattern := cmd.Flags().StringP("eval", "e", "", "Evaluate expression on output of jsonnet")
+
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		raw, err := tanka.Eval(args[0], tanka.Opts{
+		jsonnetOpts := tanka.Opts{
 			JsonnetOpts: getJsonnetOpts(),
-		})
+		}
+		jsonnetOpts.EvalPattern = *evalPattern
+		raw, err := tanka.Eval(args[0], jsonnetOpts)
 
 		if err != nil {
 			return err
