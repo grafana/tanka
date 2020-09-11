@@ -19,13 +19,12 @@ func evalCmd() *cli.Command {
 		Args:  workflowArgs,
 	}
 
-	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
+	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		raw, err := tanka.Eval(args[0],
-			tanka.WithExtCode(getExtCode()),
-			tanka.WithTLACode(getTLACode()),
-		)
+		raw, err := tanka.Eval(args[0], tanka.Opts{
+			JsonnetOpts: getJsonnetOpts(),
+		})
 
 		if err != nil {
 			return err
@@ -44,6 +43,17 @@ func evalCmd() *cli.Command {
 	}
 
 	return cmd
+}
+
+func jsonnetFlags(fs *pflag.FlagSet) func() tanka.JsonnetOpts {
+	getExtCode, getTLACode := cliCodeParser(fs)
+
+	return func() tanka.JsonnetOpts {
+		return tanka.JsonnetOpts{
+			ExtCode: getExtCode(),
+			TLACode: getTLACode(),
+		}
+	}
 }
 
 func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[string]string) {

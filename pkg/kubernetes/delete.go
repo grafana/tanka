@@ -8,7 +8,7 @@ import (
 
 type DeleteOpts client.DeleteOpts
 
-func (k *Kubernetes) Delete(state manifest.List, opts ApplyOpts) error {
+func (k *Kubernetes) Delete(state manifest.List, opts DeleteOpts) error {
 	// Sort and reverse the manifests to avoid cascading deletions
 	process.Sort(state)
 	for i := 0; i < len(state)/2; i++ {

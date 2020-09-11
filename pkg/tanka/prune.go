@@ -7,13 +7,21 @@ import (
 	"github.com/grafana/tanka/pkg/term"
 )
 
+// PruneOpts specify additional properties for the Prune action
+type PruneOpts struct {
+	Opts
+
+	// AutoApprove skips the interactive approval
+	AutoApprove bool
+	// Force ignores any warnings kubectl might have
+	Force bool
+}
+
 // Prune deletes all resources from the cluster, that are no longer present in
 // Jsonnet. It uses the `tanka.dev/environment` label to identify those.
-func Prune(baseDir string, mods ...Modifier) error {
-	opts := parseModifiers(mods)
-
+func Prune(baseDir string, opts PruneOpts) error {
 	// parse jsonnet, init k8s client
-	p, err := load(baseDir, opts)
+	p, err := load(baseDir, opts.Opts)
 	if err != nil {
 		return err
 	}
@@ -44,11 +52,13 @@ func Prune(baseDir string, mods ...Modifier) error {
 	fmt.Print(term.Colordiff(*diff).String())
 
 	// prompt for confirm
-	if opts.apply.AutoApprove {
+	if opts.AutoApprove {
 	} else if err := confirmPrompt("Pruning from", p.Env.Spec.Namespace, kube.Info()); err != nil {
 		return err
 	}
 
 	// delete resources
-	return kube.Delete(orphaned, opts.apply)
+	return kube.Delete(orphaned, kubernetes.DeleteOpts{
+		Force: opts.Force,
+	})
 }

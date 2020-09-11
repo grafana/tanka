@@ -32,11 +32,12 @@ func exportCmd() *cli.Command {
 		Args:  args,
 	}
 
-	vars := workflowFlags(cmd.Flags())
-	getExtCode, getTLACode := cliCodeParser(cmd.Flags())
 	format := cmd.Flags().String("format", "{{.apiVersion}}.{{.kind}}-{{.metadata.name}}", "https://tanka.dev/exporting#filenames")
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
 	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
+
+	vars := workflowFlags(cmd.Flags())
+	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	templateFuncMap := template.FuncMap{
 		"lower": func(s string) string {
@@ -66,11 +67,10 @@ func exportCmd() *cli.Command {
 		}
 
 		// get the manifests
-		res, err := tanka.Show(args[0],
-			tanka.WithExtCode(getExtCode()),
-			tanka.WithTLACode(getTLACode()),
-			tanka.WithTargets(stringsToRegexps(vars.targets)),
-		)
+		res, err := tanka.Show(args[0], tanka.Opts{
+			JsonnetOpts: getJsonnetOpts(),
+			Filters:     stringsToRegexps(vars.targets),
+		})
 		if err != nil {
 			return err
 		}
