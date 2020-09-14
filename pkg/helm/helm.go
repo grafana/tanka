@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
@@ -22,40 +21,6 @@ type Helm interface {
 
 	// Template returns the individual resources of a Helm Chart
 	Template(name, chart string, opts TemplateOpts) (manifest.List, error)
-}
-
-type TemplateOpts struct {
-	// Values to pass to Helm using --values
-	Values map[string]interface{}
-
-	// Kubernetes api versions used for Capabilities.APIVersions
-	APIVersions []string
-	// IncludeCRDs specifies whether CustomResourceDefinitions are included in
-	// the template output
-	IncludeCRDs bool
-	// Namespace scope for this request
-	Namespace string
-}
-
-// Flags returns all options apart from Values as their respective `helm
-// template` flag equivalent
-func (t TemplateOpts) Flags() []string {
-	var flags []string
-
-	if t.APIVersions != nil {
-		value := strings.Join(t.APIVersions, ",")
-		flags = append(flags, "--api-versions="+value)
-	}
-
-	if t.IncludeCRDs {
-		flags = append(flags, "--include-crds")
-	}
-
-	if t.Namespace != "" {
-		flags = append(flags, "--namespace="+t.Namespace)
-	}
-
-	return flags
 }
 
 // PullOpts are additional, non-required options for Helm.Pull

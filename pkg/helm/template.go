@@ -2,29 +2,14 @@ package helm
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
-	jsonnet "github.com/google/go-jsonnet"
-	"github.com/google/go-jsonnet/ast"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v3"
 )
-
-// JsonnetOpts are additional properties the consumer of the native func might
-// pass.
-type JsonnetOpts struct {
-	TemplateOpts
-
-	// CalledFrom is the file that calls helmTemplate. This is used to find the
-	// vendored chart relative to this file
-	CalledFrom string `json:"calledFrom"`
-}
 
 // Template expands a Helm Chart into a regular manifest.List using the `helm
 // template` command
@@ -72,77 +57,37 @@ func (h ExecHelm) Template(name, chart string, opts TemplateOpts) (manifest.List
 	return list, nil
 }
 
-// NativeFunc returns a jsonnet native function that provides the same
-// functionality as `Helm.Template` of this package. Charts are required to be
-// present on the local filesystem, at a relative location to the file that
-// calls `helm.template()` / `std.native('helmTemplate')`. This guarantees
-// hermeticity
-func NativeFunc(h Helm) *jsonnet.NativeFunction {
-	return &jsonnet.NativeFunction{
-		Name: "helmTemplate",
-		// Similar to `helm template [NAME] [CHART] [flags]` except 'conf' is a
-		// bit more elaborate and chart is a local path
-		Params: ast.Identifiers{"name", "chart", "opts"},
-		Func: func(data []interface{}) (interface{}, error) {
-			name, ok := data[0].(string)
-			if !ok {
-				return nil, fmt.Errorf("First argument 'name' must be of 'string' type, got '%T' instead", data[0])
-			}
+// TemplateOpts are additional, non-required options for Helm.Template
+type TemplateOpts struct {
+	// Values to pass to Helm using --values
+	Values map[string]interface{}
 
-			chartpath, ok := data[1].(string)
-			if !ok {
-				return nil, fmt.Errorf("Second argument 'chart' must be of 'string' type, got '%T' instead", data[1])
-			}
-
-			// TODO: validate data[2] actually follows the struct scheme
-			c, err := json.Marshal(data[2])
-			if err != nil {
-				return "", err
-			}
-			var opts JsonnetOpts
-			if err := json.Unmarshal(c, &opts); err != nil {
-				return "", err
-			}
-
-			// Charts are only allowed at relative paths. Use conf.CalledFrom to find the callers directory
-			if opts.CalledFrom == "" {
-				// TODO: rephrase and move lengthy explanation to website
-				return nil, fmt.Errorf("helmTemplate: 'conf.calledFrom' is unset or empty.\nTanka must know where helmTemplate was called from to resolve the Helm Chart relative to that.\n")
-			}
-			callerDir := filepath.Dir(opts.CalledFrom)
-
-			// resolve the Chart relative to the caller
-			chart := filepath.Join(callerDir, chartpath)
-			if _, err := os.Stat(chart); err != nil {
-				// TODO: add website link for explanation
-				return nil, fmt.Errorf("helmTemplate: Failed to find a Chart at '%s': %s", chart, err)
-			}
-
-			// render resources
-			list, err := h.Template(name, chart, opts.TemplateOpts)
-			if err != nil {
-				return nil, err
-			}
-
-			// convert list to map
-			out := make(map[string]interface{})
-			for _, m := range list {
-				// TODO: make this configurable
-				name := fmt.Sprintf("%s_%s", m.Metadata().Name(), m.Kind())
-				name = normalizeName(name)
-
-				// TODO: fail in case of ovewriting
-				out[name] = map[string]interface{}(m)
-			}
-
-			return out, nil
-		},
-	}
+	// Kubernetes api versions used for Capabilities.APIVersions
+	APIVersions []string
+	// IncludeCRDs specifies whether CustomResourceDefinitions are included in
+	// the template output
+	IncludeCRDs bool
+	// Namespace scope for this request
+	Namespace string
 }
 
-func normalizeName(s string) string {
-	s = strings.ReplaceAll(s, "-", "_")
-	s = strings.ReplaceAll(s, ":", "_")
-	s = strings.ToLower(s)
-	return s
+// Flags returns all options apart from Values as their respective `helm
+// template` flag equivalent
+func (t TemplateOpts) Flags() []string {
+	var flags []string
+
+	if t.APIVersions != nil {
+		value := strings.Join(t.APIVersions, ",")
+		flags = append(flags, "--api-versions="+value)
+	}
+
+	if t.IncludeCRDs {
+		flags = append(flags, "--include-crds")
+	}
+
+	if t.Namespace != "" {
+		flags = append(flags, "--namespace="+t.Namespace)
+	}
+
+	return flags
 }
