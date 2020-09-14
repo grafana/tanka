@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,66 +16,34 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-// TemplateOpts defines additional parameters that can be passed to the
-// Helm.Template action
-// TODO: Isolate between Helm.Template and NativeFunc
-type TemplateOpts struct {
-	// general
-	Values map[string]interface{} `json:"values"`
-	Flags  []string               `json:"flags"`
+// JsonnetOpts are additional properties the consumer of the native func might
+// pass.
+type JsonnetOpts struct {
+	TemplateOpts
 
-	// native func related
+	// CalledFrom is the file that calls helmTemplate. This is used to find the
+	// vendored chart relative to this file
 	CalledFrom string `json:"calledFrom"`
-}
-
-func confToArgs(conf TemplateOpts) ([]string, []string, error) {
-	var args []string
-	var tempFiles []string
-
-	// create file and append to args
-	if len(conf.Values) != 0 {
-		valuesYaml, err := yaml.Marshal(conf.Values)
-		if err != nil {
-			return nil, nil, err
-		}
-		tmpFile, err := ioutil.TempFile(os.TempDir(), "tanka-")
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "cannot create temporary values.yaml")
-		}
-		tempFiles = append(tempFiles, tmpFile.Name())
-		if _, err = tmpFile.Write(valuesYaml); err != nil {
-			return nil, tempFiles, errors.Wrap(err, "failed to write to temporary values.yaml")
-		}
-		if err := tmpFile.Close(); err != nil {
-			return nil, tempFiles, err
-		}
-		args = append(args, fmt.Sprintf("--values=%s", tmpFile.Name()))
-	}
-
-	// append custom flags to args
-	args = append(args, conf.Flags...)
-
-	return args, tempFiles, nil
 }
 
 // Template expands a Helm Chart into a regular manifest.List using the `helm
 // template` command
 func (h ExecHelm) Template(name, chart string, opts TemplateOpts) (manifest.List, error) {
-	confArgs, tmpFiles, err := confToArgs(opts)
-	if err != nil {
-		return nil, err
+	args := []string{name, chart,
+		"--values", "-", // values from stdin
 	}
-	for _, f := range tmpFiles {
-		defer os.Remove(f)
-	}
-
-	args := []string{name, chart}
-	args = append(args, confArgs...)
+	args = append(args, opts.Flags()...)
 
 	cmd := h.cmd("template", args...)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = os.Stderr
+
+	data, err := yaml.Marshal(opts.Values)
+	if err != nil {
+		return nil, errors.Wrap(err, "Converting Helm values to YAML")
+	}
+	cmd.Stdin = bytes.NewReader(data)
 
 	if err := cmd.Run(); err != nil {
 		return nil, errors.Wrap(err, "Expanding Helm Chart")
@@ -110,12 +77,12 @@ func (h ExecHelm) Template(name, chart string, opts TemplateOpts) (manifest.List
 // present on the local filesystem, at a relative location to the file that
 // calls `helm.template()` / `std.native('helmTemplate')`. This guarantees
 // hermeticity
-func NativeFunc() *jsonnet.NativeFunction {
+func NativeFunc(h Helm) *jsonnet.NativeFunction {
 	return &jsonnet.NativeFunction{
 		Name: "helmTemplate",
 		// Similar to `helm template [NAME] [CHART] [flags]` except 'conf' is a
 		// bit more elaborate and chart is a local path
-		Params: ast.Identifiers{"name", "chart", "conf"},
+		Params: ast.Identifiers{"name", "chart", "opts"},
 		Func: func(data []interface{}) (interface{}, error) {
 			name, ok := data[0].(string)
 			if !ok {
@@ -132,17 +99,17 @@ func NativeFunc() *jsonnet.NativeFunction {
 			if err != nil {
 				return "", err
 			}
-			var conf TemplateOpts
-			if err := json.Unmarshal(c, &conf); err != nil {
+			var opts JsonnetOpts
+			if err := json.Unmarshal(c, &opts); err != nil {
 				return "", err
 			}
 
 			// Charts are only allowed at relative paths. Use conf.CalledFrom to find the callers directory
-			if conf.CalledFrom == "" {
+			if opts.CalledFrom == "" {
 				// TODO: rephrase and move lengthy explanation to website
-				return nil, fmt.Errorf("helmTemplate: 'conf.calledFrom' is unset or empty.\nHowever, Tanka must know where helmTemplate was called from, to resolve the Helm Chart relative to that.\n")
+				return nil, fmt.Errorf("helmTemplate: 'conf.calledFrom' is unset or empty.\nTanka must know where helmTemplate was called from to resolve the Helm Chart relative to that.\n")
 			}
-			callerDir := filepath.Dir(conf.CalledFrom)
+			callerDir := filepath.Dir(opts.CalledFrom)
 
 			// resolve the Chart relative to the caller
 			chart := filepath.Join(callerDir, chartpath)
@@ -151,18 +118,20 @@ func NativeFunc() *jsonnet.NativeFunction {
 				return nil, fmt.Errorf("helmTemplate: Failed to find a Chart at '%s': %s", chart, err)
 			}
 
-			// TODO: Define Template on the Helm interface instead
-			var h ExecHelm
-			list, err := h.Template(name, chart, conf)
+			// render resources
+			list, err := h.Template(name, chart, opts.TemplateOpts)
 			if err != nil {
 				return nil, err
 			}
 
+			// convert list to map
 			out := make(map[string]interface{})
 			for _, m := range list {
+				// TODO: make this configurable
 				name := fmt.Sprintf("%s_%s", m.Metadata().Name(), m.Kind())
 				name = normalizeName(name)
 
+				// TODO: fail in case of ovewriting
 				out[name] = map[string]interface{}(m)
 			}
 
