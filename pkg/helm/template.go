@@ -101,27 +101,13 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 			}
 
 			// TODO: validate data[2] actually follows the struct scheme
-			c, err := json.Marshal(data[2])
+			opts, err := parseOpts(data[2])
 			if err != nil {
 				return "", err
 			}
-			var opts JsonnetOpts
-			if err := json.Unmarshal(c, &opts); err != nil {
-				return "", err
-			}
-
-			// Charts are only allowed at relative paths. Use conf.CalledFrom to find the callers directory
-			if opts.CalledFrom == "" {
-				// TODO: rephrase and move lengthy explanation to website
-				return nil, fmt.Errorf("helmTemplate: 'opts.calledFrom' is unset or empty.\nTanka must know where helmTemplate was called from to resolve the Helm Chart relative to that.\n")
-			}
-			callerDir := filepath.Dir(opts.CalledFrom)
-
-			if opts.NameFormat == "" {
-				opts.NameFormat = DefaultNameFormat
-			}
 
 			// resolve the Chart relative to the caller
+			callerDir := filepath.Dir(opts.CalledFrom)
 			chart := filepath.Join(callerDir, chartpath)
 			if _, err := os.Stat(chart); err != nil {
 				// TODO: add website link for explanation
@@ -143,6 +129,29 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 			return out, nil
 		},
 	}
+}
+
+func parseOpts(data interface{}) (*JsonnetOpts, error) {
+	c, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	var opts JsonnetOpts
+	if err := json.Unmarshal(c, &opts); err != nil {
+		return nil, err
+	}
+
+	// Charts are only allowed at relative paths. Use conf.CalledFrom to find the callers directory
+	if opts.CalledFrom == "" {
+		// TODO: rephrase and move lengthy explanation to website
+		return nil, fmt.Errorf("helmTemplate: 'opts.calledFrom' is unset or empty.\nTanka must know where helmTemplate was called from to resolve the Helm Chart relative to that.\n")
+	}
+
+	if opts.NameFormat == "" {
+		opts.NameFormat = DefaultNameFormat
+	}
+
+	return &opts, nil
 }
 
 func listAsMap(list manifest.List, nameFormat string) (map[string]interface{}, error) {
