@@ -7,14 +7,18 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
+	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v3"
 )
+
+// DefaultNameFormat to use when no nameFormat is supplied
+const DefaultNameFormat = `{{ print .kind "_" .metadata.name | snakecase }}`
 
 // JsonnetOpts are additional properties the consumer of the native func might
 // pass.
@@ -24,6 +28,8 @@ type JsonnetOpts struct {
 	// CalledFrom is the file that calls helmTemplate. This is used to find the
 	// vendored chart relative to this file
 	CalledFrom string `json:"calledFrom"`
+	// NameTemplate is used to create the keys in the resulting map
+	NameFormat string `json:"nameFormat"`
 }
 
 // Template expands a Helm Chart into a regular manifest.List using the `helm
@@ -107,9 +113,13 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 			// Charts are only allowed at relative paths. Use conf.CalledFrom to find the callers directory
 			if opts.CalledFrom == "" {
 				// TODO: rephrase and move lengthy explanation to website
-				return nil, fmt.Errorf("helmTemplate: 'conf.calledFrom' is unset or empty.\nTanka must know where helmTemplate was called from to resolve the Helm Chart relative to that.\n")
+				return nil, fmt.Errorf("helmTemplate: 'opts.calledFrom' is unset or empty.\nTanka must know where helmTemplate was called from to resolve the Helm Chart relative to that.\n")
 			}
 			callerDir := filepath.Dir(opts.CalledFrom)
+
+			if opts.NameFormat == "" {
+				opts.NameFormat = DefaultNameFormat
+			}
 
 			// resolve the Chart relative to the caller
 			chart := filepath.Join(callerDir, chartpath)
@@ -125,14 +135,9 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 			}
 
 			// convert list to map
-			out := make(map[string]interface{})
-			for _, m := range list {
-				// TODO: make this configurable
-				name := fmt.Sprintf("%s_%s", m.Metadata().Name(), m.Kind())
-				name = normalizeName(name)
-
-				// TODO: fail in case of ovewriting
-				out[name] = map[string]interface{}(m)
+			out, err := listAsMap(list, opts.NameFormat)
+			if err != nil {
+				return nil, err
 			}
 
 			return out, nil
@@ -140,9 +145,28 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 	}
 }
 
-func normalizeName(s string) string {
-	s = strings.ReplaceAll(s, "-", "_")
-	s = strings.ReplaceAll(s, ":", "_")
-	s = strings.ToLower(s)
-	return s
+func listAsMap(list manifest.List, nameFormat string) (map[string]interface{}, error) {
+	tmpl, err := template.New("").
+		Funcs(sprig.TxtFuncMap()).
+		Parse(nameFormat)
+	if err != nil {
+		return nil, fmt.Errorf("Parsing name format: %w", err)
+	}
+
+	out := make(map[string]interface{})
+	for _, m := range list {
+		var buf bytes.Buffer
+		if err := tmpl.Execute(&buf, m); err != nil {
+			return nil, err
+		}
+		name := buf.String()
+
+		if _, ok := out[name]; ok {
+			// TODO: explain on website
+			return nil, fmt.Errorf("Two resources share the same name '%s'. Please adapt the name template '%s'", name, nameFormat)
+		}
+		out[name] = map[string]interface{}(m)
+	}
+
+	return out, nil
 }
