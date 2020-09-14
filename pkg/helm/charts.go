@@ -177,7 +177,7 @@ func write(c Chartfile, dest string) error {
 	return ioutil.WriteFile(dest, data, 0644)
 }
 
-var chartExp = regexp.MustCompile(`\w+\/\w+@.+`)
+var chartExp = regexp.MustCompile(`\w+\/.+@.+`)
 
 // parseReq parses a requirement from a string of the format `repo/name@version`
 func parseReq(s string) (*Requirement, error) {
