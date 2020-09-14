@@ -41,8 +41,11 @@ func jpathCmd() *cli.Command {
 			if err != nil {
 				return fmt.Errorf("Resolving JPATH: %s", err)
 			}
-
-			fmt.Println("main:", filepath.Join(base, "main.jsonnet"))
+			entrypoint, err := jpath.GetEntrypoint(base)
+			if err != nil {
+				return fmt.Errorf("Resolving JPATH: %s", err)
+			}
+			fmt.Println("main:", entrypoint)
 			fmt.Println("rootDir:", root)
 			fmt.Println("baseDir:", base)
 			fmt.Println("jpath:", path)

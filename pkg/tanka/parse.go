@@ -129,8 +129,7 @@ func parseSpec(baseDir, rootDir string) (*v1alpha1.Config, error) {
 	return config, nil
 }
 
-// evalJsonnet evaluates the jsonnet environment at the given directory starting with
-// `main.jsonnet`
+// evalJsonnet evaluates the jsonnet environment at the given directory
 func evalJsonnet(baseDir string, env *v1alpha1.Config, opts jsonnet.Opts) (interface{}, error) {
 	// make env spec accessible from Jsonnet
 	jsonEnv, err := json.Marshal(env)
@@ -141,7 +140,11 @@ func evalJsonnet(baseDir string, env *v1alpha1.Config, opts jsonnet.Opts) (inter
 
 	// evaluate Jsonnet
 	var raw string
-	mainFile := filepath.Join(baseDir, "main.jsonnet")
+	mainFile, err := jpath.GetEntrypoint(baseDir)
+	if err != nil {
+		return nil, err
+	}
+
 	if opts.EvalPattern != "" {
 		evalScript := fmt.Sprintf("(import '%s').%s", mainFile, opts.EvalPattern)
 		raw, err = jsonnet.Evaluate(mainFile, evalScript, opts)
