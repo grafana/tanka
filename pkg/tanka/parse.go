@@ -87,17 +87,12 @@ func load(dir string, opts Opts) (*loaded, error) {
 // eval runs all processing stages describe at the Processed type apart from
 // post-processing, thus returning the raw Jsonnet result.
 func eval(dir string, opts jsonnet.Opts) (raw interface{}, env *v1alpha1.Config, err error) {
-	_, baseDir, rootDir, err := jpath.Resolve(dir)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "resolving jpath")
-	}
-
-	env, err = parseSpec(baseDir, rootDir)
+	env, err = parseSpec(dir)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	raw, err = evalJsonnet(baseDir, env, opts)
+	raw, err = evalJsonnet(dir, env, opts)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 	}
@@ -107,7 +102,12 @@ func eval(dir string, opts jsonnet.Opts) (raw interface{}, env *v1alpha1.Config,
 
 // parseEnv parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
-func parseSpec(baseDir, rootDir string) (*v1alpha1.Config, error) {
+func parseSpec(dir string) (*v1alpha1.Config, error) {
+	_, baseDir, rootDir, err := jpath.Resolve(dir)
+	if err != nil {
+		return nil, errors.Wrap(err, "resolving jpath")
+	}
+
 	// name of the environment: relative path from rootDir
 	name, _ := filepath.Rel(rootDir, baseDir)
 
