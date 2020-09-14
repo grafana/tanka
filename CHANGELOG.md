@@ -1,10 +1,46 @@
 # Changelog
 
-> ## 0.12-alpha1 (2020-08-19)
+> ## 0.12-alpha2 (2020-09-14)
 >
 > :rotating_light: This is a pre-release. It is not tested and may contain issues
 > of major kind, possibly causing data loss.  
 > :rotating_light: **DO NOT USE IN PRODUCTION**.
+>
+> ### Features
+>
+> - **cli**: Predict plain directories if outside a project
+>   **([#357](https://github.com/grafana/tanka/pull/357))**
+> - **cli**: Custom paging
+>   **([#373](https://github.com/grafana/tanka/pull/373))**
+> - **cli**: Inline eval
+>   **([#378](https://github.com/grafana/tanka/pull/378))**
+>
+> * **helm**: Charttool: Adds `tk tool charts` for easy management of vendored
+>   Helm charts **([#367](https://github.com/grafana/tanka/pull/367))**,
+>   **([#369](https://github.com/grafana/tanka/pull/369))**
+> * **helm**: Require Helm Charts to be available locally
+>   **([#370](https://github.com/grafana/tanka/pull/370))**
+> * **helm**: Configurable name format
+>   **([#381](https://github.com/grafana/tanka/pull/381))**
+>
+> - **k8s**: Default metadata from `spec.json` > **([#366](https://github.com/grafana/tanka/pull/366))**
+>
+> ### Bug Fixes
+>
+> - **cli**: Actually use `TANKA_JB_PATH` > **([#350](https://github.com/grafana/tanka/pull/350))**
+> - **jsonnet**: Load `main.jsonnet` using full path
+>   **([#370](https://github.com/grafana/tanka/pull/370))**
+> - **k8s**: Update `kubectl v1.18.0` warning
+>   **([#371](https://github.com/grafana/tanka/pull/371))**
+>
+> ### BREAKING
+>
+> - **api**: Struct based Go API: Modifies our Go API
+>   (`github.com/grafana/tanka/pkg/tanka`) to be based on structs instead of
+>   variadic arguments. This has no impact on daily usage of Tanka.
+>   **([#376](https://github.com/grafana/tanka/pull/376))**
+
+> ## 0.12-alpha1 (2020-08-19)
 >
 > ### Features
 >
@@ -29,14 +65,13 @@ This is a minor release with one bugfix and one minor feature.
 
 ### Features
 
-* **process**: With 0.11.0, tanka started automatically adding namespaces to *all* manifests it processed. We updated this to *not*
-    add a namespace to cluster-wide object types in order to make handling of these resources more consistent in different workflows. **([#320](https://github.com/grafana/tanka/pull/320))**
+- **process**: With 0.11.0, tanka started automatically adding namespaces to _all_ manifests it processed. We updated this to _not_
+  add a namespace to cluster-wide object types in order to make handling of these resources more consistent in different workflows. **([#320](https://github.com/grafana/tanka/pull/320))**
 
 ### Bug Fixes
 
 - **export**: Fix inverted logic while checking if a file already exists. This broke `tk export` entirely.
   **([#317](https://github.com/grafana/tanka/pull/317))**
-
 
 ## 0.11.0 (2020-07-07)
 
