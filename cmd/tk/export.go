@@ -12,6 +12,7 @@ import (
 
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/go-clix/cli"
 
 	"github.com/grafana/tanka/pkg/tanka"
@@ -39,12 +40,6 @@ func exportCmd() *cli.Command {
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
-	templateFuncMap := template.FuncMap{
-		"lower": func(s string) string {
-			return strings.ToLower(s)
-		},
-	}
-
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		// dir must be empty
 		to := args[1]
@@ -61,7 +56,9 @@ func exportCmd() *cli.Command {
 		// Replace all os.path separators in string with BelRune for creating subfolders
 		replacedFormat := strings.Replace(*format, string(os.PathSeparator), BelRune, -1)
 
-		tmpl, err := template.New("").Funcs(templateFuncMap).Parse(replacedFormat)
+		tmpl, err := template.New("").
+			Funcs(sprig.TxtFuncMap()). // register Masterminds/sprig
+			Parse(replacedFormat)      // parse template
 		if err != nil {
 			return fmt.Errorf("Parsing name format: %s", err)
 		}
