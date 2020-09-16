@@ -15,6 +15,8 @@ type PruneOpts struct {
 	AutoApprove bool
 	// Force ignores any warnings kubectl might have
 	Force bool
+	// Summarize prints a summary, instead of the actual diff
+	Summarize bool
 }
 
 // Prune deletes all resources from the cluster, that are no longer present in
@@ -42,14 +44,20 @@ func Prune(baseDir string, opts PruneOpts) error {
 		return nil
 	}
 
-	// print diff
-	diff, err := kubernetes.StaticDiffer(false)(orphaned)
-	if err != nil {
-		// static diff can't fail normally, so unlike in apply, this is fatal
-		// here
-		return err
+	if opts.Summarize {
+		for _, m := range orphaned {
+			fmt.Printf("Pruning %s\n", m.KindName())
+		}
+	} else {
+		// print diff
+		diff, err := kubernetes.StaticDiffer(false)(orphaned)
+		if err != nil {
+			// static diff can't fail normally, so unlike in apply, this is fatal
+			// here
+			return err
+		}
+		fmt.Print(term.Colordiff(*diff).String())
 	}
-	fmt.Print(term.Colordiff(*diff).String())
 
 	// prompt for confirm
 	if opts.AutoApprove {
