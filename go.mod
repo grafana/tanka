@@ -12,7 +12,7 @@ require (
 	github.com/google/go-cmp v0.5.2-0.20200818193711-d2fcc899bdc2
 	github.com/google/go-jsonnet v0.16.1-0.20200908152747-b70cbd441a39
 	github.com/huandu/xstrings v1.3.2 // indirect
-	github.com/imdario/mergo v0.3.11 // indirect
+	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/karrick/godirwalk v1.15.5
 	github.com/pkg/errors v0.8.1
 	github.com/posener/complete v1.2.3
@@ -21,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/thoas/go-funk v0.4.0
 	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v3 v3.0.0-20191010095647-fc94e3f71652
 	k8s.io/apimachinery v0.18.3
 	sigs.k8s.io/yaml v1.2.0
