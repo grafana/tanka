@@ -1,5 +1,15 @@
 # Changelog
 
+> ## 0.12-alpha3 (2020-09-21)
+>
+> :rotating_light: This is a pre-release. It is not tested and may contain issues
+> of major kind, possibly causing data loss.  
+> :rotating_light: **DO NOT USE IN PRODUCTION**.
+> 
+> ### Bug Fixes
+>
+> - **yaml**: Pin yaml library to v2.2.8. This resolves some unnecessary whitespace changes in some large deployments. May still be updated in a future release. **([#386](https://github.com/grafana/tanka/pull/386))**
+
 > ## 0.12-alpha2 (2020-09-14)
 >
 > :rotating_light: This is a pre-release. It is not tested and may contain issues
