@@ -1,6 +1,7 @@
 ---
 name: Directory structure
 route: /directory-structure
+menu: "References"
 ---
 
 # Directory structure

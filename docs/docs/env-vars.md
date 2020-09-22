@@ -1,6 +1,7 @@
 ---
 name: "Environment variables"
 route: "/env-vars"
+menu: "References"
 ---
 
 # Environment Variables

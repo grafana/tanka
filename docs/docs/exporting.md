@@ -1,6 +1,7 @@
 ---
 name: "Exporting as YAML"
 route: "/exporting"
+menu: Advanced features
 ---
 
 # Exporting as YAML
