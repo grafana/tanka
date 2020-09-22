@@ -45,7 +45,12 @@ export default {
     },
     {
       name: "Advanced features",
-      menu: ["Garbage collection", "Output filtering", "Exporting as YAML"],
+      menu: [
+        "Garbage collection",
+        "Helm support",
+        "Output filtering",
+        "Exporting as YAML",
+      ],
     },
     {
       name: "References",
