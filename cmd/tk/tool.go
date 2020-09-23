@@ -41,7 +41,7 @@ func jpathCmd() *cli.Command {
 			if err != nil {
 				return fmt.Errorf("Resolving JPATH: %s", err)
 			}
-			entrypoint, err := jpath.GetEntrypoint(base)
+			entrypoint, err := jpath.Entrypoint(base)
 			if err != nil {
 				return fmt.Errorf("Resolving JPATH: %s", err)
 			}

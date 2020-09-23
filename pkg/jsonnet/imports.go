@@ -26,7 +26,7 @@ func TransitiveImports(dir string) ([]string, error) {
 		return nil, err
 	}
 
-	mainFile, err := jpath.GetEntrypoint(dir)
+	mainFile, err := jpath.Entrypoint(dir)
 	if err != nil {
 		return nil, err
 	}

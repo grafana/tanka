@@ -140,7 +140,7 @@ func evalJsonnet(baseDir string, env *v1alpha1.Config, opts jsonnet.Opts) (inter
 
 	// evaluate Jsonnet
 	var raw string
-	mainFile, err := jpath.GetEntrypoint(baseDir)
+	mainFile, err := jpath.Entrypoint(baseDir)
 	if err != nil {
 		return nil, err
 	}

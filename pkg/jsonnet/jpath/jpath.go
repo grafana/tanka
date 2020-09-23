@@ -38,7 +38,7 @@ func Resolve(workdir string) (path []string, base, root string, err error) {
 		return nil, "", "", err
 	}
 
-	entrypoint, err := GetEntrypoint(workdir)
+	entrypoint, err := Entrypoint(workdir)
 	if err != nil {
 		return nil, "", "", err
 	}
@@ -119,7 +119,7 @@ func dirContainsFile(files []os.FileInfo, filename string) bool {
 	return false
 }
 
-func GetEntrypoint(dir string) (string, error) {
+func Entrypoint(dir string) (string, error) {
 	filename := "main.jsonnet"
 	stat, err := os.Stat(dir)
 	if err != nil {
