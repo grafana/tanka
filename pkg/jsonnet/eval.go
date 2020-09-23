@@ -1,8 +1,6 @@
 package jsonnet
 
 import (
-	"path/filepath"
-
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
 
@@ -60,7 +58,7 @@ func MakeVM(opts Opts) *jsonnet.VM {
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
 func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
-	jpath, _, _, err := jpath.Resolve(filepath.Dir(jsonnetFile))
+	jpath, _, _, err := jpath.Resolve(jsonnetFile)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving import paths")
 	}
@@ -72,7 +70,7 @@ func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
 
 // Evaluate renders the given jsonnet into a string
 func Evaluate(filename, data string, opts Opts) (string, error) {
-	jpath, _, _, err := jpath.Resolve(filepath.Dir(filename))
+	jpath, _, _, err := jpath.Resolve(filename)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving import paths")
 	}
