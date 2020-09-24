@@ -60,8 +60,8 @@ a regular Jsonnet object that looks roughly like so:
 
 ## Vendoring Helm Charts
 
-A core concept of Grafana Tanka is purity, which it **always yields the same
-resources**, regardless of surroundings. This is the case, when the project is
+Tanka, like Jsonnet, is hermetic. It **always yields the same
+resources** when the project is
 strictly self-contained.
 
 Helm however keeps Charts and repository configuration somewhere around
@@ -78,8 +78,8 @@ Where to actually put them inside the project is up to you, but keep in mind you
 need to refer to them using relative paths.
 
 We recommend always writing libraries that wrap the actual Helm Chart, so the
-consumer does not need to be aware of it. Whether you put these into `lib/` or
-publish them on GitHub (`vendor/`) is up to you.
+consumer does not need to be aware of it. Whether you put these into your local `lib/` directory or
+publish and vendor them into the `vendor/` directory  is up to you.
 
 A library usually looks like this:
 
@@ -98,7 +98,7 @@ When adopting Helm inside it, we recommend vendoring at the top level, as such:
 ```
 
 This way, you can refer to the charts as `./charts/<someChart>` from inside
-`main.libsonnet`. By keeping the Chart as close to the consumer as possible, the
+`main.libsonnet`. By keeping the chart as close to the consumer as possible, the
 library is kept portable.
 
 ### Charttool
@@ -112,11 +112,11 @@ Tanka ships a special utility at `tk tool charts`, which automates `helm pull`:
 # Create a chartfile.yaml in the current directory, e.g. in lib/myLibrary
 $ tk tool charts init
 
-# Install the MySQL Chart at version 1.6.7 from the stable repository
+$ # Install the MySQL chart at version 1.6.7 from the stable repository
 $ tk tool charts add stable/mysql@1.6.7
 ```
 
-**Adding Charts:** To add a Chart, use the following:
+**Adding charts:** To add a chart, use the following:
 
 ```bash
 $ tk tool charts add <repo>/<name>@<version>
@@ -159,11 +159,11 @@ helmTemplate: Failed to find a Chart at 'stable/grafana': No such file or direct
 helmTemplate: Failed to find a Chart at '/home/user/stuff/tanka/environments/default/grafana': No such file or directory.
 ```
 
-Tanka failed to locate your Helm Chart on the filesystem. It looked at the
+Tanka failed to locate your Helm chart on the filesystem. It looked at the
 relative path you provided in `helm.template()`, starting from the directory of
 the file you called `helm.template()` from.
 
-Please check there is actually a valid Helm Chart at this place. Referring to
+Please check there is actually a valid Helm chart at this place. Referring to
 charts as `<repo>/<name>` is disallowed by design.
 
 ### Two resources share the same name

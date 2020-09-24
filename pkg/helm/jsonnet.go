@@ -61,7 +61,7 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 			callerDir := filepath.Dir(opts.CalledFrom)
 			chart := filepath.Join(callerDir, chartpath)
 			if _, err := os.Stat(chart); err != nil {
-				return nil, fmt.Errorf("helmTemplate: Failed to find a Chart at '%s': %s. See https://tanka.dev/helm#failed-to-find-chart", chart, err)
+				return nil, fmt.Errorf("helmTemplate: Failed to find a chart at '%s': %s. See https://tanka.dev/helm#failed-to-find-chart", chart, err)
 			}
 
 			// render resources
@@ -93,7 +93,7 @@ func parseOpts(data interface{}) (*JsonnetOpts, error) {
 
 	// Charts are only allowed at relative paths. Use conf.CalledFrom to find the callers directory
 	if opts.CalledFrom == "" {
-		return nil, fmt.Errorf("helmTemplate: 'opts.calledFrom' is unset or empty.\nTanka needs this to find your Charts. See https://tanka.dev/helm#optscalledfrom-unset\n")
+		return nil, fmt.Errorf("helmTemplate: 'opts.calledFrom' is unset or empty.\nTanka needs this to find your charts. See https://tanka.dev/helm#optscalledfrom-unset\n")
 	}
 
 	return &opts, nil
