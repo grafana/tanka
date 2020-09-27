@@ -1,6 +1,6 @@
 module github.com/grafana/tanka
 
-go 1.12
+go 1.15
 
 require (
 	github.com/Masterminds/semver v1.4.2
@@ -14,15 +14,15 @@ require (
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/karrick/godirwalk v1.15.5
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/posener/complete v1.2.3
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/objx v0.2.0
 	github.com/stretchr/testify v1.5.1
 	github.com/thoas/go-funk v0.4.0
-	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v3 v3.0.0-20191010095647-fc94e3f71652
-	k8s.io/apimachinery v0.18.3
+	k8s.io/apimachinery v0.19.2
 	sigs.k8s.io/yaml v1.2.0
 )

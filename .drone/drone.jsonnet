@@ -1,4 +1,4 @@
-local golang = 'golang:1.13';
+local golang = 'golang:1.15';
 
 local volumes = [{ name: 'gopath', temp: {} }];
 local mounts = [{ name: 'gopath', path: '/go' }];
