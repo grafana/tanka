@@ -51,11 +51,6 @@
   <a href="https://tanka.dev/tutorial/overview"><strong>Let's kill some YAML together&nbsp;&nbsp;▶</strong></a>
 </p>
 
-Another Grafana Tanka community call is coming up!
-
-- :calendar: Mark the date: 2020-10-06 16:00 UTC
-- :tv: Join the meet in this doc: https://bit.ly/3czxbFz
-
 ## :rocket: Getting started
 
 To get started, [install Tanka](https://tanka.dev/install) first, and then
