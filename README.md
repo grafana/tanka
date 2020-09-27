@@ -51,11 +51,32 @@
   <a href="https://tanka.dev/tutorial/overview"><strong>Let's kill some YAML together&nbsp;&nbsp;▶</strong></a>
 </p>
 
+Another Grafana Tanka community call is coming up!
+
+- :calendar: Mark the date: 2020-10-06 16:00 UTC
+- :tv: Join the meet in this doc: https://bit.ly/3czxbFz
+
 ## :rocket: Getting started
 
 To get started, [install Tanka](https://tanka.dev/install) first, and then
 [follow the tutorial](https://tanka.dev/tutorial/overview). This should get you
 on track quickly.
+
+## :busts_in_silhouette: Community
+
+The Tanka community is core to the project. Connect to us using the `#tanka`
+channel on the [Grafana Slack](https://grafana.slack.com).
+
+---
+
+[![Community
+Call](./docs/img/community-call.png)](https://docs.google.com/document/d/1mEsc0GxlnwbWAXzbIP7tBb6T5WgAI66_0gIWJzqB93o/edit)
+
+Grafana Labs hosts a monthly community call for the Tanka project. Notes and the
+meeting URL can be found in a [Google
+Doc](https://docs.google.com/document/d/1mEsc0GxlnwbWAXzbIP7tBb6T5WgAI66_0gIWJzqB93o/edit).
+
+Furthermore, see [`LICENSE`](./LICENSE) and [`GOVERNANCE`](./GOVERNANCE.md).
 
 ## :book: Additional resources
 
