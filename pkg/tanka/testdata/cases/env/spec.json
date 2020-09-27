@@ -1,0 +1,7 @@
+{
+  "apiVersion": "v1alpha1",
+  "kind": "Environment",
+  "metadata": {
+    "name": "custom-name"
+  }
+}

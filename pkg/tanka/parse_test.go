@@ -40,3 +40,23 @@ func TestEvalJsonnet(t *testing.T) {
 		assert.Equal(t, test.expected, data)
 	}
 }
+
+func TestEval(t *testing.T) {
+	cases := []struct {
+		baseDir  string
+		expected interface{}
+	}{
+		{
+			baseDir: "./testdata/cases/env/",
+			expected: map[string]interface{}{
+				"tkName": "custom-name",
+			},
+		},
+	}
+
+	for _, test := range cases {
+		raw, _, e := eval(test.baseDir, jsonnet.Opts{})
+		assert.NoError(t, e)
+		assert.Equal(t, test.expected, raw)
+	}
+}
