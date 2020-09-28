@@ -2,6 +2,7 @@ package spec
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -50,6 +51,10 @@ func Parse(data []byte, name string) (*v1alpha1.Config, error) {
 		return nil, errors.Wrap(err, "parsing spec.json")
 	}
 
+	// only allow explicit metadata.name when matching generated value
+	if config.Metadata.Name != "" && config.Metadata.Name != name {
+		return nil, fmt.Errorf("invalid metadata.name, must match generated %q", name)
+	}
 	// set the name field
 	config.Metadata.Name = name
 

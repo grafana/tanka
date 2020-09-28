@@ -2,6 +2,6 @@
   "apiVersion": "v1alpha1",
   "kind": "Environment",
   "metadata": {
-    "name": "cases/env"
+    "name": "mismatched-name"
   }
 }

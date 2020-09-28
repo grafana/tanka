@@ -43,20 +43,29 @@ func TestEvalJsonnet(t *testing.T) {
 
 func TestEval(t *testing.T) {
 	cases := []struct {
-		baseDir  string
-		expected interface{}
+		baseDir       string
+		expectedError string
+		expected      interface{}
 	}{
 		{
-			baseDir: "./testdata/cases/env/",
+			baseDir:       "./testdata/cases/env-mismatch",
+			expectedError: `reading spec.json: invalid metadata.name, must match generated "cases/env-mismatch"`,
+		},
+		{
+			baseDir: "./testdata/cases/env",
 			expected: map[string]interface{}{
-				"tkName": "custom-name",
+				"tkName": "cases/env",
 			},
 		},
 	}
 
 	for _, test := range cases {
 		raw, _, e := eval(test.baseDir, jsonnet.Opts{})
-		assert.NoError(t, e)
-		assert.Equal(t, test.expected, raw)
+		if test.expectedError != "" {
+			assert.Equal(t, test.expectedError, e.Error())
+		} else {
+			assert.NoError(t, e)
+			assert.Equal(t, test.expected, raw)
+		}
 	}
 }
