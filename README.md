@@ -59,8 +59,18 @@ on track quickly.
 
 ## :busts_in_silhouette: Community
 
-The Tanka community is core to the project. Connect to us using the `#tanka`
-channel on the [Grafana Slack](https://grafana.slack.com).
+There are several places to connect with the Tanka community:
+
+- `#tanka` on [Grafana Slack](https://grafana.slack.com)
+- Mailing lists
+  - [`tanka-announce`](https://groups.google.com/forum/#!forum/tanka-announce):
+    Low frequency list with announcements, releases, etc
+  - [`tanka-users`](https://groups.google.com/forum/#!forum/tanka-users):
+    General purpose group for discussions, community support and more
+
+Please don't ask individual project members or open GitHub issues for support
+requests. Use one of the above channels so everyone in the community can
+participate.
 
 ---
 
@@ -69,7 +79,9 @@ Call](./docs/img/community-call.png)](https://docs.google.com/document/d/1mEsc0G
 
 Grafana Labs hosts a monthly community call for the Tanka project. Notes and the
 meeting URL can be found in a [Google
-Doc](https://docs.google.com/document/d/1mEsc0GxlnwbWAXzbIP7tBb6T5WgAI66_0gIWJzqB93o/edit).
+Doc](https://docs.google.com/document/d/1mEsc0GxlnwbWAXzbIP7tBb6T5WgAI66_0gIWJzqB93o/edit).  
+Join us to share why you love Tanka, why you have a hard time, tell us what you
+would like to see improved and hear about latest news!
 
 Furthermore, see [`LICENSE`](./LICENSE) and [`GOVERNANCE`](./GOVERNANCE.md).
 
