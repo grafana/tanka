@@ -142,6 +142,19 @@ repositories:
 
 ## Troubleshooting
 
+### Helm executable missing
+
+Helm support in Tanka requires the `helm` binary installed on your system and
+available on the `$PATH`. If Helm is not installed, you will see this error message:
+
+```
+evaluating jsonnet: RUNTIME ERROR: Expanding Helm Chart: exec: "helm": executable file not found in $PATH
+```
+
+To solve this, you need to [install Helm](https://helm.sh/docs/intro/install/).
+If you cannot install it system-wide, you can point Tanka at your executable
+using [`TANKA_HELM_PATH`](/env-vars#tanka_helm_path)
+
 ### opts.calledFrom unset
 
 This occurs, when Tanka was not told where it `helm.template()` was invoked
