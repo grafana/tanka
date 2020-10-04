@@ -51,11 +51,18 @@ This created the following files in `/vendor`:
 
 ```bash
 vendor
-├── ksonnet.beta.4
-│   ├── k.libsonnet # human friendly wrapper (this is what we use in our code)
-│   └── k8s.libsonnet # literally the entire API as a library. Very huge file
-└── ksonnet-util
-    └── kausal.libsonnet # Grafana's wrapper
+├── github.com
+│   ├── grafana
+│   │   └── jsonnet-libs
+│   │       └── ksonnet-util
+│   │           └── kausal.libsonnet # Grafana's wrapper
+│   └── ksonnet
+│       └── ksonnet-lib
+│           └── ksonnet.beta.4
+│               ├── k8s.libsonnet # literally the entire API as a library. Very huge file
+│               └── k.libsonnet # human friendly wrapper (this is what we use in our code)
+├── ksonnet.beta.4 -> github.com/ksonnet/ksonnet-lib/ksonnet.beta.4
+└── ksonnet-util -> github.com/grafana/jsonnet-libs/ksonnet-util
 ```
 
 > **Info**: The `vendor/` is the location for external libraries, while `lib/`
@@ -63,7 +70,7 @@ vendor
 > for more information.
 
 #### Aliasing
-Because of how `jb` works, the library can be imported as `ksonnet.beta.4/k.libsonnet`.
+Because of how `jb` works, the library can be imported as `github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k.libsonnet`.
 Most external libraries (including our wrapper) expect it as a simple `k.libsonnet` (without
 the package prefix).
 
@@ -80,7 +87,7 @@ First we need to import it in `main.jsonnet`:
 
 ```diff
 - (import "kubernetes.libsonnet") +
-+ (import "ksonnet-util/kausal.libsonnet") +
++ (import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet") +
   (import "grafana.jsonnet") +
   (import "prometheus.jsonnet") +
   { /* ... */ }
