@@ -14,7 +14,7 @@ test:
 dev:
 	go build -ldflags "-X main.Version=dev-${VERSION}" ./cmd/tk
 
-LDFLAGS := '-s -w -extldflags "-static" -X main.Version=${VERSION}'
+LDFLAGS := '-s -w -extldflags "-static" -X github.com/grafana/tanka/pkg/tanka.CURRENT_VERSION=${VERSION}'
 static:
 	CGO_ENABLED=0 go build -ldflags=${LDFLAGS} ./cmd/tk
 

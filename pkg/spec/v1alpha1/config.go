@@ -54,7 +54,14 @@ type Spec struct {
 	Namespace        string           `json:"namespace"`
 	DiffStrategy     string           `json:"diffStrategy,omitempty"`
 	InjectLabels     bool             `json:"injectLabels,omitempty"`
-	ResourceDefaults ResourceDefaults `json:"resourceDefaults,omitempty"`
+	ResourceDefaults ResourceDefaults `json:"resourceDefaults"`
+	ExpectVersions   ExpectVersions   `json:"expectVersions"`
+}
+
+// ExpectVersions holds semantic version constraints
+// TODO: extend this to handle more than Tanka
+type ExpectVersions struct {
+	Tanka string `json:"tanka,omitempty"`
 }
 
 // ResourceDefaults will be inserted in any manifests that tanka processes.
