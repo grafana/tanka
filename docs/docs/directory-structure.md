@@ -16,13 +16,20 @@ Tanka uses the following directories and special files:
 ├── jsonnetfile.json # direct dependencies
 ├── jsonnetfile.lock.json # all dependencies with exact versions
 ├── lib # libraries for this project only
-│   └── k.libsonnet # alias file for vendor/ksonnet.beta.4/k.libsonnet
+│   └── k.libsonnet # alias file for vendor/github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k.libsonnet
 └── vendor # external libraries installed using jb
-    ├── ksonnet.beta.4 # kubernetes library
-    │   ├── k8s.libsonnet
-    │   └── k.libsonnet
-    └── ksonnet-util # Grafana Labs' usability extensions to k.libsonnet
-        └── kausal.libsonnet
+    ├── github.com
+    │   ├── grafana
+    │   │   └── jsonnet-libs
+    │   │       └── ksonnet-util # Grafana Labs' usability extensions to k.libsonnet
+    │   │           └── kausal.libsonnet
+    │   └── ksonnet
+    │       └── ksonnet-lib
+    │           └── ksonnet.beta.4 # kubernetes library
+    │               ├── k8s.libsonnet
+    │               └── k.libsonnet
+    ├── ksonnet.beta.4 -> github.com/ksonnet/ksonnet-lib/ksonnet.beta.4
+    └── ksonnet-util -> github.com/grafana/jsonnet-libs/ksonnet-util
 ```
 
 ## Environments
