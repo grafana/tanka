@@ -13,11 +13,8 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/grafana/tanka/pkg/tanka"
 )
-
-// Version is the current version of the tk command.
-// To be overwritten at build time
-var Version = "dev"
 
 // describing variables
 var (
@@ -31,7 +28,7 @@ func main() {
 	rootCmd := &cli.Command{
 		Use:     "tk",
 		Short:   "tanka <3 jsonnet",
-		Version: Version,
+		Version: tanka.CURRENT_VERSION,
 	}
 
 	// workflow commands

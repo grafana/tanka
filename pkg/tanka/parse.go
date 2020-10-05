@@ -6,6 +6,7 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
@@ -16,6 +17,13 @@ import (
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
+
+// DEFAULT_DEV_VERSION is the placeholder version used when no actual semver is
+// provided using ldflags
+const DEFAULT_DEV_VERSION = "dev"
+
+// CURRENT_VERSION is the current version of the running Tanka code
+var CURRENT_VERSION = DEFAULT_DEV_VERSION
 
 // loaded is the final result of all processing stages:
 // 1. jpath.Resolve: Consruct import paths
@@ -58,6 +66,10 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 func load(dir string, opts Opts) (*loaded, error) {
 	raw, env, err := eval(dir, opts.JsonnetOpts)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}
 
@@ -148,4 +160,29 @@ func evalJsonnet(baseDir string, env *v1alpha1.Config, opts jsonnet.Opts) (inter
 		return nil, err
 	}
 	return data, nil
+}
+
+func checkVersion(constraint string) error {
+	if constraint == "" {
+		return nil
+	}
+	if CURRENT_VERSION == DEFAULT_DEV_VERSION {
+		return nil
+	}
+
+	c, err := semver.NewConstraint(constraint)
+	if err != nil {
+		return fmt.Errorf("Parsing version constraint: '%w'. Please check 'spec.expectVersions.tanka'", err)
+	}
+
+	v, err := semver.NewVersion(CURRENT_VERSION)
+	if err != nil {
+		return fmt.Errorf("'%s' is not a valid semantic version: '%w'.\nThis likely means your build of Tanka is broken, as this is a compile-time value. When in doubt, please raise an issue", CURRENT_VERSION, err)
+	}
+
+	if !c.Check(v) {
+		return fmt.Errorf("Current version '%s' does not satisfy the version required by the environment: '%s'. You likely need to use another version of Tanka", CURRENT_VERSION, constraint)
+	}
+
+	return nil
 }
