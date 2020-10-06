@@ -61,8 +61,7 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 			callerDir := filepath.Dir(opts.CalledFrom)
 			chart := filepath.Join(callerDir, chartpath)
 			if _, err := os.Stat(chart); err != nil {
-				// TODO: add website link for explanation
-				return nil, fmt.Errorf("helmTemplate: Failed to find a Chart at '%s': %s", chart, err)
+				return nil, fmt.Errorf("helmTemplate: Failed to find a chart at '%s': %s. See https://tanka.dev/helm#failed-to-find-chart", chart, err)
 			}
 
 			// render resources
@@ -94,8 +93,7 @@ func parseOpts(data interface{}) (*JsonnetOpts, error) {
 
 	// Charts are only allowed at relative paths. Use conf.CalledFrom to find the callers directory
 	if opts.CalledFrom == "" {
-		// TODO: rephrase and move lengthy explanation to website
-		return nil, fmt.Errorf("helmTemplate: 'opts.calledFrom' is unset or empty.\nTanka must know where helmTemplate was called from to resolve the Helm Chart relative to that.\n")
+		return nil, fmt.Errorf("helmTemplate: 'opts.calledFrom' is unset or empty.\nTanka needs this to find your charts. See https://tanka.dev/helm#optscalledfrom-unset\n")
 	}
 
 	return &opts, nil
@@ -138,6 +136,5 @@ type ErrorDuplicateName struct {
 }
 
 func (e ErrorDuplicateName) Error() string {
-	// TODO: explain on website
-	return fmt.Sprintf("Two resources share the same name '%s'. Please adapt the name template '%s'", e.name, e.format)
+	return fmt.Sprintf("Two resources share the same name '%s'. Please adapt the name template '%s'. See https://tanka.dev/helm#two-resources-share-the-same-name", e.name, e.format)
 }

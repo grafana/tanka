@@ -1,6 +1,7 @@
 ---
 name: "Output filtering"
 route: "/output-filtering"
+menu: Advanced features
 ---
 
 # Output Filtering

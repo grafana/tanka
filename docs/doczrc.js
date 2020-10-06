@@ -43,19 +43,26 @@ export default {
         "Overriding",
       ],
     },
-
-    // additional features
-    "Output filtering",
-    "Exporting as YAML",
-    "Garbage collection",
-    "Command-line completion",
-    "Diff strategies",
-    "Namespaces",
-
-    // reference
-    "Configuration Reference",
-    "Directory structure",
-    "Environment variables",
+    {
+      name: "Advanced features",
+      menu: [
+        "Garbage collection",
+        "Helm support",
+        "Output filtering",
+        "Exporting as YAML",
+      ],
+    },
+    {
+      name: "References",
+      menu: [
+        "Configuration Reference",
+        "Directory structure",
+        "Environment variables",
+        "Command-line completion",
+        "Diff strategies",
+        "Namespaces",
+      ],
+    },
 
     "Frequently asked questions",
     "Known issues",

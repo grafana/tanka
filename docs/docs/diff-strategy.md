@@ -1,6 +1,7 @@
 ---
 name: "Diff strategies"
 route: "/diff-strategy"
+menu: "References"
 ---
 
 # Diff Strategies

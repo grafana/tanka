@@ -1,13 +1,14 @@
 ---
 name: "Environment variables"
 route: "/env-vars"
+menu: "References"
 ---
 
 # Environment Variables
 
 ### TANKA_JB_PATH
 
-**Description**: Path to the `jb` tool executable
+**Description**: Path to the `jb` tool executable  
 **Default**: `$PATH/jb`
 
 ### TANKA_KUBECTL_PATH
@@ -22,5 +23,5 @@ route: "/env-vars"
 
 ### TANKA_HELM_PATH
 
-**Description**: Path to the `helm` executable
+**Description**: Path to the `helm` executable  
 **Default**: `$PATH/helm`

@@ -1,6 +1,7 @@
 ---
 name: "Configuration Reference"
 route: "/config"
+menu: "References"
 ---
 
 # Configuration Reference
