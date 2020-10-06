@@ -17,6 +17,9 @@ This one is huge! Tanka can now **load Helm Charts**:
 Just by upgrading to 0.12, you have access to every single Helm chart on the
 planet, right inside of Tanka! Read more on https://tanka.dev/helm
 
+> This feature is currently experimental. We believe it is feature complete, but
+> further usage in the filed may lead to adjustments
+
 #### :house: Top Level Arguments
 
 Tanka now supports the `--tla-str` and `--tla-code` flags from the `jsonnet` cli
