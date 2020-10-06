@@ -10,7 +10,7 @@ The [Helm](https://helm.sh) project is the biggest ecosystem of high quality,
 well maintained application definitions for Kubernetes.
 
 Even though Grafana Tanka uses the [Jsonnet language](/jsonnet/overview) for
-resource definition in the first place, you still have access to most of Helm.
+resource definition, you can still consume Helm resources, as described below.
 
 > **Warning:** Keep in mind this feature is considered EXPERIMENTAL
 
@@ -44,7 +44,7 @@ path](#vendoring-helm-charts), in this case `./charts/grafana`.
 
 <br />
 
-Once called, the `$.grafana` key holds the individual resources of Helm Chart as
+Once invoked, the `$.grafana` key holds the individual resources of Helm Chart as
 a regular Jsonnet object that looks roughly like so:
 
 ```jsonnet
@@ -58,6 +58,8 @@ a regular Jsonnet object that looks roughly like so:
 }
 ```
 
+Above can be [manipulated](/tutorial/environments#patching) in the same way as any other Jsonnet data.
+
 ## Vendoring Helm Charts
 
 Tanka, like Jsonnet, is hermetic. It **always yields the same
@@ -67,7 +69,7 @@ strictly self-contained.
 Helm however keeps Charts and repository configuration somewhere around
 `~/.config/helm`, which violates above requirement.
 
-As such, we decided to only allow Helm Charts that can be found **inside the
+To comply with this requirement, Tanka expects Helm Charts to be found **inside the
 bounds of a project**. This means, you MUST put your Charts **somewhere next to
 the file that calls `helm.template()`**, so that it can be referred to using a
 relative path.
@@ -103,10 +105,11 @@ library is kept portable.
 
 ### Charttool
 
-Helm does not make vendoring incredibly easy. `helm pull` provides the required
-plumbing, but it does not record its actions in a reproducible manner.
+Helm does not make vendoring incredibly easy by itself. `helm pull` provides the
+required plumbing, but it does not record its actions in a reproducible manner.
 
-Tanka ships a special utility at `tk tool charts`, which automates `helm pull`:
+Therefore, Tanka ships a special utility at `tk tool charts`, which automates
+`helm pull`:
 
 ```bash
 # Create a chartfile.yaml in the current directory, e.g. in lib/myLibrary
