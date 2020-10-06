@@ -34,7 +34,7 @@ func statusCmd() *cli.Command {
 		fmt.Println("Cluster:", context.Context.Cluster)
 		fmt.Println("Environment:")
 		for k, v := range structs.Map(status.Env.Spec) {
-			fmt.Printf("  %s: %s\n", k, v)
+			fmt.Printf("  %s: %v\n", k, v)
 		}
 
 		fmt.Println("Resources:")
