@@ -1,73 +1,100 @@
 # Changelog
 
-> ## 0.12-alpha3 (2020-09-21)
->
-> :rotating_light: This is a pre-release. It is not tested and may contain issues
-> of major kind, possibly causing data loss.  
-> :rotating_light: **DO NOT USE IN PRODUCTION**.
-> 
-> ### Bug Fixes
->
-> - **yaml**: Pin yaml library to v2.2.8. This resolves some unnecessary whitespace changes in some large deployments. May still be updated in a future release. **([#386](https://github.com/grafana/tanka/pull/386))**
+## 0.12 (2020-10-05)
 
-> ## 0.12-alpha2 (2020-09-14)
->
-> :rotating_light: This is a pre-release. It is not tested and may contain issues
-> of major kind, possibly causing data loss.  
-> :rotating_light: **DO NOT USE IN PRODUCTION**.
->
-> ### Features
->
-> - **cli**: Predict plain directories if outside a project
->   **([#357](https://github.com/grafana/tanka/pull/357))**
-> - **cli**: Custom paging
->   **([#373](https://github.com/grafana/tanka/pull/373))**
-> - **cli**: Inline eval
->   **([#378](https://github.com/grafana/tanka/pull/378))**
->
-> * **helm**: Charttool: Adds `tk tool charts` for easy management of vendored
->   Helm charts **([#367](https://github.com/grafana/tanka/pull/367))**,
->   **([#369](https://github.com/grafana/tanka/pull/369))**
-> * **helm**: Require Helm Charts to be available locally
->   **([#370](https://github.com/grafana/tanka/pull/370))**
-> * **helm**: Configurable name format
->   **([#381](https://github.com/grafana/tanka/pull/381))**
->
-> - **k8s**: Default metadata from `spec.json` > **([#366](https://github.com/grafana/tanka/pull/366))**
->
-> ### Bug Fixes
->
-> - **cli**: Actually use `TANKA_JB_PATH` > **([#350](https://github.com/grafana/tanka/pull/350))**
-> - **jsonnet**: Load `main.jsonnet` using full path
->   **([#370](https://github.com/grafana/tanka/pull/370))**
-> - **k8s**: Update `kubectl v1.18.0` warning
->   **([#371](https://github.com/grafana/tanka/pull/371))**
->
-> ### BREAKING
->
-> - **api**: Struct based Go API: Modifies our Go API
->   (`github.com/grafana/tanka/pkg/tanka`) to be based on structs instead of
->   variadic arguments. This has no impact on daily usage of Tanka.
->   **([#376](https://github.com/grafana/tanka/pull/376))**
+Like good wine, some things need time. After 3 months of intense development we
+have another Tanka release ready:
 
-> ## 0.12-alpha1 (2020-08-19)
->
-> ### Features
->
-> - **k8s, jsonnet**: Support for [Helm](https://helm.sh). In combination with
->   [`helm-util`](https://github.com/grafana/jsonnet-libs/tree/master/helm-util),
->   Tanka can now load resources from Helm Charts.
->   **([#336](https://github.com/grafana/tanka/pull/336))**
-> - **jsonnet**: Top Level Arguments can now be specified using `--tla-str` and `--tla-code` **([#340](https://github.com/grafana/tanka/pull/340))**
-> - **cli**: Filtering (`-t`) now supports negative expressions (`-t !deployment/.*`) to exclude resources
->   **([#339](https://github.com/grafana/tanka/pull/339))**
->
-> ### Bug Fixes
->
-> - **jsonnet**: Import path resolution now works on Windows
->   **([#331](https://github.com/grafana/tanka/pull/331))**
-> - **jsonnet**: Arrays are now supported at the top level
->   **([#321](https://github.com/grafana/tanka/pull/321))**
+#### :wheel_of_dharma: Helm support
+
+This one is huge! Tanka can now **load Helm Charts**:
+
+- [`helm-util`](https://github.com/grafana/jsonnet-libs/tree/master/helm-util)
+  provides `helm.template()` to load them from inside Jsonnet
+- Declarative vendoring using `tk tool charts`
+- Jsonnet-native overwriting of chart contents
+
+Just by upgrading to 0.12, you have access to every single Helm chart on the
+planet, right inside of Tanka! Read more on https://tanka.dev/helm
+
+> This feature is currently experimental. We believe it is feature complete, but
+> further usage in the filed may lead to adjustments
+
+#### :house: Top Level Arguments
+
+Tanka now supports the `--tla-str` and `--tla-code` flags from the `jsonnet` cli
+to late-bind data into the evaluation in a well-defined way. See
+https://tanka.dev/jsonnet/injecting-values for more details.
+
+#### :sparkles: Inline Eval
+
+Ever wanted to pull another value out of Jsonnet that does not comply to the
+Kubernetes object rules Tanka imposes onto everything? Wait no longer and use
+`tk eval -e`:
+
+```console
+$ tk eval environments/prometheus -e prometheus_rules
+```
+
+Above returns `$.prometheus_rules` as JSON. Every Jsonnet selector is supported:
+
+```console
+$ tk eval environments/prometheus -e 'foo.bar[0]'
+```
+
+### Features
+
+- **k8s, jsonnet** :sparkles:: Support for [Helm](https://helm.sh). In combination with
+  [`helm-util`](https://github.com/grafana/jsonnet-libs/tree/master/helm-util),
+  Tanka can now load resources from Helm Charts.
+  **([#336](https://github.com/grafana/tanka/pull/336))**
+- **k8s**: Default metadata from `spec.json`
+  **([#366](https://github.com/grafana/tanka/pull/366))**
+
+* **helm**: Charttool: Adds `tk tool charts` for easy management of vendored
+  Helm charts **([#367](https://github.com/grafana/tanka/pull/367))**,
+  **([#369](https://github.com/grafana/tanka/pull/369))**
+* **helm**: Require Helm Charts to be available locally
+  **([#370](https://github.com/grafana/tanka/pull/370))**
+* **helm**: Configurable name format
+  **([#381](https://github.com/grafana/tanka/pull/381))**
+
+- **cli**: Filtering (`-t`) now supports negative expressions (`-t !deployment/.*`) to exclude resources
+  **([#339](https://github.com/grafana/tanka/pull/339))**
+- **cli** :sparkles:: Inline eval (Use `tk eval -e` to extract nested fields)
+  **([#378](https://github.com/grafana/tanka/pull/378))**
+- **cli**: Custom paging (`PAGER` env var)
+  **([#373](https://github.com/grafana/tanka/pull/373))**
+- **cli**: Predict plain directories if outside a project
+  **([#357](https://github.com/grafana/tanka/pull/357))**
+
+* **jsonnet** :sparkles:: Top Level Arguments can now be specified using `--tla-str` and
+  `--tla-code` **([#340](https://github.com/grafana/tanka/pull/340))**
+
+### Bug Fixes
+
+- **yaml**: Pin yaml library to v2.2.8 to avoid whitespace changes
+  **([#386](https://github.com/grafana/tanka/pull/386))**
+- **cli**: Actually respect `TANKA_JB_PATH`
+  **([#350](https://github.com/grafana/tanka/pull/350))**
+- **k8s**: Update `kubectl v1.18.0` warning
+  **([#371](https://github.com/grafana/tanka/pull/371))**
+
+* **jsonnet**: Load `main.jsonnet` using full path. This makes `std.thisFile`
+  usable **([#370](https://github.com/grafana/tanka/pull/370))**
+* **jsonnet**: Import path resolution now works on Windows
+  **([#331](https://github.com/grafana/tanka/pull/331))**
+* **jsonnet**: Arrays are now supported at the top level
+  **([#321](https://github.com/grafana/tanka/pull/321))**
+
+### BREAKING
+
+- **api**: Struct based Go API: Modifies our Go API
+  (`github.com/grafana/tanka/pkg/tanka`) to be based on structs instead of
+  variadic arguments. This has no impact on daily usage of Tanka.
+  **([#376](https://github.com/grafana/tanka/pull/376))**
+- **jsonnet**: ExtVar flags are now `--ext-str` and `--ext-code` (were `--extVar` and `--extCode`)
+  **([#340](https://github.com/grafana/tanka/pull/340))**
 
 ## 0.11.1 (2020-07-17)
 
