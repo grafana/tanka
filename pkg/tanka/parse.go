@@ -64,16 +64,20 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 
 // load runs all processing stages described at the Processed type
 func load(path string, opts Opts) (*loaded, error) {
-	raw, env, err := eval(path, opts.JsonnetOpts)
+	_, env, err := eval(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
+	}
+
+	if env == nil {
+		return nil, fmt.Errorf("no Tanka environment found")
 	}
 
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}
 
-	rec, err := process.Process(raw, *env, opts.Filters)
+	rec, err := process.Process(env.Data, *env, opts.Filters)
 	if err != nil {
 		return nil, err
 	}
@@ -87,12 +91,7 @@ func load(path string, opts Opts) (*loaded, error) {
 // eval runs all processing stages describe at the Processed type apart from
 // post-processing, thus returning the raw Jsonnet result.
 func eval(path string, opts jsonnet.Opts) (raw interface{}, env *v1alpha1.Config, err error) {
-	env, err = parseSpec(path)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	raw, err = evalJsonnet(path, env, opts)
+	raw, env, err = evalJsonnet(path, opts)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 	}
@@ -119,7 +118,7 @@ func parseSpec(path string) (*v1alpha1.Config, error) {
 			log.Println(err)
 		// spec.json missing. we can still work with the default value
 		case spec.ErrNoSpec:
-			return config, nil
+			return config, err
 		// some other error
 		default:
 			return nil, errors.Wrap(err, "reading spec.json")
@@ -130,39 +129,83 @@ func parseSpec(path string) (*v1alpha1.Config, error) {
 }
 
 // evalJsonnet evaluates the jsonnet environment at the given path
-func evalJsonnet(path string, env *v1alpha1.Config, opts jsonnet.Opts) (interface{}, error) {
-	// make env spec accessible from Jsonnet
-	jsonEnv, err := json.Marshal(env)
+func evalJsonnet(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error) {
+	var hasSpec bool
+	specEnv, err := parseSpec(path)
 	if err != nil {
-		return nil, errors.Wrap(err, "marshalling environment config")
+		switch err.(type) {
+		case spec.ErrNoSpec:
+			hasSpec = false
+		default:
+			return nil, nil, errors.Wrap(err, "reading spec.json")
+		}
+	} else {
+		hasSpec = true
+
+		// original behavior, if env has spec.json
+		// then make env spec accessible through extCode
+		jsonEnv, err := json.Marshal(specEnv)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "marshalling environment config")
+		}
+		opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
 	}
-	opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
+
+	entrypoint, err := jpath.Entrypoint(path)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// evaluate Jsonnet
 	var raw string
-	entrypoint, err := jpath.Entrypoint(path)
-	if err != nil {
-		return nil, err
-	}
-
 	if opts.EvalPattern != "" {
 		evalScript := fmt.Sprintf("(import '%s').%s", entrypoint, opts.EvalPattern)
 		raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	} else {
 		raw, err = jsonnet.EvaluateFile(entrypoint, opts)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
-	// parse result
+
 	var data interface{}
 	if err := json.Unmarshal([]byte(raw), &data); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return data, nil
+
+	if opts.EvalPattern != "" {
+		// EvalPattern has no affinity with an environment, behave as jsonnet interpreter
+		return data, nil, err
+	}
+
+	var env *v1alpha1.Config
+	switch data.(type) {
+	case []interface{}:
+		env = &v1alpha1.Config{}
+		// data is array, do not try to unmarshal,
+		// multiple envs currently unsupported
+	default:
+		if err := json.Unmarshal([]byte(raw), &env); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// env is not a v1alpha1.Config, fallback to original behavior
+	if env.Kind != "Environment" {
+		if hasSpec {
+			specEnv.Data = data
+			// return env from spec.json
+			return data, specEnv, nil
+		} else {
+			// No spec.json found, behave as jsonnet interpreter
+			return data, nil, nil
+		}
+	}
+	// return env AS IS
+	return *env, env, nil
 }
 
 func checkVersion(constraint string) error {

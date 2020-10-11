@@ -21,10 +21,11 @@ func New() *Config {
 // Config holds the configuration variables for config version v1alpha1
 // ApiVersion and Kind are currently unused, this may change in the future.
 type Config struct {
-	APIVersion string   `json:"apiVersion"`
-	Kind       string   `json:"kind"`
-	Metadata   Metadata `json:"metadata"`
-	Spec       Spec     `json:"spec"`
+	APIVersion string      `json:"apiVersion"`
+	Kind       string      `json:"kind"`
+	Metadata   Metadata    `json:"metadata"`
+	Spec       Spec        `json:"spec"`
+	Data       interface{} `json:"data"`
 }
 
 // Metadata is meant for humans and not parsed
