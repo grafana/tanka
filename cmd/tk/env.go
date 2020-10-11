@@ -17,6 +17,7 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
 )
 
@@ -229,13 +230,19 @@ func envListCmd() *cli.Command {
 		}
 
 		for _, dir := range dirs {
-			env := setupConfiguration(dir)
-			if env == nil {
-				log.Printf("Could not setup configuration from %q", dir)
-				continue
+			_, parsedEnvs, err := tanka.ParseEnv(dir, tanka.ParseOpts{Evaluator: tanka.EnvsOnlyEvaluator})
+			if err != nil {
+				switch err.(type) {
+				case tanka.ErrNoEnv:
+					return nil
+				default:
+					log.Fatalf("Reading main.jsonnet: %s", err)
+				}
 			}
-			if selector == nil || selector.Empty() || selector.Matches(env.Metadata) {
-				envs = append(envs, *env)
+			for _, env := range parsedEnvs {
+				if selector == nil || selector.Empty() || selector.Matches(env.Metadata) {
+					envs = append(envs, *env)
+				}
 			}
 		}
 

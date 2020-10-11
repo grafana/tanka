@@ -77,18 +77,6 @@ func setupConfiguration(baseDir string) *v1alpha1.Environment {
 			if verbose {
 				fmt.Print(err)
 			}
-		// no spec.json is found, try parsing main.jsonnet
-		case spec.ErrNoSpec:
-			_, config, err := tanka.ParseEnv(baseDir, tanka.ParseOpts{Evaluator: tanka.EnvsOnlyEvaluator})
-			if err != nil {
-				switch err.(type) {
-				case tanka.ErrNoEnv:
-					return nil
-				default:
-					log.Fatalf("Reading main.jsonnet: %s", err)
-				}
-			}
-			return config
 		// some other error
 		default:
 			log.Fatalf("Reading spec.json: %s", err)

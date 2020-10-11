@@ -19,46 +19,56 @@ type PruneOpts struct {
 
 // Prune deletes all resources from the cluster, that are no longer present in
 // Jsonnet. It uses the `tanka.dev/environment` label to identify those.
-func Prune(baseDir string, opts PruneOpts) error {
-	// parse jsonnet, init k8s client
-	p, err := load(baseDir, opts.Opts)
-	if err != nil {
-		return err
-	}
-	kube, err := p.connect()
-	if err != nil {
-		return err
-	}
-	defer kube.Close()
-
-	// find orphaned resources
-	orphaned, err := kube.Orphaned(p.Resources)
+func Prune(path string, opts PruneOpts) error {
+	_, envs, err := ParseEnv(path, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
 	if err != nil {
 		return err
 	}
 
-	if len(orphaned) == 0 {
-		fmt.Println("Nothing found to prune.")
-		return nil
-	}
+	for _, env := range envs {
 
-	// print diff
-	diff, err := kubernetes.StaticDiffer(false)(orphaned)
-	if err != nil {
-		// static diff can't fail normally, so unlike in apply, this is fatal
-		// here
-		return err
-	}
-	fmt.Print(term.Colordiff(*diff).String())
+		p, err := load(env, opts.Opts)
+		if err != nil {
+			return err
+		}
+		kube, err := p.connect()
+		if err != nil {
+			return err
+		}
+		defer kube.Close()
 
-	// prompt for confirm
-	if opts.AutoApprove {
-	} else if err := confirmPrompt("Pruning from", p.Env.Spec.Namespace, kube.Info()); err != nil {
-		return err
-	}
+		// find orphaned resources
+		orphaned, err := kube.Orphaned(p.Resources)
+		if err != nil {
+			return err
+		}
 
-	// delete resources
-	return kube.Delete(orphaned, kubernetes.DeleteOpts{
-		Force: opts.Force,
-	})
+		if len(orphaned) == 0 {
+			fmt.Println("Nothing found to prune.")
+			return nil
+		}
+
+		// print diff
+		diff, err := kubernetes.StaticDiffer(false)(orphaned)
+		if err != nil {
+			// static diff can't fail normally, so unlike in apply, this is fatal
+			// here
+			return err
+		}
+		fmt.Print(term.Colordiff(*diff).String())
+
+		// prompt for confirm
+		if opts.AutoApprove {
+		} else if err := confirmPrompt("Pruning from", p.Env.Spec.Namespace, kube.Info()); err != nil {
+			return err
+		}
+
+		// delete resources
+		if err = kube.Delete(orphaned, kubernetes.DeleteOpts{
+			Force: opts.Force,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }

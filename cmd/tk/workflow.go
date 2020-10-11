@@ -133,9 +133,11 @@ func diffCmd() *cli.Command {
 			os.Exit(ExitStatusClean)
 		}
 
-		r := term.Colordiff(*changes)
-		if err := fPageln(r); err != nil {
-			return err
+		for _, change := range changes {
+			r := term.Colordiff(*change)
+			if err := fPageln(r); err != nil {
+				return err
+			}
 		}
 
 		os.Exit(ExitStatusDiff)

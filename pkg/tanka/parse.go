@@ -63,18 +63,13 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 }
 
 // load runs all processing stages described at the Processed type
-func load(path string, opts Opts) (*loaded, error) {
-	_, env, err := ParseEnv(path, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
-	if err != nil {
-		return nil, err
-	}
-
+func load(env *v1alpha1.Environment, opts Opts) (*loaded, error) {
 	if env == nil {
 		return nil, fmt.Errorf("no Tanka environment found")
 	}
 
 	if env.Metadata.Name == "" {
-		return nil, fmt.Errorf("Environment has no metadata.name set in %s", path)
+		return nil, fmt.Errorf("Environment has no metadata.name set")
 	}
 
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
@@ -123,7 +118,7 @@ func parseSpec(path string) (*v1alpha1.Environment, error) {
 
 // ParseEnv evaluates the jsonnet environment at the given file system path and
 // optionally also returns and Environment object
-func ParseEnv(path string, opts ParseOpts) (interface{}, *v1alpha1.Environment, error) {
+func ParseEnv(path string, opts ParseOpts) (interface{}, []*v1alpha1.Environment, error) {
 	specEnv, err := parseSpec(path)
 	if err != nil {
 		switch err.(type) {
@@ -171,28 +166,26 @@ func ParseEnv(path string, opts ParseOpts) (interface{}, *v1alpha1.Environment, 
 		return nil, nil, err
 	}
 
-	var env *v1alpha1.Environment
+	var envs []*v1alpha1.Environment
 
-	if len(extractedEnvs) > 1 {
-		names := make([]string, 0)
-		for _, exEnv := range extractedEnvs {
-			names = append(names, exEnv.Metadata().Name())
+	if len(extractedEnvs) > 0 {
+		for _, extractedEnv := range extractedEnvs {
+			marshalled, err := json.Marshal(extractedEnv)
+			if err != nil {
+				return nil, nil, err
+			}
+			env, err := spec.Parse(marshalled)
+			if err != nil {
+				return nil, nil, err
+			}
+			envs = append(envs, env)
 		}
-		return data, nil, ErrMultipleEnvs{path, names}
-	} else if len(extractedEnvs) == 1 {
-		marshalled, err := json.Marshal(extractedEnvs[0])
-		if err != nil {
-			return nil, nil, err
-		}
-		env, err = spec.Parse(marshalled)
-		if err != nil {
-			return nil, nil, err
-		}
-		return data, env, nil
+		return data, envs, nil
 	} else if specEnv != nil {
 		// if no environments found, fallback to original behavior
 		specEnv.Data = data
-		return data, specEnv, nil
+		envs = append(envs, specEnv)
+		return data, envs, nil
 	}
 	// if no environments or spec found, behave as jsonnet interpreter
 	return data, nil, ErrNoEnv{path}

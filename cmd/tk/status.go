@@ -22,29 +22,31 @@ func statusCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		status, err := tanka.Status(args[0], tanka.Opts{
+		statusses, err := tanka.Status(args[0], tanka.Opts{
 			JsonnetOpts: getJsonnetOpts(),
 		})
 		if err != nil {
 			return err
 		}
 
-		context := status.Client.Kubeconfig.Context
-		fmt.Println("Context:", context.Name)
-		fmt.Println("Cluster:", context.Context.Cluster)
-		fmt.Println("Environment:")
-		for k, v := range structs.Map(status.Env.Spec) {
-			fmt.Printf("  %s: %v\n", k, v)
-		}
+		for _, status := range statusses {
+			context := status.Client.Kubeconfig.Context
+			fmt.Println("Context:", context.Name)
+			fmt.Println("Cluster:", context.Context.Cluster)
+			fmt.Println("Environment:")
+			for k, v := range structs.Map(status.Env.Spec) {
+				fmt.Printf("  %s: %v\n", k, v)
+			}
 
-		fmt.Println("Resources:")
-		f := "  %s\t%s/%s\n"
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
-		fmt.Fprintln(w, "  NAMESPACE\tOBJECTSPEC")
-		for _, r := range status.Resources {
-			fmt.Fprintf(w, f, r.Metadata().Namespace(), r.Kind(), r.Metadata().Name())
+			fmt.Println("Resources:")
+			f := "  %s\t%s/%s\n"
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
+			fmt.Fprintln(w, "  NAMESPACE\tOBJECTSPEC")
+			for _, r := range status.Resources {
+				fmt.Fprintf(w, f, r.Metadata().Namespace(), r.Kind(), r.Metadata().Name())
+			}
+			w.Flush()
 		}
-		w.Flush()
 
 		return nil
 	}
