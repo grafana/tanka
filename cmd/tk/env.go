@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/grafana/tanka/pkg/term"
@@ -156,8 +157,12 @@ func addEnv(dir string, cfg *v1alpha1.Config) error {
 		}
 	}
 
+	rootDir, err := jpath.FindRoot(path)
+	if err != nil {
+		return err
+	}
 	// the other properties are already set by v1alpha1.New() and pflag.Parse()
-	cfg.Metadata.Name = filepath.Base(path)
+	cfg.Metadata.Name, _ = filepath.Rel(rootDir, path)
 
 	// write spec.json
 	if err := writeJSON(cfg, filepath.Join(path, "spec.json")); err != nil {

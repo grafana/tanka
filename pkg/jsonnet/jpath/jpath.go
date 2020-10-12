@@ -38,7 +38,7 @@ func Resolve(workdir string) (path []string, base, root string, err error) {
 		return nil, "", "", err
 	}
 
-	root, err = findRoot(workdir)
+	root, err = FindRoot(workdir)
 	if err != nil {
 		return nil, "", "", err
 	}
@@ -60,10 +60,10 @@ func Resolve(workdir string) (path []string, base, root string, err error) {
 	}, base, root, nil
 }
 
-// findRoot searches for a rootDir by the following criteria:
+// FindRoot searches for a rootDir by the following criteria:
 // - tkrc.yaml is considered first, for a jb-independent way of marking the root
 // - if it is not present (default), jsonnetfile.json is used.
-func findRoot(start string) (dir string, err error) {
+func FindRoot(start string) (dir string, err error) {
 	// root path based on os
 	stop := "/"
 	if runtime.GOOS == "windows" {
