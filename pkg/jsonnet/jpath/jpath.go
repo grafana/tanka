@@ -8,6 +8,8 @@ import (
 	"runtime"
 )
 
+const DEFAULT_ENTRYPOINT = "main.jsonnet"
+
 var (
 	// ErrorNoRoot means no rootDir was found in the parents
 	ErrorNoRoot = errors.New("could not locate a tkrc.yaml or jsonnetfile.json in the parent directories, which is required to identify the project root.\nRefer to https://tanka.dev/directory-structure for more information")
@@ -120,7 +122,7 @@ func dirContainsFile(files []os.FileInfo, filename string) bool {
 }
 
 func Entrypoint(dir string) (string, error) {
-	filename := "main.jsonnet"
+	filename := DEFAULT_ENTRYPOINT
 	stat, err := os.Stat(dir)
 	if err != nil {
 		return "", err
