@@ -27,20 +27,15 @@ func (e ErrorFileNotFound) Error() string {
 	return e.filename + " not found"
 }
 
-// Resolve the given directory and resolves the jPath around it. This means it:
+// Resolve the given path and resolves the jPath around it. This means it:
 // - figures out the project root (the one with .jsonnetfile, vendor/ and lib/)
 // - figures out the environments base directory (usually the main.jsonnet)
 //
 // It then constructs a jPath with the base directory, vendor/ and lib/.
 // This results in predictable imports, as it doesn't matter whether the user called
 // called the command further down tree or not. A little bit like git.
-func Resolve(workdir string) (path []string, base, root string, err error) {
-	workdir, err = filepath.Abs(workdir)
-	if err != nil {
-		return nil, "", "", err
-	}
-
-	entrypoint, err := Entrypoint(workdir)
+func Resolve(path string) (jpath []string, base, root string, err error) {
+	entrypoint, err := Entrypoint(path)
 	if err != nil {
 		return nil, "", "", err
 	}
@@ -121,14 +116,21 @@ func dirContainsFile(files []os.FileInfo, filename string) bool {
 	return false
 }
 
-func Entrypoint(dir string) (string, error) {
+func Entrypoint(path string) (string, error) {
 	filename := DEFAULT_ENTRYPOINT
-	stat, err := os.Stat(dir)
+
+	entrypoint, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+
+	stat, err := os.Stat(entrypoint)
 	if err != nil {
 		return "", err
 	}
 	if !stat.IsDir() {
-		dir, filename = filepath.Split(dir)
+		return entrypoint, nil
 	}
-	return filepath.Join(dir, filename), nil
+
+	return filepath.Join(entrypoint, filename), nil
 }

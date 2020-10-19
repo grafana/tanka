@@ -69,12 +69,12 @@ func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
 }
 
 // Evaluate renders the given jsonnet into a string
-func Evaluate(filename, data string, opts Opts) (string, error) {
-	jpath, _, _, err := jpath.Resolve(filename)
+func Evaluate(path, data string, opts Opts) (string, error) {
+	jpath, _, _, err := jpath.Resolve(path)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving import paths")
 	}
 	opts.ImportPaths = jpath
 	vm := MakeVM(opts)
-	return vm.EvaluateAnonymousSnippet(filename, data)
+	return vm.EvaluateAnonymousSnippet(path, data)
 }

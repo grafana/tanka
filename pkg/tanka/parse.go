@@ -63,8 +63,8 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 }
 
 // load runs all processing stages described at the Processed type
-func load(dir string, opts Opts) (*loaded, error) {
-	raw, env, err := eval(dir, opts.JsonnetOpts)
+func load(path string, opts Opts) (*loaded, error) {
+	raw, env, err := eval(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -86,13 +86,13 @@ func load(dir string, opts Opts) (*loaded, error) {
 
 // eval runs all processing stages describe at the Processed type apart from
 // post-processing, thus returning the raw Jsonnet result.
-func eval(dir string, opts jsonnet.Opts) (raw interface{}, env *v1alpha1.Config, err error) {
-	env, err = parseSpec(dir)
+func eval(path string, opts jsonnet.Opts) (raw interface{}, env *v1alpha1.Config, err error) {
+	env, err = parseSpec(path)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	raw, err = evalJsonnet(dir, env, opts)
+	raw, err = evalJsonnet(path, env, opts)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 	}
@@ -102,8 +102,8 @@ func eval(dir string, opts jsonnet.Opts) (raw interface{}, env *v1alpha1.Config,
 
 // parseEnv parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
-func parseSpec(dir string) (*v1alpha1.Config, error) {
-	_, baseDir, rootDir, err := jpath.Resolve(dir)
+func parseSpec(path string) (*v1alpha1.Config, error) {
+	_, baseDir, rootDir, err := jpath.Resolve(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolving jpath")
 	}
@@ -129,8 +129,8 @@ func parseSpec(dir string) (*v1alpha1.Config, error) {
 	return config, nil
 }
 
-// evalJsonnet evaluates the jsonnet environment at the given directory
-func evalJsonnet(baseDir string, env *v1alpha1.Config, opts jsonnet.Opts) (interface{}, error) {
+// evalJsonnet evaluates the jsonnet environment at the given path
+func evalJsonnet(path string, env *v1alpha1.Config, opts jsonnet.Opts) (interface{}, error) {
 	// make env spec accessible from Jsonnet
 	jsonEnv, err := json.Marshal(env)
 	if err != nil {
@@ -140,19 +140,19 @@ func evalJsonnet(baseDir string, env *v1alpha1.Config, opts jsonnet.Opts) (inter
 
 	// evaluate Jsonnet
 	var raw string
-	mainFile, err := jpath.Entrypoint(baseDir)
+	entrypoint, err := jpath.Entrypoint(path)
 	if err != nil {
 		return nil, err
 	}
 
 	if opts.EvalPattern != "" {
-		evalScript := fmt.Sprintf("(import '%s').%s", mainFile, opts.EvalPattern)
-		raw, err = jsonnet.Evaluate(mainFile, evalScript, opts)
+		evalScript := fmt.Sprintf("(import '%s').%s", entrypoint, opts.EvalPattern)
+		raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		raw, err = jsonnet.EvaluateFile(mainFile, opts)
+		raw, err = jsonnet.EvaluateFile(entrypoint, opts)
 		if err != nil {
 			return nil, err
 		}

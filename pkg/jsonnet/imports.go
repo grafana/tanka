@@ -26,12 +26,12 @@ func TransitiveImports(dir string) ([]string, error) {
 		return nil, err
 	}
 
-	mainFile, err := jpath.Entrypoint(dir)
+	entrypoint, err := jpath.Entrypoint(dir)
 	if err != nil {
 		return nil, err
 	}
 
-	sonnet, err := ioutil.ReadFile(mainFile)
+	sonnet, err := ioutil.ReadFile(entrypoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "opening file")
 	}
@@ -47,13 +47,13 @@ func TransitiveImports(dir string) ([]string, error) {
 		vm.NativeFunction(nf)
 	}
 
-	node, err := jsonnet.SnippetToAST(filepath.Base(mainFile), string(sonnet))
+	node, err := jsonnet.SnippetToAST(filepath.Base(entrypoint), string(sonnet))
 	if err != nil {
 		return nil, errors.Wrap(err, "creating Jsonnet AST")
 	}
 
 	imports := make(map[string]bool)
-	if err = importRecursive(imports, vm, node, filepath.Base(mainFile)); err != nil {
+	if err = importRecursive(imports, vm, node, filepath.Base(entrypoint)); err != nil {
 		return nil, err
 	}
 
@@ -68,7 +68,7 @@ func TransitiveImports(dir string) ([]string, error) {
 		paths = append(paths, p)
 
 	}
-	paths = append(paths, mainFile)
+	paths = append(paths, entrypoint)
 
 	for i := range paths {
 		paths[i], _ = filepath.Rel(rootDir, paths[i])
