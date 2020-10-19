@@ -40,7 +40,7 @@ func Resolve(path string) (jpath []string, base, root string, err error) {
 		return nil, "", "", err
 	}
 
-	root, err = findRoot(filepath.Dir(entrypoint))
+	root, err = FindRoot(filepath.Dir(entrypoint))
 	if err != nil {
 		return nil, "", "", err
 	}
