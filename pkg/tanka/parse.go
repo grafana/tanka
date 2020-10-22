@@ -26,6 +26,7 @@ const DEFAULT_DEV_VERSION = "dev"
 var CURRENT_VERSION = DEFAULT_DEV_VERSION
 
 // loaded is the final result of all processing stages:
+// TODO: remove or update this summary
 // 1. jpath.Resolve: Consruct import paths
 // 2. parseSpec: load spec.json
 // 3. evalJsonnet: evaluate Jsonnet to JSON
@@ -88,18 +89,7 @@ func load(path string, opts Opts) (*loaded, error) {
 	}, nil
 }
 
-// eval runs all processing stages describe at the Processed type apart from
-// post-processing, thus returning the raw Jsonnet result.
-func eval(path string, opts jsonnet.Opts) (raw interface{}, env *v1alpha1.Config, err error) {
-	raw, env, err = evalJsonnet(path, opts)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "evaluating jsonnet")
-	}
-
-	return raw, env, nil
-}
-
-// parseEnv parses the `spec.json` of the environment and returns a
+// parseSpec parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
 func parseSpec(path string) (*v1alpha1.Config, error) {
 	_, baseDir, rootDir, err := jpath.Resolve(path)
@@ -128,8 +118,8 @@ func parseSpec(path string) (*v1alpha1.Config, error) {
 	return config, nil
 }
 
-// evalJsonnet evaluates the jsonnet environment at the given path
-func evalJsonnet(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error) {
+// eval evaluates the jsonnet environment at the given path
+func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error) {
 	var hasSpec bool
 	specEnv, err := parseSpec(path)
 	if err != nil {
@@ -162,23 +152,23 @@ func evalJsonnet(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config,
 		evalScript := fmt.Sprintf("(import '%s').%s", entrypoint, opts.EvalPattern)
 		raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 		}
 	} else {
 		raw, err = jsonnet.EvaluateFile(entrypoint, opts)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "evaluating jsonnet")
 		}
 	}
 
 	var data interface{}
 	if err := json.Unmarshal([]byte(raw), &data); err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "unmarshalling data")
 	}
 
 	if opts.EvalPattern != "" {
 		// EvalPattern has no affinity with an environment, behave as jsonnet interpreter
-		return data, nil, err
+		return data, nil, nil
 	}
 
 	var env *v1alpha1.Config
@@ -189,7 +179,7 @@ func evalJsonnet(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config,
 		// multiple envs currently unsupported
 	default:
 		if err := json.Unmarshal([]byte(raw), &env); err != nil {
-			return nil, nil, err
+			return nil, nil, errors.Wrap(err, "unmarshalling into v1alpha1.Config")
 		}
 	}
 

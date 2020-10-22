@@ -111,7 +111,7 @@ func TestEvalJsonnet(t *testing.T) {
 	}
 
 	for _, test := range cases {
-		data, env, e := evalJsonnet(test.baseDir, jsonnet.Opts{})
+		data, env, e := eval(test.baseDir, jsonnet.Opts{})
 		assert.NoError(t, e)
 		assert.Equal(t, test.expected, data)
 		assert.Equal(t, test.env, env)
