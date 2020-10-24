@@ -104,7 +104,10 @@ func findFiles(target string, excludes []glob.Glob) ([]string, error) {
 
 	// godirwalk is faster than filepath.Walk, 'cause no os.Stat required
 	err = godirwalk.Walk(target, &godirwalk.Options{
-		Callback: func(path string, de *godirwalk.Dirent) error {
+		Callback: func(rawPath string, de *godirwalk.Dirent) error {
+			// Normalize slashes for Windows
+			path := filepath.ToSlash(rawPath)
+
 			if de.IsDir() {
 				return nil
 			}
