@@ -8,12 +8,14 @@ import (
 	"runtime"
 )
 
+const DEFAULT_ENTRYPOINT = "main.jsonnet"
+
 var (
 	// ErrorNoRoot means no rootDir was found in the parents
 	ErrorNoRoot = errors.New("could not locate a tkrc.yaml or jsonnetfile.json in the parent directories, which is required to identify the project root.\nRefer to https://tanka.dev/directory-structure for more information")
 
 	// ErrorNoBase means no baseDir was found in the parents
-	ErrorNoBase = errors.New("could not locate a main.jsonnet in the parent directories, which is required as the entrypoint for the evaluation.\nRefer to https://tanka.dev/directory-structure for more information")
+	ErrorNoBase = errors.New("could not locate entrypoint (usually main.jsonnet) in the parent directories, which is required as the entrypoint for the evaluation.\nRefer to https://tanka.dev/directory-structure for more information")
 )
 
 // ErrorFileNotFound means that the searched file was not found
@@ -25,25 +27,25 @@ func (e ErrorFileNotFound) Error() string {
 	return e.filename + " not found"
 }
 
-// Resolve the given directory and resolves the jPath around it. This means it:
+// Resolve the given path and resolves the jPath around it. This means it:
 // - figures out the project root (the one with .jsonnetfile, vendor/ and lib/)
-// - figures out the environments base directory (the one with the main.jsonnet)
+// - figures out the environments base directory (usually the main.jsonnet)
 //
 // It then constructs a jPath with the base directory, vendor/ and lib/.
 // This results in predictable imports, as it doesn't matter whether the user called
 // called the command further down tree or not. A little bit like git.
-func Resolve(workdir string) (path []string, base, root string, err error) {
-	workdir, err = filepath.Abs(workdir)
+func Resolve(path string) (jpath []string, base, root string, err error) {
+	entrypoint, err := Entrypoint(path)
 	if err != nil {
 		return nil, "", "", err
 	}
 
-	root, err = FindRoot(workdir)
+	root, err = FindRoot(filepath.Dir(entrypoint))
 	if err != nil {
 		return nil, "", "", err
 	}
 
-	base, err = FindParentFile("main.jsonnet", workdir, root)
+	base, err = FindParentFile(filepath.Base(entrypoint), filepath.Dir(entrypoint), root)
 	if err != nil {
 		if _, ok := err.(ErrorFileNotFound); ok {
 			return nil, "", "", ErrorNoBase
@@ -112,4 +114,23 @@ func dirContainsFile(files []os.FileInfo, filename string) bool {
 		}
 	}
 	return false
+}
+
+func Entrypoint(path string) (string, error) {
+	filename := DEFAULT_ENTRYPOINT
+
+	entrypoint, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+
+	stat, err := os.Stat(entrypoint)
+	if err != nil {
+		return "", err
+	}
+	if !stat.IsDir() {
+		return entrypoint, nil
+	}
+
+	return filepath.Join(entrypoint, filename), nil
 }
