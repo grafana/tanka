@@ -5,6 +5,7 @@ import Arch from "./tk/arch.mdx"
 import Go from "./tk/go.mdx"
 import Binary from "./tk/binary.mdx"
 
+import JbOsx from "./jb/osx.mdx"
 import JbArch from "./jb/arch.mdx"
 import JbGo from "./jb/go.mdx"
 import JbBinary from "./jb/binary.mdx"
@@ -17,8 +18,9 @@ export const Tanka = {
 }
 
 export const Jb = {
-  Binary: <JbBinary />,
+  macOS: <JbOsx />,
   ArchLinux: <JbArch />,
+  Binary: <JbBinary />,
   Go: <JbGo />,
 }
 
