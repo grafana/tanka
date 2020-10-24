@@ -93,6 +93,13 @@ func (c Charts) Vendor() error {
 
 	log.Println("Pulling Charts ...")
 	for _, r := range c.Manifest.Requires {
+		chartName := parseReqName(r.Chart)
+		chartPath := filepath.Join(dir, chartName)
+		if _, err := os.Stat(chartPath); err == nil {
+			log.Printf(" %s@%s exists", r.Chart, r.Version.String())
+			continue
+		}
+
 		err := c.Helm.Pull(r.Chart, r.Version.String(), PullOpts{
 			Destination: dir,
 			Opts:        Opts{Repositories: c.Manifest.Repositories},
@@ -101,7 +108,7 @@ func (c Charts) Vendor() error {
 			return err
 		}
 
-		log.Printf(" %s@%s", r.Chart, r.Version.String())
+		log.Printf(" %s@%s downloaded", r.Chart, r.Version.String())
 	}
 
 	return nil
@@ -198,4 +205,11 @@ func parseReq(s string) (*Requirement, error) {
 		Chart:   chart,
 		Version: *ver,
 	}, nil
+}
+
+// parseReqName parses a name from a string of the format `repo/name`
+func parseReqName(s string) string {
+	elems := strings.Split(s, "/")
+	name := elems[1]
+	return name
 }
