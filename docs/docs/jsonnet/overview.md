@@ -99,7 +99,7 @@ local patch = {
 The difference between `:` and `+::` is that the former replaces the original
 data at that key, while the latter applies the new object as a patch on top,
 meaning that values will be updated if possible but all other stay like they
-are.  
+are.
 To merge those two, just add (`+`) the patch to the original:
 
 ```jsonnet
@@ -180,3 +180,5 @@ Jsonnet has multiple options to refer to parts of an object:
 
 For more information take a look at
 [jsonnet.org](https://jsonnet.org/learning/tutorial.html#references)
+
+Tanka uses Jsonnet Kubernetes library(k8s) to work with Kubernetes resources. Here is the API [referece](https://jsonnet-libs.github.io/k8s-alpha/)
