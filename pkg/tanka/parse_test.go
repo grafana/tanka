@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/testify/assert"
 )
@@ -79,17 +80,17 @@ func TestEvalJsonnet(t *testing.T) {
 		},
 		{
 			baseDir: "./testdata/cases/withenv/main.jsonnet",
-			expected: v1alpha1.Config{
-				APIVersion: v1alpha1.New().APIVersion,
-				Kind:       v1alpha1.New().Kind,
-				Metadata: v1alpha1.Metadata{
-					Name: "withenv",
+			expected: map[string]interface{}{
+				"apiVersion": v1alpha1.New().APIVersion,
+				"kind":       v1alpha1.New().Kind,
+				"metadata": map[string]interface{}{
+					"name": "withenv",
 				},
-				Spec: v1alpha1.Spec{
-					APIServer: "https://localhost",
-					Namespace: "withenv",
+				"spec": map[string]interface{}{
+					"apiServer": "https://localhost",
+					"namespace": "withenv",
 				},
-				Data: map[string]interface{}{
+				"data": map[string]interface{}{
 					"testCase": "object",
 				},
 			},
@@ -97,7 +98,8 @@ func TestEvalJsonnet(t *testing.T) {
 				APIVersion: v1alpha1.New().APIVersion,
 				Kind:       v1alpha1.New().Kind,
 				Metadata: v1alpha1.Metadata{
-					Name: "withenv",
+					Name:   "withenv",
+					Labels: v1alpha1.New().Metadata.Labels,
 				},
 				Spec: v1alpha1.Spec{
 					APIServer: "https://localhost",
@@ -112,7 +114,11 @@ func TestEvalJsonnet(t *testing.T) {
 
 	for _, test := range cases {
 		data, env, e := eval(test.baseDir, jsonnet.Opts{})
-		assert.NoError(t, e)
+		if data == nil {
+			assert.NoError(t, e)
+		} else if e != nil {
+			assert.IsType(t, process.ErrorPrimitiveReached{}, e)
+		}
 		assert.Equal(t, test.expected, data)
 		assert.Equal(t, test.env, env)
 	}

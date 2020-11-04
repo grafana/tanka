@@ -171,31 +171,38 @@ func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error)
 		return data, nil, nil
 	}
 
-	var env *v1alpha1.Config
-	switch data.(type) {
-	case []interface{}:
-		env = &v1alpha1.Config{}
-		// data is array, do not try to unmarshal,
-		// multiple envs currently unsupported
-	default:
-		if err := json.Unmarshal([]byte(raw), &env); err != nil {
-			return nil, nil, errors.Wrap(err, "unmarshalling into v1alpha1.Config")
+	extract, err := extractEnvironments(data)
+	if _, ok := err.(process.ErrorPrimitiveReached); ok {
+		if !hasSpec {
+			// if no environments or spec found, behave as jsonnet interpreter
+			return data, nil, err
 		}
+	} else if err != nil {
+		return nil, nil, err
 	}
 
-	// env is not a v1alpha1.Config, fallback to original behavior
-	if env.Kind != "Environment" {
-		if hasSpec {
-			specEnv.Data = data
-			// return env from spec.json
-			return data, specEnv, nil
-		} else {
-			// No spec.json found, behave as jsonnet interpreter
-			return data, nil, nil
+	var env *v1alpha1.Config
+
+	if len(extract) > 1 {
+		return nil, nil, fmt.Errorf("more than 1 environments found")
+	} else if len(extract) == 1 {
+		data, err := json.Marshal(extract[0])
+		if err != nil {
+			return nil, nil, err
 		}
+		env, err = spec.Parse(data)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else if hasSpec {
+		// if no environments found, fallback to original behavior
+		specEnv.Data = data
+		return data, specEnv, nil
+	} else {
+		// if no environments or spec found, behave as jsonnet interpreter
+		return data, nil, fmt.Errorf("no environments found")
 	}
-	// return env AS IS
-	return *env, env, nil
+	return data, env, nil
 }
 
 func checkVersion(constraint string) error {
@@ -221,4 +228,26 @@ func checkVersion(constraint string) error {
 	}
 
 	return nil
+}
+
+func extractEnvironments(data interface{}) (manifest.List, error) {
+	// Scan for everything that looks like a Kubernetes object
+	extracted, err := process.Extract(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unwrap *List types
+	if err := process.Unwrap(extracted); err != nil {
+		return nil, err
+	}
+
+	// Perhaps filter for kind/name expressions
+	out := make(manifest.List, 0, len(extracted))
+	for _, m := range extracted {
+		out = append(out, m)
+	}
+
+	// Extract only object of Kind: Environment
+	return process.Filter(out, process.MustStrExps("Environment/.*")), nil
 }
