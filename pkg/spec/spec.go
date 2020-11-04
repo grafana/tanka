@@ -39,19 +39,21 @@ func ParseDir(baseDir, name string) (*v1alpha1.Config, error) {
 		return nil, err
 	}
 
-	return Parse(data, name)
+	c, err := Parse(data)
+	if c != nil {
+		// set the name field
+		c.Metadata.Name = name
+	}
+
+	return c, err
 }
 
 // Parse parses the json `data` into a `v1alpha1.Config` object.
-// `name` is the name of the environment
-func Parse(data []byte, name string) (*v1alpha1.Config, error) {
+func Parse(data []byte) (*v1alpha1.Config, error) {
 	config := v1alpha1.New()
 	if err := json.Unmarshal(data, config); err != nil {
 		return nil, errors.Wrap(err, "parsing spec.json")
 	}
-
-	// set the name field
-	config.Metadata.Name = name
 
 	if err := handleDeprecated(config, data); err != nil {
 		return config, err

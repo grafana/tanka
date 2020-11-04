@@ -14,6 +14,9 @@ import (
 func TestDeprecated(t *testing.T) {
 	data := []byte(`
 {
+	"metadata": {
+		"name": "test"
+	},
 	"spec": {
 		"namespace": "new"
 	},
@@ -23,7 +26,7 @@ func TestDeprecated(t *testing.T) {
 }
 `)
 
-	got, err := Parse(data, "test")
+	got, err := Parse(data)
 	require.Equal(t, ErrDeprecated{
 		{old: "server", new: "spec.apiServer"},
 		{old: "team", new: "metadata.labels.team"},
