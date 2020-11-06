@@ -89,6 +89,36 @@ func load(path string, opts Opts) (*loaded, error) {
 	}, nil
 }
 
+// eval evaluates the jsonnet environment at the given path
+func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error) {
+	return parseEnv(
+		path,
+		opts,
+		func(path string, opts jsonnet.Opts) (string, error) {
+			entrypoint, err := jpath.Entrypoint(path)
+			if err != nil {
+				return "", err
+			}
+
+			// evaluate Jsonnet
+			var raw string
+			if opts.EvalPattern != "" {
+				evalScript := fmt.Sprintf("(import '%s').%s", entrypoint, opts.EvalPattern)
+				raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
+				if err != nil {
+					return "", errors.Wrap(err, "evaluating jsonnet")
+				}
+			} else {
+				raw, err = jsonnet.EvaluateFile(entrypoint, opts)
+				if err != nil {
+					return "", errors.Wrap(err, "evaluating jsonnet")
+				}
+			}
+			return raw, nil
+		},
+	)
+}
+
 // parseSpec parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
 func parseSpec(path string) (*v1alpha1.Config, error) {
@@ -118,20 +148,19 @@ func parseSpec(path string) (*v1alpha1.Config, error) {
 	return config, nil
 }
 
-// eval evaluates the jsonnet environment at the given path
-func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error) {
-	var hasSpec bool
+type evaluateFunc func(path string, opts jsonnet.Opts) (string, error)
+
+// parseEnv finds the Environment object at the given path
+func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{}, *v1alpha1.Config, error) {
 	specEnv, err := parseSpec(path)
 	if err != nil {
 		switch err.(type) {
 		case spec.ErrNoSpec:
-			hasSpec = false
+			specEnv = nil
 		default:
 			return nil, nil, errors.Wrap(err, "reading spec.json")
 		}
 	} else {
-		hasSpec = true
-
 		// original behavior, if env has spec.json
 		// then make env spec accessible through extCode
 		jsonEnv, err := json.Marshal(specEnv)
@@ -141,24 +170,9 @@ func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error)
 		opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
 	}
 
-	entrypoint, err := jpath.Entrypoint(path)
+	raw, err := evalFn(path, opts)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	// evaluate Jsonnet
-	var raw string
-	if opts.EvalPattern != "" {
-		evalScript := fmt.Sprintf("(import '%s').%s", entrypoint, opts.EvalPattern)
-		raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "evaluating jsonnet")
-		}
-	} else {
-		raw, err = jsonnet.EvaluateFile(entrypoint, opts)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "evaluating jsonnet")
-		}
 	}
 
 	var data interface{}
@@ -173,7 +187,7 @@ func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error)
 
 	extract, err := extractEnvironments(data)
 	if _, ok := err.(process.ErrorPrimitiveReached); ok {
-		if !hasSpec {
+		if specEnv == nil {
 			// if no environments or spec found, behave as jsonnet interpreter
 			return data, nil, err
 		}
@@ -184,25 +198,24 @@ func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error)
 	var env *v1alpha1.Config
 
 	if len(extract) > 1 {
-		return nil, nil, fmt.Errorf("more than 1 environments found")
+		return data, nil, ErrMultipleEnvs{path}
 	} else if len(extract) == 1 {
-		data, err := json.Marshal(extract[0])
+		marshalled, err := json.Marshal(extract[0])
 		if err != nil {
 			return nil, nil, err
 		}
-		env, err = spec.Parse(data)
+		env, err = spec.Parse(marshalled)
 		if err != nil {
 			return nil, nil, err
 		}
-	} else if hasSpec {
+		return data, env, nil
+	} else if specEnv != nil {
 		// if no environments found, fallback to original behavior
 		specEnv.Data = data
 		return data, specEnv, nil
-	} else {
-		// if no environments or spec found, behave as jsonnet interpreter
-		return data, nil, fmt.Errorf("no environments found")
 	}
-	return data, env, nil
+	// if no environments or spec found, behave as jsonnet interpreter
+	return data, nil, ErrNoEnv{path}
 }
 
 func checkVersion(constraint string) error {
@@ -250,4 +263,58 @@ func extractEnvironments(data interface{}) (manifest.List, error) {
 
 	// Extract only object of Kind: Environment
 	return process.Filter(out, process.MustStrExps("Environment/.*")), nil
+}
+
+// EvalEnvs finds the Environment object (without its .data object) at the given path
+// intended for use by the `tk env` command
+func EvalEnvs(path string, opts jsonnet.Opts) (*v1alpha1.Config, error) {
+	_, env, err := parseEnv(
+		path,
+		opts,
+		func(path string, opts jsonnet.Opts) (string, error) {
+			entrypoint, err := jpath.Entrypoint(path)
+			if err != nil {
+				return "", err
+			}
+
+			// Snippet to find all Environment objects and remove the .data object for faster evaluation
+			noData := `
+local noDataEnv(object) =
+  if std.isObject(object)
+  then
+    if std.objectHas(object, 'apiVersion')
+       && std.objectHas(object, 'kind')
+    then
+      if object.kind == 'Environment'
+      then object { data:: {} }
+      else {}
+    else
+      std.mapWithKey(
+        function(key, obj)
+          noDataEnv(obj),
+        object
+      )
+  else if std.isArray(object)
+  then
+    std.map(
+      function(obj)
+        noDataEnv(obj),
+      object
+    )
+  else {};
+
+noDataEnv(import '%s')
+`
+
+			// evaluate Jsonnet with noData snippet
+			var raw string
+			evalScript := fmt.Sprintf(noData, entrypoint)
+			raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
+			if err != nil {
+				return "", errors.Wrap(err, "evaluating jsonnet")
+			}
+			return raw, nil
+		},
+	)
+	return env, err
 }

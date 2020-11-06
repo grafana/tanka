@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-clix/cli"
 
+	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -77,6 +78,18 @@ func setupConfiguration(baseDir string) *v1alpha1.Config {
 			if verbose {
 				fmt.Print(err)
 			}
+		// no spec.json is found, try parsing main.jsonnet
+		case spec.ErrNoSpec:
+			config, err := tanka.EvalEnvs(baseDir, jsonnet.Opts{})
+			if err != nil {
+				switch err.(type) {
+				case tanka.ErrNoEnv:
+					return nil
+				default:
+					log.Fatalf("Reading main.jsonnet: %s", err)
+				}
+			}
+			return config
 		// some other error
 		default:
 			log.Fatalf("Reading spec.json: %s", err)
