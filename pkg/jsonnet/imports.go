@@ -72,6 +72,9 @@ func TransitiveImports(dir string) ([]string, error) {
 
 	for i := range paths {
 		paths[i], _ = filepath.Rel(rootDir, paths[i])
+
+		// Normalize path separators for windows
+		paths[i] = filepath.ToSlash(paths[i])
 	}
 	sort.Strings(paths)
 
