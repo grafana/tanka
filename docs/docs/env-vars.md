@@ -25,3 +25,8 @@ menu: "References"
 
 **Description**: Path to the `helm` executable  
 **Default**: `$PATH/helm`
+
+### TANKA_KUSTOMIZE_PATH
+
+**Description**: Path to the `kustomize` executable  
+**Default**: `$PATH/kustomize`
