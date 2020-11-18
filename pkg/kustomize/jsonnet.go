@@ -1,21 +1,15 @@
 package kustomize
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
-
-// DefaultNameFormat to use when no nameFormat is supplied
-const DefaultNameFormat = `{{ print .kind "_" .metadata.name | snakecase }}`
 
 // JsonnetOpts are additional properties the consumer of the native func might
 // pass.
@@ -63,7 +57,7 @@ func NativeFunc(k Kustomize) *jsonnet.NativeFunction {
 			}
 
 			// convert list to map
-			out, err := listAsMap(list, opts.NameFormat)
+			out, err := manifest.ListAsMap(list, opts.NameFormat)
 			if err != nil {
 				return nil, err
 			}
@@ -89,44 +83,4 @@ func parseOpts(data interface{}) (*JsonnetOpts, error) {
 	}
 
 	return &opts, nil
-}
-
-func listAsMap(list manifest.List, nameFormat string) (map[string]interface{}, error) {
-	if nameFormat == "" {
-		nameFormat = DefaultNameFormat
-	}
-
-	tmpl, err := template.New("").
-		Funcs(sprig.TxtFuncMap()).
-		Parse(nameFormat)
-	if err != nil {
-		return nil, fmt.Errorf("Parsing name format: %w", err)
-	}
-
-	out := make(map[string]interface{})
-	for _, m := range list {
-		var buf bytes.Buffer
-		if err := tmpl.Execute(&buf, m); err != nil {
-			return nil, err
-		}
-		name := buf.String()
-
-		if _, ok := out[name]; ok {
-			return nil, ErrorDuplicateName{name: name, format: nameFormat}
-		}
-		out[name] = map[string]interface{}(m)
-	}
-
-	return out, nil
-}
-
-// ErrorDuplicateName means two resources share the same name using the given
-// nameFormat.
-type ErrorDuplicateName struct {
-	name   string
-	format string
-}
-
-func (e ErrorDuplicateName) Error() string {
-	return fmt.Sprintf("Two resources share the same name '%s'. Please adapt the name template '%s'.", e.name, e.format)
 }
