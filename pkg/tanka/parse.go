@@ -185,7 +185,7 @@ func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{},
 		return data, nil, nil
 	}
 
-	extract, err := extractEnvironments(data)
+	extractedEnvs, err := extractEnvironments(data)
 	if _, ok := err.(process.ErrorPrimitiveReached); ok {
 		if specEnv == nil {
 			// if no environments or spec found, behave as jsonnet interpreter
@@ -197,10 +197,10 @@ func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{},
 
 	var env *v1alpha1.Environment
 
-	if len(extract) > 1 {
+	if len(extractedEnvs) > 1 {
 		return data, nil, ErrMultipleEnvs{path}
-	} else if len(extract) == 1 {
-		marshalled, err := json.Marshal(extract[0])
+	} else if len(extractedEnvs) == 1 {
+		marshalled, err := json.Marshal(extractedEnvs[0])
 		if err != nil {
 			return nil, nil, err
 		}
