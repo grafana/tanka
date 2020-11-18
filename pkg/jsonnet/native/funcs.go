@@ -10,6 +10,7 @@ import (
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
 	"github.com/grafana/tanka/pkg/helm"
+	"github.com/grafana/tanka/pkg/kustomize"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v3"
 )
@@ -32,6 +33,7 @@ func Funcs() []*jsonnet.NativeFunction {
 		regexSubst(),
 
 		helm.NativeFunc(helm.ExecHelm{}),
+		kustomize.NativeFunc(kustomize.ExecKustomize{}),
 	}
 }
 

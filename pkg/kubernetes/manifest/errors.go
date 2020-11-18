@@ -66,3 +66,14 @@ func (s SampleString) Indent(n int) string {
 	lines := strings.Split(s.String(), "\n")
 	return indent + strings.Join(lines, "\n"+indent)
 }
+
+// ErrorDuplicateName means two resources share the same name using the given
+// nameFormat.
+type ErrorDuplicateName struct {
+	name   string
+	format string
+}
+
+func (e ErrorDuplicateName) Error() string {
+	return fmt.Sprintf("Two resources share the same name '%s'. Please adapt the name template '%s'.", e.name, e.format)
+}
