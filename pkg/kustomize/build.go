@@ -33,12 +33,6 @@ func (k ExecKustomize) Build(path string) (manifest.List, error) {
 			return nil, errors.Wrap(err, "Parsing Kustomize output")
 		}
 
-		// Kustomize might return "empty" elements in the YAML stream that consist
-		// only of comments. Ignore these
-		if len(m) == 0 {
-			continue
-		}
-
 		list = append(list, m)
 	}
 
