@@ -89,7 +89,7 @@ func load(path string, opts Opts) (*loaded, error) {
 	}, nil
 }
 
-// eval evaluates the jsonnet environment at the given path
+// eval evaluates the jsonnet environment at the given file system path
 func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Environment, error) {
 	return parseEnv(
 		path,
@@ -150,7 +150,7 @@ func parseSpec(path string) (*v1alpha1.Environment, error) {
 
 type evaluateFunc func(path string, opts jsonnet.Opts) (string, error)
 
-// parseEnv finds the Environment object at the given path
+// parseEnv finds the Environment object at the given file system path
 func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{}, *v1alpha1.Environment, error) {
 	specEnv, err := parseSpec(path)
 	if err != nil {
@@ -265,8 +265,8 @@ func extractEnvironments(data interface{}) (manifest.List, error) {
 	return process.Filter(out, process.MustStrExps("Environment/.*")), nil
 }
 
-// EvalEnvs finds the Environment object (without its .data object) at the given path
-// intended for use by the `tk env` command
+// EvalEnvs finds the Environment object (without its .data object) at the
+// given file system path intended for use by the `tk env` command
 func EvalEnvs(path string, opts jsonnet.Opts) (*v1alpha1.Environment, error) {
 	_, env, err := parseEnv(
 		path,
