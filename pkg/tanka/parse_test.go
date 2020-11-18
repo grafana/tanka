@@ -13,7 +13,7 @@ func TestEvalJsonnet(t *testing.T) {
 	cases := []struct {
 		baseDir  string
 		expected interface{}
-		env      *v1alpha1.Config
+		env      *v1alpha1.Environment
 	}{
 		{
 			baseDir: "./testdata/cases/array/",
@@ -41,7 +41,7 @@ func TestEvalJsonnet(t *testing.T) {
 			expected: map[string]interface{}{
 				"testCase": "object",
 			},
-			env: &v1alpha1.Config{
+			env: &v1alpha1.Environment{
 				APIVersion: v1alpha1.New().APIVersion,
 				Kind:       v1alpha1.New().Kind,
 				Metadata: v1alpha1.Metadata{
@@ -62,7 +62,7 @@ func TestEvalJsonnet(t *testing.T) {
 			expected: map[string]interface{}{
 				"testCase": "object",
 			},
-			env: &v1alpha1.Config{
+			env: &v1alpha1.Environment{
 				APIVersion: v1alpha1.New().APIVersion,
 				Kind:       v1alpha1.New().Kind,
 				Metadata: v1alpha1.Metadata{
@@ -94,7 +94,7 @@ func TestEvalJsonnet(t *testing.T) {
 					"testCase": "object",
 				},
 			},
-			env: &v1alpha1.Config{
+			env: &v1alpha1.Environment{
 				APIVersion: v1alpha1.New().APIVersion,
 				Kind:       v1alpha1.New().Kind,
 				Metadata: v1alpha1.Metadata{

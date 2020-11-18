@@ -34,7 +34,7 @@ var CURRENT_VERSION = DEFAULT_DEV_VERSION
 //
 // Also connect() is provided to connect to the cluster for live operations
 type loaded struct {
-	Env       *v1alpha1.Config
+	Env       *v1alpha1.Environment
 	Resources manifest.List
 }
 
@@ -90,7 +90,7 @@ func load(path string, opts Opts) (*loaded, error) {
 }
 
 // eval evaluates the jsonnet environment at the given path
-func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error) {
+func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Environment, error) {
 	return parseEnv(
 		path,
 		opts,
@@ -121,7 +121,7 @@ func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Config, error)
 
 // parseSpec parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
-func parseSpec(path string) (*v1alpha1.Config, error) {
+func parseSpec(path string) (*v1alpha1.Environment, error) {
 	_, baseDir, rootDir, err := jpath.Resolve(path)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolving jpath")
@@ -151,7 +151,7 @@ func parseSpec(path string) (*v1alpha1.Config, error) {
 type evaluateFunc func(path string, opts jsonnet.Opts) (string, error)
 
 // parseEnv finds the Environment object at the given path
-func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{}, *v1alpha1.Config, error) {
+func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{}, *v1alpha1.Environment, error) {
 	specEnv, err := parseSpec(path)
 	if err != nil {
 		switch err.(type) {
@@ -195,7 +195,7 @@ func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{},
 		return nil, nil, err
 	}
 
-	var env *v1alpha1.Config
+	var env *v1alpha1.Environment
 
 	if len(extract) > 1 {
 		return data, nil, ErrMultipleEnvs{path}
@@ -267,7 +267,7 @@ func extractEnvironments(data interface{}) (manifest.List, error) {
 
 // EvalEnvs finds the Environment object (without its .data object) at the given path
 // intended for use by the `tk env` command
-func EvalEnvs(path string, opts jsonnet.Opts) (*v1alpha1.Config, error) {
+func EvalEnvs(path string, opts jsonnet.Opts) (*v1alpha1.Environment, error) {
 	_, env, err := parseEnv(
 		path,
 		opts,

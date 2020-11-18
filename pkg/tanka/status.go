@@ -10,7 +10,7 @@ import (
 // the individual resources of the desired state and also the status of the
 // client.
 type Info struct {
-	Env       *v1alpha1.Config
+	Env       *v1alpha1.Environment
 	Resources manifest.List
 	Client    client.Info
 }

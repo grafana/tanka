@@ -18,9 +18,9 @@ const APIGroup = "tanka.dev"
 // Specfile is the filename for the environment config
 const Specfile = "spec.json"
 
-// ParseDir parses the given environments `spec.json` into a `v1alpha1.Config`
+// ParseDir parses the given environments `spec.json` into a `v1alpha1.Environment`
 // object with the name set to the directories name
-func ParseDir(baseDir, name string) (*v1alpha1.Config, error) {
+func ParseDir(baseDir, name string) (*v1alpha1.Environment, error) {
 	fi, err := os.Stat(baseDir)
 	if err != nil {
 		return nil, err
@@ -48,8 +48,8 @@ func ParseDir(baseDir, name string) (*v1alpha1.Config, error) {
 	return c, err
 }
 
-// Parse parses the json `data` into a `v1alpha1.Config` object.
-func Parse(data []byte) (*v1alpha1.Config, error) {
+// Parse parses the json `data` into a `v1alpha1.Environment` object.
+func Parse(data []byte) (*v1alpha1.Environment, error) {
 	config := v1alpha1.New()
 	if err := json.Unmarshal(data, config); err != nil {
 		return nil, errors.Wrap(err, "parsing spec.json")
@@ -67,7 +67,7 @@ func Parse(data []byte) (*v1alpha1.Config, error) {
 	return config, nil
 }
 
-func handleDeprecated(c *v1alpha1.Config, data []byte) error {
+func handleDeprecated(c *v1alpha1.Environment, data []byte) error {
 	var errDepr ErrDeprecated
 
 	var msi map[string]interface{}

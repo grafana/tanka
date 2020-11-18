@@ -61,7 +61,7 @@ func main() {
 	}
 }
 
-func setupConfiguration(baseDir string) *v1alpha1.Config {
+func setupConfiguration(baseDir string) *v1alpha1.Environment {
 	_, baseDir, rootDir, err := jpath.Resolve(baseDir)
 	if err != nil {
 		log.Fatalln("Resolving jpath:", err)
