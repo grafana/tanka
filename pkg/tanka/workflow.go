@@ -2,6 +2,7 @@ package tanka
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/fatih/color"
 
@@ -185,5 +186,17 @@ func Show(baseDir string, opts Opts) (manifest.List, error) {
 // Eval returns the raw evaluated Jsonnet output (without any transformations)
 func Eval(dir string, opts Opts) (raw interface{}, err error) {
 	r, _, err := eval(dir, opts.JsonnetOpts)
-	return r, err
+	if err != nil {
+		switch err.(type) {
+		case ErrMultipleEnvs:
+			log.Println(err)
+			return r, nil
+		case ErrNoEnv:
+			log.Println(err)
+			return r, nil
+		default:
+			return nil, err
+		}
+	}
+	return r, nil
 }

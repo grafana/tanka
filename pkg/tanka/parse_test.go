@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
-	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/testify/assert"
 )
@@ -117,7 +116,7 @@ func TestEvalJsonnet(t *testing.T) {
 		if data == nil {
 			assert.NoError(t, e)
 		} else if e != nil {
-			assert.IsType(t, process.ErrorPrimitiveReached{}, e)
+			assert.IsType(t, ErrNoEnv{}, e)
 		}
 		assert.Equal(t, test.expected, data)
 		assert.Equal(t, test.env, env)

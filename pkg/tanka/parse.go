@@ -189,7 +189,7 @@ func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{},
 	if _, ok := err.(process.ErrorPrimitiveReached); ok {
 		if specEnv == nil {
 			// if no environments or spec found, behave as jsonnet interpreter
-			return data, nil, err
+			return data, nil, ErrNoEnv{path}
 		}
 	} else if err != nil {
 		return nil, nil, err
