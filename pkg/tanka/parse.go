@@ -198,7 +198,11 @@ func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{},
 	var env *v1alpha1.Environment
 
 	if len(extractedEnvs) > 1 {
-		return data, nil, ErrMultipleEnvs{path}
+		names := make([]string, 0)
+		for _, exEnv := range extractedEnvs {
+			names = append(names, exEnv.Metadata().Name())
+		}
+		return data, nil, ErrMultipleEnvs{path, names}
 	} else if len(extractedEnvs) == 1 {
 		marshalled, err := json.Marshal(extractedEnvs[0])
 		if err != nil {

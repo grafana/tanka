@@ -1,6 +1,9 @@
 package tanka
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // ErrNoEnv means that the given jsonnet has no Environment object
 // This must not be fatal, some operations work without
@@ -14,9 +17,10 @@ func (e ErrNoEnv) Error() string {
 
 // ErrMultipleEnvs means that the given jsonnet has multiple Environment objects
 type ErrMultipleEnvs struct {
-	path string
+	path  string
+	names []string
 }
 
 func (e ErrMultipleEnvs) Error() string {
-	return fmt.Sprintf("found multiple Environments in '%s'", e.path)
+	return fmt.Sprintf("found multiple Environments (%s) in '%s'", strings.Join(e.names, ", "), e.path)
 }
