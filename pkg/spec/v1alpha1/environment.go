@@ -24,7 +24,7 @@ type Environment struct {
 	Kind       string      `json:"kind"`
 	Metadata   Metadata    `json:"metadata"`
 	Spec       Spec        `json:"spec"`
-	Data       interface{} `json:"data"`
+	Data       interface{} `json:"data,omitempty"`
 }
 
 // Metadata is meant for humans and not parsed
