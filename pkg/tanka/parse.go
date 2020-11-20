@@ -263,7 +263,6 @@ func extractEnvironments(data interface{}) (manifest.List, error) {
 		return nil, err
 	}
 
-	// Perhaps filter for kind/name expressions
 	out := make(manifest.List, 0, len(extracted))
 	for _, m := range extracted {
 		out = append(out, m)
