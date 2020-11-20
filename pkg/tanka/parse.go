@@ -74,6 +74,10 @@ func load(path string, opts Opts) (*loaded, error) {
 		return nil, fmt.Errorf("no Tanka environment found")
 	}
 
+	if env.Metadata.Name == "" {
+		return nil, fmt.Errorf("Environment has no metadata.name set in %s", path)
+	}
+
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}
