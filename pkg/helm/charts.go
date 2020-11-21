@@ -162,7 +162,7 @@ func InitChartfile(path string) (*Charts, error) {
 		Version: Version,
 		Repositories: []Repo{{
 			Name: "stable",
-			URL:  "https://kubernetes-charts.storage.googleapis.com",
+			URL:  "https://charts.helm.sh/stable",
 		}},
 		Requires: make(Requirements, 0),
 	}
