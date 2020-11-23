@@ -3,13 +3,16 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/go-clix/cli"
+	"github.com/posener/complete"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -30,29 +33,48 @@ func toolCmd() *cli.Command {
 
 func jpathCmd() *cli.Command {
 	cmd := &cli.Command{
-		Short: "print information about the jpath",
-		Use:   "jpath",
-		Run: func(cmd *cli.Command, args []string) error {
-			pwd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			path, base, root, err := jpath.Resolve(pwd)
-			if err != nil {
-				return fmt.Errorf("Resolving JPATH: %s", err)
-			}
-			entrypoint, err := jpath.Entrypoint(base)
-			if err != nil {
-				return fmt.Errorf("Resolving JPATH: %s", err)
-			}
-			fmt.Println("main:", entrypoint)
-			fmt.Println("rootDir:", root)
-			fmt.Println("baseDir:", base)
-			fmt.Println("jpath:", path)
-
-			return nil
+		Short: "export JSONNET_PATH for use with other jsonnet tools",
+		Use:   "jpath [<file/dir>]",
+		Args: cli.Args{
+			Validator: cli.ValidateFunc(func(args []string) error {
+				if len(args) != 1 {
+					return errors.New("One file or directory is required")
+				}
+				return nil
+			}),
+			Predictor: complete.PredictFiles("*.*sonnet"),
 		},
 	}
+
+	debug := cmd.Flags().BoolP("debug", "d", false, "show debug info")
+
+	cmd.Run = func(cmd *cli.Command, args []string) error {
+		path := args[0]
+
+		entrypoint, err := jpath.Entrypoint(path)
+		if err != nil {
+			return fmt.Errorf("Resolving JPATH: %s", err)
+		}
+
+		jsonnet_path, base, root, err := jpath.Resolve(entrypoint)
+		if err != nil {
+			return fmt.Errorf("Resolving JPATH: %s", err)
+		}
+
+		if *debug {
+			// log to debug info to stderr
+			log.Println("main:", entrypoint)
+			log.Println("rootDir:", root)
+			log.Println("baseDir:", base)
+			log.Println("jpath:", jsonnet_path)
+		}
+
+		// print export JSONNET_PATH to stdout
+		fmt.Printf("export JSONNET_PATH=%s", strings.Join(jsonnet_path, ":"))
+
+		return nil
+	}
+
 	return cmd
 }
 
