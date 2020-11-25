@@ -15,7 +15,7 @@ RUN git clone https://github.com/jsonnet-bundler/jsonnet-bundler &&\
 
 # assemble final container
 FROM alpine
-RUN apk add --no-cache coreutils diffutils less git
+RUN apk add --no-cache coreutils diffutils less git openssh-client
 COPY tk /usr/local/bin/tk
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=jb /usr/local/bin/jb /usr/local/bin/jb
