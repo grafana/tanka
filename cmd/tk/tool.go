@@ -70,7 +70,7 @@ func jpathCmd() *cli.Command {
 		}
 
 		// print export JSONNET_PATH to stdout
-		fmt.Printf("export JSONNET_PATH=%s", strings.Join(jsonnet_path, ":"))
+		fmt.Printf("%s", strings.Join(jsonnet_path, ":"))
 
 		return nil
 	}
