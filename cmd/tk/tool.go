@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/go-clix/cli"
-	"github.com/posener/complete"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -35,15 +33,7 @@ func jpathCmd() *cli.Command {
 	cmd := &cli.Command{
 		Short: "export JSONNET_PATH for use with other jsonnet tools",
 		Use:   "jpath [<file/dir>]",
-		Args: cli.Args{
-			Validator: cli.ValidateFunc(func(args []string) error {
-				if len(args) != 1 {
-					return errors.New("One file or directory is required")
-				}
-				return nil
-			}),
-			Predictor: complete.PredictFiles("*.*sonnet"),
-		},
+		Args:  workflowArgs,
 	}
 
 	debug := cmd.Flags().BoolP("debug", "d", false, "show debug info")
@@ -56,7 +46,7 @@ func jpathCmd() *cli.Command {
 			return fmt.Errorf("Resolving JPATH: %s", err)
 		}
 
-		jsonnet_path, base, root, err := jpath.Resolve(entrypoint)
+		jsonnetpath, base, root, err := jpath.Resolve(entrypoint)
 		if err != nil {
 			return fmt.Errorf("Resolving JPATH: %s", err)
 		}
@@ -66,11 +56,11 @@ func jpathCmd() *cli.Command {
 			log.Println("main:", entrypoint)
 			log.Println("rootDir:", root)
 			log.Println("baseDir:", base)
-			log.Println("jpath:", jsonnet_path)
+			log.Println("jpath:", jsonnetpath)
 		}
 
 		// print export JSONNET_PATH to stdout
-		fmt.Printf("%s", strings.Join(jsonnet_path, ":"))
+		fmt.Printf("%s", strings.Join(jsonnetpath, ":"))
 
 		return nil
 	}
