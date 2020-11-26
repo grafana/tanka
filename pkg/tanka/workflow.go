@@ -2,7 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/fatih/color"
 
@@ -188,12 +187,8 @@ func Eval(dir string, opts Opts) (raw interface{}, err error) {
 	r, _, err := eval(dir, opts.JsonnetOpts)
 	if err != nil {
 		switch err.(type) {
-		case ErrMultipleEnvs:
-			log.Println(err)
-			return r, nil
-		case ErrNoEnv:
-			log.Println(err)
-			return r, nil
+		case ErrNoEnv, ErrMultipleEnvs:
+			return r, err
 		default:
 			return nil, err
 		}
