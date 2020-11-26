@@ -22,6 +22,10 @@ import (
 // provided using ldflags
 const DEFAULT_DEV_VERSION = "dev"
 
+//
+const DefaultEvaluator = "Default"
+const EnvsOnlyEvaluator = "EnvsOnly"
+
 // CURRENT_VERSION is the current version of the running Tanka code
 var CURRENT_VERSION = DEFAULT_DEV_VERSION
 
@@ -65,7 +69,7 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 
 // load runs all processing stages described at the Processed type
 func load(path string, opts Opts) (*loaded, error) {
-	_, env, err := eval(path, opts.JsonnetOpts)
+	_, env, err := ParseEnv(path, opts.JsonnetOpts, DefaultEvaluator)
 	if err != nil {
 		return nil, err
 	}
@@ -91,36 +95,6 @@ func load(path string, opts Opts) (*loaded, error) {
 		Resources: rec,
 		Env:       env,
 	}, nil
-}
-
-// eval evaluates the jsonnet environment at the given file system path
-func eval(path string, opts jsonnet.Opts) (interface{}, *v1alpha1.Environment, error) {
-	return parseEnv(
-		path,
-		opts,
-		func(path string, opts jsonnet.Opts) (string, error) {
-			entrypoint, err := jpath.Entrypoint(path)
-			if err != nil {
-				return "", err
-			}
-
-			// evaluate Jsonnet
-			var raw string
-			if opts.EvalPattern != "" {
-				evalScript := fmt.Sprintf("(import '%s').%s", entrypoint, opts.EvalPattern)
-				raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
-				if err != nil {
-					return "", errors.Wrap(err, "evaluating jsonnet")
-				}
-			} else {
-				raw, err = jsonnet.EvaluateFile(entrypoint, opts)
-				if err != nil {
-					return "", errors.Wrap(err, "evaluating jsonnet")
-				}
-			}
-			return raw, nil
-		},
-	)
 }
 
 // parseSpec parses the `spec.json` of the environment and returns a
@@ -152,10 +126,80 @@ func parseSpec(path string) (*v1alpha1.Environment, error) {
 	return config, nil
 }
 
-type evaluateFunc func(path string, opts jsonnet.Opts) (string, error)
+// defaultEvaluator evaluates the jsonnet environment at the given file system path
+func defaultEvaluator(path string, opts jsonnet.Opts) (string, error) {
+	entrypoint, err := jpath.Entrypoint(path)
+	if err != nil {
+		return "", err
+	}
 
-// parseEnv finds the Environment object at the given file system path
-func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{}, *v1alpha1.Environment, error) {
+	// evaluate Jsonnet
+	var raw string
+	if opts.EvalPattern != "" {
+		evalScript := fmt.Sprintf("(import '%s').%s", entrypoint, opts.EvalPattern)
+		raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
+		if err != nil {
+			return "", errors.Wrap(err, "evaluating jsonnet")
+		}
+	} else {
+		raw, err = jsonnet.EvaluateFile(entrypoint, opts)
+		if err != nil {
+			return "", errors.Wrap(err, "evaluating jsonnet")
+		}
+	}
+	return raw, nil
+}
+
+// envsOnlyEvaluator finds the Environment object (without its .data object) at
+// the given file system path intended for use by the `tk env` command
+func envsOnlyEvaluator(path string, opts jsonnet.Opts) (string, error) {
+	entrypoint, err := jpath.Entrypoint(path)
+	if err != nil {
+		return "", err
+	}
+
+	// Snippet to find all Environment objects and remove the .data object for faster evaluation
+	noData := `
+local noDataEnv(object) =
+  if std.isObject(object)
+  then
+    if std.objectHas(object, 'apiVersion')
+       && std.objectHas(object, 'kind')
+    then
+      if object.kind == 'Environment'
+      then object { data:: {} }
+      else {}
+    else
+      std.mapWithKey(
+        function(key, obj)
+          noDataEnv(obj),
+        object
+      )
+  else if std.isArray(object)
+  then
+    std.map(
+      function(obj)
+        noDataEnv(obj),
+      object
+    )
+  else {};
+
+noDataEnv(import '%s')
+`
+
+	// evaluate Jsonnet with noData snippet
+	var raw string
+	evalScript := fmt.Sprintf(noData, entrypoint)
+	raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
+	if err != nil {
+		return "", errors.Wrap(err, "evaluating jsonnet")
+	}
+	return raw, nil
+}
+
+// ParseEnv evaluates the jsonnet environment at the given file system path and
+// optionally also returns and Environment object
+func ParseEnv(path string, opts jsonnet.Opts, evaluator string) (interface{}, *v1alpha1.Environment, error) {
 	specEnv, err := parseSpec(path)
 	if err != nil {
 		switch err.(type) {
@@ -172,6 +216,16 @@ func parseEnv(path string, opts jsonnet.Opts, evalFn evaluateFunc) (interface{},
 			return nil, nil, errors.Wrap(err, "marshalling environment config")
 		}
 		opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
+	}
+
+	var evalFn func(path string, opts jsonnet.Opts) (string, error)
+	switch evaluator {
+	case EnvsOnlyEvaluator:
+		evalFn = envsOnlyEvaluator
+	case DefaultEvaluator:
+		evalFn = defaultEvaluator
+	default:
+		return nil, nil, ErrInvalidEvaluator
 	}
 
 	raw, err := evalFn(path, opts)
@@ -251,6 +305,7 @@ func checkVersion(constraint string) error {
 	return nil
 }
 
+// extraEnvironments filters out any Environment manifests
 func extractEnvironments(data interface{}) (manifest.List, error) {
 	// Scan for everything that looks like a Kubernetes object
 	extracted, err := process.Extract(data)
@@ -270,58 +325,4 @@ func extractEnvironments(data interface{}) (manifest.List, error) {
 
 	// Extract only object of Kind: Environment
 	return process.Filter(out, process.MustStrExps("Environment/.*")), nil
-}
-
-// EvalEnvs finds the Environment object (without its .data object) at the
-// given file system path intended for use by the `tk env` command
-func EvalEnvs(path string, opts jsonnet.Opts) (*v1alpha1.Environment, error) {
-	_, env, err := parseEnv(
-		path,
-		opts,
-		func(path string, opts jsonnet.Opts) (string, error) {
-			entrypoint, err := jpath.Entrypoint(path)
-			if err != nil {
-				return "", err
-			}
-
-			// Snippet to find all Environment objects and remove the .data object for faster evaluation
-			noData := `
-local noDataEnv(object) =
-  if std.isObject(object)
-  then
-    if std.objectHas(object, 'apiVersion')
-       && std.objectHas(object, 'kind')
-    then
-      if object.kind == 'Environment'
-      then object { data:: {} }
-      else {}
-    else
-      std.mapWithKey(
-        function(key, obj)
-          noDataEnv(obj),
-        object
-      )
-  else if std.isArray(object)
-  then
-    std.map(
-      function(obj)
-        noDataEnv(obj),
-      object
-    )
-  else {};
-
-noDataEnv(import '%s')
-`
-
-			// evaluate Jsonnet with noData snippet
-			var raw string
-			evalScript := fmt.Sprintf(noData, entrypoint)
-			raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
-			if err != nil {
-				return "", errors.Wrap(err, "evaluating jsonnet")
-			}
-			return raw, nil
-		},
-	)
-	return env, err
 }

@@ -184,7 +184,7 @@ func Show(baseDir string, opts Opts) (manifest.List, error) {
 
 // Eval returns the raw evaluated Jsonnet output (without any transformations)
 func Eval(dir string, opts Opts) (raw interface{}, err error) {
-	r, _, err := eval(dir, opts.JsonnetOpts)
+	r, _, err := ParseEnv(dir, opts.JsonnetOpts, DefaultEvaluator)
 	switch err.(type) {
 	case ErrNoEnv, ErrMultipleEnvs:
 		return r, err
