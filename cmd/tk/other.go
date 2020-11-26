@@ -20,7 +20,7 @@ func findBaseDirs() (dirs []string) {
 	}
 
 	if err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
-		requiredFiles := []string{"main.jsonnet", "spec.json"}
+		requiredFiles := []string{"main.jsonnet"}
 		for _, name := range requiredFiles {
 			if _, err := os.Stat(filepath.Join(path, name)); err != nil {
 				// missing file, not a valid environment directory

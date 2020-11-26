@@ -30,7 +30,7 @@ func evalCmd() *cli.Command {
 		jsonnetOpts.EvalPattern = *evalPattern
 		raw, err := tanka.Eval(args[0], jsonnetOpts)
 
-		if err != nil {
+		if raw == nil && err != nil {
 			return err
 		}
 

@@ -55,7 +55,7 @@ func TestResourceDefaults(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			cfg := v1alpha1.Config{
+			cfg := v1alpha1.Environment{
 				Spec: v1alpha1.Spec{
 					ResourceDefaults: v1alpha1.ResourceDefaults{
 						Annotations: c.specAnnotations,

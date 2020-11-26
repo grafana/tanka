@@ -2,9 +2,9 @@ package v1alpha1
 
 import "strings"
 
-// New creates a new Config object with internal values already set
-func New() *Config {
-	c := Config{}
+// New creates a new Environment object with internal values already set
+func New() *Environment {
+	c := Environment{}
 
 	// constants
 	c.APIVersion = "tanka.dev/v1alpha1"
@@ -18,13 +18,13 @@ func New() *Config {
 	return &c
 }
 
-// Config holds the configuration variables for config version v1alpha1
-// ApiVersion and Kind are currently unused, this may change in the future.
-type Config struct {
-	APIVersion string   `json:"apiVersion"`
-	Kind       string   `json:"kind"`
-	Metadata   Metadata `json:"metadata"`
-	Spec       Spec     `json:"spec"`
+// Environment represents a set of resources in relation to its Kubernetes cluster
+type Environment struct {
+	APIVersion string      `json:"apiVersion"`
+	Kind       string      `json:"kind"`
+	Metadata   Metadata    `json:"metadata"`
+	Spec       Spec        `json:"spec"`
+	Data       interface{} `json:"data,omitempty"`
 }
 
 // Metadata is meant for humans and not parsed

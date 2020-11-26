@@ -36,7 +36,7 @@ func envCmd() *cli.Command {
 	return cmd
 }
 
-func envSettingsFlags(env *v1alpha1.Config, fs *pflag.FlagSet) {
+func envSettingsFlags(env *v1alpha1.Environment, fs *pflag.FlagSet) {
 	fs.StringVar(&env.Spec.APIServer, "server", env.Spec.APIServer, "endpoint of the Kubernetes API")
 	fs.StringVar(&env.Spec.APIServer, "server-from-context", env.Spec.APIServer, "set the server to a known one from $KUBECONFIG")
 	fs.StringVar(&env.Spec.Namespace, "namespace", env.Spec.Namespace, "namespace to create objects in")
@@ -61,7 +61,7 @@ func envSetCmd() *cli.Command {
 	}
 
 	// flags
-	tmp := v1alpha1.Config{}
+	tmp := v1alpha1.Environment{}
 	envSettingsFlags(&tmp, cmd.Flags())
 
 	// removed name flag
@@ -136,7 +136,7 @@ func envAddCmd() *cli.Command {
 }
 
 // used by initCmd() as well
-func addEnv(dir string, cfg *v1alpha1.Config) error {
+func addEnv(dir string, cfg *v1alpha1.Environment) error {
 	path, err := filepath.Abs(dir)
 	if err != nil {
 		return err
@@ -216,7 +216,7 @@ func envListCmd() *cli.Command {
 	useNames := cmd.Flags().Bool("names", false, "plain names output")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		envs := []v1alpha1.Config{}
+		envs := []v1alpha1.Environment{}
 		dirs := findBaseDirs()
 		var selector labels.Selector
 		var err error

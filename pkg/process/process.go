@@ -18,7 +18,7 @@ const (
 // - tanka.dev/** labels
 // - filtering
 // - best-effort sorting
-func Process(raw interface{}, cfg v1alpha1.Config, exprs Matchers) (manifest.List, error) {
+func Process(raw interface{}, cfg v1alpha1.Environment, exprs Matchers) (manifest.List, error) {
 	// Scan for everything that looks like a Kubernetes object
 	extracted, err := Extract(raw)
 	if err != nil {
@@ -56,7 +56,7 @@ func Process(raw interface{}, cfg v1alpha1.Config, exprs Matchers) (manifest.Lis
 }
 
 // Label conditionally adds tanka.dev/** labels to each manifest in the List
-func Label(list manifest.List, cfg v1alpha1.Config) manifest.List {
+func Label(list manifest.List, cfg v1alpha1.Environment) manifest.List {
 	for i, m := range list {
 		// inject tanka.dev/environment label
 		if cfg.Spec.InjectLabels {
@@ -68,7 +68,7 @@ func Label(list manifest.List, cfg v1alpha1.Config) manifest.List {
 	return list
 }
 
-func ResourceDefaults(list manifest.List, cfg v1alpha1.Config) manifest.List {
+func ResourceDefaults(list manifest.List, cfg v1alpha1.Environment) manifest.List {
 	for i, m := range list {
 		for k, v := range cfg.Spec.ResourceDefaults.Annotations {
 			annotations := m.Metadata().Annotations()
