@@ -22,10 +22,6 @@ import (
 // provided using ldflags
 const DEFAULT_DEV_VERSION = "dev"
 
-//
-const DefaultEvaluator = "Default"
-const EnvsOnlyEvaluator = "EnvsOnly"
-
 // CURRENT_VERSION is the current version of the running Tanka code
 var CURRENT_VERSION = DEFAULT_DEV_VERSION
 
@@ -69,7 +65,7 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 
 // load runs all processing stages described at the Processed type
 func load(path string, opts Opts) (*loaded, error) {
-	_, env, err := ParseEnv(path, opts.JsonnetOpts, DefaultEvaluator)
+	_, env, err := ParseEnv(path, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
 	if err != nil {
 		return nil, err
 	}
@@ -126,8 +122,8 @@ func parseSpec(path string) (*v1alpha1.Environment, error) {
 	return config, nil
 }
 
-// defaultEvaluator evaluates the jsonnet environment at the given file system path
-func defaultEvaluator(path string, opts jsonnet.Opts) (string, error) {
+// DefaultEvaluator evaluates the jsonnet environment at the given file system path
+func DefaultEvaluator(path string, opts jsonnet.Opts) (string, error) {
 	entrypoint, err := jpath.Entrypoint(path)
 	if err != nil {
 		return "", err
@@ -150,9 +146,9 @@ func defaultEvaluator(path string, opts jsonnet.Opts) (string, error) {
 	return raw, nil
 }
 
-// envsOnlyEvaluator finds the Environment object (without its .data object) at
+// EnvsOnlyEvaluator finds the Environment object (without its .data object) at
 // the given file system path intended for use by the `tk env` command
-func envsOnlyEvaluator(path string, opts jsonnet.Opts) (string, error) {
+func EnvsOnlyEvaluator(path string, opts jsonnet.Opts) (string, error) {
 	entrypoint, err := jpath.Entrypoint(path)
 	if err != nil {
 		return "", err
@@ -197,9 +193,16 @@ noDataEnv(import '%s')
 	return raw, nil
 }
 
+type Evaluator func(path string, opts jsonnet.Opts) (string, error)
+
+type ParseOpts struct {
+	JsonnetOpts jsonnet.Opts
+	Evaluator   Evaluator
+}
+
 // ParseEnv evaluates the jsonnet environment at the given file system path and
 // optionally also returns and Environment object
-func ParseEnv(path string, opts jsonnet.Opts, evaluator string) (interface{}, *v1alpha1.Environment, error) {
+func ParseEnv(path string, opts ParseOpts) (interface{}, *v1alpha1.Environment, error) {
 	specEnv, err := parseSpec(path)
 	if err != nil {
 		switch err.(type) {
@@ -215,20 +218,14 @@ func ParseEnv(path string, opts jsonnet.Opts, evaluator string) (interface{}, *v
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "marshalling environment config")
 		}
-		opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
+		opts.JsonnetOpts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
 	}
 
-	var evalFn func(path string, opts jsonnet.Opts) (string, error)
-	switch evaluator {
-	case EnvsOnlyEvaluator:
-		evalFn = envsOnlyEvaluator
-	case DefaultEvaluator:
-		evalFn = defaultEvaluator
-	default:
-		return nil, nil, ErrInvalidEvaluator
+	if opts.Evaluator == nil {
+		opts.Evaluator = DefaultEvaluator
 	}
 
-	raw, err := evalFn(path, opts)
+	raw, err := opts.Evaluator(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -238,7 +235,7 @@ func ParseEnv(path string, opts jsonnet.Opts, evaluator string) (interface{}, *v
 		return nil, nil, errors.Wrap(err, "unmarshalling data")
 	}
 
-	if opts.EvalPattern != "" {
+	if opts.JsonnetOpts.EvalPattern != "" {
 		// EvalPattern has no affinity with an environment, behave as jsonnet interpreter
 		return data, nil, nil
 	}

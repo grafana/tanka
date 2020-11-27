@@ -1,13 +1,9 @@
 package tanka
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
-
-// ErrInvalidEvaluator
-var ErrInvalidEvaluator = errors.New("invalid evaluator type")
 
 // ErrNoEnv means that the given jsonnet has no Environment object
 // This must not be fatal, some operations work without
