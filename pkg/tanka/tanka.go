@@ -9,6 +9,8 @@ import (
 	"github.com/grafana/tanka/pkg/process"
 )
 
+type JsonnetOpts = jsonnet.Opts
+
 // Opts specify general, optional properties that apply to all actions
 type Opts struct {
 	JsonnetOpts
@@ -17,4 +19,7 @@ type Opts struct {
 	Filters process.Matchers
 }
 
-type JsonnetOpts = jsonnet.Opts
+type ParseOpts struct {
+	JsonnetOpts
+	Evaluator Evaluator
+}
