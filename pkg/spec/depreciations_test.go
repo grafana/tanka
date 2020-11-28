@@ -26,7 +26,7 @@ func TestDeprecated(t *testing.T) {
 }
 `)
 
-	got, err := Parse(data)
+	got, err := Parse(data, "test")
 	require.Equal(t, ErrDeprecated{
 		{old: "server", new: "spec.apiServer"},
 		{old: "team", new: "metadata.labels.team"},

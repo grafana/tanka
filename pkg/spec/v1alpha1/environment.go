@@ -30,6 +30,7 @@ type Environment struct {
 // Metadata is meant for humans and not parsed
 type Metadata struct {
 	Name   string            `json:"name,omitempty"`
+	Path   string            `json:"path,omitempty"`
 	Labels map[string]string `json:"labels,omitempty"`
 }
 

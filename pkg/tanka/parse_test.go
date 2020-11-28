@@ -44,6 +44,7 @@ func TestEvalJsonnet(t *testing.T) {
 				Kind:       v1alpha1.New().Kind,
 				Metadata: v1alpha1.Metadata{
 					Name:   "cases/withspecjson",
+					Path:   "cases/withspecjson",
 					Labels: v1alpha1.New().Metadata.Labels,
 				},
 				Spec: v1alpha1.Spec{
@@ -65,6 +66,7 @@ func TestEvalJsonnet(t *testing.T) {
 				Kind:       v1alpha1.New().Kind,
 				Metadata: v1alpha1.Metadata{
 					Name:   "cases/withspecjson",
+					Path:   "cases/withspecjson",
 					Labels: v1alpha1.New().Metadata.Labels,
 				},
 				Spec: v1alpha1.Spec{
@@ -97,6 +99,7 @@ func TestEvalJsonnet(t *testing.T) {
 				Kind:       v1alpha1.New().Kind,
 				Metadata: v1alpha1.Metadata{
 					Name:   "withenv",
+					Path:   "cases/withenv/main.jsonnet",
 					Labels: v1alpha1.New().Metadata.Labels,
 				},
 				Spec: v1alpha1.Spec{

@@ -20,7 +20,7 @@ const Specfile = "spec.json"
 
 // ParseDir parses the given environments `spec.json` into a `v1alpha1.Environment`
 // object with the name set to the directories name
-func ParseDir(baseDir, name string) (*v1alpha1.Environment, error) {
+func ParseDir(baseDir, path string) (*v1alpha1.Environment, error) {
 	fi, err := os.Stat(baseDir)
 	if err != nil {
 		return nil, err
@@ -33,23 +33,24 @@ func ParseDir(baseDir, name string) (*v1alpha1.Environment, error) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			c := v1alpha1.New()
-			c.Metadata.Name = name
-			return c, ErrNoSpec{name}
+			c.Metadata.Name = path // legacy behavior
+			c.Metadata.Path = path
+			return c, ErrNoSpec{path}
 		}
 		return nil, err
 	}
 
-	c, err := Parse(data)
+	c, err := Parse(data, path)
 	if c != nil {
 		// set the name field
-		c.Metadata.Name = name
+		c.Metadata.Name = path // legacy behavior
 	}
 
 	return c, err
 }
 
 // Parse parses the json `data` into a `v1alpha1.Environment` object.
-func Parse(data []byte) (*v1alpha1.Environment, error) {
+func Parse(data []byte, path string) (*v1alpha1.Environment, error) {
 	config := v1alpha1.New()
 	if err := json.Unmarshal(data, config); err != nil {
 		return nil, errors.Wrap(err, "parsing spec.json")
@@ -63,6 +64,8 @@ func Parse(data []byte) (*v1alpha1.Environment, error) {
 	if !regexp.MustCompile("^.+://").MatchString(config.Spec.APIServer) {
 		config.Spec.APIServer = "https://" + config.Spec.APIServer
 	}
+
+	config.Metadata.Path = path
 
 	return config, nil
 }
