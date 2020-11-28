@@ -184,7 +184,11 @@ func ParseEnv(path string, opts ParseOpts) (interface{}, *v1alpha1.Environment, 
 		if err != nil {
 			return nil, nil, err
 		}
-		env, err = spec.Parse(marshalled)
+		relpath, err := relativeEntrypoint(path)
+		if err != nil {
+			return nil, nil, err
+		}
+		env, err = spec.Parse(marshalled, relpath)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -243,4 +247,17 @@ func extractEnvironments(data interface{}) (manifest.List, error) {
 
 	// Extract only object of Kind: Environment
 	return process.Filter(out, process.MustStrExps("Environment/.*")), nil
+}
+
+func relativeEntrypoint(path string) (string, error) {
+	entrypoint, err := jpath.Entrypoint(path)
+	if err != nil {
+		return "", err
+	}
+	_, _, rootDir, err := jpath.Resolve(entrypoint)
+	if err != nil {
+		return "", errors.Wrap(err, "resolving jpath")
+	}
+
+	return filepath.Rel(rootDir, entrypoint)
 }
