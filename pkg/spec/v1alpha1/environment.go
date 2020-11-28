@@ -1,6 +1,10 @@
 package v1alpha1
 
-import "strings"
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"strings"
+)
 
 // New creates a new Environment object with internal values already set
 func New() *Environment {
@@ -49,12 +53,19 @@ func (m Metadata) NameLabel() string {
 	return strings.Replace(m.Name, "/", ".", -1)
 }
 
+func (m Metadata) PathHash() string {
+	hash := sha256.New()
+	s := hash.Sum([]byte(m.Path))
+	return hex.EncodeToString(s)
+}
+
 // Spec defines Kubernetes properties
 type Spec struct {
 	APIServer        string           `json:"apiServer"`
 	Namespace        string           `json:"namespace"`
 	DiffStrategy     string           `json:"diffStrategy,omitempty"`
 	InjectLabels     bool             `json:"injectLabels,omitempty"`
+	PruneMark        bool             `json:"pruneMark,omitempty"`
 	ResourceDefaults ResourceDefaults `json:"resourceDefaults"`
 	ExpectVersions   ExpectVersions   `json:"expectVersions"`
 }

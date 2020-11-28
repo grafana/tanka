@@ -11,6 +11,7 @@ import (
 const (
 	MetadataPrefix   = "tanka.dev"
 	LabelEnvironment = MetadataPrefix + "/environment"
+	PruneMark        = MetadataPrefix + "/prune-mark"
 )
 
 // Process converts the raw Jsonnet evaluation result (JSON tree) into a flat
@@ -61,6 +62,9 @@ func Label(list manifest.List, cfg v1alpha1.Environment) manifest.List {
 		// inject tanka.dev/environment label
 		if cfg.Spec.InjectLabels {
 			m.Metadata().Labels()[LabelEnvironment] = cfg.Metadata.NameLabel()
+		}
+		if cfg.Spec.PruneMark {
+			m.Metadata().Labels()[PruneMark] = cfg.Metadata.PathHash()
 		}
 		list[i] = m
 	}

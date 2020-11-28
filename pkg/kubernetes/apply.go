@@ -24,8 +24,12 @@ const AnnotationLastApplied = "kubectl.kubernetes.io/last-applied-configuration"
 // Orphaned returns previously created resources that are missing from the
 // local state. It uses UIDs to safely identify objects.
 func (k *Kubernetes) Orphaned(state manifest.List) (manifest.List, error) {
-	if !k.Env.Spec.InjectLabels {
-		return nil, fmt.Errorf(`spec.injectLabels is set to false in your spec.json. Tanka needs to add
+	if k.Env.Spec.InjectLabels {
+		return nil, fmt.Errorf(`spec.injectLabels for pruning is deprecated, please use spec.pruneMark instead.  See
+https://tanka.dev/garbage-collection for more details.`)
+	}
+	if !k.Env.Spec.PruneMark {
+		return nil, fmt.Errorf(`spec.pruneMark is set to false in your spec.json. Tanka needs to add
 a label to your resources to reliably detect which were removed from Jsonnet.
 See https://tanka.dev/garbage-collection for more details.`)
 	}
@@ -61,7 +65,7 @@ See https://tanka.dev/garbage-collection for more details.`)
 	fmt.Print("fetching previously created resources .. ")
 	// get all resources matching our label
 	matched, err := k.ctl.GetByLabels("", kinds, map[string]string{
-		process.LabelEnvironment: k.Env.Metadata.NameLabel(),
+		process.PruneMark: k.Env.Metadata.PathHash(),
 	})
 	if err != nil {
 		return nil, err

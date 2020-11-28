@@ -34,6 +34,14 @@ func TestProcess(t *testing.T) {
 			},
 		},
 		{
+			name: "pruneMark",
+			deep: testDataRegular().Deep,
+			flat: mapToList(testDataRegular().Flat),
+			spec: v1alpha1.Spec{
+				PruneMark: true,
+			},
+		},
+		{
 			name: "targets",
 			deep: testDataDeep().Deep,
 			flat: manifest.List{
@@ -116,6 +124,13 @@ func TestProcess(t *testing.T) {
 			if config.Spec.InjectLabels {
 				for i, m := range c.flat {
 					m.Metadata().Labels()[LabelEnvironment] = config.Metadata.NameLabel()
+					c.flat[i] = m
+				}
+			}
+
+			if config.Spec.PruneMark {
+				for i, m := range c.flat {
+					m.Metadata().Labels()[PruneMark] = config.Metadata.PathHash()
 					c.flat[i] = m
 				}
 			}
