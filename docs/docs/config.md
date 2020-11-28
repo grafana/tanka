@@ -43,8 +43,11 @@ Tanka's behavior can be customized per Environment using a file called `spec.jso
     "diffStrategy": "[native, subset]" | default = "auto",
 
     // Whether to add a "tanka.dev/environment" label to each created resource.
+    "injectLabels": <boolean> | default = false,
+
+    // Whether to add a "tanka.dev/prune-mark" label to each created resource.
     // Required for garbage collection ("tk prune").
-    "injectLabels": <boolean> | default = false
+    "pruneMark": <boolean> | default = false
   }
 }
 ```
