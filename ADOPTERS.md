@@ -1,2 +1,3 @@
 * Everquote
+* GitLab
 * Grafana Labs
