@@ -17,17 +17,18 @@ resource definition, you can still consume Helm resources, as described below.
 ## Consuming Helm Charts from Jsonnet
 
 Helm support is provided using the
-[`github.com/grafana/jsonnet-libs/helm-util`](https://github.com/grafana/jsonnet-libs/tree/master/helm-util)
+[`github.com/grafana/jsonnet-libs/tanka-util`](https://github.com/grafana/jsonnet-libs/tree/master/tanka-util)
 library.  Install it with:
 ```bash
-jb install github.com/grafana/jsonnet-libs/helm-util
+jb install github.com/grafana/jsonnet-libs/tanka-util
 ```
 
 The following example shows how to extract the individual resources of the
 [`grafana`](https://hub.helm.sh/charts/grafana/grafana) Helm Chart:
 
 ```jsonnet
-local helm = (import "github.com/grafana/jsonnet-libs/helm-util/helm.libsonnet").new(std.thisFile);
+local tanka = import "github.com/grafana/jsonnet-libs/tanka-util/main.libsonnet";
+local helm = tanka.helm.new(std.thisFile);
 
 {
   grafana: helm.template("grafana", "./charts/grafana", {
@@ -165,11 +166,12 @@ using [`TANKA_HELM_PATH`](/env-vars#tanka_helm_path)
 ### opts.calledFrom unset
 
 This occurs, when Tanka was not told where it `helm.template()` was invoked
-from. This most likely means you didn't call `new(std.thisFile)` when importing `helm-util`:
+from. This most likely means you didn't call `new(std.thisFile)` when importing `tanka-util`:
 
 ```jsonnet
-local helm = (import "github.com/grafana/jsonnet-libs/helm-util/helm.libsonnet").new(std.thisFile);
-                                                                                 ↑ This is important
+local tanka = import "github.com/grafana/jsonnet-libs/tanka-util/main.libsonnet";
+local helm = tanka.helm.new(std.thisFile);
+                       ↑ This is important
 ```
 
 ### Failed to find Chart
