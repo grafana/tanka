@@ -1,0 +1,132 @@
+---
+name: "Inline environments"
+route: "/inline-environments"
+menu: Advanced features
+---
+
+# Inline environments
+
+Inline environments is the practice of defining the environment's config inline
+for evaluation at runtime as opposed to configuring it statically in
+`spec.json`.
+
+## Converting to an inline environment
+
+Converting a traditional `spec.json` environment into an inline environment is quite
+straight forward. Based on the example from [Using Jsonnet](tutorial/jsonnet):
+
+The directory structure:
+
+```sh
+├── environments
+│   └── default # default environment
+│       ├── main.jsonnet # main file
+│       └── spec.json # environment's config
+├── jsonnetfile.json
+├── lib # libraries
+└── vendor # external libraries
+```
+
+The original files look like this:
+
+```jsonnet
+// main.jsonnet
+{
+  some_deployment: {/* ... */ },
+  some_service: {/* ... */ },
+}
+```
+
+
+```js
+// spec.json
+{
+  "apiVersion": "tanka.dev/v1alpha1",
+  "kind": "Environment",
+  "metadata": {
+    "name": "default"
+  },
+  "spec": {
+    "apiServer": "https://127.0.0.1:6443",
+    "namespace": "monitoring"
+  }
+}
+```
+
+Converting is a simple as bringing in the `spec.json` into `main.jsonnet` and
+moving the original `main.jsonnet` scope into the `data:` element.
+
+```jsonnet
+// main.jsonnet
+{
+  apiVersion: 'tanka.dev/v1alpha1',
+  kind: 'Environment',
+  metadata: {
+    name: 'default',
+  },
+  spec: {
+    apiServer: 'https://127.0.0.1:6443',
+    namespace: 'monitoring',
+  },
+  data: { // original main.jsonnet data
+    some_deployment: {/* ... */ },
+    some_service: {/* ... */ },
+  },
+}
+```
+
+
+## Use case: variable apiServer
+
+Even though the `apiServer` directive is originally meant to prevent that the
+manifests don't get accidentally applied to the wrong Kubernetes cluster, there
+is a valid use case for making the `apiServer` variable: Local test clusters.
+
+Instead of modifying `spec.json` each time, with inline environments it is
+possible to leverage powerful jsonnet concepts, for example with top level
+arguments:
+
+```jsonnet
+// environments/minikube-test-setup/main.jsonnet
+function(apiServer) {
+  apiVersion: 'tanka.dev/v1alpha1',
+  kind: 'Environment',
+  metadata: {
+    name: 'minikube-test-setup',
+  },
+  spec: {
+    apiServer: apiServer,
+    namespace: 'monitoring',
+  },
+  data: { /* ... */ },
+}
+```
+
+Applying this to a local Kubernetes cluster can be done like this:
+
+```bash
+$ tk apply --tla-str apiServer=https://127.0.0.1:4758 environments/minikube-test-setup
+```
+
+Similarly this can be used to configure any part of the Environment object, like
+`namespace:`, `metadata.labels`, ...
+
+## Caveats
+
+### `import "tk"`
+
+Inline environments cannot use [`import "tk"`](config#jsonnet-access) anymore as
+this information was populated before jsonnet evaluation by the existence of
+`spec.json`.
+
+### `tk env`
+
+The different `tk env` subcommands are heavily based on the `spec.json`
+approach. `tk env list` will continue to work as expected, `tk env
+(add|remove|set)` will only work for `spec.json` based environments.
+
+### Multiple inline environments
+
+Having multiple inline environments is currently unsupported during Kubernetes
+operations, with an exception for `tk eval`, which will happily render it to
+json.
