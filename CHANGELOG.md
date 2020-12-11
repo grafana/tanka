@@ -1,5 +1,91 @@
 # Changelog
 
+## 0.13 (2020-12-11)
+
+#### :building_construction: Inline environments
+
+One of the most debated features of the past months has landed: defining Tanka
+Environments inline. It is now possible to leverage all powerful Jsonnet
+concepts to modify your Tanka Environments. See
+https://tanka.dev/inline-environments for more details.
+
+#### :wheel_of_dharma: Kustomize support
+
+In 0.12 we brought in [Helm support](#wheel_of_dharma-helm-support), similarly
+Tanka now also comes with Kustomize support.
+
+* We have refactored `helm-util` into
+  [`tanka-util`](https://github.com/grafana/jsonnet-libs/blob/master/tanka-util)
+  to support both `helm.template()` and `kustomize.build()` use cases from a
+  common base.
+* Jsonnet-native overwriting of Kustomizations
+
+Have a look at https://tanka.dev/kustomize on how to use all this goodness.
+Also https://tanka.dev/helm has been updated to match the library changes.
+
+> This feature is currently experimental. We believe it is feature complete, but
+> further usage in the field may lead to adjustments
+
+#### :sparkles: Export `JSONNET_PATH`
+
+Tanka :heart: Jsonnet, and so do you. With this release, you can now access the
+`JSONNET_PATH` that Tanka uses to find all libraries. Try something this in your
+environment:
+
+```console
+$ JSONNET_PATH=$(tk tool jpath environments/prometheus) jsonnet-lint environments/prometheus/main.jsonnet
+```
+
+#### :speech_balloon: Github Discussions
+
+The Tanka project trying out GitHub Discussions as the primary support channel:
+
+- :mag: It is searchable, so information never gets lost in Slack again
+- :busts_in_silhouette: No longer sign-up for two platforms
+- :mega: Reach both, the team and other community members
+
+Head over to https://github.com/grafana/tanka/discussions and start the discussion!
+
+### Features
+
+- **jsonnet**: Allow alternative entrypoints
+  **([#389](https://github.com/grafana/tanka/pull/389))**
+- **jsonnet** :sparkles:: Support for inline environment
+  **([#403](https://github.com/grafana/tanka/pull/403))**
+- **jsonnet, cli** :sparkles:: `tk tool jpath` can be used to export `JSONNET_PATH`
+  **([#427](https://github.com/grafana/tanka/pull/427))**
+- **jsonnet, docker**: Add `openssh-client` to Docker image
+  **([#429](https://github.com/grafana/tanka/pull/429))** (**@xvzf**)
+
+* **k8s** :sparkles:: Render Kustomize into Jsonnet
+  **([#422](https://github.com/grafana/tanka/pull/422))**
+* **k8s**: Add `metadata.Namespace` directive, always the path relative to the project root
+  **([#435](https://github.com/grafana/tanka/pull/435))**
+
+- **helm**: Chart tool: Check chart versions and update accordingly
+  **([#420](https://github.com/grafana/tanka/pull/420))** (**@craigfurman**)
+- **helm,docker**: Add `helm` client to Docker image
+  **([#430](https://github.com/grafana/tanka/pull/430))** (**@ducharmemp**)
+
+* **api**: Introduce the concept of Evaluators
+  **([#431](https://github.com/grafana/tanka/pull/431))**
+
+
+### Bug Fixes
+
+- **helm**: Chart tool: Detect already pulled charts
+  **([#402](https://github.com/grafana/tanka/pull/402))** (**justinwalz**)
+- **helm**: Chart tool: Use new URL for stable helm repo
+  **([#425](https://github.com/grafana/tanka/pull/425))**
+
+* **cli**: Environment path as name relative to the project root
+  **([#404](https://github.com/grafana/tanka/pull/404))** (**mwasilew2**)
+* **cli**: Normalize `tk fmt` paths on Windows
+  **([#411](https://github.com/grafana/tanka/pull/411))** (**nlowe**)
+* **cli**: Confirmation prompts on Windows
+  **([#413](https://github.com/grafana/tanka/pull/413))** (**nlowe**)
+
+
 ## 0.12 (2020-10-05)
 
 Like good wine, some things need time. After 3 months of intense development we
@@ -18,7 +104,7 @@ Just by upgrading to 0.12, you have access to every single Helm chart on the
 planet, right inside of Tanka! Read more on https://tanka.dev/helm
 
 > This feature is currently experimental. We believe it is feature complete, but
-> further usage in the filed may lead to adjustments
+> further usage in the field may lead to adjustments
 
 #### :house: Top Level Arguments
 
@@ -341,7 +427,7 @@ more partly failed applies!
   **([#235](https://github.com/grafana/tanka/pull/235))**
 
 ## 0.8.0 (2020-02-13)
-
+ (**@xvzf**)
 The next big one is here! Feature packed with environment overriding and `tk export`. Furthermore lots of bugs were fixed, so using Tanka should be much
 smoother now!
 
