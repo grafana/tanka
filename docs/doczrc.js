@@ -48,6 +48,7 @@ export default {
       menu: [
         "Garbage collection",
         "Helm support",
+        "Kustomize support",
         "Output filtering",
         "Exporting as YAML",
       ],
