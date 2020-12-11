@@ -38,7 +38,7 @@ $ JSONNET_PATH=$(tk tool jpath environments/prometheus) jsonnet-lint environment
 
 #### :speech_balloon: Github Discussions
 
-The Tanka project trying out GitHub Discussions as the primary support channel:
+The Tanka project is trying out GitHub Discussions as the primary support channel:
 
 - :mag: It is searchable, so information never gets lost in Slack again
 - :busts_in_silhouette: No longer sign-up for two platforms
