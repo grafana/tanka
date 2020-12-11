@@ -29,8 +29,9 @@ type Environment struct {
 
 // Metadata is meant for humans and not parsed
 type Metadata struct {
-	Name   string            `json:"name,omitempty"`
-	Labels map[string]string `json:"labels,omitempty"`
+	Name      string            `json:"name,omitempty"`
+	Namespace string            `json:"namespace,omitempty"`
+	Labels    map[string]string `json:"labels,omitempty"`
 }
 
 // Has and Get make Metadata a simple wrapper for labels.Labels to use our map in their querier
