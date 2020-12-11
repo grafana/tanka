@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -30,29 +31,40 @@ func toolCmd() *cli.Command {
 
 func jpathCmd() *cli.Command {
 	cmd := &cli.Command{
-		Short: "print information about the jpath",
-		Use:   "jpath",
-		Run: func(cmd *cli.Command, args []string) error {
-			pwd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			path, base, root, err := jpath.Resolve(pwd)
-			if err != nil {
-				return fmt.Errorf("Resolving JPATH: %s", err)
-			}
-			entrypoint, err := jpath.Entrypoint(base)
-			if err != nil {
-				return fmt.Errorf("Resolving JPATH: %s", err)
-			}
-			fmt.Println("main:", entrypoint)
-			fmt.Println("rootDir:", root)
-			fmt.Println("baseDir:", base)
-			fmt.Println("jpath:", path)
-
-			return nil
-		},
+		Short: "export JSONNET_PATH for use with other jsonnet tools",
+		Use:   "jpath [<file/dir>]",
+		Args:  workflowArgs,
 	}
+
+	debug := cmd.Flags().BoolP("debug", "d", false, "show debug info")
+
+	cmd.Run = func(cmd *cli.Command, args []string) error {
+		path := args[0]
+
+		entrypoint, err := jpath.Entrypoint(path)
+		if err != nil {
+			return fmt.Errorf("Resolving JPATH: %s", err)
+		}
+
+		jsonnetpath, base, root, err := jpath.Resolve(entrypoint)
+		if err != nil {
+			return fmt.Errorf("Resolving JPATH: %s", err)
+		}
+
+		if *debug {
+			// log to debug info to stderr
+			log.Println("main:", entrypoint)
+			log.Println("rootDir:", root)
+			log.Println("baseDir:", base)
+			log.Println("jpath:", jsonnetpath)
+		}
+
+		// print export JSONNET_PATH to stdout
+		fmt.Printf("%s", strings.Join(jsonnetpath, ":"))
+
+		return nil
+	}
+
 	return cmd
 }
 
