@@ -1,8 +1,10 @@
 # download kubectl
-FROM alpine as kubectl
+FROM golang:alpine as kubectl
 RUN apk add --no-cache curl
 RUN export VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt) &&\
-    curl -o /usr/local/bin/kubectl -L https://storage.googleapis.com/kubernetes-release/release/${VERSION}/bin/linux/amd64/kubectl &&\
+    export OS=$(go env GOOS) && \
+    export ARCH=$(go env GOARCH) &&\
+    curl -o /usr/local/bin/kubectl -L https://storage.googleapis.com/kubernetes-release/release/${VERSION}/bin/${OS}/${ARCH}/kubectl &&\
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
@@ -20,7 +22,7 @@ RUN apk add --no-cache jq curl
 RUN export TAG=$(curl --silent "https://api.github.com/repos/helm/helm/releases/latest" | jq -r .tag_name) &&\
     export OS=$(go env GOOS) &&\
     export ARCH=$(go env GOARCH) &&\
-    curl -SL "https://get.helm.sh/helm-$TAG-$OS-$ARCH.tar.gz" > helm.tgz && \
+    curl -SL "https://get.helm.sh/helm-${TAG}-${OS}-${ARCH}.tar.gz" > helm.tgz && \
     tar -xvf helm.tgz --strip-components=1
 
 # assemble final container
