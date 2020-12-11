@@ -47,7 +47,7 @@ func NativeFunc(k Kustomize) *jsonnet.NativeFunction {
 			callerDir := filepath.Dir(opts.CalledFrom)
 			actual_path := filepath.Join(callerDir, path)
 			if _, err := os.Stat(actual_path); err != nil {
-				return nil, fmt.Errorf("kustomizeBuild: Failed to find kustomize at '%s': %s.", actual_path, err)
+				return nil, fmt.Errorf("kustomizeBuild: Failed to find kustomization at '%s': %s. See https://tanka.dev/kustomize#failed-to-find-kustomization", actual_path, err)
 			}
 
 			// render resources
@@ -79,7 +79,7 @@ func parseOpts(data interface{}) (*JsonnetOpts, error) {
 
 	// Kustomize paths are only allowed at relative paths. Use conf.CalledFrom to find the callers directory
 	if opts.CalledFrom == "" {
-		return nil, fmt.Errorf("kustomizeBuild: 'opts.calledFrom' is unset or empty.\nTanka needs this to find your Kustomize.\n")
+		return nil, fmt.Errorf("kustomizeBuild: 'opts.calledFrom' is unset or empty.\nTanka needs this to find your Kustomize. See https://tanka.dev/kustomize#optscalledfrom-unset\n")
 	}
 
 	return &opts, nil
