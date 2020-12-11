@@ -68,6 +68,11 @@ type Charts struct {
 	Helm Helm
 }
 
+// chartManifest represents a Helm chart's Chart.yaml
+type chartManifest struct {
+	Version string `yaml:"version"`
+}
+
 // ChartDir returns the directory pulled charts are saved in
 func (c Charts) ChartDir() string {
 	return filepath.Join(c.projectRoot, c.Manifest.Directory)
@@ -95,12 +100,33 @@ func (c Charts) Vendor() error {
 	for _, r := range c.Manifest.Requires {
 		chartName := parseReqName(r.Chart)
 		chartPath := filepath.Join(dir, chartName)
-		if _, err := os.Stat(chartPath); err == nil {
-			log.Printf(" %s@%s exists", r.Chart, r.Version.String())
-			continue
+
+		_, err := os.Stat(chartPath)
+		if err == nil {
+			chartManifestPath := filepath.Join(chartPath, "Chart.yaml")
+			chartManifestBytes, err := ioutil.ReadFile(chartManifestPath)
+			if err != nil {
+				return fmt.Errorf("reading chart manifest: %w", err)
+			}
+			var chartYAML chartManifest
+			if err := yaml.Unmarshal(chartManifestBytes, &chartYAML); err != nil {
+				return fmt.Errorf("unmarshalling chart manifest: %w", err)
+			}
+
+			if chartYAML.Version == r.Version.String() {
+				log.Printf(" %s@%s exists", r.Chart, r.Version.String())
+				continue
+			} else {
+				log.Printf("Removing %s@%s", r.Chart, r.Version.String())
+				if err := os.RemoveAll(chartPath); err != nil {
+					return err
+				}
+			}
+		} else if !os.IsNotExist(err) {
+			return err
 		}
 
-		err := c.Helm.Pull(r.Chart, r.Version.String(), PullOpts{
+		err = c.Helm.Pull(r.Chart, r.Version.String(), PullOpts{
 			Destination: dir,
 			Opts:        Opts{Repositories: c.Manifest.Repositories},
 		})
