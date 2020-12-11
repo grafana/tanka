@@ -10,6 +10,12 @@ Inline environments is the practice of defining the environment's config inline
 for evaluation at runtime as opposed to configuring it statically in
 `spec.json`.
 
+The general take away is:
+
+* `spec.json` will no longer be used
+* `main.jsonnet` is expected to render a `tanka.dev/Environment` object
+* this object is expected to hold Kubernetes objects at `.data`
+
 ## Converting to an inline environment
 
 Converting a traditional `spec.json` environment into an inline environment is quite
@@ -38,7 +44,7 @@ The original files look like this:
 ```
 
 
-```js
+```json
 // spec.json
 {
   "apiVersion": "tanka.dev/v1alpha1",
