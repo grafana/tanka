@@ -6,9 +6,10 @@ RUN export VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/r
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
-FROM golang as jb
+FROM golang:alpine as jb
 WORKDIR /tmp
-RUN git clone https://github.com/jsonnet-bundler/jsonnet-bundler &&\
+RUN apk add --no-cache git make bash &&\
+    git clone https://github.com/jsonnet-bundler/jsonnet-bundler &&\
     cd jsonnet-bundler &&\
     make static &&\
     mv _output/jb /usr/local/bin/jb
