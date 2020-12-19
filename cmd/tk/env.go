@@ -17,6 +17,7 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
 )
 
@@ -217,9 +218,16 @@ func envListCmd() *cli.Command {
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		envs := []v1alpha1.Environment{}
-		dirs := findBaseDirs()
+		pwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		dirs, err := tanka.FindBaseDirs(pwd)
+		if err != nil {
+			return err
+		}
+
 		var selector labels.Selector
-		var err error
 
 		if *labelSelector != "" {
 			selector, err = labels.Parse(*labelSelector)
