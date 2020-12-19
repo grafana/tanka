@@ -232,10 +232,10 @@ func envRemoveCmd() *cli.Command {
 
 func envListCmd() *cli.Command {
 	cmd := &cli.Command{
-		Use:     "list",
+		Use:     "list <path>",
 		Aliases: []string{"ls"},
-		Short:   "list environments",
-		Args:    cli.ArgsNone(),
+		Short:   "list environments relative to <path>",
+		Args:    workflowArgs,
 	}
 
 	useJSON := cmd.Flags().Bool("json", false, "json output")
@@ -244,9 +244,13 @@ func envListCmd() *cli.Command {
 	useNames := cmd.Flags().Bool("names", false, "plain names output")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		pwd, err := os.Getwd()
+		dir := args[0]
+		stat, err := os.Stat(dir)
 		if err != nil {
 			return err
+		}
+		if !stat.IsDir() {
+			return fmt.Errorf("Not a directory: %s", dir)
 		}
 
 		var selector labels.Selector
@@ -257,7 +261,7 @@ func envListCmd() *cli.Command {
 			}
 		}
 
-		envs, err := tanka.FindEnvironments(pwd, selector)
+		envs, err := tanka.FindEnvironments(dir, selector)
 		if err != nil {
 			return err
 		}
