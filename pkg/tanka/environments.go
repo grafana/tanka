@@ -15,11 +15,11 @@ const BASEDIR_INDICATOR = "main.jsonnet"
 // FindBaseDirs searches for possible environments
 func FindBaseDirs(workdir string) (dirs []string, err error) {
 	_, _, _, err = jpath.Resolve(workdir)
-	if err != nil {
+	if err == jpath.ErrorNoRoot {
 		return nil, err
 	}
 
-	if err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(workdir, func(path string, info os.FileInfo, err error) error {
 		if _, err := os.Stat(filepath.Join(path, BASEDIR_INDICATOR)); err != nil {
 			// missing file, not a valid environment directory
 			return nil
@@ -34,7 +34,7 @@ func FindBaseDirs(workdir string) (dirs []string, err error) {
 
 // FindEnvironments searches for actual environments
 // ignores main.jsonnet if no environments found
-func FindEnvironments(workdir string, selector labels.Selector) (envs []v1alpha1.Environment, err error) {
+func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha1.Environment, err error) {
 	dirs, err := FindBaseDirs(workdir)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func FindEnvironments(workdir string, selector labels.Selector) (envs []v1alpha1
 		}
 
 		if selector == nil || selector.Empty() || selector.Matches(env.Metadata) {
-			envs = append(envs, *env)
+			envs = append(envs, env)
 		}
 	}
 
