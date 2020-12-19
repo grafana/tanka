@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"text/tabwriter"
@@ -227,18 +226,12 @@ func envListCmd() *cli.Command {
 	useNames := cmd.Flags().Bool("names", false, "plain names output")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		envs := []v1alpha1.Environment{}
 		pwd, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		dirs, err := tanka.FindBaseDirs(pwd)
 		if err != nil {
 			return err
 		}
 
 		var selector labels.Selector
-
 		if *labelSelector != "" {
 			selector, err = labels.Parse(*labelSelector)
 			if err != nil {
@@ -246,15 +239,9 @@ func envListCmd() *cli.Command {
 			}
 		}
 
-		for _, dir := range dirs {
-			env := setupConfiguration(dir)
-			if env == nil {
-				log.Printf("Could not setup configuration from %q", dir)
-				continue
-			}
-			if selector == nil || selector.Empty() || selector.Matches(env.Metadata) {
-				envs = append(envs, *env)
-			}
+		envs, err := tanka.FindEnvironments(pwd, selector)
+		if err != nil {
+			return err
 		}
 
 		if *useJSON {
