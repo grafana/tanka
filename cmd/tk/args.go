@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/go-clix/cli"
 	"github.com/posener/complete"
@@ -22,8 +23,16 @@ var workflowArgs = cli.Args{
 			return nil
 		}
 
-		if len(dirs) != 0 {
-			return dirs
+		var reldirs []string
+		for _, dir := range dirs {
+			reldir, err := filepath.Rel(pwd, dir)
+			if err == nil {
+				reldirs = append(reldirs, reldir)
+			}
+		}
+
+		if len(reldirs) != 0 {
+			return reldirs
 		}
 
 		return complete.PredictDirs("*").Predict(args)
