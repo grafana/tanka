@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-clix/cli"
 
-	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
 )
@@ -49,7 +48,7 @@ func applyCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts.Filters = stringsToRegexps(vars.targets)
+		opts.Filters = tanka.StringsToRegexps(vars.targets)
 		opts.JsonnetOpts = getJsonnetOpts()
 
 		return tanka.Apply(args[0], opts)
@@ -94,7 +93,7 @@ func deleteCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts.Filters = stringsToRegexps(vars.targets)
+		opts.Filters = tanka.StringsToRegexps(vars.targets)
 		opts.JsonnetOpts = getJsonnetOpts()
 
 		return tanka.Delete(args[0], opts)
@@ -120,7 +119,7 @@ func diffCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts.Filters = stringsToRegexps(vars.targets)
+		opts.Filters = tanka.StringsToRegexps(vars.targets)
 		opts.JsonnetOpts = getJsonnetOpts()
 
 		changes, err := tanka.Diff(args[0], opts)
@@ -167,7 +166,7 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 
 		pretty, err := tanka.Show(args[0], tanka.Opts{
 			JsonnetOpts: getJsonnetOpts(),
-			Filters:     stringsToRegexps(vars.targets),
+			Filters:     tanka.StringsToRegexps(vars.targets),
 		})
 
 		if err != nil {
@@ -177,12 +176,4 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 		return pageln(pretty.String())
 	}
 	return cmd
-}
-
-func stringsToRegexps(exps []string) process.Matchers {
-	regexs, err := process.StrExps(exps...)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return regexs
 }
