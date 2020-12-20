@@ -25,4 +25,5 @@ type ParseOpts struct {
 	JsonnetOpts
 	Evaluator Evaluator
 	Selector  labels.Selector
+	Parallel  int
 }
