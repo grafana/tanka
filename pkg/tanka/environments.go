@@ -46,7 +46,7 @@ func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha
 		Evaluator: EnvsOnlyEvaluator,
 		Selector:  selector,
 	}
-	envs, errs := ParseEnvs(dirs, opts, PARALLEL)
+	envs, errs := ParseEnvs(dirs, opts)
 
 	var returnErrs string
 	for _, err := range errs {
@@ -66,11 +66,15 @@ func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha
 }
 
 // ParseEnvs evaluates multiple environments in parallel
-func ParseEnvs(paths []string, opts ParseOpts, numParallel int) (envs []*v1alpha1.Environment, errs []error) {
+func ParseEnvs(paths []string, opts ParseOpts) (envs []*v1alpha1.Environment, errs []error) {
 	wg := sync.WaitGroup{}
 	envsChan := make(chan parseEnvsRoutineOpts)
 	var allErrors []error
 
+	numParallel := PARALLEL
+	if opts.Parallel > 0 {
+		numParallel = opts.Parallel
+	}
 	for i := 0; i < numParallel; i++ {
 		wg.Add(1)
 		go func() {
