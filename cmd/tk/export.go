@@ -63,11 +63,13 @@ func exportCmd() *cli.Command {
 			return fmt.Errorf("Parsing name format: %s", err)
 		}
 
+		_, env, err := tanka.ParseEnv(args[0], tanka.ParseOpts{JsonnetOpts: getJsonnetOpts()})
+		if err != nil {
+			return err
+		}
+
 		// get the manifests
-		res, err := tanka.Show(args[0], tanka.Opts{
-			JsonnetOpts: getJsonnetOpts(),
-			Filters:     stringsToRegexps(vars.targets),
-		})
+		res, err := tanka.LoadManifests(env, stringsToRegexps(vars.targets))
 		if err != nil {
 			return err
 		}
