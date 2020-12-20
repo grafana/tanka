@@ -5,6 +5,8 @@
 package tanka
 
 import (
+	"k8s.io/apimachinery/pkg/labels"
+
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/process"
 )
@@ -22,4 +24,5 @@ type Opts struct {
 type ParseOpts struct {
 	JsonnetOpts
 	Evaluator Evaluator
+	Selector  labels.Selector
 }
