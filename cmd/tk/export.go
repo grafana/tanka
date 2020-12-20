@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,6 +16,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/go-clix/cli"
 
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
@@ -34,6 +36,8 @@ func exportCmd() *cli.Command {
 	}
 
 	format := cmd.Flags().String("format", "{{.apiVersion}}.{{.kind}}-{{.metadata.name}}", "https://tanka.dev/exporting#filenames")
+	dirFormat := cmd.Flags().String("dirformat", "{{.spec.namespace}}/{{.metadata.name}}", "based on tanka.dev/Environment object")
+
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
 	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
 
@@ -54,13 +58,23 @@ func exportCmd() *cli.Command {
 		// exit early if the template is bad
 
 		// Replace all os.path separators in string with BelRune for creating subfolders
-		replacedFormat := strings.Replace(*format, string(os.PathSeparator), BelRune, -1)
+		manifestReplaceFormat := strings.Replace(*format, string(os.PathSeparator), BelRune, -1)
 
-		tmpl, err := template.New("").
-			Funcs(sprig.TxtFuncMap()). // register Masterminds/sprig
-			Parse(replacedFormat)      // parse template
+		manifestTemplate, err := template.New("").
+			Funcs(sprig.TxtFuncMap()).   // register Masterminds/sprig
+			Parse(manifestReplaceFormat) // parse template
 		if err != nil {
-			return fmt.Errorf("Parsing name format: %s", err)
+			return fmt.Errorf("Parsing filename format: %s", err)
+		}
+
+		// Replace all os.path separators in string with BelRune for creating subfolders
+		directoryReplaceFormat := strings.Replace(*dirFormat, string(os.PathSeparator), BelRune, -1)
+
+		directoryTemplate, err := template.New("").
+			Funcs(sprig.TxtFuncMap()).    // register Masterminds/sprig
+			Parse(directoryReplaceFormat) // parse template
+		if err != nil {
+			return fmt.Errorf("Parsing directory format: %s", err)
 		}
 
 		_, env, err := tanka.ParseEnv(args[0], tanka.ParseOpts{JsonnetOpts: getJsonnetOpts()})
@@ -74,10 +88,33 @@ func exportCmd() *cli.Command {
 			return err
 		}
 
+		raw, err := json.Marshal(env)
+		if err != nil {
+			return err
+		}
+
+		var m manifest.Manifest
+		if err := json.Unmarshal(raw, &m); err != nil {
+			return err
+		}
+
+		buf := bytes.Buffer{}
+		if err := directoryTemplate.Execute(&buf, m); err != nil {
+			log.Fatalln("executing directory template:", err)
+		}
+
+		// Replace all os.path separators in string in order to not accidentally create subfolders
+		dir := strings.Replace(buf.String(), string(os.PathSeparator), "-", -1)
+		// Replace the BEL character inserted with a path separator again in order to create a subfolder
+		dir = strings.Replace(dir, BelRune, string(os.PathSeparator), -1)
+
+		// Create all subfolders in path
+		to = filepath.Join(to, dir)
+
 		// write each to a file
 		for _, m := range res {
 			buf := bytes.Buffer{}
-			if err := tmpl.Execute(&buf, m); err != nil {
+			if err := manifestTemplate.Execute(&buf, m); err != nil {
 				log.Fatalln("executing name template:", err)
 			}
 
