@@ -54,7 +54,6 @@ func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha
 		case ErrNoEnv:
 			continue
 		default:
-			fmt.Print(err)
 			returnErrs = fmt.Sprintf("%s\n%s", returnErrs, err)
 		}
 	}
@@ -127,7 +126,7 @@ func parseEnvsRoutine(envsChan <-chan parseEnvsRoutineOpts) error {
 	for req := range envsChan {
 		_, env, err := ParseEnv(req.path, req.opts)
 		if err != nil {
-			return err
+			return fmt.Errorf("%w: %s", err, req.path)
 		}
 		*req.env = *env
 	}

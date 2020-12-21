@@ -44,7 +44,7 @@ func exportCmd() *cli.Command {
 			Merge:       *merge,
 			JsonnetOpts: getJsonnetOpts(),
 		}
-		return tanka.ExportEnvironment(args[0], args[1], &opts)
+		return tanka.ExportEnvironments([]string{args[0]}, args[1], &opts)
 	}
 	return cmd
 }

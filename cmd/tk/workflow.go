@@ -48,7 +48,11 @@ func applyCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts.Filters = tanka.StringsToRegexps(vars.targets)
+		filters, err := tanka.StringsToRegexps(vars.targets)
+		if err != nil {
+			return err
+		}
+		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 
 		return tanka.Apply(args[0], opts)
@@ -93,7 +97,11 @@ func deleteCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts.Filters = tanka.StringsToRegexps(vars.targets)
+		filters, err := tanka.StringsToRegexps(vars.targets)
+		if err != nil {
+			return err
+		}
+		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 
 		return tanka.Delete(args[0], opts)
@@ -119,7 +127,11 @@ func diffCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts.Filters = tanka.StringsToRegexps(vars.targets)
+		filters, err := tanka.StringsToRegexps(vars.targets)
+		if err != nil {
+			return err
+		}
+		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 
 		changes, err := tanka.Diff(args[0], opts)
@@ -164,9 +176,14 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return nil
 		}
 
+		filters, err := tanka.StringsToRegexps(vars.targets)
+		if err != nil {
+			return err
+		}
+
 		pretty, err := tanka.Show(args[0], tanka.Opts{
 			JsonnetOpts: getJsonnetOpts(),
-			Filters:     tanka.StringsToRegexps(vars.targets),
+			Filters:     filters,
 		})
 
 		if err != nil {
