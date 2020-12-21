@@ -22,6 +22,11 @@ import (
 // in a valid filepath by accident. Only when we include it.
 const BelRune = string(rune(7))
 
+// When exporting manifests to files, it becomes increasingly hard to map manifests back to its environment, this file
+// can be used to map the files back to their environment. This is aimed to be used by CI/CD but can also be used for
+// debugging purposes.
+const manifestFile = "manifest.json"
+
 type ExportEnvOpts struct {
 	Format    string
 	DirFormat string
@@ -41,6 +46,9 @@ func DefaultExportEnvOpts() ExportEnvOpts {
 }
 
 func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
+	// Keep track of which file maps to which environment
+	fileToEnv := map[string]string{}
+
 	// dir must be empty
 	empty, err := dirEmpty(to)
 	if err != nil {
@@ -107,6 +115,8 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 			// Create all subfolders in path
 			path := filepath.Join(toDir, name+"."+opts.Extension)
 
+			fileToEnv[path] = env.Metadata.Namespace
+
 			// Abort if already exists
 			if exists, err := fileExists(path); err != nil {
 				return err
@@ -122,6 +132,20 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 			if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
 				return fmt.Errorf("writing manifest: %s", err)
 			}
+		}
+	}
+
+	if len(fileToEnv) != 0 {
+		data, err := json.MarshalIndent(fileToEnv, "", "    ")
+		if err != nil {
+			return err
+		}
+		path := filepath.Join(to, manifestFile)
+		if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+			return fmt.Errorf("creating filepath '%s': %s", filepath.Dir(path), err)
+		}
+		if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+			return err
 		}
 	}
 
