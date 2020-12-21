@@ -23,12 +23,12 @@ import (
 const BelRune = string(rune(7))
 
 type ExportEnvOpts struct {
-	Format      string
-	DirFormat   string
-	Extension   string
-	Targets     []string
-	Merge       bool
-	JsonnetOpts JsonnetOpts
+	Format    string
+	DirFormat string
+	Extension string
+	Targets   []string
+	Merge     bool
+	ParseOpts ParseOpts
 }
 
 func DefaultExportEnvOpts() ExportEnvOpts {
@@ -62,7 +62,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 		return fmt.Errorf("Parsing directory format: %s", err)
 	}
 
-	envs, err := ParseEnvs(paths, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
+	envs, err := ParseEnvs(paths, opts.ParseOpts)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 		}
 
 		// Create all subfolders in path
-		to = filepath.Join(to, dir)
+		toDir := filepath.Join(to, dir)
 
 		// write each to a file
 		for _, m := range res {
@@ -105,7 +105,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 			}
 
 			// Create all subfolders in path
-			path := filepath.Join(to, name+"."+opts.Extension)
+			path := filepath.Join(toDir, name+"."+opts.Extension)
 
 			// Abort if already exists
 			if exists, err := fileExists(path); err != nil {
