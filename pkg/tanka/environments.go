@@ -48,24 +48,26 @@ func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha
 	}
 	envs, err = ParseEnvs(dirs, opts)
 
-	switch err.(type) {
-	case ErrParseEnvs:
-		// ignore ErrNoEnv errors
-		e := err.(ErrParseEnvs)
-		var errors []error
-		for _, err := range e.errors {
-			switch err.(type) {
-			case ErrNoEnv:
-				continue
-			default:
-				errors = append(errors, err)
+	if err != nil {
+		switch err.(type) {
+		case ErrParseEnvs:
+			// ignore ErrNoEnv errors
+			e := err.(ErrParseEnvs)
+			var errors []error
+			for _, err := range e.errors {
+				switch err.(type) {
+				case ErrNoEnv:
+					continue
+				default:
+					errors = append(errors, err)
+				}
 			}
+			if len(errors) != 0 {
+				return nil, ErrParseEnvs{errors: errors}
+			}
+		default:
+			return nil, err
 		}
-		if len(errors) != 0 {
-			return nil, ErrParseEnvs{errors: errors}
-		}
-	default:
-		return nil, err
 	}
 
 	return envs, nil
