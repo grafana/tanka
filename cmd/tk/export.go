@@ -1,18 +1,9 @@
 package main
 
 import (
-	"io"
-	"os"
-
 	"github.com/go-clix/cli"
-
 	"github.com/grafana/tanka/pkg/tanka"
 )
-
-// BelRune is a string of the Ascii character BEL which made computers ring in ancient times
-// We use it as "magic" char for the subfolder creation as it is a non printable character and thereby will never be
-// in a valid filepath by accident. Only when we include it.
-const BelRune = string(rune(7))
 
 func exportCmd() *cli.Command {
 	args := workflowArgs
@@ -47,31 +38,4 @@ func exportCmd() *cli.Command {
 		return tanka.ExportEnvironments([]string{args[0]}, args[1], &opts)
 	}
 	return cmd
-}
-
-func fileExists(name string) (bool, error) {
-	_, err := os.Stat(name)
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-func dirEmpty(dir string) (bool, error) {
-	f, err := os.Open(dir)
-	if os.IsNotExist(err) {
-		return true, os.MkdirAll(dir, os.ModePerm)
-	} else if err != nil {
-		return false, err
-	}
-	defer f.Close()
-
-	_, err = f.Readdirnames(1)
-	if err == io.EOF {
-		return true, nil
-	}
-	return false, err
 }
