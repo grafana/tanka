@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
-
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/pkg/errors"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/process"
@@ -42,7 +41,7 @@ func DefaultExportEnvOpts() ExportEnvOpts {
 	}
 }
 
-func ExportEnvironment(path, to string, opts *ExportEnvOpts) error {
+func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 	// dir must be empty
 	empty, err := dirEmpty(to)
 	if err != nil {
@@ -64,59 +63,70 @@ func ExportEnvironment(path, to string, opts *ExportEnvOpts) error {
 		return fmt.Errorf("Parsing directory format: %s", err)
 	}
 
-	_, env, err := ParseEnv(path, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
-	if err != nil {
-		return err
+	envs, errs := ParseEnvs(paths, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
+	if len(errs) != 0 {
+		returnErr := errors.New("Unable to parse selected Environments")
+		for _, err := range errs {
+			returnErr = errors.Wrap(returnErr, err.Error())
+		}
+		return returnErr
 	}
 
-	// get the manifests
-	res, err := LoadManifests(env, StringsToRegexps(opts.Targets))
-	if err != nil {
-		return err
-	}
-
-	raw, err := json.Marshal(env)
-	if err != nil {
-		return err
-	}
-
-	var m manifest.Manifest
-	if err := json.Unmarshal(raw, &m); err != nil {
-		return err
-	}
-
-	dir, err := applyTemplate(directoryTemplate, m)
-	if err != nil {
-		log.Fatalln("executing directory template:", err)
-	}
-
-	// Create all subfolders in path
-	to = filepath.Join(to, dir)
-
-	// write each to a file
-	for _, m := range res {
-		name, err := applyTemplate(manifestTemplate, m)
+	for _, env := range envs {
+		filter, err := StringsToRegexps(opts.Targets)
 		if err != nil {
-			log.Fatalln("executing name template:", err)
+			return err
+		}
+
+		// get the manifests
+		res, err := LoadManifests(env, filter)
+		if err != nil {
+			return err
+		}
+
+		raw, err := json.Marshal(env)
+		if err != nil {
+			return err
+		}
+
+		var m manifest.Manifest
+		if err := json.Unmarshal(raw, &m); err != nil {
+			return err
+		}
+
+		dir, err := applyTemplate(directoryTemplate, m)
+		if err != nil {
+			return fmt.Errorf("executing directory template: %w", err)
 		}
 
 		// Create all subfolders in path
-		path := filepath.Join(to, name+"."+opts.Extension)
+		to = filepath.Join(to, dir)
 
-		// Abort if already exists
-		if exists, err := fileExists(path); err != nil {
-			return err
-		} else if exists {
-			return fmt.Errorf("File '%s' already exists. Aborting", path)
-		}
+		// write each to a file
+		for _, m := range res {
+			name, err := applyTemplate(manifestTemplate, m)
+			if err != nil {
+				return fmt.Errorf("executing name template: %w", err)
+			}
 
-		// Write file
-		if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-			return fmt.Errorf("creating filepath '%s': %s", filepath.Dir(path), err)
-		}
-		data := m.String()
-		if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
-			return fmt.Errorf("writing manifest: %s", err)
+			// Create all subfolders in path
+			path := filepath.Join(to, name+"."+opts.Extension)
+
+			// Abort if already exists
+			if exists, err := fileExists(path); err != nil {
+				return err
+			} else if exists {
+				return fmt.Errorf("File '%s' already exists. Aborting", path)
+			}
+
+			// Write file
+			if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+				return fmt.Errorf("creating filepath '%s': %s", filepath.Dir(path), err)
+			}
+			data := m.String()
+			if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+				return fmt.Errorf("writing manifest: %s", err)
+			}
 		}
 	}
 
@@ -177,10 +187,10 @@ func applyTemplate(template *template.Template, m manifest.Manifest) (path strin
 	return path, nil
 }
 
-func StringsToRegexps(exps []string) process.Matchers {
+func StringsToRegexps(exps []string) (process.Matchers, error) {
 	regexs, err := process.StrExps(exps...)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
-	return regexs
+	return regexs, nil
 }
