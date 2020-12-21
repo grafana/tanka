@@ -12,7 +12,6 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/pkg/errors"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/process"
@@ -63,13 +62,9 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 		return fmt.Errorf("Parsing directory format: %s", err)
 	}
 
-	envs, errs := ParseEnvs(paths, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
-	if len(errs) != 0 {
-		returnErr := errors.New("Unable to parse selected Environments")
-		for _, err := range errs {
-			returnErr = errors.Wrap(returnErr, err.Error())
-		}
-		return returnErr
+	envs, err := ParseEnvs(paths, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
+	if err != nil {
+		return err
 	}
 
 	for _, env := range envs {

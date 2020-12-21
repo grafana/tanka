@@ -46,26 +46,33 @@ func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha
 		Evaluator: EnvsOnlyEvaluator,
 		Selector:  selector,
 	}
-	envs, errs := ParseEnvs(dirs, opts)
+	envs, err = ParseEnvs(dirs, opts)
 
-	var returnErrs string
-	for _, err := range errs {
-		switch err.(type) {
-		case ErrNoEnv:
-			continue
-		default:
-			returnErrs = fmt.Sprintf("%s\n%s", returnErrs, err)
+	switch err.(type) {
+	case ErrParseEnvs:
+		// ignore ErrNoEnv errors
+		e := err.(ErrParseEnvs)
+		var errors []error
+		for _, err := range e.errors {
+			switch err.(type) {
+			case ErrNoEnv:
+				continue
+			default:
+				errors = append(errors, err)
+			}
 		}
-	}
-	if len(returnErrs) != 0 {
-		return nil, fmt.Errorf("Unable to parse selected Environments: \n%s", returnErrs)
+		if len(errors) != 0 {
+			return nil, ErrParseEnvs{errors: errors}
+		}
+	default:
+		return nil, err
 	}
 
 	return envs, nil
 }
 
 // ParseEnvs evaluates multiple environments in parallel
-func ParseEnvs(paths []string, opts ParseOpts) (envs []*v1alpha1.Environment, errs []error) {
+func ParseEnvs(paths []string, opts ParseOpts) (envs []*v1alpha1.Environment, err error) {
 	wg := sync.WaitGroup{}
 	envsChan := make(chan parseEnvsRoutineOpts)
 	var allErrors []error
@@ -110,7 +117,7 @@ func ParseEnvs(paths []string, opts ParseOpts) (envs []*v1alpha1.Environment, er
 	}
 
 	if len(allErrors) != 0 {
-		return envs, allErrors
+		return envs, ErrParseEnvs{errors: allErrors}
 	}
 
 	return envs, nil
