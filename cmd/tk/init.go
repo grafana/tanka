@@ -23,6 +23,7 @@ func initCmd() *cli.Command {
 
 	force := cmd.Flags().BoolP("force", "f", false, "ignore the working directory not being empty")
 	installK8sLibFlag := cmd.Flags().Bool("k8s", true, "set to false to skip installation of k.libsonnet")
+	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		failed := false
@@ -48,7 +49,7 @@ func initCmd() *cli.Command {
 		}
 
 		cfg := v1alpha1.New()
-		if err := addEnv("environments/default", cfg); err != nil {
+		if err := addEnv("environments/default", cfg, *inline); err != nil {
 			return err
 		}
 
