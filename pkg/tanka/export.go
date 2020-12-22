@@ -28,12 +28,12 @@ const BelRune = string(rune(7))
 const manifestFile = "manifest.json"
 
 type ExportEnvOpts struct {
-	Format    string
-	DirFormat string
-	Extension string
-	Targets   []string
-	Merge     bool
-	ParseOpts ParseOpts
+	Format    string    // formatting the filename based on the exported Kubernetes manifest
+	DirFormat string    // formatting the directory based on the exported Environment
+	Extension string    // extension of the filename
+	Merge     bool      // merge export with existing directory
+	Targets   []string  // optional: only export specified Kubernetes manifests
+	ParseOpts ParseOpts // optional: options for parsing Environments
 }
 
 func DefaultExportEnvOpts() ExportEnvOpts {
