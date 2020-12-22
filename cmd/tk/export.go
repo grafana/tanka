@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/go-clix/cli"
-	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/tanka"
 )
@@ -24,33 +23,29 @@ func exportCmd() *cli.Command {
 		Args:  args,
 	}
 
-	defaultOpts := tanka.DefaultExportEnvOpts()
+	opts := tanka.DefaultExportEnvOpts()
 
-	format := cmd.Flags().String("format", defaultOpts.Format, "https://tanka.dev/exporting#filenames")
-	dirFormat := cmd.Flags().String("dirformat", defaultOpts.DirFormat, "based on tanka.dev/Environment object")
+	opts.Format = *cmd.Flags().String("format", opts.Format, "https://tanka.dev/exporting#filenames")
+	opts.DirFormat = *cmd.Flags().String("dirformat", opts.DirFormat, "based on tanka.dev/Environment object")
 
-	extension := cmd.Flags().String("extension", defaultOpts.Extension, "File extension")
-	merge := cmd.Flags().Bool("merge", defaultOpts.Merge, "Allow merging with existing directory")
-	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
-	labelSelector := cmd.Flags().StringP("selector", "l", "", "Label selector. Uses the same syntax as kubectl does")
+	opts.Extension = *cmd.Flags().String("extension", opts.Extension, "File extension")
+	opts.Merge = *cmd.Flags().Bool("merge", opts.Merge, "Allow merging with existing directory")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getLabelSelector := labelSelectorFlag(cmd.Flags())
+
+	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		var selector labels.Selector
-		var err error
-		if *labelSelector != "" {
-			selector, err = labels.Parse(*labelSelector)
-			if err != nil {
-				return err
-			}
-		}
+		opts.Targets = vars.targets
+		opts.ParseOpts.JsonnetOpts = getJsonnetOpts()
+		opts.ParseOpts.Selector = getLabelSelector()
 
 		var paths []string
 		for _, path := range args[1:] {
 			if *recursive {
-				envs, err := tanka.FindEnvironments(path, selector)
+				envs, err := tanka.FindEnvironments(path, opts.ParseOpts.Selector)
 				if err != nil {
 					return err
 				}
@@ -58,11 +53,11 @@ func exportCmd() *cli.Command {
 					paths = append(paths, env.Metadata.Namespace)
 				}
 			} else {
-				opts := tanka.ParseOpts{
+				parseOpts := tanka.ParseOpts{
 					Evaluator: tanka.EnvsOnlyEvaluator,
-					Selector:  selector,
+					Selector:  opts.ParseOpts.Selector,
 				}
-				_, _, err := tanka.ParseEnv(path, opts)
+				_, _, err := tanka.ParseEnv(path, parseOpts)
 				if err != nil {
 					return err
 				}
@@ -70,17 +65,6 @@ func exportCmd() *cli.Command {
 			}
 		}
 
-		opts := tanka.ExportEnvOpts{
-			Format:    *format,
-			DirFormat: *dirFormat,
-			Extension: *extension,
-			Targets:   vars.targets,
-			Merge:     *merge,
-			ParseOpts: tanka.ParseOpts{
-				Selector:    selector,
-				JsonnetOpts: getJsonnetOpts(),
-			},
-		}
 		return tanka.ExportEnvironments(paths, args[0], &opts)
 	}
 	return cmd

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/spf13/pflag"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/grafana/tanka/pkg/tanka"
@@ -19,6 +20,21 @@ func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
 	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects (Format: <type>/<name>)")
 	return &v
+}
+
+func labelSelectorFlag(fs *pflag.FlagSet) func() labels.Selector {
+	labelSelector := fs.StringP("selector", "l", "", "Label selector. Uses the same syntax as kubectl does")
+
+	return func() labels.Selector {
+		if *labelSelector != "" {
+			selector, err := labels.Parse(*labelSelector)
+			if err != nil {
+				log.Fatalf("Could not parse selector (-l) %s", *labelSelector)
+			}
+			return selector
+		}
+		return nil
+	}
 }
 
 func jsonnetFlags(fs *pflag.FlagSet) func() tanka.JsonnetOpts {

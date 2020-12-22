@@ -11,7 +11,6 @@ import (
 	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
 	"github.com/posener/complete"
-	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
@@ -241,7 +240,7 @@ func envListCmd() *cli.Command {
 	}
 
 	useJSON := cmd.Flags().Bool("json", false, "json output")
-	labelSelector := cmd.Flags().StringP("selector", "l", "", "Label selector. Uses the same syntax as kubectl does")
+	getLabelSelector := labelSelectorFlag(cmd.Flags())
 
 	useNames := cmd.Flags().Bool("names", false, "plain names output")
 
@@ -255,15 +254,7 @@ func envListCmd() *cli.Command {
 			return fmt.Errorf("Not a directory: %s", dir)
 		}
 
-		var selector labels.Selector
-		if *labelSelector != "" {
-			selector, err = labels.Parse(*labelSelector)
-			if err != nil {
-				return err
-			}
-		}
-
-		envs, err := tanka.FindEnvironments(dir, selector)
+		envs, err := tanka.FindEnvironments(dir, getLabelSelector())
 		if err != nil {
 			return err
 		}
