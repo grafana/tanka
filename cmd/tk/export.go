@@ -31,6 +31,7 @@ func exportCmd() *cli.Command {
 
 	extension := cmd.Flags().String("extension", defaultOpts.Extension, "File extension")
 	merge := cmd.Flags().Bool("merge", defaultOpts.Merge, "Allow merging with existing directory")
+	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 	labelSelector := cmd.Flags().StringP("selector", "l", "", "Label selector. Uses the same syntax as kubectl does")
 
 	vars := workflowFlags(cmd.Flags())
@@ -46,6 +47,29 @@ func exportCmd() *cli.Command {
 			}
 		}
 
+		var paths []string
+		for _, path := range args[1:] {
+			if *recursive {
+				envs, err := tanka.FindEnvironments(path, selector)
+				if err != nil {
+					return err
+				}
+				for _, env := range envs {
+					paths = append(paths, env.Metadata.Namespace)
+				}
+			} else {
+				opts := tanka.ParseOpts{
+					Evaluator: tanka.EnvsOnlyEvaluator,
+					Selector:  selector,
+				}
+				_, _, err := tanka.ParseEnv(path, opts)
+				if err != nil {
+					return err
+				}
+				paths = append(paths, path)
+			}
+		}
+
 		opts := tanka.ExportEnvOpts{
 			Format:    *format,
 			DirFormat: *dirFormat,
@@ -56,14 +80,6 @@ func exportCmd() *cli.Command {
 				Selector:    selector,
 				JsonnetOpts: getJsonnetOpts(),
 			},
-		}
-		var paths []string
-		for _, path := range args[1:] {
-			dirs, err := tanka.FindBaseDirs(path)
-			if err != nil {
-				return err
-			}
-			paths = append(paths, dirs...)
 		}
 		return tanka.ExportEnvironments(paths, args[0], &opts)
 	}
