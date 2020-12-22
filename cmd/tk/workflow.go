@@ -5,10 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/posener/complete"
-	"github.com/spf13/pflag"
-
 	"github.com/go-clix/cli"
+	"github.com/posener/complete"
 
 	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
@@ -21,16 +19,6 @@ const (
 	// differences between the local config and the cluster
 	ExitStatusDiff = 16
 )
-
-type workflowFlagVars struct {
-	targets []string
-}
-
-func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
-	v := workflowFlagVars{}
-	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects (Format: <type>/<name>)")
-	return &v
-}
 
 func applyCmd() *cli.Command {
 	cmd := &cli.Command{
