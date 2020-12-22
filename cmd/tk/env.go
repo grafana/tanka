@@ -11,7 +11,6 @@ import (
 	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
 	"github.com/posener/complete"
-	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -36,13 +35,6 @@ func envCmd() *cli.Command {
 	)
 
 	return cmd
-}
-
-func envSettingsFlags(env *v1alpha1.Environment, fs *pflag.FlagSet) {
-	fs.StringVar(&env.Spec.APIServer, "server", env.Spec.APIServer, "endpoint of the Kubernetes API")
-	fs.StringVar(&env.Spec.APIServer, "server-from-context", env.Spec.APIServer, "set the server to a known one from $KUBECONFIG")
-	fs.StringVar(&env.Spec.Namespace, "namespace", env.Spec.Namespace, "namespace to create objects in")
-	fs.StringVar(&env.Spec.DiffStrategy, "diff-strategy", env.Spec.DiffStrategy, "specify diff-strategy. Automatically detected otherwise.")
 }
 
 var kubectlContexts = cli.PredictFunc(
