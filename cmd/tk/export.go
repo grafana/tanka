@@ -25,11 +25,10 @@ func exportCmd() *cli.Command {
 
 	opts := tanka.DefaultExportEnvOpts()
 
-	opts.Format = *cmd.Flags().String("format", opts.Format, "https://tanka.dev/exporting#filenames")
-	opts.DirFormat = *cmd.Flags().String("dirformat", opts.DirFormat, "based on tanka.dev/Environment object")
+	opts.Format = cmd.Flags().String("format", *opts.Format, "https://tanka.dev/exporting#filenames")
 
-	opts.Extension = *cmd.Flags().String("extension", opts.Extension, "File extension")
-	opts.Merge = *cmd.Flags().Bool("merge", opts.Merge, "Allow merging with existing directory")
+	opts.Extension = cmd.Flags().String("extension", *opts.Extension, "File extension")
+	opts.Merge = cmd.Flags().Bool("merge", *opts.Merge, "Allow merging with existing directory")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())

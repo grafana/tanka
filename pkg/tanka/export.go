@@ -28,20 +28,21 @@ const BelRune = string(rune(7))
 const manifestFile = "manifest.json"
 
 type ExportEnvOpts struct {
-	Format    string    // formatting the filename based on the exported Kubernetes manifest
-	DirFormat string    // formatting the directory based on the exported Environment
-	Extension string    // extension of the filename
-	Merge     bool      // merge export with existing directory
+	Format    *string   // formatting the filename based on the exported Kubernetes manifest
+	Extension *string   // extension of the filename
+	Merge     *bool     // merge export with existing directory
 	Targets   []string  // optional: only export specified Kubernetes manifests
 	ParseOpts ParseOpts // optional: options for parsing Environments
 }
 
 func DefaultExportEnvOpts() ExportEnvOpts {
+	format := "{{env.spec.namespace}}/{{env.metadata.name}}/{{.apiVersion}}.{{.kind}}-{{.metadata.name}}"
+	extension := "yaml"
+	merge := false
 	return ExportEnvOpts{
-		Format:    "{{.apiVersion}}.{{.kind}}-{{.metadata.name}}",
-		DirFormat: "{{.spec.namespace}}/{{.metadata.name}}",
-		Extension: "yaml",
-		Merge:     false,
+		Format:    &format,
+		Extension: &extension,
+		Merge:     &merge,
 	}
 }
 
@@ -54,28 +55,18 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 	if err != nil {
 		return fmt.Errorf("Checking target dir: %s", err)
 	}
-	if !empty && !opts.Merge {
+	if !empty && !*opts.Merge {
 		return fmt.Errorf("Output dir `%s` not empty. Pass --merge to ignore this", to)
 	}
 
-	// exit early if the template is bad
-
-	manifestTemplate, err := createTemplate(opts.Format)
-	if err != nil {
-		return fmt.Errorf("Parsing filename format: %s", err)
-	}
-
-	directoryTemplate, err := createTemplate(opts.DirFormat)
-	if err != nil {
-		return fmt.Errorf("Parsing directory format: %s", err)
-	}
-
+	// get all environments for paths
 	envs, err := ParseEnvs(paths, opts.ParseOpts)
 	if err != nil {
 		return err
 	}
 
 	for _, env := range envs {
+		// select targets to export
 		filter, err := StringsToRegexps(opts.Targets)
 		if err != nil {
 			return err
@@ -87,33 +78,32 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 			return err
 		}
 
+		// create raw manifest version of env for templating
 		raw, err := json.Marshal(env)
 		if err != nil {
 			return err
 		}
-
-		var m manifest.Manifest
-		if err := json.Unmarshal(raw, &m); err != nil {
+		var menv manifest.Manifest
+		if err := json.Unmarshal(raw, &menv); err != nil {
 			return err
 		}
 
-		dir, err := applyTemplate(directoryTemplate, m)
+		// create template
+		manifestTemplate, err := createTemplate(*opts.Format, menv)
 		if err != nil {
-			return fmt.Errorf("executing directory template: %w", err)
+			return fmt.Errorf("Parsing format: %s", err)
 		}
-
-		// Create all subfolders in path
-		toDir := filepath.Join(to, dir)
 
 		// write each to a file
 		for _, m := range res {
+			// apply template
 			name, err := applyTemplate(manifestTemplate, m)
 			if err != nil {
 				return fmt.Errorf("executing name template: %w", err)
 			}
 
 			// Create all subfolders in path
-			path := filepath.Join(toDir, name+"."+opts.Extension)
+			path := filepath.Join(to, name+"."+*opts.Extension)
 
 			fileToEnv[path] = env.Metadata.Namespace
 
@@ -135,6 +125,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 		}
 	}
 
+	// create manifest file
 	if len(fileToEnv) != 0 {
 		data, err := json.MarshalIndent(fileToEnv, "", "    ")
 		if err != nil {
@@ -179,12 +170,15 @@ func dirEmpty(dir string) (bool, error) {
 	return false, err
 }
 
-func createTemplate(format string) (*template.Template, error) {
+func createTemplate(format string, env manifest.Manifest) (*template.Template, error) {
 	// Replace all os.path separators in string with BelRune for creating subfolders
 	replaceFormat := strings.Replace(format, string(os.PathSeparator), BelRune, -1)
 
+	envMap := template.FuncMap{"env": func() manifest.Manifest { return env }}
+
 	template, err := template.New("").
 		Funcs(sprig.TxtFuncMap()). // register Masterminds/sprig
+		Funcs(envMap).             // register environment mapping
 		Parse(replaceFormat)       // parse template
 	if err != nil {
 		return nil, err
