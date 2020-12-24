@@ -232,11 +232,19 @@ func envRemoveCmd() *cli.Command {
 }
 
 func envListCmd() *cli.Command {
+	args := workflowArgs
+	args.Validator = cli.ValidateFunc(func(args []string) error {
+		if len(args) > 1 {
+			return fmt.Errorf("expects at most 1 arg, received %v", len(args))
+		}
+		return nil
+	})
+
 	cmd := &cli.Command{
-		Use:     "list <path>",
+		Use:     "list [<path>]",
 		Aliases: []string{"ls"},
-		Short:   "list environments relative to <path>",
-		Args:    workflowArgs,
+		Short:   "list environments relative to current dir or <path>",
+		Args:    args,
 	}
 
 	useJSON := cmd.Flags().Bool("json", false, "json output")
@@ -245,7 +253,17 @@ func envListCmd() *cli.Command {
 	useNames := cmd.Flags().Bool("names", false, "plain names output")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		dir := args[0]
+		var dir string
+		var err error
+		if len(args) == 1 {
+			dir = args[0]
+		} else {
+			dir, err = os.Getwd()
+			if err != nil {
+				return nil
+			}
+		}
+
 		stat, err := os.Stat(dir)
 		if err != nil {
 			return err
