@@ -23,12 +23,14 @@ func exportCmd() *cli.Command {
 		Args:  args,
 	}
 
-	opts := tanka.DefaultExportEnvOpts()
+	format := cmd.Flags().String(
+		"format",
+		"{{env.spec.namespace}}/{{env.metadata.name}}/{{.apiVersion}}.{{.kind}}-{{.metadata.name}}",
+		"https://tanka.dev/exporting#filenames",
+	)
 
-	opts.Format = cmd.Flags().String("format", *opts.Format, "https://tanka.dev/exporting#filenames")
-
-	opts.Extension = cmd.Flags().String("extension", *opts.Extension, "File extension")
-	opts.Merge = cmd.Flags().Bool("merge", *opts.Merge, "Allow merging with existing directory")
+	extension := cmd.Flags().String("extension", "yaml", "File extension")
+	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -37,9 +39,18 @@ func exportCmd() *cli.Command {
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts.Targets = vars.targets
-		opts.ParseParallelOpts.ParseOpts.JsonnetOpts = getJsonnetOpts()
-		opts.ParseParallelOpts.Selector = getLabelSelector()
+		opts := tanka.ExportEnvOpts{
+			Format:    *format,
+			Extension: *extension,
+			Merge:     *merge,
+			Targets:   vars.targets,
+			ParseParallelOpts: tanka.ParseParallelOpts{
+				ParseOpts: tanka.ParseOpts{
+					JsonnetOpts: getJsonnetOpts(),
+				},
+				Selector: getLabelSelector(),
+			},
+		}
 
 		var paths []string
 		for _, path := range args[1:] {

@@ -27,28 +27,18 @@ const BelRune = string(rune(7))
 // debugging purposes.
 const manifestFile = "manifest.json"
 
+// ExportEnvOpts specify options on how to export environments
 type ExportEnvOpts struct {
 	// formatting the filename based on the exported Kubernetes manifest
-	Format *string
+	Format string
 	// extension of the filename
-	Extension *string
+	Extension string
 	// merge export with existing directory
-	Merge *bool
+	Merge bool
 	// optional: only export specified Kubernetes manifests
 	Targets []string
 	// optional: options for parsing Environments
 	ParseParallelOpts ParseParallelOpts
-}
-
-func DefaultExportEnvOpts() ExportEnvOpts {
-	format := "{{env.spec.namespace}}/{{env.metadata.name}}/{{.apiVersion}}.{{.kind}}-{{.metadata.name}}"
-	extension := "yaml"
-	merge := false
-	return ExportEnvOpts{
-		Format:    &format,
-		Extension: &extension,
-		Merge:     &merge,
-	}
 }
 
 func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
@@ -60,7 +50,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 	if err != nil {
 		return fmt.Errorf("Checking target dir: %s", err)
 	}
-	if !empty && !*opts.Merge {
+	if !empty && !opts.Merge {
 		return fmt.Errorf("Output dir `%s` not empty. Pass --merge to ignore this", to)
 	}
 
@@ -94,7 +84,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 		}
 
 		// create template
-		manifestTemplate, err := createTemplate(*opts.Format, menv)
+		manifestTemplate, err := createTemplate(opts.Format, menv)
 		if err != nil {
 			return fmt.Errorf("Parsing format: %s", err)
 		}
@@ -108,7 +98,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 			}
 
 			// Create all subfolders in path
-			path := filepath.Join(to, name+"."+*opts.Extension)
+			path := filepath.Join(to, name+"."+opts.Extension)
 
 			fileToEnv[path] = env.Metadata.Namespace
 
