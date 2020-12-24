@@ -47,28 +47,31 @@ func EnvsOnlyEvaluator(path string, opts jsonnet.Opts) (string, error) {
 	// Snippet to find all Environment objects and remove the .data object for faster evaluation
 	noData := `
 local noDataEnv(object) =
-  if std.isObject(object)
-  then
-    if std.objectHas(object, 'apiVersion')
-       && std.objectHas(object, 'kind')
+  std.prune(
+    if std.isObject(object)
     then
-      if object.kind == 'Environment'
-      then object { data:: {} }
-      else {}
-    else
-      std.mapWithKey(
-        function(key, obj)
+      if std.objectHas(object, 'apiVersion')
+         && std.objectHas(object, 'kind')
+      then
+        if object.kind == 'Environment'
+        then object { data:: {} }
+        else {}
+      else
+        std.mapWithKey(
+          function(key, obj)
+            noDataEnv(obj),
+          object
+        )
+    else if std.isArray(object)
+    then
+      std.map(
+        function(obj)
           noDataEnv(obj),
         object
       )
-  else if std.isArray(object)
-  then
-    std.map(
-      function(obj)
-        noDataEnv(obj),
-      object
-    )
-  else {};
+    else {}
+  );
+
 
 noDataEnv(import '%s')
 `
