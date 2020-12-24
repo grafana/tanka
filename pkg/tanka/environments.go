@@ -96,13 +96,11 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 		}()
 	}
 
-	results := make([]*v1alpha1.Environment, len(paths))
-	currentIndex := 0
+	results := make([]*v1alpha1.Environment, 0, len(paths))
 
 	for _, path := range paths {
 		env := &v1alpha1.Environment{}
-		results[currentIndex] = env
-		currentIndex++
+		results = append(results, env)
 		envsChan <- parseJob{
 			path: path,
 			opts: opts.ParseOpts,
@@ -113,10 +111,11 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 	wg.Wait()
 
 	for _, env := range results {
-		if env != nil {
-			if opts.Selector == nil || opts.Selector.Empty() || opts.Selector.Matches(env.Metadata) {
-				envs = append(envs, env)
-			}
+		if env == nil {
+			continue
+		}
+		if opts.Selector == nil || opts.Selector.Empty() || opts.Selector.Matches(env.Metadata) {
+			envs = append(envs, env)
 		}
 	}
 
