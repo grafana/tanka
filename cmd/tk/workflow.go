@@ -8,6 +8,7 @@ import (
 	"github.com/go-clix/cli"
 	"github.com/posener/complete"
 
+	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
 )
@@ -36,7 +37,7 @@ func applyCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		filters, err := tanka.StringsToRegexps(vars.targets)
+		filters, err := process.StrExps(vars.targets...)
 		if err != nil {
 			return err
 		}
@@ -85,7 +86,7 @@ func deleteCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		filters, err := tanka.StringsToRegexps(vars.targets)
+		filters, err := process.StrExps(vars.targets...)
 		if err != nil {
 			return err
 		}
@@ -115,7 +116,7 @@ func diffCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		filters, err := tanka.StringsToRegexps(vars.targets)
+		filters, err := process.StrExps(vars.targets...)
 		if err != nil {
 			return err
 		}
@@ -164,7 +165,7 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return nil
 		}
 
-		filters, err := tanka.StringsToRegexps(vars.targets)
+		filters, err := process.StrExps(vars.targets...)
 		if err != nil {
 			return err
 		}

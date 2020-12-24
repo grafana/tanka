@@ -62,7 +62,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 
 	for _, env := range envs {
 		// select targets to export
-		filter, err := StringsToRegexps(opts.Targets)
+		filter, err := process.StrExps(opts.Targets...)
 		if err != nil {
 			return err
 		}
@@ -193,12 +193,4 @@ func applyTemplate(template *template.Template, m manifest.Manifest) (path strin
 	path = strings.Replace(path, BelRune, string(os.PathSeparator), -1)
 
 	return path, nil
-}
-
-func StringsToRegexps(exps []string) (process.Matchers, error) {
-	regexs, err := process.StrExps(exps...)
-	if err != nil {
-		return nil, err
-	}
-	return regexs, nil
 }
