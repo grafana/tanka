@@ -3,8 +3,6 @@ package tanka
 import (
 	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // ErrNoEnv means that the given jsonnet has no Environment object
@@ -33,9 +31,9 @@ type ErrParseParallel struct {
 }
 
 func (e ErrParseParallel) Error() string {
-	returnErr := errors.New("Unable to parse selected Environments")
+	returnErr := fmt.Sprintf("Unable to parse selected Environments:\n\n")
 	for _, err := range e.errors {
-		returnErr = errors.Wrap(returnErr, err.Error())
+		returnErr = fmt.Sprintf("%s- %s\n", returnErr, err.Error())
 	}
-	return returnErr.Error()
+	return returnErr
 }
