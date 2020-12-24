@@ -74,6 +74,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 		}
 
 		// create raw manifest version of env for templating
+		env.Data = nil
 		raw, err := json.Marshal(env)
 		if err != nil {
 			return err
