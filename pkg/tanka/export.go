@@ -110,28 +110,22 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 				return fmt.Errorf("File '%s' already exists. Aborting", path)
 			}
 
-			// Write file
-			if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-				return fmt.Errorf("creating filepath '%s': %s", filepath.Dir(path), err)
-			}
+			// Write manifest
 			data := m.String()
-			if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
-				return fmt.Errorf("writing manifest: %s", err)
+			if err := writeExportFile(path, []byte(data)); err != nil {
+				return err
 			}
 		}
 	}
 
-	// create manifest file
+	// Write manifest file
 	if len(fileToEnv) != 0 {
 		data, err := json.MarshalIndent(fileToEnv, "", "    ")
 		if err != nil {
 			return err
 		}
 		path := filepath.Join(to, manifestFile)
-		if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-			return fmt.Errorf("creating filepath '%s': %s", filepath.Dir(path), err)
-		}
-		if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
+		if err := writeExportFile(path, data); err != nil {
 			return err
 		}
 	}
@@ -164,6 +158,14 @@ func dirEmpty(dir string) (bool, error) {
 		return true, nil
 	}
 	return false, err
+}
+
+func writeExportFile(path string, data []byte) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		return fmt.Errorf("creating filepath '%s': %s", filepath.Dir(path), err)
+	}
+
+	return ioutil.WriteFile(path, data, 0644)
 }
 
 func createTemplate(format string, env manifest.Manifest) (*template.Template, error) {
