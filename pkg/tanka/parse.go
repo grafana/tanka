@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
-	"reflect"
 
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
@@ -199,11 +198,9 @@ func ParseEnv(path string, opts JsonnetOpts) (interface{}, *v1alpha1.Environment
 			return nil, nil, err
 		}
 		return data, env, nil
-	} else if specEnv != nil { // if no environments found, fallback to original behavior
-		// EnvsOnlyEvaluator explicitly removes Data, we should not add it
-		if reflect.ValueOf(opts.Evaluator).Pointer() != reflect.ValueOf(EnvsOnlyEvaluator).Pointer() {
-			specEnv.Data = data
-		}
+	} else if specEnv != nil {
+		// if no environments found, fallback to original behavior
+		specEnv.Data = data
 		return data, specEnv, nil
 	}
 	// if no environments or spec found, behave as jsonnet interpreter
