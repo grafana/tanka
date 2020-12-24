@@ -38,13 +38,13 @@ func exportCmd() *cli.Command {
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		opts.Targets = vars.targets
-		opts.ParseOpts.JsonnetOpts = getJsonnetOpts()
-		opts.ParseOpts.Selector = getLabelSelector()
+		opts.ParseParallelOpts.ParseOpts.JsonnetOpts = getJsonnetOpts()
+		opts.ParseParallelOpts.Selector = getLabelSelector()
 
 		var paths []string
 		for _, path := range args[1:] {
 			if *recursive {
-				envs, err := tanka.FindEnvironments(path, opts.ParseOpts.Selector)
+				envs, err := tanka.FindEnvironments(path, opts.ParseParallelOpts.Selector)
 				if err != nil {
 					return err
 				}
@@ -54,7 +54,6 @@ func exportCmd() *cli.Command {
 			} else {
 				parseOpts := tanka.ParseOpts{
 					Evaluator: tanka.EnvsOnlyEvaluator,
-					Selector:  opts.ParseOpts.Selector,
 				}
 				_, _, err := tanka.ParseEnv(path, parseOpts)
 				if err != nil {

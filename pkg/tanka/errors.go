@@ -27,12 +27,12 @@ func (e ErrMultipleEnvs) Error() string {
 	return fmt.Sprintf("found multiple Environments (%s) in '%s'", strings.Join(e.names, ", "), e.path)
 }
 
-// ErrParseEnvs is an array of errors collected while parsing environments in parallel
-type ErrParseEnvs struct {
+// ErrParseParallel is an array of errors collected while parsing environments in parallel
+type ErrParseParallel struct {
 	errors []error
 }
 
-func (e ErrParseEnvs) Error() string {
+func (e ErrParseParallel) Error() string {
 	returnErr := errors.New("Unable to parse selected Environments")
 	for _, err := range e.errors {
 		returnErr = errors.Wrap(returnErr, err.Error())
