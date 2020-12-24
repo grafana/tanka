@@ -5,6 +5,8 @@
 package tanka
 
 import (
+	"k8s.io/apimachinery/pkg/labels"
+
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/process"
 )
@@ -17,4 +19,10 @@ type Opts struct {
 
 	// Filters are used to optionally select a subset of the resources
 	Filters process.Matchers
+}
+
+type ParseParallelOpts struct {
+	JsonnetOpts JsonnetOpts
+	Selector    labels.Selector
+	Parallel    int
 }

@@ -12,8 +12,8 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-const BASEDIR_INDICATOR = "main.jsonnet"
-const PARALLEL = 8
+const baseDirIndicator = "main.jsonnet"
+const parallel = 8
 
 // FindBaseDirs searches for possible environments
 func FindBaseDirs(workdir string) (dirs []string, err error) {
@@ -23,7 +23,7 @@ func FindBaseDirs(workdir string) (dirs []string, err error) {
 	}
 
 	if err := filepath.Walk(workdir, func(path string, info os.FileInfo, err error) error {
-		if _, err := os.Stat(filepath.Join(path, BASEDIR_INDICATOR)); err != nil {
+		if _, err := os.Stat(filepath.Join(path, baseDirIndicator)); err != nil {
 			// missing file, not a valid environment directory
 			return nil
 		}
@@ -42,17 +42,19 @@ func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha
 	if err != nil {
 		return nil, err
 	}
-	opts := ParseOpts{
-		Evaluator: EnvsOnlyEvaluator,
-		Selector:  selector,
+	opts := ParseParallelOpts{
+		ParseOpts: ParseOpts{
+			Evaluator: EnvsOnlyEvaluator,
+		},
+		Selector: selector,
 	}
-	envs, err = ParseEnvs(dirs, opts)
+	envs, err = ParseParallel(dirs, opts)
 
 	if err != nil {
 		switch err.(type) {
-		case ErrParseEnvs:
+		case ErrParseParallel:
 			// ignore ErrNoEnv errors
-			e := err.(ErrParseEnvs)
+			e := err.(ErrParseParallel)
 			var errors []error
 			for _, err := range e.errors {
 				switch err.(type) {
@@ -63,7 +65,7 @@ func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha
 				}
 			}
 			if len(errors) != 0 {
-				return nil, ErrParseEnvs{errors: errors}
+				return nil, ErrParseParallel{errors: errors}
 			}
 		default:
 			return nil, err
@@ -73,20 +75,20 @@ func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha
 	return envs, nil
 }
 
-// ParseEnvs evaluates multiple environments in parallel
-func ParseEnvs(paths []string, opts ParseOpts) (envs []*v1alpha1.Environment, err error) {
+// ParseParallel evaluates multiple environments in parallel
+func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Environment, err error) {
 	wg := sync.WaitGroup{}
-	envsChan := make(chan parseEnvsRoutineOpts)
+	envsChan := make(chan parseJob)
 	var allErrors []error
 
-	numParallel := PARALLEL
+	numParallel := parallel
 	if opts.Parallel > 0 {
 		numParallel = opts.Parallel
 	}
 	for i := 0; i < numParallel; i++ {
 		wg.Add(1)
 		go func() {
-			err := parseEnvsRoutine(envsChan)
+			err := parseWorker(envsChan)
 			if err != nil {
 				allErrors = append(allErrors, err)
 			}
@@ -101,9 +103,9 @@ func ParseEnvs(paths []string, opts ParseOpts) (envs []*v1alpha1.Environment, er
 		env := &v1alpha1.Environment{}
 		results[currentIndex] = env
 		currentIndex++
-		envsChan <- parseEnvsRoutineOpts{
+		envsChan <- parseJob{
 			path: path,
-			opts: opts,
+			opts: opts.ParseOpts,
 			env:  env,
 		}
 	}
@@ -119,19 +121,19 @@ func ParseEnvs(paths []string, opts ParseOpts) (envs []*v1alpha1.Environment, er
 	}
 
 	if len(allErrors) != 0 {
-		return envs, ErrParseEnvs{errors: allErrors}
+		return envs, ErrParseParallel{errors: allErrors}
 	}
 
 	return envs, nil
 }
 
-type parseEnvsRoutineOpts struct {
+type parseJob struct {
 	path string
 	opts ParseOpts
 	env  *v1alpha1.Environment
 }
 
-func parseEnvsRoutine(envsChan <-chan parseEnvsRoutineOpts) error {
+func parseWorker(envsChan <-chan parseJob) error {
 	for req := range envsChan {
 		_, env, err := ParseEnv(req.path, req.opts)
 		if err != nil {
