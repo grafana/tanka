@@ -63,9 +63,8 @@ func exportCmd() *cli.Command {
 					paths = append(paths, env.Metadata.Namespace)
 				}
 			} else {
-				parseOpts := tanka.ParseOpts{
-					Evaluator: tanka.EnvsOnlyEvaluator,
-				}
+				parseOpts := opts.ParseParallelOpts.ParseOpts
+				parseOpts.Evaluator = tanka.EnvsOnlyEvaluator
 				_, _, err := tanka.ParseEnv(path, parseOpts)
 				if err != nil {
 					return err
