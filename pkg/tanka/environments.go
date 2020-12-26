@@ -2,6 +2,7 @@ package tanka
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -88,11 +89,11 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 	for i := 0; i < numParallel; i++ {
 		wg.Add(1)
 		go func() {
-			err := parseWorker(envsChan)
-			if err != nil {
-				allErrors = append(allErrors, err)
+			defer wg.Done()
+			errs := parseWorker(envsChan)
+			if errs != nil {
+				allErrors = append(allErrors, errs...)
 			}
-			wg.Done()
 		}()
 	}
 
@@ -132,13 +133,18 @@ type parseJob struct {
 	env  *v1alpha1.Environment
 }
 
-func parseWorker(envsChan <-chan parseJob) error {
+func parseWorker(envsChan <-chan parseJob) (errs []error) {
 	for req := range envsChan {
+		log.Printf("Parsing %s\n", req.path)
 		_, env, err := ParseEnv(req.path, req.opts)
 		if err != nil {
-			return fmt.Errorf("%w: %s", err, req.path)
+			errs = append(errs, fmt.Errorf("%s:\n %w", req.path, err))
+			continue
 		}
 		*req.env = *env
+	}
+	if len(errs) != 0 {
+		return errs
 	}
 	return nil
 }
