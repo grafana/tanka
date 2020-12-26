@@ -9,6 +9,7 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 
+	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -148,7 +149,13 @@ func ParseEnv(path string, opts JsonnetOpts) (interface{}, *v1alpha1.Environment
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "marshalling environment config")
 		}
-		opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
+		// make a copy to prevent race condition in parallel execution
+		injectCode := jsonnet.InjectedCode{}
+		for k, v := range opts.ExtCode {
+			injectCode.Set(k, v)
+		}
+		injectCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
+		opts.ExtCode = injectCode
 	}
 
 	raw, err := EvalJsonnet(path, opts)
