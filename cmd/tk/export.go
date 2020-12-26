@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/go-clix/cli"
+	"github.com/pkg/errors"
 
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
@@ -55,12 +58,19 @@ func exportCmd() *cli.Command {
 		var paths []string
 		for _, path := range args[1:] {
 			if *recursive {
+				rootDir, err := jpath.FindRoot(path)
+				if err != nil {
+					return errors.Wrap(err, "resolving jpath")
+				}
+
+				// get absolute path to Environment
 				envs, err := tanka.FindEnvironments(path, opts.ParseParallelOpts.Selector)
 				if err != nil {
 					return err
 				}
+
 				for _, env := range envs {
-					paths = append(paths, env.Metadata.Namespace)
+					paths = append(paths, filepath.Join(rootDir, env.Metadata.Namespace))
 				}
 				continue
 			}
