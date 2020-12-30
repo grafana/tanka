@@ -27,7 +27,7 @@ func evalCmd() *cli.Command {
 		jsonnetOpts := tanka.Opts{
 			JsonnetOpts: getJsonnetOpts(),
 		}
-		jsonnetOpts.EvalPattern = *evalPattern
+		jsonnetOpts.EvalScript = "(import '%s')." + *evalPattern
 		raw, err := tanka.Eval(args[0], jsonnetOpts)
 
 		if raw == nil && err != nil {
