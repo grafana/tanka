@@ -44,8 +44,8 @@ func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha
 		return nil, err
 	}
 	opts := ParseParallelOpts{
-		ParseOpts: ParseOpts{
-			Evaluator: EnvsOnlyEvaluator,
+		JsonnetOpts: JsonnetOpts{
+			EvalScript: EnvsOnlyEvalScript,
 		},
 		Selector: selector,
 	}
@@ -104,7 +104,7 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 		results = append(results, env)
 		envsChan <- parseJob{
 			path: path,
-			opts: opts.ParseOpts,
+			opts: opts.JsonnetOpts,
 			env:  env,
 		}
 	}
@@ -129,7 +129,7 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 
 type parseJob struct {
 	path string
-	opts ParseOpts
+	opts JsonnetOpts
 	env  *v1alpha1.Environment
 }
 

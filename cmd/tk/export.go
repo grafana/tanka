@@ -48,10 +48,8 @@ func exportCmd() *cli.Command {
 			Merge:     *merge,
 			Targets:   vars.targets,
 			ParseParallelOpts: tanka.ParseParallelOpts{
-				ParseOpts: tanka.ParseOpts{
-					JsonnetOpts: getJsonnetOpts(),
-				},
-				Selector: getLabelSelector(),
+				JsonnetOpts: getJsonnetOpts(),
+				Selector:    getLabelSelector(),
 			},
 		}
 
@@ -75,9 +73,9 @@ func exportCmd() *cli.Command {
 				continue
 			}
 
-			parseOpts := opts.ParseParallelOpts.ParseOpts
-			parseOpts.Evaluator = tanka.EnvsOnlyEvaluator
-			_, _, err := tanka.ParseEnv(path, parseOpts)
+			jsonnetOpts := opts.ParseParallelOpts.JsonnetOpts
+			jsonnetOpts.EvalScript = tanka.EnvsOnlyEvalScript
+			_, _, err := tanka.ParseEnv(path, jsonnetOpts)
 			if err != nil {
 				return err
 			}
