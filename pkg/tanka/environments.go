@@ -2,7 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -135,7 +134,6 @@ type parseJob struct {
 
 func parseWorker(envsChan <-chan parseJob) (errs []error) {
 	for req := range envsChan {
-		log.Printf("Parsing %s\n", req.path)
 		_, env, err := ParseEnv(req.path, req.opts)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s:\n %w", req.path, err))
