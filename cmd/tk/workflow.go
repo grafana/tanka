@@ -4,10 +4,17 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/go-clix/cli"
+	"github.com/manifoldco/promptui"
+	"github.com/pkg/errors"
 	"github.com/posener/complete"
+	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
@@ -165,12 +172,50 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return nil
 		}
 
+		path := args[0]
+		rootDir, err := jpath.FindRoot(path)
+		if err != nil {
+			return errors.Wrap(err, "resolving jpath")
+		}
+		envs, err := tanka.FindEnvironments(path, labels.Everything())
+		if err != nil {
+			return err
+		}
+		paths := make(map[string]string, len(envs))
+		for _, env := range envs {
+			if env != nil {
+				paths[env.Metadata.Name] = filepath.Join(rootDir, env.Metadata.Namespace)
+			}
+		}
+
+		if len(envs) > 1 {
+			names := []string{}
+			for name, _ := range paths {
+				names = append(names, name)
+			}
+			sort.Strings(names)
+			prompt := promptui.Select{
+				Label: "Select Environment",
+				Items: names,
+				Size:  10,
+				Searcher: func(input string, index int) bool {
+					return strings.Contains(names[index], input)
+				},
+			}
+
+			_, selected, err := prompt.Run()
+			if err != nil {
+				return fmt.Errorf("Prompt failed %v\n", err)
+			}
+			path = paths[selected]
+		}
+
 		filters, err := process.StrExps(vars.targets...)
 		if err != nil {
 			return err
 		}
 
-		pretty, err := tanka.Show(args[0], tanka.Opts{
+		pretty, err := tanka.Show(path, tanka.Opts{
 			JsonnetOpts: getJsonnetOpts(),
 			Filters:     filters,
 		})

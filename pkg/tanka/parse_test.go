@@ -11,7 +11,7 @@ func TestEvalJsonnet(t *testing.T) {
 	cases := []struct {
 		baseDir  string
 		expected interface{}
-		env      *v1alpha1.Environment
+		envs     []*v1alpha1.Environment
 	}{
 		{
 			baseDir: "./testdata/cases/array/",
@@ -25,34 +25,36 @@ func TestEvalJsonnet(t *testing.T) {
 					map[string]interface{}{"testCase": "nestedArray[1][1]"},
 				},
 			},
-			env: nil,
+			envs: nil,
 		},
 		{
 			baseDir: "./testdata/cases/object/",
 			expected: map[string]interface{}{
 				"testCase": "object",
 			},
-			env: nil,
+			envs: nil,
 		},
 		{
 			baseDir: "./testdata/cases/withspecjson/",
 			expected: map[string]interface{}{
 				"testCase": "object",
 			},
-			env: &v1alpha1.Environment{
-				APIVersion: v1alpha1.New().APIVersion,
-				Kind:       v1alpha1.New().Kind,
-				Metadata: v1alpha1.Metadata{
-					Name:      "cases/withspecjson",
-					Namespace: "cases/withspecjson",
-					Labels:    v1alpha1.New().Metadata.Labels,
-				},
-				Spec: v1alpha1.Spec{
-					APIServer: "https://localhost",
-					Namespace: "withspec",
-				},
-				Data: map[string]interface{}{
-					"testCase": "object",
+			envs: []*v1alpha1.Environment{
+				{
+					APIVersion: v1alpha1.New().APIVersion,
+					Kind:       v1alpha1.New().Kind,
+					Metadata: v1alpha1.Metadata{
+						Name:      "cases/withspecjson",
+						Namespace: "cases/withspecjson",
+						Labels:    v1alpha1.New().Metadata.Labels,
+					},
+					Spec: v1alpha1.Spec{
+						APIServer: "https://localhost",
+						Namespace: "withspec",
+					},
+					Data: map[string]interface{}{
+						"testCase": "object",
+					},
 				},
 			},
 		},
@@ -61,20 +63,22 @@ func TestEvalJsonnet(t *testing.T) {
 			expected: map[string]interface{}{
 				"testCase": "object",
 			},
-			env: &v1alpha1.Environment{
-				APIVersion: v1alpha1.New().APIVersion,
-				Kind:       v1alpha1.New().Kind,
-				Metadata: v1alpha1.Metadata{
-					Name:      "cases/withspecjson",
-					Namespace: "cases/withspecjson",
-					Labels:    v1alpha1.New().Metadata.Labels,
-				},
-				Spec: v1alpha1.Spec{
-					APIServer: "https://localhost",
-					Namespace: "withspec",
-				},
-				Data: map[string]interface{}{
-					"testCase": "object",
+			envs: []*v1alpha1.Environment{
+				{
+					APIVersion: v1alpha1.New().APIVersion,
+					Kind:       v1alpha1.New().Kind,
+					Metadata: v1alpha1.Metadata{
+						Name:      "cases/withspecjson",
+						Namespace: "cases/withspecjson",
+						Labels:    v1alpha1.New().Metadata.Labels,
+					},
+					Spec: v1alpha1.Spec{
+						APIServer: "https://localhost",
+						Namespace: "withspec",
+					},
+					Data: map[string]interface{}{
+						"testCase": "object",
+					},
 				},
 			},
 		},
@@ -94,33 +98,34 @@ func TestEvalJsonnet(t *testing.T) {
 					"testCase": "object",
 				},
 			},
-			env: &v1alpha1.Environment{
-				APIVersion: v1alpha1.New().APIVersion,
-				Kind:       v1alpha1.New().Kind,
-				Metadata: v1alpha1.Metadata{
-					Name:      "withenv",
-					Namespace: "cases/withenv/main.jsonnet",
-					Labels:    v1alpha1.New().Metadata.Labels,
-				},
-				Spec: v1alpha1.Spec{
-					APIServer: "https://localhost",
-					Namespace: "withenv",
-				},
-				Data: map[string]interface{}{
-					"testCase": "object",
-				},
-			},
+			envs: []*v1alpha1.Environment{
+				{
+					APIVersion: v1alpha1.New().APIVersion,
+					Kind:       v1alpha1.New().Kind,
+					Metadata: v1alpha1.Metadata{
+						Name:      "withenv",
+						Namespace: "cases/withenv/main.jsonnet",
+						Labels:    v1alpha1.New().Metadata.Labels,
+					},
+					Spec: v1alpha1.Spec{
+						APIServer: "https://localhost",
+						Namespace: "withenv",
+					},
+					Data: map[string]interface{}{
+						"testCase": "object",
+					},
+				}},
 		},
 	}
 
 	for _, test := range cases {
-		data, env, e := ParseEnv(test.baseDir, ParseOpts{})
+		data, envs, e := ParseEnv(test.baseDir, ParseOpts{})
 		if data == nil {
 			assert.NoError(t, e)
 		} else if e != nil {
 			assert.IsType(t, ErrNoEnv{}, e)
 		}
 		assert.Equal(t, test.expected, data)
-		assert.Equal(t, test.env, env)
+		assert.Equal(t, test.envs, envs)
 	}
 }

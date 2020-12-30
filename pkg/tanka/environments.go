@@ -2,7 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -82,6 +81,8 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 	envsChan := make(chan parseJob)
 	var allErrors []error
 
+	results := make([]*v1alpha1.Environment, 0)
+
 	numParallel := parallel
 	if opts.Parallel > 0 {
 		numParallel = opts.Parallel
@@ -90,22 +91,20 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			errs := parseWorker(envsChan)
+			parsedEnvs, errs := parseWorker(envsChan)
 			if errs != nil {
 				allErrors = append(allErrors, errs...)
+			}
+			if parsedEnvs != nil {
+				results = append(results, parsedEnvs...)
 			}
 		}()
 	}
 
-	results := make([]*v1alpha1.Environment, 0, len(paths))
-
 	for _, path := range paths {
-		env := &v1alpha1.Environment{}
-		results = append(results, env)
 		envsChan <- parseJob{
 			path: path,
 			opts: opts.ParseOpts,
-			env:  env,
 		}
 	}
 	close(envsChan)
@@ -130,21 +129,20 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 type parseJob struct {
 	path string
 	opts ParseOpts
-	env  *v1alpha1.Environment
+	envs []*v1alpha1.Environment
 }
 
-func parseWorker(envsChan <-chan parseJob) (errs []error) {
+func parseWorker(envsChan <-chan parseJob) (envs []*v1alpha1.Environment, errs []error) {
 	for req := range envsChan {
-		log.Printf("Parsing %s\n", req.path)
-		_, env, err := ParseEnv(req.path, req.opts)
+		_, parsedEnvs, err := ParseEnv(req.path, req.opts)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s:\n %w", req.path, err))
 			continue
 		}
-		*req.env = *env
+		envs = append(envs, parsedEnvs...)
 	}
 	if len(errs) != 0 {
-		return errs
+		return nil, errs
 	}
-	return nil
+	return envs, nil
 }

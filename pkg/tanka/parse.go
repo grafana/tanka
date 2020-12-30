@@ -65,15 +65,24 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 
 // load runs all processing stages described at the Processed type
 func load(path string, opts Opts) (*loaded, error) {
-	_, env, err := ParseEnv(path, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
+	_, envs, err := ParseEnv(path, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
 	if err != nil {
 		return nil, err
 	}
 
-	if env == nil {
+	if envs == nil {
 		return nil, fmt.Errorf("no Tanka environment found")
 	}
 
+	if len(envs) > 1 {
+		names := make([]string, 0)
+		for _, env := range envs {
+			names = append(names, env.Metadata.Name)
+		}
+		return nil, ErrMultipleEnvs{path, names}
+	}
+
+	env := envs[0]
 	rec, err := LoadManifests(env, opts.Filters)
 	if err != nil {
 		return nil, err
@@ -133,7 +142,7 @@ func parseSpec(path string) (*v1alpha1.Environment, error) {
 
 // ParseEnv evaluates the jsonnet environment at the given file system path and
 // optionally also returns and Environment object
-func ParseEnv(path string, opts ParseOpts) (interface{}, *v1alpha1.Environment, error) {
+func ParseEnv(path string, opts ParseOpts) (data interface{}, envs []*v1alpha1.Environment, err error) {
 	specEnv, err := parseSpec(path)
 	if err != nil {
 		switch err.(type) {
@@ -167,7 +176,6 @@ func ParseEnv(path string, opts ParseOpts) (interface{}, *v1alpha1.Environment, 
 		return nil, nil, err
 	}
 
-	var data interface{}
 	if err := json.Unmarshal([]byte(raw), &data); err != nil {
 		return nil, nil, errors.Wrap(err, "unmarshalling data")
 	}
@@ -189,30 +197,28 @@ func ParseEnv(path string, opts ParseOpts) (interface{}, *v1alpha1.Environment, 
 
 	var env *v1alpha1.Environment
 
-	if len(extractedEnvs) > 1 {
-		names := make([]string, 0)
+	if len(extractedEnvs) != 0 {
 		for _, exEnv := range extractedEnvs {
-			names = append(names, exEnv.Metadata().Name())
+			marshalled, err := json.Marshal(exEnv)
+			if err != nil {
+				return nil, nil, err
+			}
+			relpath, err := relativeEntrypoint(path)
+			if err != nil {
+				return nil, nil, err
+			}
+			env, err = spec.Parse(marshalled, relpath)
+			if err != nil {
+				return nil, nil, err
+			}
+			envs = append(envs, env)
 		}
-		return data, nil, ErrMultipleEnvs{path, names}
-	} else if len(extractedEnvs) == 1 {
-		marshalled, err := json.Marshal(extractedEnvs[0])
-		if err != nil {
-			return nil, nil, err
-		}
-		relpath, err := relativeEntrypoint(path)
-		if err != nil {
-			return nil, nil, err
-		}
-		env, err = spec.Parse(marshalled, relpath)
-		if err != nil {
-			return nil, nil, err
-		}
-		return data, env, nil
+		return data, envs, nil
 	} else if specEnv != nil {
 		// if no environments found, fallback to original behavior
 		specEnv.Data = data
-		return data, specEnv, nil
+		envs = append(envs, specEnv)
+		return data, envs, nil
 	}
 	// if no environments or spec found, behave as jsonnet interpreter
 	return data, nil, ErrNoEnv{path}
