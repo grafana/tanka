@@ -37,7 +37,7 @@ func TestFindRoot(t *testing.T) {
 			name:        "missing-basePointer",
 			environment: "environments/default",
 			testdata:    []string{"jsonnetfile.json", "environments/default/"},
-			err:         ErrorNoBase,
+			err:         ErrorNoBase{filename: "main.jsonnet"},
 		},
 		// Scenario: Missing root pointerfile. We expect an ErrorNoRoot.
 		{
