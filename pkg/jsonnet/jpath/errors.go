@@ -5,18 +5,12 @@ import (
 	"fmt"
 )
 
-var (
-	// ErrorNoRoot means no rootDir was found in the parents
-	ErrorNoRoot = errors.New(`Unable to identify the project root.
+// ErrorNoRoot means no rootDir was found in the parent directories
+var ErrorNoRoot = errors.New(`Unable to identify the project root.
 Tried to find 'tkrc.yaml' or 'jsonnetfile.json' in the parent directories.
 Please refer to https://tanka.dev/directory-structure for more information`)
 
-	// ErrorNoBase means no baseDir was found in the parents
-	// ErrorNoBase = errors.New("could not locate entrypoint (usually main.jsonnet) in the parent directories, which is required as the entrypoint for the evaluation.\nRefer to https://tanka.dev/directory-structure for more information")
-	// ErrorNoBase = errors.New(`Unable to identify the environments base directory.
-// `)
-)
-
+// ErrorNoBase means no baseDir was found in the parent directories
 type ErrorNoBase struct {
 	filename string
 }
