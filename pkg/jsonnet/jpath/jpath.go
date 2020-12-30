@@ -35,21 +35,13 @@ func (e ErrorFileNotFound) Error() string {
 // This results in predictable imports, as it doesn't matter whether the user called
 // called the command further down tree or not. A little bit like git.
 func Resolve(path string) (jpath []string, base, root string, err error) {
-	entrypoint, err := Entrypoint(path)
+	root, err = FindRoot(path)
 	if err != nil {
 		return nil, "", "", err
 	}
 
-	root, err = FindRoot(filepath.Dir(entrypoint))
+	base, err = FindBase(path, root)
 	if err != nil {
-		return nil, "", "", err
-	}
-
-	base, err = FindParentFile(filepath.Base(entrypoint), filepath.Dir(entrypoint), root)
-	if err != nil {
-		if _, ok := err.(ErrorFileNotFound); ok {
-			return nil, "", "", ErrorNoBase
-		}
 		return nil, "", "", err
 	}
 
@@ -62,10 +54,15 @@ func Resolve(path string) (jpath []string, base, root string, err error) {
 	}, base, root, nil
 }
 
-// FindRoot searches for a rootDir by the following criteria:
-// - tkrc.yaml is considered first, for a jb-independent way of marking the root
-// - if it is not present (default), jsonnetfile.json is used.
-func FindRoot(start string) (dir string, err error) {
+// FindRoot returns the absolute path of the project root, being the directory
+// that directly holds `tkrc.yaml` if it exists, otherwise the directory that
+// directly holds `jsonnetfile.json`
+func FindRoot(path string) (dir string, err error) {
+	start, err := FsDir(path)
+	if err != nil {
+		return "", err
+	}
+
 	// root path based on os
 	stop := "/"
 	if runtime.GOOS == "windows" {
@@ -80,14 +77,37 @@ func FindRoot(start string) (dir string, err error) {
 
 	// otherwise use jsonnetfile.json
 	root, err = FindParentFile("jsonnetfile.json", start, stop)
-	if err != nil {
-		if _, ok := err.(ErrorFileNotFound); ok {
-			return "", ErrorNoRoot
-		}
+	if _, ok := err.(ErrorFileNotFound); ok {
+		return "", ErrorNoRoot
+	} else if err != nil {
 		return "", err
 	}
 
 	return root, nil
+}
+
+// FindBase returns the absolute path of the environments base directory, the
+// one which directly holds the entrypoint file.
+func FindBase(path string, root string) (string, error) {
+	dir, err := FsDir(path)
+	if err != nil {
+		return "", err
+	}
+
+	filename, err := Filename(path)
+	if err != nil {
+		return "", err
+	}
+
+	base, err := FindParentFile(filename, dir, root)
+
+	if _, ok := err.(ErrorFileNotFound); ok {
+		return "", ErrorNoBase
+	} else if err != nil {
+		return "", err
+	}
+
+	return base, nil
 }
 
 // FindParentFile traverses the parent directory tree for the given `file`,
@@ -116,21 +136,60 @@ func dirContainsFile(files []os.FileInfo, filename string) bool {
 	return false
 }
 
+// FsDir returns the most inner directory of path, as reported by the local
+// filesystem
+func FsDir(path string) (string, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+
+	fi, err := os.Stat(path)
+	if err != nil {
+		return "", err
+	}
+
+	if fi.IsDir() {
+		return path, nil
+	}
+
+	return filepath.Dir(path), nil
+}
+
+// Filename returns the name of the entrypoint file.
+// It DOES NOT return an absolute path, only a plain name like "main.jsonnet"
+// To obtain an absolute path, use Entrypoint() instead.
+func Filename(path string) (string, error) {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return "", err
+	}
+
+	if fi.IsDir() {
+		return DEFAULT_ENTRYPOINT, nil
+	}
+
+	return filepath.Base(fi.Name()), nil
+
+}
+
+// Entrypoint returns the absolute path of the environments entrypoint file (the
+// one passed to jsonnet.EvaluateFile)
 func Entrypoint(path string) (string, error) {
-	filename := DEFAULT_ENTRYPOINT
-
-	entrypoint, err := filepath.Abs(path)
+	root, err := FindRoot(path)
 	if err != nil {
 		return "", err
 	}
 
-	stat, err := os.Stat(entrypoint)
+	base, err := FindBase(path, root)
 	if err != nil {
 		return "", err
 	}
-	if !stat.IsDir() {
-		return entrypoint, nil
+
+	filename, err := Filename(path)
+	if err != nil {
+		return "", err
 	}
 
-	return filepath.Join(entrypoint, filename), nil
+	return filepath.Join(base, filename), nil
 }
