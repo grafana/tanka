@@ -142,7 +142,7 @@ func (c Charts) Vendor() error {
 
 // Add adds every Chart in reqs to the Manifest after validation, and runs
 // Vendor afterwards
-func (c Charts) Add(reqs []string) error {
+func (c *Charts) Add(reqs []string) error {
 	log.Printf("Adding %v Charts ...", len(reqs))
 
 	skip := func(s string, err error) {
@@ -181,6 +181,13 @@ func (c Charts) Add(reqs []string) error {
 	// worked fine? vendor it
 	log.Printf("Added %v Charts to helmfile.yaml. Vendoring ...", added)
 	return c.Vendor()
+}
+
+func (c *Charts) AddRepos(repos ...Repo) error {
+	c.Manifest.Repositories = append(c.Manifest.Repositories, repos...)
+
+	// write out
+	return write(c.Manifest, c.ManifestFile())
 }
 
 func InitChartfile(path string) (*Charts, error) {
