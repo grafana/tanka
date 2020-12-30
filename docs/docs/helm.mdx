@@ -18,7 +18,8 @@ resource definition, you can still consume Helm resources, as described below.
 
 Helm support is provided using the
 [`github.com/grafana/jsonnet-libs/tanka-util`](https://github.com/grafana/jsonnet-libs/tree/master/tanka-util)
-library.  Install it with:
+library. Install it with:
+
 ```bash
 jb install github.com/grafana/jsonnet-libs/tanka-util
 ```
@@ -136,8 +137,14 @@ This will also call `tk tool charts vendor`, so that the `charts/` directory is 
 
 **Adding Repositories:**
 By default, the `stable` repository is automatically set up for you. If you wish
-to add another repository, you currently need modify `chartfile.yaml` directly
-to add it:
+to add another repository, you can use the `add-repo` command:
+
+```bash
+# Add the official Grafana repository
+$ tk tool charts add-repo grafana https://grafana.github.io/helm-charts
+```
+
+Another way is to modify `chartfile.yaml` directly:
 
 ```diff
 version: 1
