@@ -184,10 +184,26 @@ func (c *Charts) Add(reqs []string) error {
 }
 
 func (c *Charts) AddRepos(repos ...Repo) error {
-	c.Manifest.Repositories = append(c.Manifest.Repositories, repos...)
+	added := 0
+	for _, r := range repos {
+		if c.Manifest.Repositories.Has(r) {
+			log.Printf("Skipping %s: Already exists", r.Name)
+			continue
+		}
+
+		c.Manifest.Repositories = append(c.Manifest.Repositories, r)
+	}
 
 	// write out
-	return write(c.Manifest, c.ManifestFile())
+	if err := write(c.Manifest, c.ManifestFile()); err != nil {
+		return err
+	}
+
+	if added != len(repos) {
+		return fmt.Errorf("%v Chart(s) were skipped. Please check above logs for details", len(repos)-added)
+	}
+
+	return nil
 }
 
 func InitChartfile(path string) (*Charts, error) {

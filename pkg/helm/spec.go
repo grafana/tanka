@@ -23,7 +23,7 @@ type Chartfile struct {
 	Version uint `json:"version"`
 
 	// Repositories to source from
-	Repositories []Repo `json:"repositories"`
+	Repositories Repos `json:"repositories"`
 
 	// Requires lists Charts expected to be present in the charts folder
 	Requires Requirements `json:"requires"`
@@ -41,6 +41,19 @@ type Repo struct {
 	KeyFile  string `json:"keyFile,omitempty"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
+}
+
+type Repos []Repo
+
+// Has reports whether 'repo' is already part of the repositories
+func (r Repos) Has(repo Repo) bool {
+	for _, x := range r {
+		if x == repo {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Requirement describes a single required Helm Chart.
