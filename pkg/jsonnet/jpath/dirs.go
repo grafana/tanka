@@ -55,7 +55,7 @@ func FindBase(path string, root string) (string, error) {
 	base, err := FindParentFile(filename, dir, root)
 
 	if _, ok := err.(ErrorFileNotFound); ok {
-		return "", ErrorNoBase
+		return "", ErrorNoBase{filename: filename}
 	} else if err != nil {
 		return "", err
 	}

@@ -8,6 +8,7 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 
+	"github.com/fatih/color"
 	"github.com/go-clix/cli"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -56,7 +57,7 @@ func main() {
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
-		log.Fatalln(err)
+		log.Fatalln(color.RedString("Error:"), err)
 	}
 }
 
