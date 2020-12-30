@@ -59,7 +59,7 @@ func writeJSON(i interface{}, path string) error {
 	return nil
 }
 
-// writeJSON writes the given object to the path as a JSON file
+// writeJsonnet writes the given object to the path as a formatted Jsonnet file
 func writeJsonnet(i interface{}, path string) error {
 	out, err := json.MarshalIndent(i, "", "  ")
 	if err != nil {
@@ -68,7 +68,7 @@ func writeJsonnet(i interface{}, path string) error {
 
 	main, err := formatter.Format(path, string(out), formatter.DefaultOptions())
 	if err != nil {
-		return fmt.Errorf("writing %s: %s", path, err)
+		return fmt.Errorf("formatting %s: %s", path, err)
 	}
 
 	if err := ioutil.WriteFile(path, []byte(main), 0644); err != nil {

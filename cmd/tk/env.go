@@ -179,7 +179,7 @@ func addEnv(dir string, cfg *v1alpha1.Environment, inline bool) error {
 		}
 
 		// write main.jsonnet
-		if err := writeJSON(struct{}{}, filepath.Join(path, "main.jsonnet")); err != nil {
+		if err := writeJsonnet(struct{}{}, filepath.Join(path, "main.jsonnet")); err != nil {
 			return err
 		}
 	}
