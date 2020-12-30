@@ -64,7 +64,7 @@ func (p *loaded) connect() (*kubernetes.Kubernetes, error) {
 
 // load runs all processing stages described at the Processed type
 func load(path string, opts Opts) (*loaded, error) {
-	_, env, err := ParseEnv(path, ParseOpts{JsonnetOpts: opts.JsonnetOpts})
+	_, env, err := ParseEnv(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func parseSpec(path string) (*v1alpha1.Environment, error) {
 
 // ParseEnv evaluates the jsonnet environment at the given file system path and
 // optionally also returns and Environment object
-func ParseEnv(path string, opts ParseOpts) (interface{}, *v1alpha1.Environment, error) {
+func ParseEnv(path string, opts JsonnetOpts) (interface{}, *v1alpha1.Environment, error) {
 	specEnv, err := parseSpec(path)
 	if err != nil {
 		switch err.(type) {
@@ -139,14 +139,10 @@ func ParseEnv(path string, opts ParseOpts) (interface{}, *v1alpha1.Environment, 
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "marshalling environment config")
 		}
-		opts.JsonnetOpts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
+		opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
 	}
 
-	if opts.Evaluator == nil {
-		opts.Evaluator = DefaultEvaluator
-	}
-
-	raw, err := opts.Evaluator(path, opts.JsonnetOpts)
+	raw, err := EvalJsonnet(path, opts)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -156,8 +152,8 @@ func ParseEnv(path string, opts ParseOpts) (interface{}, *v1alpha1.Environment, 
 		return nil, nil, errors.Wrap(err, "unmarshalling data")
 	}
 
-	if opts.JsonnetOpts.EvalPattern != "" {
-		// EvalPattern has no affinity with an environment, behave as jsonnet interpreter
+	if opts.EvalScript != "" {
+		// EvalScript has no affinity with an environment, behave as jsonnet interpreter
 		return data, nil, nil
 	}
 

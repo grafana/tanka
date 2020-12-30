@@ -114,7 +114,7 @@ func TestEvalJsonnet(t *testing.T) {
 	}
 
 	for _, test := range cases {
-		data, env, e := ParseEnv(test.baseDir, ParseOpts{})
+		data, env, e := ParseEnv(test.baseDir, JsonnetOpts{})
 		if data == nil {
 			assert.NoError(t, e)
 		} else if e != nil {

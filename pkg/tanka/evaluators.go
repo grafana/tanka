@@ -9,20 +9,16 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 )
 
-// Evaluator signature for implementing arbitrary Jsonnet evaluators
-type Evaluator func(path string, opts jsonnet.Opts) (string, error)
-
-// DefaultEvaluator evaluates the jsonnet environment at the given file system path
-func DefaultEvaluator(path string, opts jsonnet.Opts) (string, error) {
+// EvalJsonnet evaluates the jsonnet environment at the given file system path
+func EvalJsonnet(path string, opts jsonnet.Opts) (raw string, err error) {
 	entrypoint, err := jpath.Entrypoint(path)
 	if err != nil {
 		return "", err
 	}
 
 	// evaluate Jsonnet
-	var raw string
-	if opts.EvalPattern != "" {
-		evalScript := fmt.Sprintf("(import '%s').%s", entrypoint, opts.EvalPattern)
+	if opts.EvalScript != "" {
+		evalScript := fmt.Sprintf(opts.EvalScript, entrypoint)
 		raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
 		if err != nil {
 			return "", errors.Wrap(err, "evaluating jsonnet")
@@ -36,49 +32,33 @@ func DefaultEvaluator(path string, opts jsonnet.Opts) (string, error) {
 	return raw, nil
 }
 
-// EnvsOnlyEvaluator finds the Environment object (without its .data object) at
-// the given file system path intended for use by the `tk env` command
-func EnvsOnlyEvaluator(path string, opts jsonnet.Opts) (string, error) {
-	entrypoint, err := jpath.Entrypoint(path)
-	if err != nil {
-		return "", err
-	}
-
-	// Snippet to find all Environment objects and remove the .data object for faster evaluation
-	noData := `
+// EnvsOnlyEvalScript finds the Environment object (without its .data object)
+const EnvsOnlyEvalScript = `
 local noDataEnv(object) =
-  if std.isObject(object)
-  then
-    if std.objectHas(object, 'apiVersion')
-       && std.objectHas(object, 'kind')
+  std.prune(
+    if std.isObject(object)
     then
-      if object.kind == 'Environment'
-      then object { data:: {} }
-      else {}
-    else
-      std.mapWithKey(
-        function(key, obj)
+      if std.objectHas(object, 'apiVersion')
+         && std.objectHas(object, 'kind')
+      then
+        if object.kind == 'Environment'
+        then object { data:: {} }
+        else {}
+      else
+        std.mapWithKey(
+          function(key, obj)
+            noDataEnv(obj),
+          object
+        )
+    else if std.isArray(object)
+    then
+      std.map(
+        function(obj)
           noDataEnv(obj),
         object
       )
-  else if std.isArray(object)
-  then
-    std.map(
-      function(obj)
-        noDataEnv(obj),
-      object
-    )
-  else {};
+    else {}
+  );
 
 noDataEnv(import '%s')
 `
-
-	// evaluate Jsonnet with noData snippet
-	var raw string
-	evalScript := fmt.Sprintf(noData, entrypoint)
-	raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
-	if err != nil {
-		return "", errors.Wrap(err, "evaluating jsonnet")
-	}
-	return raw, nil
-}

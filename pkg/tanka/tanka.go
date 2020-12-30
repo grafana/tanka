@@ -18,8 +18,3 @@ type Opts struct {
 	// Filters are used to optionally select a subset of the resources
 	Filters process.Matchers
 }
-
-type ParseOpts struct {
-	JsonnetOpts
-	Evaluator Evaluator
-}

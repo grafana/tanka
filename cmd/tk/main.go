@@ -79,7 +79,7 @@ func setupConfiguration(baseDir string) *v1alpha1.Environment {
 			}
 		// no spec.json is found, try parsing main.jsonnet
 		case spec.ErrNoSpec:
-			_, config, err := tanka.ParseEnv(baseDir, tanka.ParseOpts{Evaluator: tanka.EnvsOnlyEvaluator})
+			_, config, err := tanka.ParseEnv(baseDir, tanka.JsonnetOpts{EvalScript: tanka.EnvsOnlyEvalScript})
 			if err != nil {
 				switch err.(type) {
 				case tanka.ErrNoEnv:

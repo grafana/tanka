@@ -29,7 +29,7 @@ type Opts struct {
 	ExtCode     InjectedCode
 	TLACode     InjectedCode
 	ImportPaths []string
-	EvalPattern string
+	EvalScript  string
 }
 
 // MakeVM returns a Jsonnet VM with some extensions of Tanka, including:
