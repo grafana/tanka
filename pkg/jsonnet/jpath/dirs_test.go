@@ -11,6 +11,125 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDirs(t *testing.T) {
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+
+	cases := []struct {
+		name    string
+		data    string
+		workdir string
+		env     string
+
+		wantBase    string
+		wantRoot    string
+		wantRootErr error
+		wantBaseErr error
+	}{
+		// noBase
+		{
+			name: "noBase/empty",
+			data: "./testdata/noBase",
+			env:  "environments/empty",
+
+			wantRoot:    "/",
+			wantBaseErr: ErrorNoBase{"main.jsonnet"},
+		},
+		{
+			name: "noBase/filename",
+			data: "./testdata/noBase",
+			env:  "environments/filename",
+
+			wantRoot:    "/",
+			wantBaseErr: ErrorNoBase{"main.jsonnet"},
+		},
+		{
+			name: "noBase/noMain",
+			data: "./testdata/noBase",
+			env:  "environments/noMain",
+
+			wantRoot:    "/",
+			wantBaseErr: ErrorNoBase{"main.jsonnet"},
+		},
+
+		// noRoot
+		{
+			name: "noRoot",
+			data: "./testdata/noRoot",
+			env:  "environments/default",
+
+			wantRootErr: ErrorNoRoot,
+		},
+
+		// valid
+		{
+			name: "valid:relative",
+			data: "./testdata/valid",
+			env:  "environments/default",
+
+			wantRoot: "/",
+			wantBase: "environments/default",
+		},
+		{
+			name:    "valid:currentDir",
+			data:    "./testdata/valid",
+			env:     ".",
+			workdir: "environments/default",
+
+			wantRoot: "/",
+			wantBase: "environments/default",
+		},
+		{
+			name:    "valid:nested",
+			data:    "./testdata/valid",
+			env:     ".",
+			workdir: "environments/default/nestedDir",
+
+			wantRoot: "/",
+			wantBase: "environments/default",
+		},
+		{
+			name:    "valid:nested2",
+			data:    "./testdata/valid",
+			env:     "..",
+			workdir: "environments/default/nestedDir",
+
+			wantRoot: "/",
+			wantBase: "environments/default",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			defer os.Chdir(origDir)
+
+			// go to testdata
+			require.NoError(t, os.Chdir(c.data))
+
+			tdRoot, err := os.Getwd()
+			require.NoError(t, err)
+
+			if c.workdir != "" {
+				require.NoError(t, os.Chdir(c.workdir))
+			}
+
+			root, err := FindRoot(c.env)
+			assert.Equal(t, c.wantRootErr, err)
+			if err == nil {
+				assert.Equal(t, filepath.Join(tdRoot, c.wantRoot), root)
+			} else {
+				return
+			}
+
+			base, err := FindBase(c.env, root)
+			assert.Equal(t, c.wantBaseErr, err)
+			if err == nil {
+				assert.Equal(t, filepath.Join(tdRoot, c.wantBase), base)
+			}
+		})
+	}
+}
+
 type scenario struct {
 	name        string
 	testdata    []string
