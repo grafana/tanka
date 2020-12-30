@@ -152,11 +152,6 @@ func ParseEnv(path string, opts JsonnetOpts) (interface{}, *v1alpha1.Environment
 		return nil, nil, errors.Wrap(err, "unmarshalling data")
 	}
 
-	if opts.EvalScript != "" {
-		// EvalScript has no affinity with an environment, behave as jsonnet interpreter
-		return data, nil, nil
-	}
-
 	extractedEnvs, err := extractEnvironments(data)
 	if _, ok := err.(process.ErrorPrimitiveReached); ok {
 		if specEnv == nil {
