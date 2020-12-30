@@ -117,6 +117,8 @@ func envAddCmd() *cli.Command {
 	}
 	cfg := v1alpha1.New()
 	envSettingsFlags(cfg, cmd.Flags())
+	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
+
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		if cmd.Flags().Changed("server-from-context") {
 			server, err := client.IPFromContext(cfg.Spec.APIServer)
@@ -126,7 +128,7 @@ func envAddCmd() *cli.Command {
 			cfg.Spec.APIServer = server
 		}
 
-		if err := addEnv(args[0], cfg); err != nil {
+		if err := addEnv(args[0], cfg, *inline); err != nil {
 			return err
 		}
 
@@ -136,7 +138,7 @@ func envAddCmd() *cli.Command {
 }
 
 // used by initCmd() as well
-func addEnv(dir string, cfg *v1alpha1.Environment) error {
+func addEnv(dir string, cfg *v1alpha1.Environment, inline bool) error {
 	path, err := filepath.Abs(dir)
 	if err != nil {
 		return err
@@ -164,14 +166,22 @@ func addEnv(dir string, cfg *v1alpha1.Environment) error {
 	// the other properties are already set by v1alpha1.New() and pflag.Parse()
 	cfg.Metadata.Name, _ = filepath.Rel(rootDir, path)
 
-	// write spec.json
-	if err := writeJSON(cfg, filepath.Join(path, "spec.json")); err != nil {
-		return err
-	}
+	if inline {
+		cfg.Data = struct{}{}
+		// write main.jsonnet with inline tanka.dev/Environment
+		if err := writeJsonnet(cfg, filepath.Join(path, "main.jsonnet")); err != nil {
+			return err
+		}
+	} else {
+		// write spec.json
+		if err := writeJSON(cfg, filepath.Join(path, "spec.json")); err != nil {
+			return err
+		}
 
-	// write main.jsonnet
-	if err := writeJSON(struct{}{}, filepath.Join(path, "main.jsonnet")); err != nil {
-		return err
+		// write main.jsonnet
+		if err := writeJsonnet(struct{}{}, filepath.Join(path, "main.jsonnet")); err != nil {
+			return err
+		}
 	}
 
 	return nil
