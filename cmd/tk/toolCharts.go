@@ -20,6 +20,7 @@ func chartsCmd() *cli.Command {
 	cmd.AddCommand(
 		chartsInitCmd(),
 		chartsAddCmd(),
+		chartsAddRepoCmd(),
 		chartsVendorCmd(),
 		chartsConfigCmd(),
 	)
@@ -58,6 +59,28 @@ func chartsAddCmd() *cli.Command {
 		}
 
 		return c.Add(args)
+	}
+
+	return cmd
+}
+
+func chartsAddRepoCmd() *cli.Command {
+	cmd := &cli.Command{
+		Use:   "add-repo [NAME] [URL]",
+		Short: "Adds a repository to the chartfile",
+		Args:  cli.ArgsExact(2),
+	}
+
+	cmd.Run = func(cmd *cli.Command, args []string) error {
+		c, err := loadChartfile()
+		if err != nil {
+			return err
+		}
+
+		return c.AddRepos(helm.Repo{
+			Name: args[0],
+			URL:  args[1],
+		})
 	}
 
 	return cmd

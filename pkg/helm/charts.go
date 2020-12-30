@@ -142,7 +142,7 @@ func (c Charts) Vendor() error {
 
 // Add adds every Chart in reqs to the Manifest after validation, and runs
 // Vendor afterwards
-func (c Charts) Add(reqs []string) error {
+func (c *Charts) Add(reqs []string) error {
 	log.Printf("Adding %v Charts ...", len(reqs))
 
 	skip := func(s string, err error) {
@@ -181,6 +181,29 @@ func (c Charts) Add(reqs []string) error {
 	// worked fine? vendor it
 	log.Printf("Added %v Charts to helmfile.yaml. Vendoring ...", added)
 	return c.Vendor()
+}
+
+func (c *Charts) AddRepos(repos ...Repo) error {
+	added := 0
+	for _, r := range repos {
+		if c.Manifest.Repositories.Has(r) {
+			log.Printf("Skipping %s: Already exists", r.Name)
+			continue
+		}
+
+		c.Manifest.Repositories = append(c.Manifest.Repositories, r)
+	}
+
+	// write out
+	if err := write(c.Manifest, c.ManifestFile()); err != nil {
+		return err
+	}
+
+	if added != len(repos) {
+		return fmt.Errorf("%v Chart(s) were skipped. Please check above logs for details", len(repos)-added)
+	}
+
+	return nil
 }
 
 func InitChartfile(path string) (*Charts, error) {
