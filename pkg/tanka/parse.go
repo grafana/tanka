@@ -97,7 +97,7 @@ func load(path string, opts Opts) (*loaded, error) {
 func parseSpec(path string) (*v1alpha1.Environment, error) {
 	_, baseDir, rootDir, err := jpath.Resolve(path)
 	if err != nil {
-		return nil, errors.Wrap(err, "resolving jpath")
+		return nil, err
 	}
 
 	// name of the environment: relative path from rootDir
@@ -114,7 +114,7 @@ func parseSpec(path string) (*v1alpha1.Environment, error) {
 			return config, err
 		// some other error
 		default:
-			return nil, errors.Wrap(err, "reading spec.json")
+			return nil, err
 		}
 	}
 
@@ -130,7 +130,7 @@ func ParseEnv(path string, opts JsonnetOpts) (interface{}, *v1alpha1.Environment
 		case spec.ErrNoSpec:
 			specEnv = nil
 		default:
-			return nil, nil, errors.Wrap(err, "reading spec.json")
+			return nil, nil, err
 		}
 	} else {
 		// original behavior, if env has spec.json
