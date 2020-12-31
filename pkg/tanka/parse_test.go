@@ -3,103 +3,97 @@ package tanka
 import (
 	"testing"
 
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEvalJsonnet(t *testing.T) {
 	cases := []struct {
+		name     string
 		baseDir  string
 		expected interface{}
 		env      *v1alpha1.Environment
 	}{
 		{
-			baseDir: "./testdata/cases/array/",
-			expected: []interface{}{
-				[]interface{}{
-					map[string]interface{}{"testCase": "nestedArray[0][0]"},
-					map[string]interface{}{"testCase": "nestedArray[0][1]"},
-				},
-				[]interface{}{
-					map[string]interface{}{"testCase": "nestedArray[1][0]"},
-					map[string]interface{}{"testCase": "nestedArray[1][1]"},
-				},
-			},
-			env: nil,
-		},
-		{
-			baseDir: "./testdata/cases/object/",
-			expected: map[string]interface{}{
-				"testCase": "object",
-			},
-			env: nil,
-		},
-		{
+			name:    "static",
 			baseDir: "./testdata/cases/withspecjson/",
-			expected: map[string]interface{}{
-				"testCase": "object",
-			},
-			env: &v1alpha1.Environment{
-				APIVersion: v1alpha1.New().APIVersion,
-				Kind:       v1alpha1.New().Kind,
-				Metadata: v1alpha1.Metadata{
-					Name:      "cases/withspecjson",
-					Namespace: "cases/withspecjson",
-					Labels:    v1alpha1.New().Metadata.Labels,
-				},
-				Spec: v1alpha1.Spec{
-					APIServer: "https://localhost",
-					Namespace: "withspec",
-				},
-				Data: map[string]interface{}{
-					"testCase": "object",
-				},
-			},
-		},
-		{
-			baseDir: "./testdata/cases/withspecjson/main.jsonnet",
-			expected: map[string]interface{}{
-				"testCase": "object",
-			},
-			env: &v1alpha1.Environment{
-				APIVersion: v1alpha1.New().APIVersion,
-				Kind:       v1alpha1.New().Kind,
-				Metadata: v1alpha1.Metadata{
-					Name:      "cases/withspecjson",
-					Namespace: "cases/withspecjson",
-					Labels:    v1alpha1.New().Metadata.Labels,
-				},
-				Spec: v1alpha1.Spec{
-					APIServer: "https://localhost",
-					Namespace: "withspec",
-				},
-				Data: map[string]interface{}{
-					"testCase": "object",
-				},
-			},
-		},
-		{
-			baseDir: "./testdata/cases/withenv/main.jsonnet",
-			expected: map[string]interface{}{
-				"apiVersion": v1alpha1.New().APIVersion,
-				"kind":       v1alpha1.New().Kind,
+			expected: manifest.List{{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
 				"metadata": map[string]interface{}{
-					"name": "withenv",
+					"name":      "config",
+					"namespace": "withspec",
 				},
-				"spec": map[string]interface{}{
-					"apiServer": "https://localhost",
+			}},
+			env: &v1alpha1.Environment{
+				APIVersion: v1alpha1.New().APIVersion,
+				Kind:       v1alpha1.New().Kind,
+				Metadata: v1alpha1.Metadata{
+					Name:      "cases/withspecjson",
+					Namespace: "cases/withspecjson",
+					Labels:    v1alpha1.New().Metadata.Labels,
+				},
+				Spec: v1alpha1.Spec{
+					APIServer: "https://localhost",
+					Namespace: "withspec",
+				},
+				Data: map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata":   map[string]interface{}{"name": "config", "namespace": "withspec"},
+				},
+			},
+		},
+		{
+			name:    "static-filename",
+			baseDir: "./testdata/cases/withspecjson/main.jsonnet",
+			expected: manifest.List{{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name":      "config",
+					"namespace": "withspec",
+				},
+			}},
+			env: &v1alpha1.Environment{
+				APIVersion: v1alpha1.New().APIVersion,
+				Kind:       v1alpha1.New().Kind,
+				Metadata: v1alpha1.Metadata{
+					Name:      "cases/withspecjson",
+					Namespace: "cases/withspecjson",
+					Labels:    v1alpha1.New().Metadata.Labels,
+				},
+				Spec: v1alpha1.Spec{
+					APIServer: "https://localhost",
+					Namespace: "withspec",
+				},
+				Data: map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata":   map[string]interface{}{"name": "config", "namespace": "withspec"},
+				},
+			},
+		},
+
+		{
+			name:    "inline",
+			baseDir: "./testdata/cases/withenv/main.jsonnet",
+			expected: manifest.List{{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name":      "config",
 					"namespace": "withenv",
 				},
-				"data": map[string]interface{}{
-					"testCase": "object",
-				},
-			},
+			}},
 			env: &v1alpha1.Environment{
 				APIVersion: v1alpha1.New().APIVersion,
 				Kind:       v1alpha1.New().Kind,
 				Metadata: v1alpha1.Metadata{
 					Name:      "withenv",
-					Namespace: "cases/withenv/main.jsonnet",
+					Namespace: "cases/withenv",
 					Labels:    v1alpha1.New().Metadata.Labels,
 				},
 				Spec: v1alpha1.Spec{
@@ -107,20 +101,21 @@ func TestEvalJsonnet(t *testing.T) {
 					Namespace: "withenv",
 				},
 				Data: map[string]interface{}{
-					"testCase": "object",
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata":   map[string]interface{}{"name": "config", "namespace": "withenv"},
 				},
 			},
 		},
 	}
 
 	for _, test := range cases {
-		data, env, e := ParseEnv(test.baseDir, JsonnetOpts{})
-		if data == nil {
-			assert.NoError(t, e)
-		} else if e != nil {
-			assert.IsType(t, ErrNoEnv{}, e)
-		}
-		assert.Equal(t, test.expected, data)
-		assert.Equal(t, test.env, env)
+		t.Run(test.name, func(t *testing.T) {
+			l, err := Load(test.baseDir, Opts{})
+			require.NoError(t, err)
+
+			assert.Equal(t, test.expected, l.Resources)
+			assert.Equal(t, test.env, l.Env)
+		})
 	}
 }

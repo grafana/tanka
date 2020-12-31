@@ -9,6 +9,8 @@
     namespace: 'withenv',
   },
   data: {
-    testCase: 'object',
+    apiVersion: 'v1',
+    kind: 'ConfigMap',
+    metadata: { name: 'config' },
   },
 }
