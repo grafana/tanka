@@ -196,14 +196,4 @@ func Eval(dir string, opts Opts) (interface{}, error) {
 	}
 
 	return data, nil
-
-	// r, _, err := ParseEnv(dir, opts.JsonnetOpts)
-	// switch err.(type) {
-	// case ErrNoEnv, ErrMultipleEnvs:
-	// 	return r, err
-	// case nil:
-	// 	return r, nil
-	// default:
-	// 	return nil, err
-	// }
 }
