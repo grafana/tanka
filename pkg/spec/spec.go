@@ -50,7 +50,7 @@ func ParseDir(baseDir, path string) (*v1alpha1.Environment, error) {
 }
 
 // Parse parses the json `data` into a `v1alpha1.Environment` object.
-func Parse(data []byte, path string) (*v1alpha1.Environment, error) {
+func Parse(data []byte, namespace string) (*v1alpha1.Environment, error) {
 	config := v1alpha1.New()
 	if err := json.Unmarshal(data, config); err != nil {
 		return nil, errors.Wrap(err, "parsing spec.json")
@@ -65,7 +65,7 @@ func Parse(data []byte, path string) (*v1alpha1.Environment, error) {
 		config.Spec.APIServer = "https://" + config.Spec.APIServer
 	}
 
-	config.Metadata.Namespace = path
+	config.Metadata.Namespace = namespace
 
 	return config, nil
 }
