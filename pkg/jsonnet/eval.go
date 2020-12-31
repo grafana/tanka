@@ -69,6 +69,7 @@ func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
 }
 
 // Evaluate renders the given jsonnet into a string
+// TODO: don't resolve jpath, this is ANONYMOUS AFTER ALL
 func Evaluate(path, data string, opts Opts) (string, error) {
 	jpath, _, _, err := jpath.Resolve(path)
 	if err != nil {
