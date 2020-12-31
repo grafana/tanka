@@ -7,13 +7,14 @@ import (
 	"runtime"
 )
 
-func Dirs(path string) (string, string, error) {
-	root, err := FindRoot(path)
+// Dirs returns the project-root (root) and environment directory (base)
+func Dirs(path string) (root string, base string, err error) {
+	root, err = FindRoot(path)
 	if err != nil {
 		return "", "", err
 	}
 
-	base, err := FindBase(path, root)
+	base, err = FindBase(path, root)
 	if err != nil {
 		return root, "", err
 	}

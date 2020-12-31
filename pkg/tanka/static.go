@@ -37,11 +37,14 @@ func (s StaticLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environment
 	return config, nil
 }
 
-// parseSpec parses the `spec.json` of the environment and returns a
+// parseStaticSpec parses the `spec.json` of the environment and returns a
 // *kubernetes.Kubernetes from it
 func parseStaticSpec(root, base string) (*v1alpha1.Environment, error) {
 	// name of the environment: relative path from rootDir
-	name, _ := filepath.Rel(root, base)
+	name, err := filepath.Rel(root, base)
+	if err != nil {
+		return nil, err
+	}
 
 	config, err := spec.ParseDir(base, name)
 	if err != nil {

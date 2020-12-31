@@ -22,7 +22,7 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 		return nil, err
 	}
 
-	loader, err := chooseLoader(base)
+	loader, err := detectLoader(base)
 	if err != nil {
 		return nil, err
 	}
@@ -44,9 +44,9 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 	return &LoadResult{Env: env, Resources: processed}, nil
 }
 
-// chooseLoader detects whether the environment is inline or static and picks
+// detectLoader detects whether the environment is inline or static and picks
 // the approriate loader
-func chooseLoader(base string) (Loader, error) {
+func detectLoader(base string) (Loader, error) {
 	// check if spec.json exists
 	_, err := os.Stat(filepath.Join(base, spec.Specfile))
 	if os.IsNotExist(err) {
