@@ -5,10 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/posener/complete"
-	"github.com/spf13/pflag"
-
 	"github.com/go-clix/cli"
+	"github.com/posener/complete"
 
 	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/tanka"
@@ -22,16 +20,6 @@ const (
 	// differences between the local config and the cluster
 	ExitStatusDiff = 16
 )
-
-type workflowFlagVars struct {
-	targets []string
-}
-
-func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
-	v := workflowFlagVars{}
-	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects (Format: <type>/<name>)")
-	return &v
-}
 
 func applyCmd() *cli.Command {
 	cmd := &cli.Command{
@@ -49,7 +37,11 @@ func applyCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts.Filters = stringsToRegexps(vars.targets)
+		filters, err := process.StrExps(vars.targets...)
+		if err != nil {
+			return err
+		}
+		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 
 		return tanka.Apply(args[0], opts)
@@ -94,7 +86,11 @@ func deleteCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts.Filters = stringsToRegexps(vars.targets)
+		filters, err := process.StrExps(vars.targets...)
+		if err != nil {
+			return err
+		}
+		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 
 		return tanka.Delete(args[0], opts)
@@ -120,7 +116,11 @@ func diffCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts.Filters = stringsToRegexps(vars.targets)
+		filters, err := process.StrExps(vars.targets...)
+		if err != nil {
+			return err
+		}
+		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 
 		changes, err := tanka.Diff(args[0], opts)
@@ -165,9 +165,14 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return nil
 		}
 
+		filters, err := process.StrExps(vars.targets...)
+		if err != nil {
+			return err
+		}
+
 		pretty, err := tanka.Show(args[0], tanka.Opts{
 			JsonnetOpts: getJsonnetOpts(),
-			Filters:     stringsToRegexps(vars.targets),
+			Filters:     filters,
 		})
 
 		if err != nil {
@@ -177,12 +182,4 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 		return pageln(pretty.String())
 	}
 	return cmd
-}
-
-func stringsToRegexps(exps []string) process.Matchers {
-	regexs, err := process.StrExps(exps...)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return regexs
 }

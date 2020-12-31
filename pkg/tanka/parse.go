@@ -9,6 +9,7 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 
+	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -73,15 +74,7 @@ func load(path string, opts Opts) (*loaded, error) {
 		return nil, fmt.Errorf("no Tanka environment found")
 	}
 
-	if env.Metadata.Name == "" {
-		return nil, fmt.Errorf("Environment has no metadata.name set in %s", path)
-	}
-
-	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
-		return nil, err
-	}
-
-	rec, err := process.Process(env.Data, *env, opts.Filters)
+	rec, err := LoadManifests(env, opts.Filters)
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +83,23 @@ func load(path string, opts Opts) (*loaded, error) {
 		Resources: rec,
 		Env:       env,
 	}, nil
+}
+
+func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (manifest.List, error) {
+	if env.Metadata.Name == "" {
+		return nil, fmt.Errorf("Environment has no metadata.name set in %s", env.Metadata.Namespace)
+	}
+
+	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
+		return nil, err
+	}
+
+	resources, err := process.Process(env.Data, *env, filters)
+	if err != nil {
+		return nil, err
+	}
+
+	return resources, nil
 }
 
 // parseSpec parses the `spec.json` of the environment and returns a
@@ -139,7 +149,13 @@ func ParseEnv(path string, opts JsonnetOpts) (interface{}, *v1alpha1.Environment
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "marshalling environment config")
 		}
-		opts.ExtCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
+		// make a copy to prevent race condition in parallel execution
+		injectCode := jsonnet.InjectedCode{}
+		for k, v := range opts.ExtCode {
+			injectCode.Set(k, v)
+		}
+		injectCode.Set(spec.APIGroup+"/environment", string(jsonEnv))
+		opts.ExtCode = injectCode
 	}
 
 	raw, err := EvalJsonnet(path, opts)
