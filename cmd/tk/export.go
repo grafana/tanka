@@ -28,7 +28,7 @@ func exportCmd() *cli.Command {
 
 	format := cmd.Flags().String(
 		"format",
-		"{{env.spec.namespace}}/{{env.metadata.name}}/{{.apiVersion}}.{{.kind}}-{{.metadata.name}}",
+		"{{.apiVersion}}.{{.kind}}-{{.metadata.name}}",
 		"https://tanka.dev/exporting#filenames",
 	)
 
