@@ -11,12 +11,12 @@ import (
 	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
 	"github.com/posener/complete"
-	"github.com/spf13/pflag"
-	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
+	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
 )
 
@@ -36,19 +36,38 @@ func envCmd() *cli.Command {
 	return cmd
 }
 
-func envSettingsFlags(env *v1alpha1.Environment, fs *pflag.FlagSet) {
-	fs.StringVar(&env.Spec.APIServer, "server", env.Spec.APIServer, "endpoint of the Kubernetes API")
-	fs.StringVar(&env.Spec.APIServer, "server-from-context", env.Spec.APIServer, "set the server to a known one from $KUBECONFIG")
-	fs.StringVar(&env.Spec.Namespace, "namespace", env.Spec.Namespace, "namespace to create objects in")
-	fs.StringVar(&env.Spec.DiffStrategy, "diff-strategy", env.Spec.DiffStrategy, "specify diff-strategy. Automatically detected otherwise.")
-}
-
 var kubectlContexts = cli.PredictFunc(
 	func(complete.Args) []string {
 		c, _ := client.Contexts()
 		return c
 	},
 )
+
+func setupConfiguration(baseDir string) *v1alpha1.Environment {
+	_, baseDir, rootDir, err := jpath.Resolve(baseDir)
+	if err != nil {
+		log.Fatalln("Resolving jpath:", err)
+	}
+
+	// name of the environment: relative path from rootDir
+	name, _ := filepath.Rel(rootDir, baseDir)
+
+	config, err := spec.ParseDir(baseDir, name)
+	if err != nil {
+		switch err.(type) {
+		// the config includes deprecated fields
+		case spec.ErrDeprecated:
+			if verbose {
+				fmt.Print(err)
+			}
+		// some other error
+		default:
+			log.Fatalf("Reading spec.json: %s", err)
+		}
+	}
+
+	return config
+}
 
 func envSetCmd() *cli.Command {
 	cmd := &cli.Command{
@@ -213,40 +232,49 @@ func envRemoveCmd() *cli.Command {
 }
 
 func envListCmd() *cli.Command {
+	args := workflowArgs
+	args.Validator = cli.ValidateFunc(func(args []string) error {
+		if len(args) > 1 {
+			return fmt.Errorf("expects at most 1 arg, received %v", len(args))
+		}
+		return nil
+	})
+
 	cmd := &cli.Command{
-		Use:     "list",
+		Use:     "list [<path>]",
 		Aliases: []string{"ls"},
-		Short:   "list environments",
-		Args:    cli.ArgsNone(),
+		Short:   "list environments relative to current dir or <path>",
+		Args:    args,
 	}
 
 	useJSON := cmd.Flags().Bool("json", false, "json output")
-	labelSelector := cmd.Flags().StringP("selector", "l", "", "Label selector. Uses the same syntax as kubectl does")
+	getLabelSelector := labelSelectorFlag(cmd.Flags())
 
 	useNames := cmd.Flags().Bool("names", false, "plain names output")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		envs := []v1alpha1.Environment{}
-		dirs := findBaseDirs()
-		var selector labels.Selector
+		var dir string
 		var err error
-
-		if *labelSelector != "" {
-			selector, err = labels.Parse(*labelSelector)
+		if len(args) == 1 {
+			dir = args[0]
+		} else {
+			dir, err = os.Getwd()
 			if err != nil {
-				return err
+				return nil
 			}
 		}
 
-		for _, dir := range dirs {
-			env := setupConfiguration(dir)
-			if env == nil {
-				log.Printf("Could not setup configuration from %q", dir)
-				continue
-			}
-			if selector == nil || selector.Empty() || selector.Matches(env.Metadata) {
-				envs = append(envs, *env)
-			}
+		stat, err := os.Stat(dir)
+		if err != nil {
+			return err
+		}
+		if !stat.IsDir() {
+			return fmt.Errorf("Not a directory: %s", dir)
+		}
+
+		envs, err := tanka.FindEnvironments(dir, getLabelSelector())
+		if err != nil {
+			return err
 		}
 
 		if *useJSON {

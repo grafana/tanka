@@ -4,10 +4,9 @@ import (
 	"log"
 	"os"
 
-	"golang.org/x/crypto/ssh/terminal"
-
 	"github.com/fatih/color"
 	"github.com/go-clix/cli"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/grafana/tanka/pkg/tanka"
