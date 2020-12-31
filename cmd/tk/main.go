@@ -1,18 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/fatih/color"
 	"github.com/go-clix/cli"
 
-	"github.com/grafana/tanka/pkg/jsonnet/jpath"
-	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/grafana/tanka/pkg/tanka"
 )
@@ -62,39 +58,48 @@ func main() {
 }
 
 func setupConfiguration(baseDir string) *v1alpha1.Environment {
-	_, baseDir, rootDir, err := jpath.Resolve(baseDir)
+	env, err := tanka.Load(baseDir, tanka.Opts{
+		JsonnetOpts: tanka.JsonnetOpts{EvalScript: tanka.EnvsOnlyEvalScript},
+	})
 	if err != nil {
-		log.Fatalln("Resolving jpath:", err)
+		log.Fatalln(err)
 	}
 
-	// name of the environment: relative path from rootDir
-	name, _ := filepath.Rel(rootDir, baseDir)
+	return env.Env
 
-	config, err := spec.ParseDir(baseDir, name)
-	if err != nil {
-		switch err.(type) {
-		// the config includes deprecated fields
-		case spec.ErrDeprecated:
-			if verbose {
-				fmt.Print(err)
-			}
-		// no spec.json is found, try parsing main.jsonnet
-		case spec.ErrNoSpec:
-			_, config, err := tanka.ParseEnv(baseDir, tanka.JsonnetOpts{EvalScript: tanka.EnvsOnlyEvalScript})
-			if err != nil {
-				switch err.(type) {
-				case tanka.ErrNoEnv:
-					return nil
-				default:
-					log.Fatalf("Reading main.jsonnet: %s", err)
-				}
-			}
-			return config
-		// some other error
-		default:
-			log.Fatalf("Reading spec.json: %s", err)
-		}
-	}
+	// _, baseDir, rootDir, err := jpath.Resolve(baseDir)
+	// if err != nil {
+	// 	log.Fatalln("Resolving jpath:", err)
+	// }
 
-	return config
+	// // name of the environment: relative path from rootDir
+	// name, _ := filepath.Rel(rootDir, baseDir)
+
+	// config, err := spec.ParseDir(baseDir, name)
+	// if err != nil {
+	// 	switch err.(type) {
+	// 	// the config includes deprecated fields
+	// 	case spec.ErrDeprecated:
+	// 		if verbose {
+	// 			fmt.Print(err)
+	// 		}
+	// 	// no spec.json is found, try parsing main.jsonnet
+	// 	case spec.ErrNoSpec:
+	// 		_, config, err := tanka.ParseEnv(baseDir, tanka.JsonnetOpts{EvalScript: tanka.EnvsOnlyEvalScript})
+	// 		if err != nil {
+	// 			switch err.(type) {
+	// 			case tanka.ErrNoEnv:
+	// 				return nil
+	// 			default:
+	// 				log.Fatalf("Reading main.jsonnet: %s", err)
+	// 			}
+	// 		}
+	// 		return config
+	// 	// some other error
+	// 	default:
+	// 		log.Fatalf("Reading spec.json: %s", err)
+	// 	}
+	// }
+
+	// return config
 }

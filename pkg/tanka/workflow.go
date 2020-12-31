@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/fatih/color"
@@ -30,11 +31,11 @@ type ApplyOpts struct {
 // the evaluated jsonnet to the Kubernetes cluster defined in the environments
 // `spec.json`.
 func Apply(baseDir string, opts ApplyOpts) error {
-	l, err := load(baseDir, opts.Opts)
+	l, err := Load(baseDir, opts.Opts)
 	if err != nil {
 		return err
 	}
-	kube, err := l.connect()
+	kube, err := l.Connect()
 	if err != nil {
 		return err
 	}
@@ -101,11 +102,11 @@ type DiffOpts struct {
 // The cluster information is retrieved from the environments `spec.json`.
 // NOTE: This function requires on `diff(1)`, `kubectl(1)` and perhaps `diffstat(1)`
 func Diff(baseDir string, opts DiffOpts) (*string, error) {
-	l, err := load(baseDir, opts.Opts)
+	l, err := Load(baseDir, opts.Opts)
 	if err != nil {
 		return nil, err
 	}
-	kube, err := l.connect()
+	kube, err := l.Connect()
 	if err != nil {
 		return nil, err
 	}
@@ -134,11 +135,11 @@ type DeleteOpts struct {
 // the generated objects from the Kubernetes cluster defined in the environment's
 // `spec.json`.
 func Delete(baseDir string, opts DeleteOpts) error {
-	l, err := load(baseDir, opts.Opts)
+	l, err := Load(baseDir, opts.Opts)
 	if err != nil {
 		return err
 	}
-	kube, err := l.connect()
+	kube, err := l.Connect()
 	if err != nil {
 		return err
 	}
@@ -174,7 +175,7 @@ func Delete(baseDir string, opts DeleteOpts) error {
 // the list of Kubernetes objects.
 // Tip: use the `String()` function on the returned list to get the familiar yaml stream
 func Show(baseDir string, opts Opts) (manifest.List, error) {
-	l, err := load(baseDir, opts)
+	l, err := Load(baseDir, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -183,14 +184,26 @@ func Show(baseDir string, opts Opts) (manifest.List, error) {
 }
 
 // Eval returns the raw evaluated Jsonnet output (without any transformations)
-func Eval(dir string, opts Opts) (raw interface{}, err error) {
-	r, _, err := ParseEnv(dir, opts.JsonnetOpts)
-	switch err.(type) {
-	case ErrNoEnv, ErrMultipleEnvs:
-		return r, err
-	case nil:
-		return r, nil
-	default:
+func Eval(dir string, opts Opts) (interface{}, error) {
+	raw, err := EvalJsonnet(dir, opts.JsonnetOpts)
+	if err != nil {
 		return nil, err
 	}
+
+	var data interface{}
+	if err := json.Unmarshal([]byte(raw), &data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
+
+	// r, _, err := ParseEnv(dir, opts.JsonnetOpts)
+	// switch err.(type) {
+	// case ErrNoEnv, ErrMultipleEnvs:
+	// 	return r, err
+	// case nil:
+	// 	return r, nil
+	// default:
+	// 	return nil, err
+	// }
 }

@@ -21,11 +21,11 @@ type PruneOpts struct {
 // Jsonnet. It uses the `tanka.dev/environment` label to identify those.
 func Prune(baseDir string, opts PruneOpts) error {
 	// parse jsonnet, init k8s client
-	p, err := load(baseDir, opts.Opts)
+	p, err := Load(baseDir, opts.Opts)
 	if err != nil {
 		return err
 	}
-	kube, err := p.connect()
+	kube, err := p.Connect()
 	if err != nil {
 		return err
 	}
