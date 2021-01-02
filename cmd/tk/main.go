@@ -56,7 +56,7 @@ func main() {
 
 	// external commands prefixed with "tk-"
 	rootCmd.AddCommand(
-		prefixCmds("tk-")...,
+		prefixCommands("tk-")...,
 	)
 
 	// Run!

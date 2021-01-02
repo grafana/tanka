@@ -10,31 +10,14 @@ import (
 	"github.com/go-clix/cli"
 )
 
-func prefixCmds(prefix string) []*cli.Command {
-	ext_subcommands := map[string]string{}
-	if path, ok := os.LookupEnv("PATH"); ok {
-		paths := strings.Split(path, ":")
-		for _, p := range paths {
-			s, err := os.Stat(p)
-			if err == nil && s.IsDir() {
-				files, err := ioutil.ReadDir(p)
-				if err != nil {
-					panic(err)
-				}
-				for _, file := range files {
-					if strings.HasPrefix(file.Name(), prefix) &&
-						!file.IsDir() &&
-						file.Mode().IsRegular() &&
-						file.Mode().Perm()&0111 != 0 {
-						ext_subcommands[file.Name()] = fmt.Sprintf("%s/%s", p, file.Name())
-					}
-				}
-			}
-		}
+func prefixCommands(prefix string) (cmds []*cli.Command) {
+	externalCommands, err := executablesOnPath(prefix)
+	if err != nil {
+		// soft fail if no commands found
+		return nil
 	}
 
-	var cmds []*cli.Command
-	for file, path := range ext_subcommands {
+	for file, path := range externalCommands {
 		cmd := &cli.Command{
 			Use:   fmt.Sprintf("%s --", strings.TrimPrefix(file, prefix)),
 			Short: fmt.Sprintf("external command %s", path),
@@ -58,4 +41,40 @@ func prefixCmds(prefix string) []*cli.Command {
 		return cmds
 	}
 	return nil
+}
+
+func executablesOnPath(prefix string) (executables map[string]string, err error) {
+	path, ok := os.LookupEnv("PATH")
+	if !ok {
+		// if PATH not set, soft fail
+		return nil, fmt.Errorf("PATH not set")
+	}
+
+	paths := strings.Split(path, ":")
+	for _, p := range paths {
+		s, err := os.Stat(p)
+		if err != nil && os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		if !s.IsDir() {
+			continue
+		}
+
+		files, err := ioutil.ReadDir(p)
+		if err != nil {
+			return nil, err
+		}
+		for _, file := range files {
+			if !strings.HasPrefix(file.Name(), prefix) {
+				continue
+			}
+			if file.Mode().IsRegular() && file.Mode().Perm()&0111 != 0 {
+				executables[file.Name()] = fmt.Sprintf("%s/%s", p, file.Name())
+			}
+		}
+	}
+	return executables, nil
 }
