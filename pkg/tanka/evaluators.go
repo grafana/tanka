@@ -2,6 +2,7 @@ package tanka
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -18,7 +19,24 @@ func EvalJsonnet(path string, opts jsonnet.Opts) (raw string, err error) {
 
 	// evaluate Jsonnet
 	if opts.EvalScript != "" {
-		evalScript := fmt.Sprintf(opts.EvalScript, entrypoint)
+		var tla []string
+		for k, _ := range opts.TLACode {
+			tla = append(tla, k)
+		}
+		evalScript := fmt.Sprintf(`
+  local main = (import '%s');
+  %s
+`, entrypoint, opts.EvalScript)
+
+		if len(tla) != 0 {
+			tlaJoin := strings.Join(tla, ", ")
+			evalScript = fmt.Sprintf(`
+function(%s)
+  local main = (import '%s')(%s);
+  %s
+`, tlaJoin, entrypoint, tlaJoin, opts.EvalScript)
+		}
+
 		raw, err = jsonnet.Evaluate(path, evalScript, opts)
 		if err != nil {
 			return "", errors.Wrap(err, "evaluating jsonnet")
@@ -32,6 +50,8 @@ func EvalJsonnet(path string, opts jsonnet.Opts) (raw string, err error) {
 	}
 	return raw, nil
 }
+
+const PatternEvalScript = "main.%s"
 
 // EnvsOnlyEvalScript finds the Environment object (without its .data object)
 const EnvsOnlyEvalScript = `
@@ -61,5 +81,5 @@ local noDataEnv(object) =
     else {}
   );
 
-noDataEnv(import '%s')
+noDataEnv(main)
 `

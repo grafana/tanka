@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/go-clix/cli"
 
@@ -24,7 +25,7 @@ func evalCmd() *cli.Command {
 			JsonnetOpts: getJsonnetOpts(),
 		}
 		if *evalPattern != "" {
-			jsonnetOpts.EvalScript = "(import '%s')." + *evalPattern
+			jsonnetOpts.EvalScript = fmt.Sprintf(tanka.PatternEvalScript, *evalPattern)
 		}
 		raw, err := tanka.Eval(args[0], jsonnetOpts)
 
