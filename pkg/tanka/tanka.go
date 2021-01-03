@@ -56,7 +56,7 @@ func checkVersion(constraint string) error {
 	return nil
 }
 
-type ParseParallelOpts struct {
+type ParallelOpts struct {
 	JsonnetOpts JsonnetOpts
 	Selector    labels.Selector
 	Parallel    int

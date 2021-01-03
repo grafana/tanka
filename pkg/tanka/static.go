@@ -14,13 +14,13 @@ import (
 // Jsonnet is evaluated as normal
 type StaticLoader struct{}
 
-func (s StaticLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
+func (s StaticLoader) Load(path string, opts JsonnetOpts) (envs []*v1alpha1.Environment, err error) {
 	root, base, err := jpath.Dirs(path)
 	if err != nil {
 		return nil, err
 	}
 
-	config, err := parseStaticSpec(root, base)
+	env, err := parseStaticSpec(root, base)
 	if err != nil {
 		return nil, err
 	}
@@ -30,11 +30,11 @@ func (s StaticLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environment
 		return nil, err
 	}
 
-	if err := json.Unmarshal([]byte(data), &config.Data); err != nil {
+	if err := json.Unmarshal([]byte(data), &env.Data); err != nil {
 		return nil, err
 	}
 
-	return config, nil
+	return append(envs, env), nil
 }
 
 // parseStaticSpec parses the `spec.json` of the environment and returns a

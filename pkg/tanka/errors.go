@@ -2,7 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"strings"
 )
 
 // ErrNoEnv means that the given jsonnet has no Environment object
@@ -22,17 +21,21 @@ type ErrMultipleEnvs struct {
 }
 
 func (e ErrMultipleEnvs) Error() string {
-	return fmt.Sprintf("found multiple Environments (%s) in '%s'", strings.Join(e.names, ", "), e.path)
+	var listEnvs string
+	for _, name := range e.names {
+		listEnvs = listEnvs + fmt.Sprintf("  - %s \n", name)
+	}
+	return fmt.Sprintf("found multiple Environments in %s:\n%s", e.path, listEnvs)
 }
 
 // ErrParseParallel is an array of errors collected while parsing environments in parallel
 type ErrParseParallel struct {
-	errors []error
+	Errors []error
 }
 
 func (e ErrParseParallel) Error() string {
 	returnErr := fmt.Sprintf("Unable to parse selected Environments:\n\n")
-	for _, err := range e.errors {
+	for _, err := range e.Errors {
 		returnErr = fmt.Sprintf("%s- %s\n", returnErr, err.Error())
 	}
 	return returnErr

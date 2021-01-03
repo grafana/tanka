@@ -38,7 +38,7 @@ type ExportEnvOpts struct {
 	// optional: only export specified Kubernetes manifests
 	Targets []string
 	// optional: options for parsing Environments
-	ParseParallelOpts ParseParallelOpts
+	ParallelOpts ParallelOpts
 }
 
 func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {

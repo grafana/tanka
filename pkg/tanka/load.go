@@ -14,9 +14,27 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Load loads the Environment at `path`. It automatically detects whether to
-// load inline or statically
+// Load loads a single Environment at `path`
 func Load(path string, opts Opts) (*LoadResult, error) {
+	envs, err := LoadEnvironments(path, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(envs) > 1 {
+		names := make([]string, 0, len(envs))
+		for _, e := range envs {
+			names = append(names, e.Metadata.Name)
+		}
+		return nil, ErrMultipleEnvs{path, names}
+	}
+
+	return LoadManifests(envs[0], opts.Filters)
+}
+
+// LoadEnvironments loads Environments at `path`. It automatically detects whether to
+// load inline or statically
+func LoadEnvironments(path string, opts Opts) ([]*v1alpha1.Environment, error) {
 	_, base, err := jpath.Dirs(path)
 	if err != nil {
 		return nil, err
@@ -27,16 +45,17 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 		return nil, err
 	}
 
-	env, err := loader.Load(path, opts.JsonnetOpts)
-	if err != nil {
-		return nil, err
-	}
+	return loader.Load(path, opts.JsonnetOpts)
+}
+
+// LoadManifests loads a single Environment.
+func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
 
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}
 
-	processed, err := process.Process(env.Data, *env, opts.Filters)
+	processed, err := process.Process(env.Data, *env, filters)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +79,7 @@ func detectLoader(base string) (Loader, error) {
 
 // Loader is an abstraction over the process of loading Environments
 type Loader interface {
-	Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error)
+	Load(path string, opts JsonnetOpts) ([]*v1alpha1.Environment, error)
 }
 
 type LoadResult struct {

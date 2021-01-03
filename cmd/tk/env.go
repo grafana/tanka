@@ -236,14 +236,6 @@ func envListCmd() *cli.Command {
 			}
 		}
 
-		stat, err := os.Stat(dir)
-		if err != nil {
-			return err
-		}
-		if !stat.IsDir() {
-			return fmt.Errorf("Not a directory: %s", dir)
-		}
-
 		envs, err := tanka.FindEnvironments(dir, getLabelSelector())
 		if err != nil {
 			return err

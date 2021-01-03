@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -10,8 +11,18 @@ import (
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
+// ValidateMin checks that at least n arguments were given
+func ValidateMin(n int) cli.ValidateFunc {
+	return func(args []string) error {
+		if len(args) < n {
+			return fmt.Errorf("expects at least %v arg, received %v", n, len(args))
+		}
+		return nil
+	}
+}
+
 var workflowArgs = cli.Args{
-	Validator: cli.ValidateExact(1),
+	Validator: ValidateMin(1),
 	Predictor: cli.PredictFunc(func(args complete.Args) []string {
 		pwd, err := os.Getwd()
 		if err != nil {
