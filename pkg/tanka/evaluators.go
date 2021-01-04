@@ -19,15 +19,16 @@ func EvalJsonnet(path string, opts jsonnet.Opts) (raw string, err error) {
 	// evaluate Jsonnet
 	if opts.EvalScript != "" {
 		evalScript := fmt.Sprintf(opts.EvalScript, entrypoint)
-		raw, err = jsonnet.Evaluate(entrypoint, evalScript, opts)
+		raw, err = jsonnet.Evaluate(path, evalScript, opts)
 		if err != nil {
 			return "", errors.Wrap(err, "evaluating jsonnet")
 		}
-	} else {
-		raw, err = jsonnet.EvaluateFile(entrypoint, opts)
-		if err != nil {
-			return "", errors.Wrap(err, "evaluating jsonnet")
-		}
+		return raw, nil
+	}
+
+	raw, err = jsonnet.EvaluateFile(entrypoint, opts)
+	if err != nil {
+		return "", errors.Wrap(err, "evaluating jsonnet")
 	}
 	return raw, nil
 }

@@ -55,6 +55,7 @@ func exportCmd() *cli.Command {
 
 		var paths []string
 		for _, path := range args[1:] {
+			// find possible environments
 			if *recursive {
 				rootDir, err := jpath.FindRoot(path)
 				if err != nil {
@@ -73,15 +74,17 @@ func exportCmd() *cli.Command {
 				continue
 			}
 
+			// validate environment
 			jsonnetOpts := opts.ParseParallelOpts.JsonnetOpts
 			jsonnetOpts.EvalScript = tanka.EnvsOnlyEvalScript
-			_, _, err := tanka.ParseEnv(path, jsonnetOpts)
+			_, err := tanka.Load(path, tanka.Opts{JsonnetOpts: jsonnetOpts})
 			if err != nil {
 				return err
 			}
 			paths = append(paths, path)
 		}
 
+		// export them
 		return tanka.ExportEnvironments(paths, args[0], &opts)
 	}
 	return cmd

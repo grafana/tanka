@@ -109,18 +109,19 @@ func TestProcess(t *testing.T) {
 
 	for _, c := range tests {
 		t.Run(c.name, func(t *testing.T) {
-			config := v1alpha1.New()
-			config.Metadata.Name = "testdata"
-			config.Spec = c.spec
+			env := v1alpha1.New()
+			env.Metadata.Name = "testdata"
+			env.Spec = c.spec
+			env.Data = c.deep.(map[string]interface{})
 
-			if config.Spec.InjectLabels {
+			if env.Spec.InjectLabels {
 				for i, m := range c.flat {
-					m.Metadata().Labels()[LabelEnvironment] = config.Metadata.NameLabel()
+					m.Metadata().Labels()[LabelEnvironment] = env.Metadata.NameLabel()
 					c.flat[i] = m
 				}
 			}
 
-			got, err := Process(c.deep.(map[string]interface{}), *config, c.targets)
+			got, err := Process(*env, c.targets)
 			require.Equal(t, c.err, err)
 
 			Sort(c.flat)
@@ -142,7 +143,10 @@ func mapToList(ms map[string]manifest.Manifest) manifest.List {
 func TestProcessOrder(t *testing.T) {
 	got := make([]manifest.List, 10)
 	for i := 0; i < 10; i++ {
-		r, err := Process(testDataDeep().Deep.(map[string]interface{}), *v1alpha1.New(), nil)
+		env := v1alpha1.New()
+		env.Data = testDataDeep().Deep.(map[string]interface{})
+
+		r, err := Process(*env, nil)
 		require.NoError(t, err)
 		got[i] = r
 	}

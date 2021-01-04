@@ -7,6 +7,21 @@ import (
 	"runtime"
 )
 
+// Dirs returns the project-root (root) and environment directory (base)
+func Dirs(path string) (root string, base string, err error) {
+	root, err = FindRoot(path)
+	if err != nil {
+		return "", "", err
+	}
+
+	base, err = FindBase(path, root)
+	if err != nil {
+		return root, "", err
+	}
+
+	return root, base, err
+}
+
 // FindRoot returns the absolute path of the project root, being the directory
 // that directly holds `tkrc.yaml` if it exists, otherwise the directory that
 // directly holds `jsonnetfile.json`

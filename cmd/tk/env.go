@@ -14,7 +14,6 @@ import (
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
-	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
@@ -42,32 +41,6 @@ var kubectlContexts = cli.PredictFunc(
 		return c
 	},
 )
-
-func setupConfiguration(baseDir string) *v1alpha1.Environment {
-	_, baseDir, rootDir, err := jpath.Resolve(baseDir)
-	if err != nil {
-		log.Fatalln("Resolving jpath:", err)
-	}
-
-	// name of the environment: relative path from rootDir
-	name, _ := filepath.Rel(rootDir, baseDir)
-
-	config, err := spec.ParseDir(baseDir, name)
-	if err != nil {
-		switch err.(type) {
-		// the config includes deprecated fields
-		case spec.ErrDeprecated:
-			if verbose {
-				fmt.Print(err)
-			}
-		// some other error
-		default:
-			log.Fatalf("Reading spec.json: %s", err)
-		}
-	}
-
-	return config
-}
 
 func envSetCmd() *cli.Command {
 	cmd := &cli.Command{
@@ -302,4 +275,15 @@ func envListCmd() *cli.Command {
 		return nil
 	}
 	return cmd
+}
+
+func setupConfiguration(baseDir string) *v1alpha1.Environment {
+	env, err := tanka.Load(baseDir, tanka.Opts{
+		JsonnetOpts: tanka.JsonnetOpts{EvalScript: tanka.EnvsOnlyEvalScript},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return env.Env
 }

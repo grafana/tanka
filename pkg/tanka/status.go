@@ -17,11 +17,11 @@ type Info struct {
 
 // Status returns information about the particular environment
 func Status(baseDir string, opts Opts) (*Info, error) {
-	r, err := load(baseDir, opts)
+	r, err := Load(baseDir, opts)
 	if err != nil {
 		return nil, err
 	}
-	kube, err := r.connect()
+	kube, err := r.Connect()
 	if err != nil {
 		return nil, err
 	}
