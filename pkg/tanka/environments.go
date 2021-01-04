@@ -16,28 +16,36 @@ const baseDirIndicator = "main.jsonnet"
 const parallel = 8
 
 // FindBaseDirs searches for possible environments
-func FindBaseDirs(workdir string) (dirs []string, err error) {
-	_, _, _, err = jpath.Resolve(workdir)
+func FindBaseDirs(path string) (paths []string, err error) {
+	pathInfo, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	if !pathInfo.IsDir() {
+		return append(paths, path), nil
+	}
+
+	_, _, _, err = jpath.Resolve(path)
 	if err == jpath.ErrorNoRoot {
 		return nil, err
 	}
 
-	if err := filepath.Walk(workdir, func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if _, err := os.Stat(filepath.Join(path, baseDirIndicator)); err != nil {
 			// missing file, not a valid environment directory
 			return nil
 		}
-		dirs = append(dirs, path)
+		paths = append(paths, path)
 		return nil
 	}); err != nil {
 		return nil, err
 	}
-	return dirs, nil
+	return paths, nil
 }
 
 // FindEnvironments searches for actual environments
 // ignores directories if no environments are found
-func FindEnvironments(path string, selector labels.Selector) (envs []*v1alpha1.Environment, err error) {
+func FindEnvironments(path string, selector labels.Selector) (envs map[string][]*v1alpha1.Environment, err error) {
 	opts := ParallelOpts{
 		JsonnetOpts: JsonnetOpts{
 			EvalScript: EnvsOnlyEvalScript,
@@ -45,21 +53,12 @@ func FindEnvironments(path string, selector labels.Selector) (envs []*v1alpha1.E
 		Selector: selector,
 	}
 
-	pathInfo, err := os.Stat(path)
+	paths, err := FindBaseDirs(path)
 	if err != nil {
 		return nil, err
 	}
-	var parsePath []string
-	if pathInfo.IsDir() {
-		parsePath, err = FindBaseDirs(path)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		parsePath = append(parsePath, path)
-	}
 
-	envs, err = LoadEnvironmentsParallel(parsePath, opts)
+	envs, err = LoadEnvironmentsParallel(paths, opts)
 
 	if err != nil {
 		switch err.(type) {
@@ -87,12 +86,12 @@ func FindEnvironments(path string, selector labels.Selector) (envs []*v1alpha1.E
 }
 
 // LoadEnvironmentsParallel evaluates multiple environments in parallel
-func LoadEnvironmentsParallel(paths []string, opts ParallelOpts) (envs []*v1alpha1.Environment, err error) {
+func LoadEnvironmentsParallel(paths []string, opts ParallelOpts) (envs map[string][]*v1alpha1.Environment, err error) {
+	envs = make(map[string][]*v1alpha1.Environment, 0)
+
 	wg := sync.WaitGroup{}
 	envsChan := make(chan loadJob)
 	var allErrors []error
-
-	results := make([]*v1alpha1.Environment, 0)
 
 	numParallel := parallel
 	if opts.Parallel > 0 {
@@ -102,12 +101,21 @@ func LoadEnvironmentsParallel(paths []string, opts ParallelOpts) (envs []*v1alph
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			envs, errs := loadWorker(envsChan)
+			result, errs := loadWorker(envsChan)
 			if errs != nil {
 				allErrors = append(allErrors, errs...)
 			}
-			if envs != nil {
-				results = append(results, envs...)
+			if result != nil {
+				for path, v := range result {
+					for _, env := range v {
+						if env == nil {
+							continue
+						}
+						if opts.Selector == nil || opts.Selector.Empty() || opts.Selector.Matches(env.Metadata) {
+							envs[path] = append(envs[path], env)
+						}
+					}
+				}
 			}
 		}()
 	}
@@ -120,15 +128,6 @@ func LoadEnvironmentsParallel(paths []string, opts ParallelOpts) (envs []*v1alph
 	}
 	close(envsChan)
 	wg.Wait()
-
-	for _, env := range results {
-		if env == nil {
-			continue
-		}
-		if opts.Selector == nil || opts.Selector.Empty() || opts.Selector.Matches(env.Metadata) {
-			envs = append(envs, env)
-		}
-	}
 
 	if len(allErrors) != 0 {
 		return envs, ErrParseParallel{Errors: allErrors}
@@ -143,14 +142,18 @@ type loadJob struct {
 	env  *v1alpha1.Environment
 }
 
-func loadWorker(envsChan <-chan loadJob) (envs []*v1alpha1.Environment, errs []error) {
+func loadWorker(envsChan <-chan loadJob) (envs map[string][]*v1alpha1.Environment, errs []error) {
+	envs = make(map[string][]*v1alpha1.Environment, 0)
 	for req := range envsChan {
 		loaded, err := LoadEnvironments(req.path, Opts{JsonnetOpts: req.opts})
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s:\n %w", req.path, err))
 			continue
 		}
-		envs = append(envs, loaded...)
+		if envs[req.path] == nil {
+			envs[req.path] = make([]*v1alpha1.Environment, 0)
+		}
+		envs[req.path] = append(envs[req.path], loaded...)
 	}
 	if len(errs) != 0 {
 		return envs, errs

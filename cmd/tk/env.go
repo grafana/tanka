@@ -250,7 +250,9 @@ func envListCmd() *cli.Command {
 			return nil
 		} else if *useNames {
 			for _, e := range envs {
-				fmt.Println(e.Metadata.Name)
+				for _, env := range e {
+					fmt.Println(env.Metadata.Name)
+				}
 			}
 			return nil
 		}
@@ -259,7 +261,9 @@ func envListCmd() *cli.Command {
 		f := "%s\t%s\t%s\t\n"
 		fmt.Fprintf(w, f, "NAME", "NAMESPACE", "SERVER")
 		for _, e := range envs {
-			fmt.Fprintf(w, f, e.Metadata.Name, e.Spec.Namespace, e.Spec.APIServer)
+			for _, env := range e {
+				fmt.Fprintf(w, f, env.Metadata.Name, env.Spec.Namespace, env.Spec.APIServer)
+			}
 		}
 		w.Flush()
 
