@@ -147,7 +147,7 @@ func diffCmd() *cli.Command {
 
 func showCmd() *cli.Command {
 	cmd := &cli.Command{
-		Use:   "show <path>",
+		Use:   "show <path> [name]",
 		Short: "jsonnet as yaml",
 		Args:  workflowArgs,
 	}
@@ -156,6 +156,7 @@ func showCmd() *cli.Command {
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getSelector := labelSelectorFlag(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		if !interactive && !*allowRedirect {
@@ -170,10 +171,24 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return err
 		}
 
-		pretty, err := tanka.Show(args[0], tanka.Opts{
+		var name, path string
+		if len(args) == 2 {
+			path = args[0]
+			name = args[1]
+		} else {
+			name, path, err = environmentSelector(args[0], getSelector())
+			if err != nil {
+				return err
+			}
+		}
+
+		opts := tanka.Opts{
 			JsonnetOpts: getJsonnetOpts(),
 			Filters:     filters,
-		})
+		}
+		opts.JsonnetOpts.EvalScript = fmt.Sprintf(tanka.SingleEnvEvalScript, name)
+
+		pretty, err := tanka.Show(path, opts)
 
 		if err != nil {
 			return err
