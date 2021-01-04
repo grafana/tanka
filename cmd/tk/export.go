@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
+	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
@@ -42,28 +43,30 @@ func exportCmd() *cli.Command {
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts := tanka.ExportEnvOpts{
+		opts := tanka.ExportOpts{
 			Format:    *format,
 			Extension: *extension,
 			Merge:     *merge,
-			Targets:   vars.targets,
-			ParseParallelOpts: tanka.ParseParallelOpts{
+			Opts: tanka.Opts{
+				Filters:     process.MustStrExps(vars.targets...), // TODO: check err
 				JsonnetOpts: getJsonnetOpts(),
-				Selector:    getLabelSelector(),
 			},
 		}
 
+		outputDir := args[0]
+
 		var paths []string
 		for _, path := range args[1:] {
-			// find possible environments
+			// recursive?
 			if *recursive {
 				rootDir, err := jpath.FindRoot(path)
 				if err != nil {
 					return errors.Wrap(err, "resolving jpath")
 				}
 
-				// get absolute path to Environment
-				envs, err := tanka.FindEnvironments(path, opts.ParseParallelOpts.Selector)
+				envs, err := tanka.ListEnvs(path, tanka.ListOpts{
+					Selector: getLabelSelector(),
+				})
 				if err != nil {
 					return err
 				}
@@ -71,21 +74,16 @@ func exportCmd() *cli.Command {
 				for _, env := range envs {
 					paths = append(paths, filepath.Join(rootDir, env.Metadata.Namespace))
 				}
+
 				continue
 			}
 
-			// validate environment
-			jsonnetOpts := opts.ParseParallelOpts.JsonnetOpts
-			jsonnetOpts.EvalScript = tanka.EnvsOnlyEvalScript
-			_, err := tanka.Load(path, tanka.Opts{JsonnetOpts: jsonnetOpts})
-			if err != nil {
-				return err
-			}
-			paths = append(paths, path)
+			// single env
+			paths = []string{path}
 		}
 
 		// export them
-		return tanka.ExportEnvironments(paths, args[0], &opts)
+		return tanka.Export(paths, outputDir, &opts)
 	}
 	return cmd
 }

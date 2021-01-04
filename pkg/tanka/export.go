@@ -14,7 +14,6 @@ import (
 	"github.com/Masterminds/sprig/v3"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
-	"github.com/grafana/tanka/pkg/process"
 )
 
 // BelRune is a string of the Ascii character BEL which made computers ring in ancient times
@@ -28,20 +27,20 @@ const BelRune = string(rune(7))
 const manifestFile = "manifest.json"
 
 // ExportEnvOpts specify options on how to export environments
-type ExportEnvOpts struct {
+type ExportOpts struct {
+	Opts
+
 	// formatting the filename based on the exported Kubernetes manifest
 	Format string
 	// extension of the filename
 	Extension string
 	// merge export with existing directory
 	Merge bool
-	// optional: only export specified Kubernetes manifests
-	Targets []string
-	// optional: options for parsing Environments
-	ParseParallelOpts ParseParallelOpts
+	// // optional: only export specified Kubernetes manifests
+	// Targets []string
 }
 
-func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
+func Export(paths []string, to string, opts *ExportOpts) error {
 	// Keep track of which file maps to which environment
 	fileToEnv := map[string]string{}
 
@@ -54,23 +53,19 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 		return fmt.Errorf("Output dir `%s` not empty. Pass --merge to ignore this", to)
 	}
 
+	var jobs []job
 	for _, path := range paths {
-		// select targets to export
-		filter, err := process.StrExps(opts.Targets...)
-		if err != nil {
-			return err
-		}
+		jobs = append(jobs, job{path: path, opts: opts.Opts})
+	}
 
-		// get the manifests
-		loaded, err := Load(path, Opts{
-			Filters: filter,
-		})
-		if err != nil {
-			return err
-		}
+	loaded, err := parse(jobs, 8)
+	if err != nil {
+		return err
+	}
 
-		env := loaded.Env
-		res := loaded.Resources
+	for _, l := range loaded {
+		env := l.Env
+		res := l.Resources
 
 		// create raw manifest version of env for templating
 		env.Data = nil
@@ -195,4 +190,49 @@ func applyTemplate(template *template.Template, m manifest.Manifest) (path strin
 	path = strings.Replace(path, BelRune, string(os.PathSeparator), -1)
 
 	return path, nil
+}
+
+func parse(jobs []job, n int) ([]LoadResult, error) {
+	jobCh := make(chan job, len(jobs))
+	resCh := make(chan res, len(jobs))
+
+	for w := 0; w <= n; w++ {
+		go worker(jobCh, resCh)
+	}
+
+	var err error
+	for _, j := range jobs {
+		jobCh <- j
+	}
+	close(jobCh)
+
+	results := make([]LoadResult, 0, len(jobs))
+	for range jobs {
+		r := <-resCh
+		if r.err != nil {
+			err = r.err
+		}
+		if r.data != nil {
+			results = append(results, *r.data)
+		}
+	}
+
+	return results, err
+}
+
+func worker(jobs <-chan job, results chan<- res) {
+	for j := range jobs {
+		l, err := Load(j.path, j.opts)
+		results <- res{data: l, err: err}
+	}
+}
+
+type job struct {
+	path string
+	opts Opts
+}
+
+type res struct {
+	data *LoadResult
+	err  error
 }
