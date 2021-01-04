@@ -7,6 +7,7 @@ import (
 	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
 
+	"github.com/grafana/tanka/pkg/export"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/tanka"
@@ -27,31 +28,19 @@ func exportCmd() *cli.Command {
 		Args:  args,
 	}
 
-	format := cmd.Flags().String(
-		"format",
-		"{{.apiVersion}}.{{.kind}}-{{.metadata.name}}",
-		"https://tanka.dev/exporting#filenames",
-	)
-
-	extension := cmd.Flags().String("extension", "yaml", "File extension")
-	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
-
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 	getLabelSelector := labelSelectorFlag(cmd.Flags())
-
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
+	var opts export.Opts
+	cmd.Flags().StringVar(&opts.Extension, "extension", "yaml", "File extension")
+	cmd.Flags().BoolVar(&opts.Merge, "merge", false, "Allow merging with existing directory")
+	cmd.Flags().StringVar(&opts.Format, "format", export.DefaultFormat, "https://tanka.dev/exporting#filenames")
+
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		opts := tanka.ExportOpts{
-			Format:    *format,
-			Extension: *extension,
-			Merge:     *merge,
-			Opts: tanka.Opts{
-				Filters:     process.MustStrExps(vars.targets...), // TODO: check err
-				JsonnetOpts: getJsonnetOpts(),
-			},
-		}
+		opts.Filters = process.MustStrExps(vars.targets...) // TODO: check err
+		opts.JsonnetOpts = getJsonnetOpts()
 
 		outputDir := args[0]
 
@@ -79,11 +68,11 @@ func exportCmd() *cli.Command {
 			}
 
 			// single env
-			paths = []string{path}
+			paths = append(paths, path)
 		}
 
 		// export them
-		return tanka.Export(paths, outputDir, &opts)
+		return export.Export(paths, outputDir, &opts)
 	}
 	return cmd
 }

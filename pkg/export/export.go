@@ -1,4 +1,6 @@
-package tanka
+// Package export provides functionality for exporting multiple Tanka
+// environments from their source code into a structured tree of YAML documents
+package export
 
 import (
 	"bytes"
@@ -9,11 +11,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/tanka"
 )
 
 // BelRune is a string of the Ascii character BEL which made computers ring in ancient times
@@ -26,9 +29,12 @@ const BelRune = string(rune(7))
 // debugging purposes.
 const manifestFile = "manifest.json"
 
+// DefaultFormat is the filename format used if no other format was specified
+const DefaultFormat = "{{.apiVersion}}.{{.kind}}-{{.metadata.name}}"
+
 // ExportEnvOpts specify options on how to export environments
-type ExportOpts struct {
-	Opts
+type Opts struct {
+	tanka.Opts
 
 	// formatting the filename based on the exported Kubernetes manifest
 	Format string
@@ -36,13 +42,17 @@ type ExportOpts struct {
 	Extension string
 	// merge export with existing directory
 	Merge bool
-	// // optional: only export specified Kubernetes manifests
-	// Targets []string
 }
 
-func Export(paths []string, to string, opts *ExportOpts) error {
+// Export loads specified environments, converts their resources to YAML and
+// writes them to disk based on opts.Format.
+func Export(paths []string, to string, opts *Opts) error {
 	// Keep track of which file maps to which environment
 	fileToEnv := map[string]string{}
+
+	if opts.Format == "" {
+		opts.Format = DefaultFormat
+	}
 
 	// dir must be empty
 	empty, err := dirEmpty(to)
@@ -190,49 +200,4 @@ func applyTemplate(template *template.Template, m manifest.Manifest) (path strin
 	path = strings.Replace(path, BelRune, string(os.PathSeparator), -1)
 
 	return path, nil
-}
-
-func parse(jobs []job, n int) ([]LoadResult, error) {
-	jobCh := make(chan job, len(jobs))
-	resCh := make(chan res, len(jobs))
-
-	for w := 0; w <= n; w++ {
-		go worker(jobCh, resCh)
-	}
-
-	var err error
-	for _, j := range jobs {
-		jobCh <- j
-	}
-	close(jobCh)
-
-	results := make([]LoadResult, 0, len(jobs))
-	for range jobs {
-		r := <-resCh
-		if r.err != nil {
-			err = r.err
-		}
-		if r.data != nil {
-			results = append(results, *r.data)
-		}
-	}
-
-	return results, err
-}
-
-func worker(jobs <-chan job, results chan<- res) {
-	for j := range jobs {
-		l, err := Load(j.path, j.opts)
-		results <- res{data: l, err: err}
-	}
-}
-
-type job struct {
-	path string
-	opts Opts
-}
-
-type res struct {
-	data *LoadResult
-	err  error
 }
