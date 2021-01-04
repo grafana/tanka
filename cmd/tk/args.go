@@ -18,14 +18,14 @@ var workflowArgs = cli.Args{
 			return nil
 		}
 
-		dirs, err := tanka.FindBaseDirs(pwd)
+		dirs, err := tanka.ListEnvs(pwd, tanka.ListOpts{})
 		if err != nil {
 			return nil
 		}
 
 		var reldirs []string
-		for _, dir := range dirs {
-			reldir, err := filepath.Rel(pwd, dir)
+		for _, env := range dirs {
+			reldir, err := filepath.Rel(pwd, env.Metadata.Namespace)
 			if err == nil {
 				reldirs = append(reldirs, reldir)
 			}

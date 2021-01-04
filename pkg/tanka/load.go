@@ -58,9 +58,27 @@ func detectLoader(base string) (Loader, error) {
 	return &StaticLoader{}, nil
 }
 
+func Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
+	_, base, err := jpath.Dirs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	loader, err := detectLoader(base)
+	if err != nil {
+		return nil, err
+	}
+
+	return loader.Peek(path, opts)
+}
+
 // Loader is an abstraction over the process of loading Environments
 type Loader interface {
+	// Load the environment at path
 	Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error)
+
+	// Peek only loads enviornment metadata, not the actual resource contents
+	Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error)
 }
 
 type LoadResult struct {

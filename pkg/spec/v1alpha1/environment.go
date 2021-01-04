@@ -35,6 +35,7 @@ type Metadata struct {
 }
 
 // Has and Get make Metadata a simple wrapper for labels.Labels to use our map in their querier
+// TODO: This should be implemented on Labels instead
 func (m Metadata) Has(label string) (exists bool) {
 	_, exists = m.Labels[label]
 	return exists
