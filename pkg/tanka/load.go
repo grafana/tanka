@@ -36,7 +36,7 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 		return nil, err
 	}
 
-	processed, err := process.Process(env.Data, *env, opts.Filters)
+	processed, err := process.Process(*env, opts.Filters)
 	if err != nil {
 		return nil, err
 	}

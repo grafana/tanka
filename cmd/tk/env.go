@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"text/tabwriter"
@@ -274,4 +275,15 @@ func envListCmd() *cli.Command {
 		return nil
 	}
 	return cmd
+}
+
+func setupConfiguration(baseDir string) *v1alpha1.Environment {
+	env, err := tanka.Load(baseDir, tanka.Opts{
+		JsonnetOpts: tanka.JsonnetOpts{EvalScript: tanka.EnvsOnlyEvalScript},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return env.Env
 }

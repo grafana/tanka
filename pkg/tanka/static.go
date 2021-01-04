@@ -46,7 +46,7 @@ func parseStaticSpec(root, base string) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	config, err := spec.ParseDir(base, name)
+	env, err := spec.ParseDir(base, name)
 	if err != nil {
 		switch err.(type) {
 		// the config includes deprecated fields
@@ -54,12 +54,12 @@ func parseStaticSpec(root, base string) (*v1alpha1.Environment, error) {
 			log.Println(err)
 		// spec.json missing. we can still work with the default value
 		case spec.ErrNoSpec:
-			return config, nil
+			return env, nil
 		// some other error
 		default:
 			return nil, err
 		}
 	}
 
-	return config, nil
+	return env, nil
 }

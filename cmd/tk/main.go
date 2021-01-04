@@ -8,7 +8,6 @@ import (
 	"github.com/go-clix/cli"
 	"golang.org/x/crypto/ssh/terminal"
 
-	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
@@ -54,15 +53,4 @@ func main() {
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln(color.RedString("Error:"), err)
 	}
-}
-
-func setupConfiguration(baseDir string) *v1alpha1.Environment {
-	env, err := tanka.Load(baseDir, tanka.Opts{
-		JsonnetOpts: tanka.JsonnetOpts{EvalScript: tanka.EnvsOnlyEvalScript},
-	})
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return env.Env
 }
