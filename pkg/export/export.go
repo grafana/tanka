@@ -103,9 +103,10 @@ func Export(paths []string, to string, opts *Opts) error {
 			}
 
 			// Create all subfolders in path
-			path := filepath.Join(to, name+"."+opts.Extension)
+			relpath := name + "." + opts.Extension
+			path := filepath.Join(to, relpath)
 
-			fileToEnv[path] = env.Metadata.Namespace
+			fileToEnv[relpath] = env.Metadata.Namespace
 
 			// Abort if already exists
 			if exists, err := fileExists(path); err != nil {

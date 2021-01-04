@@ -67,7 +67,6 @@ func exportCmd() *cli.Command {
 				continue
 			}
 
-			// single env
 			paths = append(paths, path)
 		}
 
