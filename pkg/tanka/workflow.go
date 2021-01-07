@@ -117,7 +117,7 @@ func Diff(baseDir string, opts DiffOpts) (*string, error) {
 	return kube.Diff(l.Resources, kubernetes.DiffOpts{
 		Summarize: opts.Summarize,
 		Strategy:  opts.Strategy,
-		WithPrune:  opts.WithPrune,
+		WithPrune: opts.WithPrune,
 	})
 }
 
