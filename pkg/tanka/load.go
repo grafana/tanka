@@ -17,12 +17,7 @@ import (
 // Load loads the Environment at `path`. It automatically detects whether to
 // load inline or statically
 func Load(path string, opts Opts) (*LoadResult, error) {
-	_, base, err := jpath.Dirs(path)
-	if err != nil {
-		return nil, err
-	}
-
-	loader, err := detectLoader(base)
+	loader, err := detectLoader(path)
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +42,7 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 // Peek loads the metadata of the environment at path. To get resources as well,
 // use Load
 func Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
-	_, base, err := jpath.Dirs(path)
-	if err != nil {
-		return nil, err
-	}
-
-	loader, err := detectLoader(base)
+	loader, err := detectLoader(path)
 	if err != nil {
 		return nil, err
 	}
@@ -62,9 +52,14 @@ func Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
 
 // detectLoader detects whether the environment is inline or static and picks
 // the approriate loader
-func detectLoader(base string) (Loader, error) {
+func detectLoader(path string) (Loader, error) {
+	_, base, err := jpath.Dirs(path)
+	if err != nil {
+		return nil, err
+	}
+
 	// check if spec.json exists
-	_, err := os.Stat(filepath.Join(base, spec.Specfile))
+	_, err = os.Stat(filepath.Join(base, spec.Specfile))
 	if os.IsNotExist(err) {
 		return &InlineLoader{}, nil
 	} else if err != nil {
