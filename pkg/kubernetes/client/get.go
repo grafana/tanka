@@ -35,15 +35,16 @@ func (k Kubectl) GetByLabels(namespace, kind string, labels map[string]string) (
 	return unwrapList(list)
 }
 
+// TODO: this feels wrong
+type GetByStateOpts struct {
+	ignoreNotFound bool
+}
+
 // GetByState returns the full object, including runtime fields for each
-// resource in the state
-func (k Kubectl) GetByState(data manifest.List) (manifest.List, error) {
+// resource in the state. optIgnoreNotFound passes --ignore-not-found option to kubectl
+func (k Kubectl) GetByState(data manifest.List, opts getByStateOpts) (manifest.List, error) {
 	list, err := k.get("", "", []string{"-f", "-"}, getOpts{
-		// TODO: is this the right place to specify --ignore-not-found?
-		// 	or do we want to pass it as an argument to GetByState()
-		// 	the side effect of adding it here is that prune no longer
-		//	fails when there are new k8s objects in jsonnet
-		ignoreNotFound: true,
+		ignoreNotFound: opts.ignoreNotFound,
 		stdin:          data.String(),
 	})
 	if err != nil {
@@ -92,6 +93,11 @@ func (k Kubectl) get(namespace, kind string, selector []string, opts getOpts) (m
 	// run command
 	if err := cmd.Run(); err != nil {
 		return nil, parseGetErr(err, serr.String())
+	}
+
+	// return error if nothing was returned
+	if sout.Len() == 0 {
+		return nil, ErrorNothingReturned{serr.String()}
 	}
 
 	// parse result
