@@ -48,12 +48,13 @@ Please upgrade kubectl to at least version 1.18.1.`)
 		return nil, err
 	}
 
-	// reports all resources as new
-	staticDiff := StaticDiffer(true)
+	// reports all resources as created
+	staticDiffAllCreated := StaticDiffer(true)
 
-	// reports all resources as deleted (TODO: check)
-	pruneDiff := StaticDiffer(false)
+	// reports all resources as deleted
+	staticDiffAllDeleted := StaticDiffer(false)
 
+	// include orphaned resources in the diff if it was requested by the user
 	orphaned := manifest.List{}
 	if opts.WithPrune {
 		// find orphaned resources
@@ -66,8 +67,8 @@ Please upgrade kubectl to at least version 1.18.1.`)
 	// run the diff
 	d, err := multiDiff{
 		{differ: liveDiff, state: live},
-		{differ: staticDiff, state: soon},
-		{differ: pruneDiff, state: orphaned},
+		{differ: staticDiffAllCreated, state: soon},
+		{differ: statisDiffAllDeleted, state: orphaned},
 	}.diff()
 
 	switch {
