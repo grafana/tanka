@@ -39,6 +39,11 @@ func (k Kubectl) GetByLabels(namespace, kind string, labels map[string]string) (
 // resource in the state
 func (k Kubectl) GetByState(data manifest.List) (manifest.List, error) {
 	list, err := k.get("", "", []string{"-f", "-"}, getOpts{
+		// TODO: is this the right place to specify --ignore-not-found?
+		// 	or do we want to pass it as an argument to GetByState()
+		// 	the side effect of adding it here is that prune no longer
+		//	fails when there are new k8s objects in jsonnet
+		ignoreNotFound: true,
 		stdin: data.String(),
 	})
 	if err != nil {
@@ -49,16 +54,19 @@ func (k Kubectl) GetByState(data manifest.List) (manifest.List, error) {
 }
 
 type getOpts struct {
-	allNamespaces bool
-	stdin         string
+	allNamespaces  bool
+	ignoreNotFound bool
+	stdin          string
 }
 
 func (k Kubectl) get(namespace, kind string, selector []string, opts getOpts) (manifest.Manifest, error) {
 	// build cli flags and args
 	argv := []string{
-		"-o", "json", "--ignore-not-found",
+		"-o", "json",
 	}
-	fmt.Println("FIXME: ignoring not found objects")
+	if opts.ignoreNotFound {
+		argv = append(argv, "--ignore-not-found")
+	}
 
 	if opts.allNamespaces {
 		argv = append(argv, "--all-namespaces")
