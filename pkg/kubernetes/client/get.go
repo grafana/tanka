@@ -44,7 +44,7 @@ func (k Kubectl) GetByState(data manifest.List) (manifest.List, error) {
 		// 	the side effect of adding it here is that prune no longer
 		//	fails when there are new k8s objects in jsonnet
 		ignoreNotFound: true,
-		stdin: data.String(),
+		stdin:          data.String(),
 	})
 	if err != nil {
 		return nil, err
