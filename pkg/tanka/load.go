@@ -17,7 +17,7 @@ import (
 // Load loads the Environment at `path`. It automatically detects whether to
 // load inline or statically
 func Load(path string, opts Opts) (*LoadResult, error) {
-	loader, err := detectLoader(path)
+	loader, err := DetectLoader(path)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 // Peek loads the metadata of the environment at path. To get resources as well,
 // use Load
 func Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
-	loader, err := detectLoader(path)
+	loader, err := DetectLoader(path)
 	if err != nil {
 		return nil, err
 	}
@@ -50,9 +50,9 @@ func Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
 	return loader.Peek(path, opts)
 }
 
-// detectLoader detects whether the environment is inline or static and picks
+// DetectLoader detects whether the environment is inline or static and picks
 // the approriate loader
-func detectLoader(path string) (Loader, error) {
+func DetectLoader(path string) (Loader, error) {
 	_, base, err := jpath.Dirs(path)
 	if err != nil {
 		return nil, err
