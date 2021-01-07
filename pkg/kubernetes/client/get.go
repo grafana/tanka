@@ -56,8 +56,9 @@ type getOpts struct {
 func (k Kubectl) get(namespace, kind string, selector []string, opts getOpts) (manifest.Manifest, error) {
 	// build cli flags and args
 	argv := []string{
-		"-o", "json",
+		"-o", "json", "--ignore-not-found",
 	}
+	fmt.Println("FIXME: ignoring not found objects")
 
 	if opts.allNamespaces {
 		argv = append(argv, "--all-namespaces")
