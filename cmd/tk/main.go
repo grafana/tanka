@@ -49,6 +49,11 @@ func main() {
 		toolCmd(),
 	)
 
+	// external commands prefixed with "tk-"
+	rootCmd.AddCommand(
+		prefixCommands("tk-")...,
+	)
+
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatalln(color.RedString("Error:"), err)
