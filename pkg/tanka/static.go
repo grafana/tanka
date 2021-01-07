@@ -15,7 +15,7 @@ import (
 type StaticLoader struct{}
 
 func (s StaticLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
-	config, err := Peek(path, opts)
+	config, err := s.Peek(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +44,15 @@ func (s StaticLoader) Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment
 	}
 
 	return config, nil
+}
+
+func (s StaticLoader) List(path string, opts JsonnetOpts) ([]*v1alpha1.Environment, error) {
+	env, err := s.Peek(path, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*v1alpha1.Environment{env}, nil
 }
 
 // parseStaticSpec parses the `spec.json` of the environment and returns a

@@ -50,6 +50,18 @@ func Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
 	return loader.Peek(path, opts)
 }
 
+// List finds metadata of all environments at path that could possibly be
+// loaded. List can be used to deal with multiple inline environments, by first
+// listing them, choosing the right one and then only loading that one
+func List(path string, opts JsonnetOpts) ([]*v1alpha1.Environment, error) {
+	loader, err := DetectLoader(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return loader.List(path, opts)
+}
+
 // DetectLoader detects whether the environment is inline or static and picks
 // the approriate loader
 func DetectLoader(path string) (Loader, error) {
@@ -71,11 +83,15 @@ func DetectLoader(path string) (Loader, error) {
 
 // Loader is an abstraction over the process of loading Environments
 type Loader interface {
-	// Load the environment with path
+	// Load a single environment at path
 	Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error)
 
 	// Peek only loads metadata and omits the actual resources
 	Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error)
+
+	// List returns metadata of all possible environments at path that can be
+	// loaded
+	List(path string, opts JsonnetOpts) ([]*v1alpha1.Environment, error)
 }
 
 type LoadResult struct {
