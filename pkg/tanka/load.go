@@ -44,6 +44,22 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 	return &LoadResult{Env: env, Resources: processed}, nil
 }
 
+// Peek loads the metadata of the environment at path. To get resources as well,
+// use Load
+func Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
+	_, base, err := jpath.Dirs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	loader, err := detectLoader(base)
+	if err != nil {
+		return nil, err
+	}
+
+	return loader.Peek(path, opts)
+}
+
 // detectLoader detects whether the environment is inline or static and picks
 // the approriate loader
 func detectLoader(base string) (Loader, error) {
@@ -60,7 +76,11 @@ func detectLoader(base string) (Loader, error) {
 
 // Loader is an abstraction over the process of loading Environments
 type Loader interface {
+	// Load the environment with path
 	Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error)
+
+	// Peek only loads metadata and omits the actual resources
+	Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error)
 }
 
 type LoadResult struct {

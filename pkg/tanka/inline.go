@@ -69,6 +69,11 @@ func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environmen
 	return env, nil
 }
 
+func (i *InlineLoader) Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
+	opts.EvalScript = EnvsOnlyEvalScript
+	return i.Load(path, opts)
+}
+
 // extractEnvs filters out any Environment manifests
 func extractEnvs(data interface{}) (manifest.List, error) {
 	// Scan for everything that looks like a Kubernetes object

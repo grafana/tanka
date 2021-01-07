@@ -15,12 +15,7 @@ import (
 type StaticLoader struct{}
 
 func (s StaticLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
-	root, base, err := jpath.Dirs(path)
-	if err != nil {
-		return nil, err
-	}
-
-	config, err := parseStaticSpec(root, base)
+	config, err := Peek(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -31,6 +26,20 @@ func (s StaticLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environment
 	}
 
 	if err := json.Unmarshal([]byte(data), &config.Data); err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+func (s StaticLoader) Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
+	root, base, err := jpath.Dirs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := parseStaticSpec(root, base)
+	if err != nil {
 		return nil, err
 	}
 
