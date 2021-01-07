@@ -68,7 +68,7 @@ Please upgrade kubectl to at least version 1.18.1.`)
 	d, err := multiDiff{
 		{differ: liveDiff, state: live},
 		{differ: staticDiffAllCreated, state: soon},
-		{differ: statisDiffAllDeleted, state: orphaned},
+		{differ: staticDiffAllDeleted, state: orphaned},
 	}.diff()
 
 	switch {
