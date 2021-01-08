@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestLoad(t *testing.T) {
+func TestEvalJsonnet(t *testing.T) {
 	cases := []struct {
 		name     string
 		baseDir  string
@@ -79,7 +79,7 @@ func TestLoad(t *testing.T) {
 
 		{
 			name:    "inline",
-			baseDir: "./testdata/cases/withenv/main.jsonnet",
+			baseDir: "./testdata/cases/withenv/",
 			expected: manifest.List{{
 				"apiVersion": "v1",
 				"kind":       "ConfigMap",
@@ -94,6 +94,36 @@ func TestLoad(t *testing.T) {
 				Metadata: v1alpha1.Metadata{
 					Name:      "withenv",
 					Namespace: "cases/withenv",
+					Labels:    v1alpha1.New().Metadata.Labels,
+				},
+				Spec: v1alpha1.Spec{
+					APIServer: "https://localhost",
+					Namespace: "withenv",
+				},
+				Data: map[string]interface{}{
+					"apiVersion": "v1",
+					"kind":       "ConfigMap",
+					"metadata":   map[string]interface{}{"name": "config", "namespace": "withenv"},
+				},
+			},
+		},
+		{
+			name:    "inline-filename",
+			baseDir: "./testdata/cases/withenv/main.jsonnet",
+			expected: manifest.List{{
+				"apiVersion": "v1",
+				"kind":       "ConfigMap",
+				"metadata": map[string]interface{}{
+					"name":      "config",
+					"namespace": "withenv",
+				},
+			}},
+			env: &v1alpha1.Environment{
+				APIVersion: v1alpha1.New().APIVersion,
+				Kind:       v1alpha1.New().Kind,
+				Metadata: v1alpha1.Metadata{
+					Name:      "withenv",
+					Namespace: "cases/withenv/main.jsonnet",
 					Labels:    v1alpha1.New().Metadata.Labels,
 				},
 				Spec: v1alpha1.Spec{

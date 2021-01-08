@@ -3,6 +3,7 @@ package tanka
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -50,7 +51,20 @@ func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environmen
 		return nil, err
 	}
 
-	name, err := filepath.Rel(root, base)
+	fi, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// if path is a file, use that as base for the namespace
+	if !fi.IsDir() {
+		base, err = filepath.Abs(path)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	namespace, err := filepath.Rel(root, base)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +75,7 @@ func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environmen
 		return nil, err
 	}
 
-	env, err := spec.Parse(envData, name)
+	env, err := spec.Parse(envData, namespace)
 	if err != nil {
 		return nil, err
 	}
