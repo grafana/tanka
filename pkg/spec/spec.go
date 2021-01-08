@@ -21,8 +21,29 @@ const Specfile = "spec.json"
 
 // ParseDir parses the given environments `spec.json` into a `v1alpha1.Environment`
 // object with the name set to the directories name
-func ParseDir(baseDir, namespace string) (*v1alpha1.Environment, error) {
-	fi, err := os.Stat(baseDir)
+func ParseDir(path string) (*v1alpha1.Environment, error) {
+	root, base, err := jpath.Dirs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// name of the environment: relative path from rootDir
+	name, err := filepath.Rel(root, base)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := jpath.Entrypoint(path)
+	if err != nil {
+		return nil, err
+	}
+
+	namespace, err := filepath.Rel(root, file)
+	if err != nil {
+		return nil, err
+	}
+
+	fi, err := os.Stat(base)
 	if err != nil {
 		return nil, err
 	}
@@ -30,18 +51,13 @@ func ParseDir(baseDir, namespace string) (*v1alpha1.Environment, error) {
 		return nil, errors.New("baseDir is not an directory")
 	}
 
-	name, err := jpath.FsDir(namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := ioutil.ReadFile(filepath.Join(baseDir, Specfile))
+	data, err := ioutil.ReadFile(filepath.Join(base, Specfile))
 	if err != nil {
 		if os.IsNotExist(err) {
 			c := v1alpha1.New()
 			c.Metadata.Name = name // legacy behavior
 			c.Metadata.Namespace = namespace
-			return c, ErrNoSpec{name}
+			return c, ErrNoSpec{path}
 		}
 		return nil, err
 	}
