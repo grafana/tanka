@@ -9,10 +9,10 @@ import (
 
 const parallel = 8
 
-// ParseParallel evaluates multiple environments in parallel
-func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Environment, err error) {
+// parallelLoadEnvironments evaluates multiple environments in parallel
+func parallelLoadEnvironments(paths []string, opts ParallelOpts) (envs []*v1alpha1.Environment, err error) {
 	wg := sync.WaitGroup{}
-	envsChan := make(chan parseJob)
+	envsChan := make(chan parallelJob)
 	var allErrors []error
 
 	numParallel := parallel
@@ -23,7 +23,7 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			errs := parseWorker(envsChan)
+			errs := parallelWorker(envsChan)
 			if errs != nil {
 				allErrors = append(allErrors, errs...)
 			}
@@ -35,7 +35,7 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 	for _, path := range paths {
 		env := &v1alpha1.Environment{}
 		results = append(results, env)
-		envsChan <- parseJob{
+		envsChan <- parallelJob{
 			path: path,
 			opts: opts.JsonnetOpts,
 			env:  env,
@@ -54,19 +54,19 @@ func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Env
 	}
 
 	if len(allErrors) != 0 {
-		return envs, ErrParseParallel{errors: allErrors}
+		return envs, ErrParallel{errors: allErrors}
 	}
 
 	return envs, nil
 }
 
-type parseJob struct {
+type parallelJob struct {
 	path string
 	opts JsonnetOpts
 	env  *v1alpha1.Environment
 }
 
-func parseWorker(envsChan <-chan parseJob) (errs []error) {
+func parallelWorker(envsChan <-chan parallelJob) (errs []error) {
 	for req := range envsChan {
 		env, err := LoadEnvironment(req.path, Opts{JsonnetOpts: req.opts})
 		if err != nil {
