@@ -12,6 +12,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/process"
@@ -37,8 +38,12 @@ type ExportEnvOpts struct {
 	Merge bool
 	// optional: only export specified Kubernetes manifests
 	Targets []string
-	// optional: options for parsing Environments
-	ParallelOpts ParallelOpts
+	// optional: options to parse Jsonnet
+	Opts Opts
+	// optional: filter environments based on labels
+	Selector labels.Selector
+	// optional: number of environments to process in parallel
+	Parallelism int
 }
 
 func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
@@ -55,7 +60,11 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 	}
 
 	// get all environments for paths
-	envs, err := parallelLoadEnvironments(paths, opts.ParallelOpts)
+	envs, err := parallelLoadEnvironments(paths, parallelOpts{
+		JsonnetOpts: opts.Opts.JsonnetOpts,
+		Selector:    opts.Selector,
+		Parallelism: opts.Parallelism,
+	})
 	if err != nil {
 		return err
 	}

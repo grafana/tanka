@@ -2,59 +2,56 @@ package tanka
 
 import (
 	"fmt"
-	"sync"
+
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-const parallel = 8
+const defaultParallelism = 8
+
+type parallelOpts struct {
+	JsonnetOpts JsonnetOpts
+	Selector    labels.Selector
+	Parallelism int
+}
 
 // parallelLoadEnvironments evaluates multiple environments in parallel
-func parallelLoadEnvironments(paths []string, opts ParallelOpts) (envs []*v1alpha1.Environment, err error) {
-	wg := sync.WaitGroup{}
-	envsChan := make(chan parallelJob)
-	var allErrors []error
+func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.Environment, error) {
+	jobsCh := make(chan parallelJob)
+	outCh := make(chan parallelOut)
 
-	numParallel := parallel
-	if opts.Parallel > 0 {
-		numParallel = opts.Parallel
-	}
-	for i := 0; i < numParallel; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			errs := parallelWorker(envsChan)
-			if errs != nil {
-				allErrors = append(allErrors, errs...)
-			}
-		}()
+	if opts.Parallelism <= 0 {
+		opts.Parallelism = defaultParallelism
 	}
 
-	results := make([]*v1alpha1.Environment, 0, len(paths))
+	for i := 0; i < opts.Parallelism; i++ {
+		go parallelWorker(jobsCh, outCh)
+	}
 
 	for _, path := range paths {
-		env := &v1alpha1.Environment{}
-		results = append(results, env)
-		envsChan <- parallelJob{
+		jobsCh <- parallelJob{
 			path: path,
-			opts: opts.JsonnetOpts,
-			env:  env,
+			opts: Opts{JsonnetOpts: opts.JsonnetOpts},
 		}
 	}
-	close(envsChan)
-	wg.Wait()
+	close(jobsCh)
 
-	for _, env := range results {
-		if env == nil {
+	var envs []*v1alpha1.Environment
+	var errors []error
+	for i := 0; i < len(paths); i++ {
+		out := <-outCh
+		if out.err != nil {
+			errors = append(errors, out.err)
 			continue
 		}
-		if opts.Selector == nil || opts.Selector.Empty() || opts.Selector.Matches(env.Metadata) {
-			envs = append(envs, env)
+		if opts.Selector == nil || opts.Selector.Empty() || opts.Selector.Matches(out.env.Metadata) {
+			envs = append(envs, out.env)
 		}
 	}
 
-	if len(allErrors) != 0 {
-		return envs, ErrParallel{errors: allErrors}
+	if len(errors) != 0 {
+		return envs, ErrParallel{errors: errors}
 	}
 
 	return envs, nil
@@ -62,21 +59,20 @@ func parallelLoadEnvironments(paths []string, opts ParallelOpts) (envs []*v1alph
 
 type parallelJob struct {
 	path string
-	opts JsonnetOpts
-	env  *v1alpha1.Environment
+	opts Opts
 }
 
-func parallelWorker(envsChan <-chan parallelJob) (errs []error) {
-	for req := range envsChan {
-		env, err := LoadEnvironment(req.path, Opts{JsonnetOpts: req.opts})
+type parallelOut struct {
+	env *v1alpha1.Environment
+	err error
+}
+
+func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
+	for job := range jobsCh {
+		env, err := LoadEnvironment(job.path, job.opts)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("%s:\n %w", req.path, err))
-			continue
+			err = fmt.Errorf("%s:\n %w", job.path, err)
 		}
-		*req.env = *env
+		outCh <- parallelOut{env: env, err: err}
 	}
-	if len(errs) != 0 {
-		return errs
-	}
-	return nil
 }

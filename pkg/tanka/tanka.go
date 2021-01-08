@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/semver"
-	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/process"
@@ -54,10 +53,4 @@ func checkVersion(constraint string) error {
 	}
 
 	return nil
-}
-
-type ParallelOpts struct {
-	JsonnetOpts JsonnetOpts
-	Selector    labels.Selector
-	Parallel    int
 }
