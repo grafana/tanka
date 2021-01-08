@@ -39,7 +39,7 @@ type ExportEnvOpts struct {
 	// optional: only export specified Kubernetes manifests
 	Targets []string
 	// optional: options to parse Jsonnet
-	JsonnetOpts JsonnetOpts
+	Opts Opts
 	// optional: filter environments based on labels
 	Selector labels.Selector
 	// optional: number of environments to process in parallel
@@ -61,7 +61,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 
 	// get all environments for paths
 	envs, err := parallelLoadEnvironments(paths, parallelOpts{
-		JsonnetOpts: opts.JsonnetOpts,
+		JsonnetOpts: opts.Opts.JsonnetOpts,
 		Selector:    opts.Selector,
 		Parallelism: opts.Parallelism,
 	})

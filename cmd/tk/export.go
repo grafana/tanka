@@ -44,11 +44,13 @@ func exportCmd() *cli.Command {
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		opts := tanka.ExportEnvOpts{
-			Format:      *format,
-			Extension:   *extension,
-			Merge:       *merge,
-			Targets:     vars.targets,
-			JsonnetOpts: getJsonnetOpts(),
+			Format:    *format,
+			Extension: *extension,
+			Merge:     *merge,
+			Targets:   vars.targets,
+			Opts: tanka.Opts{
+				JsonnetOpts: getJsonnetOpts(),
+			},
 			Selector:    getLabelSelector(),
 			Parallelism: *parallel,
 		}
@@ -75,7 +77,7 @@ func exportCmd() *cli.Command {
 			}
 
 			// validate environment
-			if _, err := tanka.Peek(path, opts.JsonnetOpts); err != nil {
+			if _, err := tanka.Peek(path, opts.Opts.JsonnetOpts); err != nil {
 				return err
 			}
 
