@@ -45,7 +45,7 @@ func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environmen
 		return nil, fmt.Errorf("Found no environments in '%s'", path)
 	}
 
-	root, _, err := jpath.Dirs(path)
+	root, err := jpath.FindRoot(path)
 	if err != nil {
 		return nil, err
 	}
