@@ -36,11 +36,8 @@ func (e ErrorNoCluster) Error() string {
 }
 
 // ErrorNothingReturned means that there was no output returned
-type ErrorNothingReturned struct {
-	errOut string
-}
+type ErrorNothingReturned struct {}
 
 func (e ErrorNothingReturned) Error() string {
-	// TODO: this is probably wrong
-	return fmt.Sprintf("Kubectl returned no output. Stderr was: `%s`", string(e.errOut))
+	return "kubectl returned no output"
 }

@@ -35,16 +35,11 @@ func (k Kubectl) GetByLabels(namespace, kind string, labels map[string]string) (
 	return unwrapList(list)
 }
 
-// TODO: this feels wrong
-type GetByStateOpts struct {
-	ignoreNotFound bool
-}
-
 // GetByState returns the full object, including runtime fields for each
-// resource in the state. optIgnoreNotFound passes --ignore-not-found option to kubectl
-func (k Kubectl) GetByState(data manifest.List, opts getByStateOpts) (manifest.List, error) {
+// resource in the state.
+func (k Kubectl) GetByState(data manifest.List, opts GetByStateOpts) (manifest.List, error) {
 	list, err := k.get("", "", []string{"-f", "-"}, getOpts{
-		ignoreNotFound: opts.ignoreNotFound,
+		ignoreNotFound: opts.IgnoreNotFound,
 		stdin:          data.String(),
 	})
 	if err != nil {
@@ -96,8 +91,9 @@ func (k Kubectl) get(namespace, kind string, selector []string, opts getOpts) (m
 	}
 
 	// return error if nothing was returned
+	// because parsing empty output as json would cause errors
 	if sout.Len() == 0 {
-		return nil, ErrorNothingReturned{serr.String()}
+		return nil, ErrorNothingReturned{}
 	}
 
 	// parse result
