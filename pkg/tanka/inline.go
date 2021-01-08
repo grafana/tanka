@@ -50,12 +50,12 @@ func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environmen
 		return nil, err
 	}
 
-	base, err := jpath.Entrypoint(path)
+	file, err := jpath.Entrypoint(path)
 	if err != nil {
 		return nil, err
 	}
 
-	namespace, err := filepath.Rel(root, base)
+	namespace, err := filepath.Rel(root, file)
 	if err != nil {
 		return nil, err
 	}
