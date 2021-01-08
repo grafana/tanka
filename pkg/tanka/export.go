@@ -63,7 +63,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 	envs, err := parallelLoadEnvironments(paths, parallelOpts{
 		JsonnetOpts: opts.JsonnetOpts,
 		Selector:    opts.Selector,
-		Parallel:    opts.Parallel,
+		Parallelism:    opts.Parallel,
 	})
 	if err != nil {
 		return err
