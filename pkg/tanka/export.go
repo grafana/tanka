@@ -60,12 +60,11 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 	}
 
 	// get all environments for paths
-	p := parallelOpts{
+	envs, err := parallelLoadEnvironments(paths, parallelOpts{
 		JsonnetOpts: opts.JsonnetOpts,
 		Selector:    opts.Selector,
 		Parallel:    opts.Parallel,
-	}
-	envs, err := parallelLoadEnvironments(paths, p)
+	})
 	if err != nil {
 		return err
 	}
