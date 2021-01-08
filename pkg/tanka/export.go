@@ -54,7 +54,13 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 		return fmt.Errorf("Output dir `%s` not empty. Pass --merge to ignore this", to)
 	}
 
-	for _, path := range paths {
+	// get all environments for paths
+	envs, err := ParseParallel(paths, opts.ParseParallelOpts)
+	if err != nil {
+		return err
+	}
+
+	for _, env := range envs {
 		// select targets to export
 		filter, err := process.StrExps(opts.Targets...)
 		if err != nil {
@@ -62,9 +68,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 		}
 
 		// get the manifests
-		loaded, err := Load(path, Opts{
-			Filters: filter,
-		})
+		loaded, err := LoadManifests(env, filter)
 		if err != nil {
 			return err
 		}

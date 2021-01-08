@@ -134,12 +134,12 @@ type parseJob struct {
 
 func parseWorker(envsChan <-chan parseJob) (errs []error) {
 	for req := range envsChan {
-		loaded, err := Load(req.path, Opts{JsonnetOpts: req.opts})
+		env, err := LoadEnvironment(req.path, Opts{JsonnetOpts: req.opts})
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s:\n %w", req.path, err))
 			continue
 		}
-		*req.env = *loaded.Env
+		*req.env = *env
 	}
 	if len(errs) != 0 {
 		return errs
