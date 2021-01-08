@@ -20,7 +20,7 @@ const Specfile = "spec.json"
 
 // ParseDir parses the given environments `spec.json` into a `v1alpha1.Environment`
 // object with the name set to the directories name
-func ParseDir(baseDir, path string) (*v1alpha1.Environment, error) {
+func ParseDir(baseDir, path string, namespace string) (*v1alpha1.Environment, error) {
 	fi, err := os.Stat(baseDir)
 	if err != nil {
 		return nil, err
@@ -34,13 +34,13 @@ func ParseDir(baseDir, path string) (*v1alpha1.Environment, error) {
 		if os.IsNotExist(err) {
 			c := v1alpha1.New()
 			c.Metadata.Name = path // legacy behavior
-			c.Metadata.Namespace = path
+			c.Metadata.Namespace = namespace
 			return c, ErrNoSpec{path}
 		}
 		return nil, err
 	}
 
-	c, err := Parse(data, path)
+	c, err := Parse(data, namespace)
 	if c != nil {
 		// set the name field
 		c.Metadata.Name = path // legacy behavior

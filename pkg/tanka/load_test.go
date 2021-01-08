@@ -32,7 +32,7 @@ func TestLoad(t *testing.T) {
 				Kind:       v1alpha1.New().Kind,
 				Metadata: v1alpha1.Metadata{
 					Name:      "cases/withspecjson",
-					Namespace: "cases/withspecjson",
+					Namespace: "cases/withspecjson/main.jsonnet",
 					Labels:    v1alpha1.New().Metadata.Labels,
 				},
 				Spec: v1alpha1.Spec{
@@ -62,7 +62,7 @@ func TestLoad(t *testing.T) {
 				Kind:       v1alpha1.New().Kind,
 				Metadata: v1alpha1.Metadata{
 					Name:      "cases/withspecjson",
-					Namespace: "cases/withspecjson",
+					Namespace: "cases/withspecjson/main.jsonnet",
 					Labels:    v1alpha1.New().Metadata.Labels,
 				},
 				Spec: v1alpha1.Spec{
