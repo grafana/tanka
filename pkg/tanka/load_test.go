@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestEvalJsonnet(t *testing.T) {
+func TestLoad(t *testing.T) {
 	cases := []struct {
 		name     string
 		baseDir  string
