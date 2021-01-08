@@ -63,7 +63,7 @@ func exportCmd() *cli.Command {
 				}
 
 				// get absolute path to Environment
-				envs, err := tanka.FindEnvironments(path, opts.ParseParallelOpts.Selector)
+				envs, err := tanka.ListEnvs(path, tanka.ListOpts{Selector: opts.ParseParallelOpts.Selector})
 				if err != nil {
 					return err
 				}

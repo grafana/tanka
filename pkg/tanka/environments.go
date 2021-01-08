@@ -2,78 +2,12 @@ package tanka
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
 
-	"k8s.io/apimachinery/pkg/labels"
-
-	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-const baseDirIndicator = "main.jsonnet"
 const parallel = 8
-
-// FindBaseDirs searches for possible environments
-func FindBaseDirs(workdir string) (dirs []string, err error) {
-	_, _, _, err = jpath.Resolve(workdir)
-	if err == jpath.ErrorNoRoot {
-		return nil, err
-	}
-
-	if err := filepath.Walk(workdir, func(path string, info os.FileInfo, err error) error {
-		if _, err := os.Stat(filepath.Join(path, baseDirIndicator)); err != nil {
-			// missing file, not a valid environment directory
-			return nil
-		}
-		dirs = append(dirs, path)
-		return nil
-	}); err != nil {
-		return nil, err
-	}
-	return dirs, nil
-}
-
-// FindEnvironments searches for actual environments
-// ignores directories if no environments are found
-func FindEnvironments(workdir string, selector labels.Selector) (envs []*v1alpha1.Environment, err error) {
-	dirs, err := FindBaseDirs(workdir)
-	if err != nil {
-		return nil, err
-	}
-	opts := ParseParallelOpts{
-		JsonnetOpts: JsonnetOpts{
-			EvalScript: EnvsOnlyEvalScript,
-		},
-		Selector: selector,
-	}
-	envs, err = ParseParallel(dirs, opts)
-
-	if err != nil {
-		switch err.(type) {
-		case ErrParseParallel:
-			// ignore ErrNoEnv errors
-			e := err.(ErrParseParallel)
-			var errors []error
-			for _, err := range e.errors {
-				switch err.(type) {
-				case ErrNoEnv:
-					continue
-				default:
-					errors = append(errors, err)
-				}
-			}
-			if len(errors) != 0 {
-				return nil, ErrParseParallel{errors: errors}
-			}
-		default:
-			return nil, err
-		}
-	}
-
-	return envs, nil
-}
 
 // ParseParallel evaluates multiple environments in parallel
 func ParseParallel(paths []string, opts ParseParallelOpts) (envs []*v1alpha1.Environment, err error) {
