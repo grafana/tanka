@@ -75,12 +75,10 @@ func exportCmd() *cli.Command {
 			}
 
 			// validate environment
-			jsonnetOpts := opts.ParseParallelOpts.JsonnetOpts
-			jsonnetOpts.EvalScript = tanka.EnvsOnlyEvalScript
-			_, err := tanka.Load(path, tanka.Opts{JsonnetOpts: jsonnetOpts})
-			if err != nil {
+			if _, err := tanka.Peek(path, opts.ParseParallelOpts.JsonnetOpts); err != nil {
 				return err
 			}
+
 			paths = append(paths, path)
 		}
 

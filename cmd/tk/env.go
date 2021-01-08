@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"text/tabwriter"
@@ -78,7 +77,11 @@ func envSetCmd() *cli.Command {
 			tmp.Spec.APIServer = server
 		}
 
-		cfg := setupConfiguration(path)
+		cfg, err := tanka.Peek(path, tanka.JsonnetOpts{})
+		if err != nil {
+			return err
+		}
+
 		if tmp.Spec.APIServer != "" && tmp.Spec.APIServer != cfg.Spec.APIServer {
 			fmt.Printf("updated spec.apiServer (`%s -> `%s`)\n", cfg.Spec.APIServer, tmp.Spec.APIServer)
 			cfg.Spec.APIServer = tmp.Spec.APIServer
@@ -275,15 +278,4 @@ func envListCmd() *cli.Command {
 		return nil
 	}
 	return cmd
-}
-
-func setupConfiguration(baseDir string) *v1alpha1.Environment {
-	env, err := tanka.Load(baseDir, tanka.Opts{
-		JsonnetOpts: tanka.JsonnetOpts{EvalScript: tanka.EnvsOnlyEvalScript},
-	})
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return env.Env
 }
