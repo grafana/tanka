@@ -50,7 +50,7 @@ func exportCmd() *cli.Command {
 			Targets:     vars.targets,
 			JsonnetOpts: getJsonnetOpts(),
 			Selector:    getLabelSelector(),
-			Parallel:    *parallel,
+			Parallelism: *parallel,
 		}
 
 		var paths []string

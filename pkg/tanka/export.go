@@ -43,7 +43,7 @@ type ExportEnvOpts struct {
 	// optional: filter environments based on labels
 	Selector labels.Selector
 	// optional: number of environments to process in parallel
-	Parallel int
+	Parallelism int
 }
 
 func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
@@ -63,7 +63,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 	envs, err := parallelLoadEnvironments(paths, parallelOpts{
 		JsonnetOpts: opts.JsonnetOpts,
 		Selector:    opts.Selector,
-		Parallelism:    opts.Parallel,
+		Parallelism: opts.Parallelism,
 	})
 	if err != nil {
 		return err
