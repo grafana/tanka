@@ -52,9 +52,10 @@ type ApplyOpts struct {
 // Currently not different from ApplyOpts, but may be required in the future
 type DeleteOpts ApplyOpts
 
-// GetByStateOpts allow to specify additional parameter for GetByState function
-// Currently ignoreNotFound is only useful for GetByState() so we have GetByStateOpts
-// instead of more generic GetOpts for all get operations
+// GetByStateOpts allow to specify additional parameters for GetByState function
+// Currently there is just ignoreNotFound parameter which is only useful for
+// GetByState() so we only have GetByStateOpts instead of more generic GetOpts
+// for all get operations
 type GetByStateOpts struct {
 	// ignoreNotFound allows to ignore errors caused by missing objects
 	IgnoreNotFound bool

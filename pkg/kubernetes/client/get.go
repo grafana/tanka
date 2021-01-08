@@ -36,7 +36,7 @@ func (k Kubectl) GetByLabels(namespace, kind string, labels map[string]string) (
 }
 
 // GetByState returns the full object, including runtime fields for each
-// resource in the state.
+// resource in the state
 func (k Kubectl) GetByState(data manifest.List, opts GetByStateOpts) (manifest.List, error) {
 	list, err := k.get("", "", []string{"-f", "-"}, getOpts{
 		ignoreNotFound: opts.IgnoreNotFound,
