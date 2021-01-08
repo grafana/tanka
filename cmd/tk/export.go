@@ -34,6 +34,7 @@ func exportCmd() *cli.Command {
 
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
 	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
+	parallel := cmd.Flags().IntP("parallel", "p", 8, "Number of environments to process in parallel")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -43,14 +44,13 @@ func exportCmd() *cli.Command {
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		opts := tanka.ExportEnvOpts{
-			Format:    *format,
-			Extension: *extension,
-			Merge:     *merge,
-			Targets:   vars.targets,
-			ParallelOpts: tanka.ParallelOpts{
-				JsonnetOpts: getJsonnetOpts(),
-				Selector:    getLabelSelector(),
-			},
+			Format:      *format,
+			Extension:   *extension,
+			Merge:       *merge,
+			Targets:     vars.targets,
+			JsonnetOpts: getJsonnetOpts(),
+			Selector:    getLabelSelector(),
+			Parallel:    *parallel,
 		}
 
 		var paths []string
@@ -63,7 +63,7 @@ func exportCmd() *cli.Command {
 				}
 
 				// get absolute path to Environment
-				envs, err := tanka.ListEnvs(path, tanka.ListOpts{Selector: opts.ParallelOpts.Selector})
+				envs, err := tanka.ListEnvs(path, tanka.ListOpts{Selector: opts.Selector})
 				if err != nil {
 					return err
 				}
@@ -75,7 +75,7 @@ func exportCmd() *cli.Command {
 			}
 
 			// validate environment
-			if _, err := tanka.Peek(path, opts.ParallelOpts.JsonnetOpts); err != nil {
+			if _, err := tanka.Peek(path, opts.JsonnetOpts); err != nil {
 				return err
 			}
 
