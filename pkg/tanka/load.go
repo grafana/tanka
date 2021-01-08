@@ -17,6 +17,20 @@ import (
 // Load loads the Environment at `path`. It automatically detects whether to
 // load inline or statically
 func Load(path string, opts Opts) (*LoadResult, error) {
+	env, err := LoadEnvironment(path, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := LoadManifests(env, opts.Filters)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 	loader, err := DetectLoader(path)
 	if err != nil {
 		return nil, err
@@ -27,11 +41,15 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 		return nil, err
 	}
 
+	return env, nil
+}
+
+func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}
 
-	processed, err := process.Process(*env, opts.Filters)
+	processed, err := process.Process(*env, filters)
 	if err != nil {
 		return nil, err
 	}
