@@ -45,12 +45,17 @@ func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environmen
 		return nil, fmt.Errorf("Found no environments in '%s'", path)
 	}
 
-	root, base, err := jpath.Dirs(path)
+	root, err := jpath.FindRoot(path)
 	if err != nil {
 		return nil, err
 	}
 
-	name, err := filepath.Rel(root, base)
+	file, err := jpath.Entrypoint(path)
+	if err != nil {
+		return nil, err
+	}
+
+	namespace, err := filepath.Rel(root, file)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +66,7 @@ func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environmen
 		return nil, err
 	}
 
-	env, err := spec.Parse(envData, name)
+	env, err := spec.Parse(envData, namespace)
 	if err != nil {
 		return nil, err
 	}

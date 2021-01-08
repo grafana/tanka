@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
@@ -20,30 +21,43 @@ const Specfile = "spec.json"
 
 // ParseDir parses the given environments `spec.json` into a `v1alpha1.Environment`
 // object with the name set to the directories name
-func ParseDir(baseDir, path string) (*v1alpha1.Environment, error) {
-	fi, err := os.Stat(baseDir)
+func ParseDir(path string) (*v1alpha1.Environment, error) {
+	root, base, err := jpath.Dirs(path)
 	if err != nil {
 		return nil, err
 	}
-	if !fi.IsDir() {
-		return nil, errors.New("baseDir is not an directory")
+
+	// name of the environment: relative path from rootDir
+	name, err := filepath.Rel(root, base)
+	if err != nil {
+		return nil, err
 	}
 
-	data, err := ioutil.ReadFile(filepath.Join(baseDir, Specfile))
+	file, err := jpath.Entrypoint(path)
+	if err != nil {
+		return nil, err
+	}
+
+	namespace, err := filepath.Rel(root, file)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadFile(filepath.Join(base, Specfile))
 	if err != nil {
 		if os.IsNotExist(err) {
 			c := v1alpha1.New()
-			c.Metadata.Name = path // legacy behavior
-			c.Metadata.Namespace = path
+			c.Metadata.Name = name // legacy behavior
+			c.Metadata.Namespace = namespace
 			return c, ErrNoSpec{path}
 		}
 		return nil, err
 	}
 
-	c, err := Parse(data, path)
+	c, err := Parse(data, namespace)
 	if c != nil {
 		// set the name field
-		c.Metadata.Name = path // legacy behavior
+		c.Metadata.Name = name // legacy behavior
 	}
 
 	return c, err
