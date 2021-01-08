@@ -31,7 +31,7 @@ var workflowArgs = cli.Args{
 
 		var reldirs []string
 		for _, env := range envs {
-			path := filepath.Join(root, env.Metadata.Namespace) // namespace == dir on disk
+			path := filepath.Join(root, env.Metadata.Namespace) // namespace == path on disk
 			reldir, err := filepath.Rel(pwd, path)
 			if err == nil {
 				reldirs = append(reldirs, reldir)
