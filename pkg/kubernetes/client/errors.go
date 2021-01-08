@@ -36,7 +36,7 @@ func (e ErrorNoCluster) Error() string {
 }
 
 // ErrorNothingReturned means that there was no output returned
-type ErrorNothingReturned struct {}
+type ErrorNothingReturned struct{}
 
 func (e ErrorNothingReturned) Error() string {
 	return "kubectl returned no output"
