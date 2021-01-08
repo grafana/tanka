@@ -2,7 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"sync"
 
 	"k8s.io/apimachinery/pkg/labels"
 
@@ -19,7 +18,6 @@ type parallelOpts struct {
 
 // parallelLoadEnvironments evaluates multiple environments in parallel
 func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.Environment, error) {
-	wg := sync.WaitGroup{}
 	jobsCh := make(chan parallelJob)
 	outCh := make(chan parallelOut)
 
@@ -28,11 +26,7 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 	}
 
 	for i := 0; i < opts.Parallelism; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			parallelWorker(jobsCh, outCh)
-		}()
+		go parallelWorker(jobsCh, outCh)
 	}
 
 	for _, path := range paths {
@@ -55,8 +49,6 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 			envs = append(envs, out.env)
 		}
 	}
-
-	wg.Wait()
 
 	if len(errors) != 0 {
 		return envs, ErrParallel{errors: errors}
