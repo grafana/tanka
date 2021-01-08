@@ -49,12 +49,6 @@ func parseStaticSpec(path string) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	// name of the environment: relative path from rootDir
-	name, err := filepath.Rel(root, base)
-	if err != nil {
-		return nil, err
-	}
-
 	file, err := jpath.Entrypoint(path)
 	if err != nil {
 		return nil, err
@@ -65,7 +59,7 @@ func parseStaticSpec(path string) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	env, err := spec.ParseDir(base, name, namespace)
+	env, err := spec.ParseDir(base, namespace)
 	if err != nil {
 		switch err.(type) {
 		// the config includes deprecated fields
