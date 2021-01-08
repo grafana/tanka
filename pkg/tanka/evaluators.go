@@ -83,3 +83,33 @@ local noDataEnv(object) =
 
 noDataEnv(main)
 `
+
+const MetaOnlyEvalScript = `
+local isKube(x) = std.isObject(x)
+                  && std.objectHas(x, 'apiVersion')
+                  && std.objectHas(x, 'metadata')
+                  && std.objectHas(x.metadata, 'name');
+
+local isEnv(x) = isKube(x)
+                 && x.apiVersion == 'tanka.dev/v1alpha1'
+                 && x.kind == 'Environment';
+
+local isList(x) = isKube(x)
+                  && std.objectHas(x, 'items');
+
+local N(o) =
+  if isEnv(o) then
+    o { data: N(o.data) }
+  else if isList(o) then
+    o { items: N(o.items) }
+  else if isKube(o) then
+    { apiVersion: o.apiVersion, kind: o.kind, metadata: o.metadata }
+  else if std.isObject(o) then
+    std.mapWithKey(function(k, v) N(v), o)
+  else if std.isArray(o) then
+    std.map(N, o)
+  else
+    o;
+
+N(main)
+`

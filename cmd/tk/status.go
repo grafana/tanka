@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/fatih/structs"
@@ -32,15 +34,24 @@ func statusCmd() *cli.Command {
 		context := status.Client.Kubeconfig.Context
 		fmt.Println("Context:", context.Name)
 		fmt.Println("Cluster:", context.Context.Cluster)
+
+		fmt.Println()
+		fmt.Println("Directory Layout:")
+		fmt.Println("  Project root:", status.DirLayout.Root)
+		fmt.Println("  Environment:", status.DirLayout.Base)
+		fmt.Println("  Entrypoint:", status.DirLayout.Entrypoint)
+
+		fmt.Println()
 		fmt.Println("Environment:")
-		for k, v := range structs.Map(status.Env.Spec) {
-			fmt.Printf("  %s: %v\n", k, v)
+		for _, f := range structs.Fields(status.Env.Spec) {
+			fmt.Printf("  %s: %v\n", f.Name(), mustJsonFmt(f.Value()))
 		}
 
+		fmt.Println()
 		fmt.Println("Resources:")
 		f := "  %s\t%s/%s\n"
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
-		fmt.Fprintln(w, "  NAMESPACE\tOBJECTSPEC")
+		fmt.Fprintln(w, "  NAMESPACE\t<KIND>/<NAME>")
 		for _, r := range status.Resources {
 			fmt.Fprintf(w, f, r.Metadata().Namespace(), r.Kind(), r.Metadata().Name())
 		}
@@ -49,4 +60,18 @@ func statusCmd() *cli.Command {
 		return nil
 	}
 	return cmd
+}
+
+func mustJsonFmt(i interface{}) string {
+	data, err := json.Marshal(i)
+	if err != nil {
+		return err.Error()
+	}
+
+	out, err := tanka.Format("", string(data))
+	if err != nil {
+		return err.Error()
+	}
+
+	return strings.TrimSuffix(out, "\n")
 }
