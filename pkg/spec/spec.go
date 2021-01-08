@@ -43,14 +43,6 @@ func ParseDir(path string) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	fi, err := os.Stat(base)
-	if err != nil {
-		return nil, err
-	}
-	if !fi.IsDir() {
-		return nil, errors.New("baseDir is not an directory")
-	}
-
 	data, err := ioutil.ReadFile(filepath.Join(base, Specfile))
 	if err != nil {
 		if os.IsNotExist(err) {
