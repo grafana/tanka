@@ -38,7 +38,7 @@ type ExportEnvOpts struct {
 	// optional: only export specified Kubernetes manifests
 	Targets []string
 	// optional: options for parsing Environments
-	ParseParallelOpts ParseParallelOpts
+	ParallelOpts ParallelOpts
 }
 
 func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
@@ -55,7 +55,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 	}
 
 	// get all environments for paths
-	envs, err := ParseParallel(paths, opts.ParseParallelOpts)
+	envs, err := parallelLoadEnvironments(paths, opts.ParallelOpts)
 	if err != nil {
 		return err
 	}
