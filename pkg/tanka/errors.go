@@ -22,7 +22,7 @@ type ErrMultipleEnvs struct {
 }
 
 func (e ErrMultipleEnvs) Error() string {
-	return fmt.Sprintf("found multiple Environments (%s) in '%s'", strings.Join(e.names, ", "), e.path)
+	return fmt.Sprintf("found multiple Environments in '%s': \n - %s", e.path, strings.Join(e.names, "\n - "))
 }
 
 // ErrParallel is an array of errors collected while parsing environments in parallel

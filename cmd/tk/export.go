@@ -78,7 +78,13 @@ func exportCmd() *cli.Command {
 
 			// validate environment
 			if _, err := tanka.Peek(path, opts.Opts.JsonnetOpts); err != nil {
-				return err
+				switch err.(type) {
+				case tanka.ErrMultipleEnvs:
+					fmt.Println("Please use --recursive to export with multiple inline environments.")
+					return err
+				default:
+					return err
+				}
 			}
 
 			paths = append(paths, path)

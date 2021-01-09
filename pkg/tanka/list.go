@@ -2,6 +2,7 @@ package tanka
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
@@ -14,13 +15,13 @@ type ListOpts struct {
 	Selector labels.Selector
 }
 
-// ListEnvs returns metadata of all environments recursively found in 'dir'.
+// ListEnvs returns metadata of all environments recursively found in 'path'.
 // Each directory is tested and included if it is a valid environment, either
 // static or inline. If a directory is a valid environment, its subdirectories
 // are not checked.
-func ListEnvs(dir string, opts ListOpts) ([]*v1alpha1.Environment, error) {
+func ListEnvs(path string, opts ListOpts) ([]*v1alpha1.Environment, error) {
 	// list all environments at dir
-	envs, err := list(dir)
+	envs, err := list(path)
 	if err != nil {
 		return nil, err
 	}
@@ -42,18 +43,28 @@ func ListEnvs(dir string, opts ListOpts) ([]*v1alpha1.Environment, error) {
 }
 
 // list implements the actual functionality described at 'ListEnvs'
-func list(dir string) ([]*v1alpha1.Environment, error) {
-	// list directory, also checks if dir
-	files, err := ioutil.ReadDir(dir)
+func list(path string) ([]*v1alpha1.Environment, error) {
+	// try if this has envs
+	list, err := List(path, jsonnet.Opts{})
+	if len(list) != 0 && err == nil {
+		// it has. don't search deeper
+		return list, nil
+	}
+
+	stat, err := os.Stat(path)
 	if err != nil {
 		return nil, err
 	}
 
-	// try if this is an env
-	env, err := Peek(dir, jsonnet.Opts{})
-	if err == nil {
-		// it is one. don't search deeper
-		return []*v1alpha1.Environment{env}, nil
+	// if path is a file, don't search deeper
+	if !stat.IsDir() {
+		return nil, nil
+	}
+
+	// list directory
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
 	}
 
 	// it's not one. Maybe subdirectories are?
@@ -67,7 +78,7 @@ func list(dir string) ([]*v1alpha1.Environment, error) {
 		}
 
 		routines++
-		go listShim(filepath.Join(dir, fi.Name()), ch)
+		go listShim(filepath.Join(path, fi.Name()), ch)
 	}
 
 	// collect parallel results
