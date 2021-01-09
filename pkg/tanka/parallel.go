@@ -27,7 +27,6 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 		}
 		for _, env := range envs {
 			list[env.Metadata.Name] = path
-			fmt.Println(env.Metadata.Name)
 		}
 	}
 	outCh := make(chan parallelOut, len(list))
