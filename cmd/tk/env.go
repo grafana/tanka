@@ -240,7 +240,7 @@ func envListCmd() *cli.Command {
 			}
 		}
 
-		envs, err := tanka.ListEnvs(path, tanka.ListOpts{Selector: getLabelSelector()})
+		envs, err := tanka.FindEnvs(path, tanka.FindOpts{Selector: getLabelSelector()})
 		if err != nil {
 			return err
 		}

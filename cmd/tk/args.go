@@ -24,7 +24,7 @@ var workflowArgs = cli.Args{
 			return nil
 		}
 
-		envs, err := tanka.ListEnvs(pwd, tanka.ListOpts{})
+		envs, err := tanka.FindEnvs(pwd, tanka.FindOpts{})
 		if err != nil {
 			return nil
 		}
