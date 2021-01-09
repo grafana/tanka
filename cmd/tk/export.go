@@ -71,10 +71,7 @@ func exportCmd() *cli.Command {
 				}
 
 				for _, env := range envs {
-					path := filepath.Join(rootDir, env.Metadata.Namespace)
-					if !hasPath(paths, path) {
-						paths = append(paths, path)
-					}
+					paths = append(paths, filepath.Join(rootDir, env.Metadata.Namespace))
 				}
 				continue
 			}
@@ -91,13 +88,4 @@ func exportCmd() *cli.Command {
 		return tanka.ExportEnvironments(paths, args[0], &opts)
 	}
 	return cmd
-}
-
-func hasPath(paths []string, path string) bool {
-	for _, p := range paths {
-		if p == path {
-			return true
-		}
-	}
-	return false
 }

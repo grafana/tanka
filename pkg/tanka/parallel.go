@@ -2,7 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"sync"
 
 	"k8s.io/apimachinery/pkg/labels"
 
@@ -12,52 +11,44 @@ import (
 const defaultParallelism = 8
 
 type parallelOpts struct {
-	JsonnetOpts
+	JsonnetOpts JsonnetOpts
 	Selector    labels.Selector
 	Parallelism int
 }
 
 // parallelLoadEnvironments evaluates multiple environments in parallel
 func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.Environment, error) {
-	wg := sync.WaitGroup{}
 	jobsCh := make(chan parallelJob)
+	outCh := make(chan parallelOut)
 
 	if opts.Parallelism <= 0 {
 		opts.Parallelism = defaultParallelism
 	}
 
 	for i := 0; i < opts.Parallelism; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			parallelWorker(jobsCh)
-		}()
+		go parallelWorker(jobsCh, outCh)
 	}
 
-	var results []*parallelOut
 	for _, path := range paths {
-		out := &parallelOut{}
-		results = append(results, out)
 		jobsCh <- parallelJob{
 			path: path,
 			opts: Opts{JsonnetOpts: opts.JsonnetOpts},
-			out:  out,
 		}
 	}
 	close(jobsCh)
 
 	var envs []*v1alpha1.Environment
 	var errors []error
-	for _, out := range results {
+	for i := 0; i < len(paths); i++ {
+		out := <-outCh
 		if out.err != nil {
 			errors = append(errors, out.err)
 			continue
 		}
 		if opts.Selector == nil || opts.Selector.Empty() || opts.Selector.Matches(out.env.Metadata) {
-			envs = append(envs, &out.env)
+			envs = append(envs, out.env)
 		}
 	}
-	wg.Wait()
 
 	if len(errors) != 0 {
 		return envs, ErrParallel{errors: errors}
@@ -69,20 +60,19 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 type parallelJob struct {
 	path string
 	opts Opts
-	out  *parallelOut
 }
 
 type parallelOut struct {
-	env v1alpha1.Environment
+	env *v1alpha1.Environment
 	err error
 }
 
-func parallelWorker(jobsCh <-chan parallelJob) {
+func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
 	for job := range jobsCh {
 		env, err := LoadEnvironment(job.path, job.opts)
 		if err != nil {
 			err = fmt.Errorf("%s:\n %w", job.path, err)
 		}
-		*job.out = parallelOut{*env, err}
+		outCh <- parallelOut{env: env, err: err}
 	}
 }
