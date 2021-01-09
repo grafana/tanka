@@ -77,7 +77,7 @@ func envSetCmd() *cli.Command {
 			tmp.Spec.APIServer = server
 		}
 
-		cfg, err := tanka.Peek(path, tanka.JsonnetOpts{})
+		cfg, err := tanka.Peek(path, tanka.Opts{})
 		if err != nil {
 			return err
 		}

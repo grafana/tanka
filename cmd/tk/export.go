@@ -84,7 +84,7 @@ func exportCmd() *cli.Command {
 			}
 
 			// validate environment
-			if _, err := tanka.LoadEnvironment(path, opts.Opts); err != nil {
+			if _, err := tanka.Peek(path, opts.Opts); err != nil {
 				switch err.(type) {
 				case tanka.ErrMultipleEnvs:
 					fmt.Println("Please use --name to export a single environment or --recursive to export multiple environments.")

@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -45,7 +44,7 @@ func FindEnvs(path string, opts FindOpts) ([]*v1alpha1.Environment, error) {
 // find implements the actual functionality described at 'FindEnvs'
 func find(path string) ([]*v1alpha1.Environment, error) {
 	// try if this has envs
-	list, err := List(path, jsonnet.Opts{})
+	list, err := List(path, Opts{})
 	if len(list) != 0 && err == nil {
 		// it has. don't search deeper
 		return list, nil

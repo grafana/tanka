@@ -17,8 +17,12 @@ import (
 // Kubernetes resources are expected at the `data` key of this very type
 type InlineLoader struct{}
 
-func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
-	envs, err := inlineEval(path, opts)
+func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+	if opts.Name != "" {
+		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
+	}
+
+	envs, err := inlineEval(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -49,14 +53,20 @@ func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environmen
 	return env, nil
 }
 
-func (i *InlineLoader) Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
-	opts.EvalScript = EnvsOnlyEvalScript
+func (i *InlineLoader) Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+	opts.JsonnetOpts.EvalScript = EnvsOnlyEvalScript
+	if opts.Name != "" {
+		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
+	}
 	return i.Load(path, opts)
 }
 
-func (i *InlineLoader) List(path string, opts JsonnetOpts) ([]*v1alpha1.Environment, error) {
-	opts.EvalScript = EnvsOnlyEvalScript
-	list, err := inlineEval(path, opts)
+func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
+	opts.JsonnetOpts.EvalScript = EnvsOnlyEvalScript
+	if opts.Name != "" {
+		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
+	}
+	list, err := inlineEval(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}

@@ -12,13 +12,13 @@ import (
 // Jsonnet is evaluated as normal
 type StaticLoader struct{}
 
-func (s StaticLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
+func (s StaticLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
 	config, err := s.Peek(path, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := EvalJsonnet(path, opts)
+	data, err := EvalJsonnet(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (s StaticLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environment
 	return config, nil
 }
 
-func (s StaticLoader) Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
+func (s StaticLoader) Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
 	config, err := parseStaticSpec(path)
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func (s StaticLoader) Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment
 	return config, nil
 }
 
-func (s StaticLoader) List(path string, opts JsonnetOpts) ([]*v1alpha1.Environment, error) {
+func (s StaticLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
 	env, err := s.Peek(path, opts)
 	if err != nil {
 		return nil, err
