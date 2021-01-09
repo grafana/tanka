@@ -21,12 +21,13 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 	jobsCh := make(chan parallelJob)
 	list := make(map[string]string)
 	for _, path := range paths {
-		envs, err := FindEnvs(path, FindOpts{opts.Selector})
+		envs, err := FindEnvs(path, FindOpts{Selector: opts.Selector, Name: opts.Name})
 		if err != nil {
 			return nil, err
 		}
 		for _, env := range envs {
 			list[env.Metadata.Name] = path
+			fmt.Println(env.Metadata.Name)
 		}
 	}
 	outCh := make(chan parallelOut, len(list))
