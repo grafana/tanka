@@ -11,7 +11,7 @@ import (
 const defaultParallelism = 8
 
 type parallelOpts struct {
-	JsonnetOpts JsonnetOpts
+	Opts
 	Selector    labels.Selector
 	Parallelism int
 }
@@ -32,7 +32,7 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 	for _, path := range paths {
 		jobsCh <- parallelJob{
 			path: path,
-			opts: Opts{JsonnetOpts: opts.JsonnetOpts},
+			opts: opts.Opts,
 		}
 	}
 	close(jobsCh)

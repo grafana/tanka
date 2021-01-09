@@ -36,6 +36,9 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
+	if opts.Name != "" {
+		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
+	}
 	env, err := loader.Load(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err

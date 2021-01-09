@@ -83,3 +83,35 @@ local noDataEnv(object) =
 
 noDataEnv(main)
 `
+
+// SingleEnvEvalScript returns a Single Environment object
+const SingleEnvEvalScript = `
+local singleEnv(object) =
+  std.prune(
+    if std.isObject(object)
+    then
+      if std.objectHas(object, 'apiVersion')
+         && std.objectHas(object, 'kind')
+      then
+        if object.kind == 'Environment'
+        && object.metadata.name == '%s'
+        then object
+        else {}
+      else
+        std.mapWithKey(
+          function(key, obj)
+            singleEnv(obj),
+          object
+        )
+    else if std.isArray(object)
+    then
+      std.map(
+        function(obj)
+          singleEnv(obj),
+        object
+      )
+    else {}
+  );
+
+singleEnv(main)
+`

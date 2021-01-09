@@ -15,7 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
-	"github.com/grafana/tanka/pkg/process"
 )
 
 // BelRune is a string of the Ascii character BEL which made computers ring in ancient times
@@ -36,8 +35,6 @@ type ExportEnvOpts struct {
 	Extension string
 	// merge export with existing directory
 	Merge bool
-	// optional: only export specified Kubernetes manifests
-	Targets []string
 	// optional: options to parse Jsonnet
 	Opts Opts
 	// optional: filter environments based on labels
@@ -61,7 +58,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 
 	// get all environments for paths
 	envs, err := parallelLoadEnvironments(paths, parallelOpts{
-		JsonnetOpts: opts.Opts.JsonnetOpts,
+		Opts:        opts.Opts,
 		Selector:    opts.Selector,
 		Parallelism: opts.Parallelism,
 	})
@@ -70,14 +67,8 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 	}
 
 	for _, env := range envs {
-		// select targets to export
-		filter, err := process.StrExps(opts.Targets...)
-		if err != nil {
-			return err
-		}
-
 		// get the manifests
-		loaded, err := LoadManifests(env, filter)
+		loaded, err := LoadManifests(env, opts.Opts.Filters)
 		if err != nil {
 			return err
 		}

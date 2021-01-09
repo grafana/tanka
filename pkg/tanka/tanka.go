@@ -21,6 +21,9 @@ type Opts struct {
 
 	// Filters are used to optionally select a subset of the resources
 	Filters process.Matchers
+
+	// Name is used to extract a single environment from multiple environments
+	Name string
 }
 
 // DEFAULT_DEV_VERSION is the placeholder version used when no actual semver is
