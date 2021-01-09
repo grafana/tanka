@@ -19,7 +19,7 @@ type parallelOpts struct {
 // parallelLoadEnvironments evaluates multiple environments in parallel
 func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.Environment, error) {
 	jobsCh := make(chan parallelJob)
-	outCh := make(chan parallelOut)
+	outCh := make(chan parallelOut, len(paths))
 
 	if opts.Parallelism <= 0 {
 		opts.Parallelism = defaultParallelism
