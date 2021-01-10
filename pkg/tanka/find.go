@@ -12,7 +12,6 @@ import (
 // FindOpts are optional arguments for FindEnvs
 type FindOpts struct {
 	Selector labels.Selector
-	Name     string
 }
 
 // FindEnvs returns metadata of all environments recursively found in 'path'.
@@ -21,7 +20,7 @@ type FindOpts struct {
 // are not checked.
 func FindEnvs(path string, opts FindOpts) ([]*v1alpha1.Environment, error) {
 	// find all environments at dir
-	envs, err := find(path, opts.Name)
+	envs, err := find(path)
 	if err != nil {
 		return nil, err
 	}
@@ -43,9 +42,9 @@ func FindEnvs(path string, opts FindOpts) ([]*v1alpha1.Environment, error) {
 }
 
 // find implements the actual functionality described at 'FindEnvs'
-func find(path, name string) ([]*v1alpha1.Environment, error) {
+func find(path string) ([]*v1alpha1.Environment, error) {
 	// try if this has envs
-	list, err := List(path, Opts{Name: name})
+	list, err := List(path, Opts{})
 	if len(list) != 0 && err == nil {
 		// it has. don't search deeper
 		return list, nil
@@ -78,7 +77,7 @@ func find(path, name string) ([]*v1alpha1.Environment, error) {
 		}
 
 		routines++
-		go findShim(filepath.Join(path, fi.Name()), name, ch)
+		go findShim(filepath.Join(path, fi.Name()), ch)
 	}
 
 	// collect parallel results
@@ -106,7 +105,7 @@ type findOut struct {
 	err  error
 }
 
-func findShim(path, name string, ch chan findOut) {
-	envs, err := find(path, name)
+func findShim(dir string, ch chan findOut) {
+	envs, err := find(dir)
 	ch <- findOut{envs: envs, err: err}
 }
