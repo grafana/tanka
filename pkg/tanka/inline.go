@@ -17,18 +17,12 @@ import (
 // Kubernetes resources are expected at the `data` key of this very type
 type InlineLoader struct{}
 
-func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
-	raw, err := EvalJsonnet(path, opts)
-	if err != nil {
-		return nil, err
+func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+	if opts.Name != "" {
+		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
 	}
 
-	var data interface{}
-	if err := json.Unmarshal([]byte(raw), &data); err != nil {
-		return nil, err
-	}
-
-	envs, err := extractEnvs(data)
+	envs, err := inlineEval(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -45,6 +39,73 @@ func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environmen
 		return nil, fmt.Errorf("Found no environments in '%s'", path)
 	}
 
+	// TODO: Re-serializing the entire env here. This is horribly inefficient
+	envData, err := json.Marshal(envs[0])
+	if err != nil {
+		return nil, err
+	}
+
+	env, err := inlineParse(path, envData)
+	if err != nil {
+		return nil, err
+	}
+
+	return env, nil
+}
+
+func (i *InlineLoader) Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+	opts.JsonnetOpts.EvalScript = MetadataEvalScript
+	if opts.Name != "" {
+		opts.JsonnetOpts.EvalScript = fmt.Sprintf(MetadataSingleEnvEvalScript, opts.Name)
+	}
+	return i.Load(path, opts)
+}
+
+func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
+	opts.JsonnetOpts.EvalScript = MetadataEvalScript
+	list, err := inlineEval(path, opts.JsonnetOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	envs := make([]*v1alpha1.Environment, 0, len(list))
+	for _, raw := range list {
+		data, err := json.Marshal(raw)
+		if err != nil {
+			return nil, err
+		}
+
+		env, err := inlineParse(path, data)
+		if err != nil {
+			return nil, err
+		}
+
+		envs = append(envs, env)
+	}
+
+	return envs, nil
+}
+
+func inlineEval(path string, opts JsonnetOpts) (manifest.List, error) {
+	raw, err := EvalJsonnet(path, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var data interface{}
+	if err := json.Unmarshal([]byte(raw), &data); err != nil {
+		return nil, err
+	}
+
+	envs, err := extractEnvs(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return envs, nil
+}
+
+func inlineParse(path string, data []byte) (*v1alpha1.Environment, error) {
 	root, err := jpath.FindRoot(path)
 	if err != nil {
 		return nil, err
@@ -60,23 +121,12 @@ func (i *InlineLoader) Load(path string, opts JsonnetOpts) (*v1alpha1.Environmen
 		return nil, err
 	}
 
-	// TODO: Re-serializing the entire env here. This is horribly inefficient
-	envData, err := json.Marshal(envs[0])
-	if err != nil {
-		return nil, err
-	}
-
-	env, err := spec.Parse(envData, namespace)
+	env, err := spec.Parse(data, namespace)
 	if err != nil {
 		return nil, err
 	}
 
 	return env, nil
-}
-
-func (i *InlineLoader) Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
-	opts.EvalScript = EnvsOnlyEvalScript
-	return i.Load(path, opts)
 }
 
 // extractEnvs filters out any Environment manifests

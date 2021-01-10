@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
+	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
@@ -43,13 +44,19 @@ func exportCmd() *cli.Command {
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		filters, err := process.StrExps(vars.targets...)
+		if err != nil {
+			return err
+		}
+
 		opts := tanka.ExportEnvOpts{
 			Format:    *format,
 			Extension: *extension,
 			Merge:     *merge,
-			Targets:   vars.targets,
 			Opts: tanka.Opts{
 				JsonnetOpts: getJsonnetOpts(),
+				Filters:     filters,
+				Name:        vars.name,
 			},
 			Selector:    getLabelSelector(),
 			Parallelism: *parallel,
@@ -65,7 +72,7 @@ func exportCmd() *cli.Command {
 				}
 
 				// get absolute path to Environment
-				envs, err := tanka.ListEnvs(path, tanka.ListOpts{Selector: opts.Selector})
+				envs, err := tanka.FindEnvs(path, tanka.FindOpts{Selector: opts.Selector})
 				if err != nil {
 					return err
 				}
@@ -77,8 +84,14 @@ func exportCmd() *cli.Command {
 			}
 
 			// validate environment
-			if _, err := tanka.Peek(path, opts.Opts.JsonnetOpts); err != nil {
-				return err
+			if _, err := tanka.Peek(path, opts.Opts); err != nil {
+				switch err.(type) {
+				case tanka.ErrMultipleEnvs:
+					fmt.Println("Please use --name to export a single environment or --recursive to export multiple environments.")
+					return err
+				default:
+					return err
+				}
 			}
 
 			paths = append(paths, path)

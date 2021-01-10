@@ -13,11 +13,13 @@ import (
 )
 
 type workflowFlagVars struct {
+	name    string
 	targets []string
 }
 
 func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
+	fs.StringVar(&v.name, "name", "", "selects an environment from inline environments")
 	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects (Format: <type>/<name>)")
 	return &v
 }

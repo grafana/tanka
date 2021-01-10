@@ -2,25 +2,25 @@ package tanka
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
-	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-// ListOpts are optional arguments for ListEnvs
-type ListOpts struct {
+// FindOpts are optional arguments for FindEnvs
+type FindOpts struct {
 	Selector labels.Selector
 }
 
-// ListEnvs returns metadata of all environments recursively found in 'dir'.
+// FindEnvs returns metadata of all environments recursively found in 'path'.
 // Each directory is tested and included if it is a valid environment, either
 // static or inline. If a directory is a valid environment, its subdirectories
 // are not checked.
-func ListEnvs(dir string, opts ListOpts) ([]*v1alpha1.Environment, error) {
-	// list all environments at dir
-	envs, err := list(dir)
+func FindEnvs(path string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+	// find all environments at dir
+	envs, err := find(path)
 	if err != nil {
 		return nil, err
 	}
@@ -41,33 +41,43 @@ func ListEnvs(dir string, opts ListOpts) ([]*v1alpha1.Environment, error) {
 	return filtered, nil
 }
 
-// list implements the actual functionality described at 'ListEnvs'
-func list(dir string) ([]*v1alpha1.Environment, error) {
-	// list directory, also checks if dir
-	files, err := ioutil.ReadDir(dir)
+// find implements the actual functionality described at 'FindEnvs'
+func find(path string) ([]*v1alpha1.Environment, error) {
+	// try if this has envs
+	list, err := List(path, Opts{})
+	if len(list) != 0 && err == nil {
+		// it has. don't search deeper
+		return list, nil
+	}
+
+	stat, err := os.Stat(path)
 	if err != nil {
 		return nil, err
 	}
 
-	// try if this is an env
-	env, err := Peek(dir, jsonnet.Opts{})
-	if err == nil {
-		// it is one. don't search deeper
-		return []*v1alpha1.Environment{env}, nil
+	// if path is a file, don't search deeper
+	if !stat.IsDir() {
+		return nil, nil
+	}
+
+	// list directory
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
 	}
 
 	// it's not one. Maybe subdirectories are?
-	ch := make(chan listOut)
+	ch := make(chan findOut)
 	routines := 0
 
-	// recursively list in parallel
+	// recursively find in parallel
 	for _, fi := range files {
 		if !fi.IsDir() {
 			continue
 		}
 
 		routines++
-		go listShim(filepath.Join(dir, fi.Name()), ch)
+		go findShim(filepath.Join(path, fi.Name()), ch)
 	}
 
 	// collect parallel results
@@ -90,12 +100,12 @@ func list(dir string) ([]*v1alpha1.Environment, error) {
 	return envs, nil
 }
 
-type listOut struct {
+type findOut struct {
 	envs []*v1alpha1.Environment
 	err  error
 }
 
-func listShim(dir string, ch chan listOut) {
-	envs, err := list(dir)
-	ch <- listOut{envs: envs, err: err}
+func findShim(dir string, ch chan findOut) {
+	envs, err := find(dir)
+	ch <- findOut{envs: envs, err: err}
 }

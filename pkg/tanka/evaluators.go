@@ -53,8 +53,8 @@ function(%s)
 
 const PatternEvalScript = "main.%s"
 
-// EnvsOnlyEvalScript finds the Environment object (without its .data object)
-const EnvsOnlyEvalScript = `
+// MetadataEvalScript finds the Environment object (without its .data object)
+const MetadataEvalScript = `
 local noDataEnv(object) =
   std.prune(
     if std.isObject(object)
@@ -82,4 +82,66 @@ local noDataEnv(object) =
   );
 
 noDataEnv(main)
+`
+
+// MetadataSingleEnvEvalScript returns a Single Environment object
+const MetadataSingleEnvEvalScript = `
+local singleEnv(object) =
+  std.prune(
+    if std.isObject(object)
+    then
+      if std.objectHas(object, 'apiVersion')
+         && std.objectHas(object, 'kind')
+      then
+        if object.kind == 'Environment'
+        && object.metadata.name == '%s'
+        then object { data:: {} }
+        else {}
+      else
+        std.mapWithKey(
+          function(key, obj)
+            singleEnv(obj),
+          object
+        )
+    else if std.isArray(object)
+    then
+      std.map(
+        function(obj)
+          singleEnv(obj),
+        object
+      )
+    else {}
+  );
+
+singleEnv(main)
+`
+
+// SingleEnvEvalScript returns a Single Environment object
+const SingleEnvEvalScript = `
+local singleEnv(object) =
+  if std.isObject(object)
+  then
+    if std.objectHas(object, 'apiVersion')
+       && std.objectHas(object, 'kind')
+    then
+      if object.kind == 'Environment'
+      && object.metadata.name == '%s'
+      then object
+      else {}
+    else
+      std.mapWithKey(
+        function(key, obj)
+          singleEnv(obj),
+        object
+      )
+  else if std.isArray(object)
+  then
+    std.map(
+      function(obj)
+        singleEnv(obj),
+      object
+    )
+  else {};
+
+singleEnv(main)
 `

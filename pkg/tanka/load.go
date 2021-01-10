@@ -36,7 +36,7 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	env, err := loader.Load(path, opts.JsonnetOpts)
+	env, err := loader.Load(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -59,13 +59,25 @@ func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadRe
 
 // Peek loads the metadata of the environment at path. To get resources as well,
 // use Load
-func Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error) {
+func Peek(path string, opts Opts) (*v1alpha1.Environment, error) {
 	loader, err := DetectLoader(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return loader.Peek(path, opts)
+	return loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+}
+
+// List finds metadata of all environments at path that could possibly be
+// loaded. List can be used to deal with multiple inline environments, by first
+// listing them, choosing the right one and then only loading that one
+func List(path string, opts Opts) ([]*v1alpha1.Environment, error) {
+	loader, err := DetectLoader(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return loader.List(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
 // DetectLoader detects whether the environment is inline or static and picks
@@ -89,11 +101,20 @@ func DetectLoader(path string) (Loader, error) {
 
 // Loader is an abstraction over the process of loading Environments
 type Loader interface {
-	// Load the environment with path
-	Load(path string, opts JsonnetOpts) (*v1alpha1.Environment, error)
+	// Load a single environment at path
+	Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error)
 
 	// Peek only loads metadata and omits the actual resources
-	Peek(path string, opts JsonnetOpts) (*v1alpha1.Environment, error)
+	Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error)
+
+	// List returns metadata of all possible environments at path that can be
+	// loaded
+	List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error)
+}
+
+type LoaderOpts struct {
+	JsonnetOpts
+	Name string
 }
 
 type LoadResult struct {

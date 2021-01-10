@@ -11,7 +11,7 @@ import (
 const defaultParallelism = 8
 
 type parallelOpts struct {
-	JsonnetOpts JsonnetOpts
+	Opts
 	Selector    labels.Selector
 	Parallelism int
 }
@@ -19,7 +19,20 @@ type parallelOpts struct {
 // parallelLoadEnvironments evaluates multiple environments in parallel
 func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.Environment, error) {
 	jobsCh := make(chan parallelJob)
-	outCh := make(chan parallelOut, len(paths))
+	list := make(map[string]string)
+	for _, path := range paths {
+		envs, err := FindEnvs(path, FindOpts{opts.Selector})
+		if err != nil {
+			return nil, err
+		}
+		for _, env := range envs {
+			if opts.Name != "" && opts.Name != env.Metadata.Name {
+				continue
+			}
+			list[env.Metadata.Name] = path
+		}
+	}
+	outCh := make(chan parallelOut, len(list))
 
 	if opts.Parallelism <= 0 {
 		opts.Parallelism = defaultParallelism
@@ -29,17 +42,19 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 		go parallelWorker(jobsCh, outCh)
 	}
 
-	for _, path := range paths {
+	for name, path := range list {
+		o := opts.Opts
+		o.Name = name
 		jobsCh <- parallelJob{
 			path: path,
-			opts: Opts{JsonnetOpts: opts.JsonnetOpts},
+			opts: o,
 		}
 	}
 	close(jobsCh)
 
 	var envs []*v1alpha1.Environment
 	var errors []error
-	for i := 0; i < len(paths); i++ {
+	for i := 0; i < len(list); i++ {
 		out := <-outCh
 		if out.err != nil {
 			errors = append(errors, out.err)
