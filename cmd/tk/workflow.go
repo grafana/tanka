@@ -58,6 +58,7 @@ func pruneCmd() *cli.Command {
 	}
 
 	var opts tanka.PruneOpts
+	cmd.Flags().BoolVar(&opts.IncludeNamespaces, "namespaces", false, "prune namespace objects")
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -79,6 +80,7 @@ func deleteCmd() *cli.Command {
 	}
 
 	var opts tanka.DeleteOpts
+	cmd.Flags().BoolVar(&opts.IncludeNamespaces, "namespaces", false, "delete namespace objects")
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
 	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
