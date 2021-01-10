@@ -54,18 +54,15 @@ func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment
 }
 
 func (i *InlineLoader) Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
-	opts.JsonnetOpts.EvalScript = EnvsOnlyEvalScript
+	opts.JsonnetOpts.EvalScript = MetadataEvalScript
 	if opts.Name != "" {
-		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
+		opts.JsonnetOpts.EvalScript = fmt.Sprintf(MetadataSingleEnvEvalScript, opts.Name)
 	}
 	return i.Load(path, opts)
 }
 
 func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
-	opts.JsonnetOpts.EvalScript = EnvsOnlyEvalScript
-	if opts.Name != "" {
-		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
-	}
+	opts.JsonnetOpts.EvalScript = MetadataEvalScript
 	list, err := inlineEval(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err

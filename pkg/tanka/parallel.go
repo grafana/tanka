@@ -26,6 +26,9 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 			return nil, err
 		}
 		for _, env := range envs {
+			if opts.Name != "" && opts.Name != env.Metadata.Name {
+				continue
+			}
 			list[env.Metadata.Name] = path
 		}
 	}
