@@ -43,13 +43,14 @@ func prefixCommands(prefix string) (cmds []*cli.Command) {
 	return nil
 }
 
-func executablesOnPath(prefix string) (executables map[string]string, err error) {
+func executablesOnPath(prefix string) (map[string]string, error) {
 	path, ok := os.LookupEnv("PATH")
 	if !ok {
 		// if PATH not set, soft fail
 		return nil, fmt.Errorf("PATH not set")
 	}
 
+	executables := make(map[string]string)
 	paths := strings.Split(path, ":")
 	for _, p := range paths {
 		s, err := os.Stat(p)
