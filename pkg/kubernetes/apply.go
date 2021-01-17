@@ -94,11 +94,10 @@ func (k *Kubernetes) uids(state manifest.List) (map[string]bool, error) {
 	live, err := k.ctl.GetByState(state, client.GetByStateOpts{
 		IgnoreNotFound: true,
 	})
-	if err != nil {
-		if _, ok := err.(client.ErrorNothingReturned); ok {
-			// return empty map of uids when kubectl returns nothing
-			return uids, nil
-		}
+	if _, ok := err.(client.ErrorNothingReturned); ok {
+		// return empty map of uids when kubectl returns nothing
+		return uids, nil
+	} else if err != nil {
 		return nil, err
 	}
 
