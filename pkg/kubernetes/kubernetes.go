@@ -63,6 +63,8 @@ func (k *Kubernetes) Close() error {
 type DiffOpts struct {
 	// Use `diffstat(1)` to create a histogram of the changes instead
 	Summarize bool
+	// Find orphaned resources and include them in the diff
+	WithPrune bool
 
 	// Set the diff-strategy. If unset, the value set in the spec is used
 	Strategy string

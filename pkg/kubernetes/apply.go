@@ -91,8 +91,13 @@ See https://tanka.dev/garbage-collection for more details.`)
 func (k *Kubernetes) uids(state manifest.List) (map[string]bool, error) {
 	uids := make(map[string]bool)
 
-	live, err := k.ctl.GetByState(state)
-	if err != nil {
+	live, err := k.ctl.GetByState(state, client.GetByStateOpts{
+		IgnoreNotFound: true,
+	})
+	if _, ok := err.(client.ErrorNothingReturned); ok {
+		// return empty map of uids when kubectl returns nothing
+		return uids, nil
+	} else if err != nil {
 		return nil, err
 	}
 

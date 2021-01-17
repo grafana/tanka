@@ -34,3 +34,10 @@ type ErrorNoCluster string
 func (e ErrorNoCluster) Error() string {
 	return fmt.Sprintf("no cluster that matches the apiServer `%s` was found. Please check your $KUBECONFIG", string(e))
 }
+
+// ErrorNothingReturned means that there was no output returned
+type ErrorNothingReturned struct{}
+
+func (e ErrorNothingReturned) Error() string {
+	return "kubectl returned no output"
+}

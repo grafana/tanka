@@ -37,9 +37,10 @@ func (k Kubectl) GetByLabels(namespace, kind string, labels map[string]string) (
 
 // GetByState returns the full object, including runtime fields for each
 // resource in the state
-func (k Kubectl) GetByState(data manifest.List) (manifest.List, error) {
+func (k Kubectl) GetByState(data manifest.List, opts GetByStateOpts) (manifest.List, error) {
 	list, err := k.get("", "", []string{"-f", "-"}, getOpts{
-		stdin: data.String(),
+		ignoreNotFound: opts.IgnoreNotFound,
+		stdin:          data.String(),
 	})
 	if err != nil {
 		return nil, err
@@ -49,14 +50,18 @@ func (k Kubectl) GetByState(data manifest.List) (manifest.List, error) {
 }
 
 type getOpts struct {
-	allNamespaces bool
-	stdin         string
+	allNamespaces  bool
+	ignoreNotFound bool
+	stdin          string
 }
 
 func (k Kubectl) get(namespace, kind string, selector []string, opts getOpts) (manifest.Manifest, error) {
 	// build cli flags and args
 	argv := []string{
 		"-o", "json",
+	}
+	if opts.ignoreNotFound {
+		argv = append(argv, "--ignore-not-found")
 	}
 
 	if opts.allNamespaces {
@@ -83,6 +88,12 @@ func (k Kubectl) get(namespace, kind string, selector []string, opts getOpts) (m
 	// run command
 	if err := cmd.Run(); err != nil {
 		return nil, parseGetErr(err, serr.String())
+	}
+
+	// return error if nothing was returned
+	// because parsing empty output as json would cause errors
+	if sout.Len() == 0 {
+		return nil, ErrorNothingReturned{}
 	}
 
 	// parse result

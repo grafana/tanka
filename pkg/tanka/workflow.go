@@ -93,6 +93,8 @@ type DiffOpts struct {
 	Strategy string
 	// Summarize prints a summary, instead of the actual diff
 	Summarize bool
+	// WithPrune includes objects to be deleted by prune command in the diff
+	WithPrune bool
 }
 
 // Diff parses the environment at the given directory (a `baseDir`) and returns
@@ -115,6 +117,7 @@ func Diff(baseDir string, opts DiffOpts) (*string, error) {
 	return kube.Diff(l.Resources, kubernetes.DiffOpts{
 		Summarize: opts.Summarize,
 		Strategy:  opts.Strategy,
+		WithPrune: opts.WithPrune,
 	})
 }
 
