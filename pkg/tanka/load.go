@@ -14,6 +14,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// environmentExtCode is the extCode ID `tk.env` uses underneath
+// TODO: remove "import tk" and replace it with tanka-util
+const environmentExtCode = spec.APIGroup + "/environment"
+
 // Load loads the Environment at `path`. It automatically detects whether to
 // load inline or statically
 func Load(path string, opts Opts) (*LoadResult, error) {

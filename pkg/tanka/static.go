@@ -18,6 +18,12 @@ func (s StaticLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment,
 		return nil, err
 	}
 
+	envCode, err := specToExtCode(*config)
+	if err != nil {
+		return nil, err
+	}
+	opts.ExtCode.Set(environmentExtCode, envCode)
+
 	data, err := EvalJsonnet(path, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
@@ -46,6 +52,16 @@ func (s StaticLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environmen
 	}
 
 	return []*v1alpha1.Environment{env}, nil
+}
+
+func specToExtCode(spec v1alpha1.Environment) (string, error) {
+	spec.Data = nil
+	data, err := json.Marshal(spec)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 // parseStaticSpec parses the `spec.json` of the environment and returns a
