@@ -44,6 +44,14 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 
 	for name, path := range list {
 		o := opts.Opts
+
+		// TODO: This is required because the map[string]string in here is not
+		// concurrency-safe. Instead of putting this burden on the caller, find
+		// a way to handle this inside the jsonnet package. A possible way would
+		// be to make the jsonnet package less general, more tightly coupling it
+		// to Tanka workflow thus being able to handle such cases
+		o.JsonnetOpts = o.JsonnetOpts.Clone()
+
 		o.Name = name
 		jobsCh <- parallelJob{
 			path: path,
