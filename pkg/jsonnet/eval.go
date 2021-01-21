@@ -32,6 +32,25 @@ type Opts struct {
 	EvalScript  string
 }
 
+// Clone returns a deep copy of Opts
+func (o Opts) Clone() Opts {
+	var extCode, tlaCode InjectedCode
+	for k, v := range o.ExtCode {
+		extCode[k] = v
+	}
+
+	for k, v := range o.TLACode {
+		tlaCode[k] = v
+	}
+
+	return Opts{
+		TLACode:     tlaCode,
+		ExtCode:     extCode,
+		ImportPaths: append([]string{}, o.ImportPaths...),
+		EvalScript:  o.EvalScript,
+	}
+}
+
 // MakeVM returns a Jsonnet VM with some extensions of Tanka, including:
 // - extended importer
 // - extCode and tlaCode applied
