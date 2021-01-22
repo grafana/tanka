@@ -34,7 +34,7 @@ func Prune(baseDir string, opts PruneOpts) error {
 	defer kube.Close()
 
 	// find orphaned resources
-	orphaned, err := kube.Orphaned(p.Resources, kubernetes.OrphanedOpts{opts.IncludeNamespaces})
+	orphaned, err := kube.Orphaned(p.Resources, kubernetes.OrphanedOpts{IncludeNamespaces: opts.IncludeNamespaces})
 	if err != nil {
 		return err
 	}
