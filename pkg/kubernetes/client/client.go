@@ -49,8 +49,19 @@ type ApplyOpts struct {
 }
 
 // DeleteOpts allow to specify additional parameters for delete operations
-// Currently not different from ApplyOpts, but may be required in the future
-type DeleteOpts ApplyOpts
+type DeleteOpts struct {
+	// force allows to ignore checks and force the operation
+	Force bool
+
+	// validate allows to enable/disable kubectl validation
+	Validate bool
+
+	// autoApprove allows to skip the interactive approval
+	AutoApprove bool
+
+	// includeNamespaces allows to delete namespaces
+	IncludeNamespaces bool
+}
 
 // GetByStateOpts allow to specify additional parameters for GetByState function
 // Currently there is just ignoreNotFound parameter which is only useful for

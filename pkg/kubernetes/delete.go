@@ -18,6 +18,9 @@ func (k *Kubernetes) Delete(state manifest.List, opts DeleteOpts) error {
 	}
 
 	for _, m := range state {
+		if !opts.IncludeNamespaces && m.Kind() == "Namespace" {
+			continue
+		}
 		if err := k.ctl.Delete(m.Metadata().Namespace(), m.Kind(), m.Metadata().Name(), client.DeleteOpts(opts)); err != nil {
 			return err
 		}

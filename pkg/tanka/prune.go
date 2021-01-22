@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/grafana/tanka/pkg/kubernetes"
-	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/term"
 )
 
@@ -23,15 +22,6 @@ type PruneOpts struct {
 // Prune deletes all resources from the cluster, that are no longer present in
 // Jsonnet. It uses the `tanka.dev/environment` label to identify those.
 func Prune(baseDir string, opts PruneOpts) error {
-	// By default, don't delete namespaces
-	if !opts.IncludeNamespaces {
-		ignoreNamespace, err := process.StrExps("!namespace*")
-		if err != nil {
-			return err
-		}
-		opts.Opts.Filters = append(opts.Opts.Filters, ignoreNamespace)
-	}
-
 	// parse jsonnet, init k8s client
 	p, err := Load(baseDir, opts.Opts)
 	if err != nil {
@@ -71,6 +61,7 @@ func Prune(baseDir string, opts PruneOpts) error {
 
 	// delete resources
 	return kube.Delete(orphaned, kubernetes.DeleteOpts{
-		Force: opts.Force,
+		Force:             opts.Force,
+		IncludeNamespaces: opts.IncludeNamespaces,
 	})
 }

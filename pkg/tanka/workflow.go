@@ -9,7 +9,6 @@ import (
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
-	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/term"
 )
 
@@ -141,15 +140,6 @@ type DeleteOpts struct {
 // the generated objects from the Kubernetes cluster defined in the environment's
 // `spec.json`.
 func Delete(baseDir string, opts DeleteOpts) error {
-	// By default, don't delete namespaces
-	if !opts.IncludeNamespaces {
-		ignoreNamespace, err := process.StrExps("!namespace*")
-		if err != nil {
-			return err
-		}
-		opts.Opts.Filters = append(opts.Opts.Filters, ignoreNamespace)
-	}
-
 	l, err := Load(baseDir, opts.Opts)
 	if err != nil {
 		return err
@@ -181,8 +171,9 @@ func Delete(baseDir string, opts DeleteOpts) error {
 	}
 
 	return kube.Delete(l.Resources, kubernetes.DeleteOpts{
-		Force:    opts.Force,
-		Validate: opts.Validate,
+		Force:             opts.Force,
+		Validate:          opts.Validate,
+		IncludeNamespaces: opts.IncludeNamespaces,
 	})
 }
 
