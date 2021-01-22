@@ -49,16 +49,16 @@ Please upgrade kubectl to at least version 1.18.1.`)
 	}
 
 	// reports all resources as created
-	staticDiffAllCreated := StaticDiffer(true)
+	staticDiffAllCreated := StaticDiffer(true, true)
 
 	// reports all resources as deleted
-	staticDiffAllDeleted := StaticDiffer(false)
+	staticDiffAllDeleted := StaticDiffer(false, opts.IncludeNamespaces)
 
 	// include orphaned resources in the diff if it was requested by the user
 	orphaned := manifest.List{}
 	if opts.WithPrune {
 		// find orphaned resources
-		orphaned, err = k.Orphaned(state)
+		orphaned, err = k.Orphaned(state, OrphanedOpts{opts.IncludeNamespaces})
 		if err != nil {
 			return nil, err
 		}
@@ -159,10 +159,14 @@ func (k *Kubernetes) differ(override string) (Differ, error) {
 
 // StaticDiffer returns a differ that reports all resources as either created or
 // deleted.
-func StaticDiffer(create bool) Differ {
+func StaticDiffer(create bool, includeNamespaces bool) Differ {
 	return func(state manifest.List) (*string, error) {
 		s := ""
 		for _, m := range state {
+			if !includeNamespaces && m.Kind() == "Namespace" {
+				continue
+			}
+
 			is, should := m.String(), ""
 			if create {
 				is, should = should, is

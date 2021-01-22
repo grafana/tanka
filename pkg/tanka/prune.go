@@ -34,7 +34,7 @@ func Prune(baseDir string, opts PruneOpts) error {
 	defer kube.Close()
 
 	// find orphaned resources
-	orphaned, err := kube.Orphaned(p.Resources)
+	orphaned, err := kube.Orphaned(p.Resources, kubernetes.OrphanedOpts{opts.IncludeNamespaces})
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func Prune(baseDir string, opts PruneOpts) error {
 	}
 
 	// print diff
-	diff, err := kubernetes.StaticDiffer(false)(orphaned)
+	diff, err := kubernetes.StaticDiffer(false, opts.IncludeNamespaces)(orphaned)
 	if err != nil {
 		// static diff can't fail normally, so unlike in apply, this is fatal
 		// here

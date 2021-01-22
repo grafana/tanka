@@ -68,6 +68,9 @@ type DiffOpts struct {
 
 	// Set the diff-strategy. If unset, the value set in the spec is used
 	Strategy string
+
+	// Include namespaces for prune/delete
+	IncludeNamespaces bool
 }
 
 // Info about the client, etc.

@@ -21,9 +21,13 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 // AnnoationLastApplied is the last-applied-configuration annotation used by kubectl
 const AnnotationLastApplied = "kubectl.kubernetes.io/last-applied-configuration"
 
+type OrphanedOpts struct {
+	IncludeNamespaces bool
+}
+
 // Orphaned returns previously created resources that are missing from the
 // local state. It uses UIDs to safely identify objects.
-func (k *Kubernetes) Orphaned(state manifest.List) (manifest.List, error) {
+func (k *Kubernetes) Orphaned(state manifest.List, opts OrphanedOpts) (manifest.List, error) {
 	if !k.Env.Spec.InjectLabels {
 		return nil, fmt.Errorf(`spec.injectLabels is set to false in your spec.json. Tanka needs to add
 a label to your resources to reliably detect which were removed from Jsonnet.
@@ -70,6 +74,10 @@ See https://tanka.dev/garbage-collection for more details.`)
 
 	// filter unknown
 	for _, m := range matched {
+		if !opts.IncludeNamespaces && m.Kind() == "Namespace" {
+			continue
+		}
+
 		// ignore known ones
 		if uids[m.Metadata().UID()] {
 			continue

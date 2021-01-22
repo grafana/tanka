@@ -95,6 +95,8 @@ type DiffOpts struct {
 	Summarize bool
 	// WithPrune includes objects to be deleted by prune command in the diff
 	WithPrune bool
+	// IncludeNamespaces includes namespace objects for pruning
+	IncludeNamespaces bool
 }
 
 // Diff parses the environment at the given directory (a `baseDir`) and returns
@@ -115,9 +117,10 @@ func Diff(baseDir string, opts DiffOpts) (*string, error) {
 	defer kube.Close()
 
 	return kube.Diff(l.Resources, kubernetes.DiffOpts{
-		Summarize: opts.Summarize,
-		Strategy:  opts.Strategy,
-		WithPrune: opts.WithPrune,
+		Summarize:         opts.Summarize,
+		Strategy:          opts.Strategy,
+		WithPrune:         opts.WithPrune,
+		IncludeNamespaces: opts.IncludeNamespaces,
 	})
 }
 
@@ -152,7 +155,7 @@ func Delete(baseDir string, opts DeleteOpts) error {
 
 	// show diff
 	// static differ will never fail and always return something if input is not nil
-	diff, err := kubernetes.StaticDiffer(false)(l.Resources)
+	diff, err := kubernetes.StaticDiffer(false, opts.IncludeNamespaces)(l.Resources)
 
 	if err != nil {
 		fmt.Println("Error diffing:", err)
