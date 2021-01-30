@@ -2,29 +2,62 @@
 
 ## 0.14 (2021-02-01)
 
-### Breaking changes
+#### :sparkles: `Loader` interface for parsing environments
 
-- **cli**: Export multiple environments with a single `tk export` command
-  **([#450](https://github.com/grafana/tanka/pull/450))**
-- **api**: `Loader` interface, major rewrite of the parsing logic
-  **([#459](https://github.com/grafana/tanka/pull/459))**
-- **api**: Refactor `EvalPattern` into `EvalScript`
-  **([#457](https://github.com/grafana/tanka/pull/457))**
+While introducing inline environments in the last release, the parsing logic became harder
+to understand and maintain. To improve the situation, it received a major overhaul so we
+can handle spec.json-based and inline environments more efficiently.
+
+#### :building_construction: Multiple inline environments
+
+As a next step in the inline environment area, this release supports multiple inline
+environments. In case there are multiple environments in your workflow, you can use
+`--name` to specify the environment you want to diff or apply.
+
+```console
+tk apply --name us-central1 environments/dev
+tk diff --name europe-west2 environments/prod
+```
+
+#### :hammer: Export multiple environments
+
+As part of Grafana Labs' continuous delivery setup, we developed a fast and effective way
+to export all our environments. In v0.14, this is now built into the `tk export` command.
+
+Note that this is a breaking change: the arguments on the CLI have switched places, a
+`path` to an environment can be added multiple times:
+
+```console
+tk export <outputDir> <path> [<path>...] [flags]
+```
+
+Some examples:
+
+```bash
+# Format based on environment {{env.<...>}}
+$ tk export exportDir environments/dev/ --format '{{env.metadata.labels.cluster}}/{{env.spec.namespace}}//{{.kind}}-{{.metadata.name}}'
+# Export multiple environments
+$ tk export exportDir environments/dev/ environments/qa/
+# Recursive export
+$ tk export exportDir environments/ --recursive
+# Recursive export with labelSelector
+$ tk export exportDir environments/ -r -l team=infra
+```
 
 ### Features
 
-- **tanka**: Handle multiple inline environments
+- **tanka** :sprakles:: Handle multiple inline environments
   **([#476](https://github.com/grafana/tanka/pull/476))**
 - **jsonnet**: Vendor jsonnet v0.17.0
   **([#445](https://github.com/grafana/tanka/pull/445))**
 
-- **cli**: Extend Tanka with scripts through `tk-` prefix on PATH
+* **cli**: Extend Tanka with scripts through `tk*` prefix on PATH
   **([#412](https://github.com/grafana/tanka/pull/412))**
-- **cli**: Initialize inline environments
+* **cli**: Initialize inline environments
   **([#451](https://github.com/grafana/tanka/pull/451))**
-- **cli**: Add Helm Chart repositories with `tk tool charts add-repo`
+* **cli**: Add Helm Chart repositories with `tk tool charts add*repo`
   **([#455](https://github.com/grafana/tanka/pull/455))**
-- **cli**: Add `--with-prune` option for `tk diff`
+* **cli**: Add `**with*prune` option for `tk diff`
   **([#469](https://github.com/grafana/tanka/pull/469))** (**@curusarn**)
 
 - **api**: `Peek`, similar to `Loader` interface but only for environment metadata
@@ -40,6 +73,15 @@
   **([#464](https://github.com/grafana/tanka/pull/464))**
 - **jsonnet**: Restore tk.env
   **([#482](https://github.com/grafana/tanka/pull/482))**
+
+### BREAKING
+
+- **cli** :sparkles:: Export multiple environments with a single `tk export` command
+  **([#450](https://github.com/grafana/tanka/pull/450))**
+- **api** :sparkles:: `Loader` interface, major rewrite of the parsing logic
+  **([#459](https://github.com/grafana/tanka/pull/459))**
+- **api**: Refactor `EvalPattern` into `EvalScript`
+  **([#457](https://github.com/grafana/tanka/pull/457))**
 
 ## 0.13 (2020-12-11)
 
