@@ -56,7 +56,7 @@ $ tk export exportDir environments/ -r -l team=infra
   **([#412](https://github.com/grafana/tanka/pull/412))**
 * **cli**: Initialize inline environments
   **([#451](https://github.com/grafana/tanka/pull/451))**
-* **cli**: Add Helm Chart repositories with `tk tool charts add*repo`
+* **cli**: Add Helm Chart repositories with `tk tool charts add-repo`
   **([#455](https://github.com/grafana/tanka/pull/455))**
 * **cli**: Add `--with-prune` option for `tk diff`
   **([#469](https://github.com/grafana/tanka/pull/469))** (**@curusarn**)
