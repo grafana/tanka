@@ -22,9 +22,10 @@ tk diff --name europe-west2 environments/prod
 #### :hammer: Export multiple environments
 
 As part of Grafana Labs' continuous delivery setup, we developed a fast and effective way
-to export all our environments. In v0.14, this is now built into the `tk export` command.
+to export all our environments. In v0.14, we have built this into `tk export`.
 
-Note that this is a breaking change: the arguments on the CLI have switched places, a
+> :warning: breaking change: the arguments for `tk export` have switched places!
+
 `path` to an environment can be added multiple times:
 
 ```console
@@ -51,13 +52,13 @@ $ tk export exportDir environments/ -r -l team=infra
 - **jsonnet**: Vendor jsonnet v0.17.0
   **([#445](https://github.com/grafana/tanka/pull/445))**
 
-* **cli**: Extend Tanka with scripts through `tk*` prefix on PATH
+* **cli**: Extend Tanka with scripts through `tk-` prefix on PATH
   **([#412](https://github.com/grafana/tanka/pull/412))**
 * **cli**: Initialize inline environments
   **([#451](https://github.com/grafana/tanka/pull/451))**
 * **cli**: Add Helm Chart repositories with `tk tool charts add*repo`
   **([#455](https://github.com/grafana/tanka/pull/455))**
-* **cli**: Add `**with*prune` option for `tk diff`
+* **cli**: Add `--with-prune` option for `tk diff`
   **([#469](https://github.com/grafana/tanka/pull/469))** (**@curusarn**)
 
 - **api**: `Peek`, similar to `Loader` interface but only for environment metadata
