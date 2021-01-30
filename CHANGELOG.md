@@ -1,5 +1,46 @@
 # Changelog
 
+## 0.14 (2021-02-01)
+
+### Breaking changes
+
+- **cli**: Export multiple environments with a single `tk export` command
+  **([#450](https://github.com/grafana/tanka/pull/450))**
+- **api**: `Loader` interface, major rewrite of the parsing logic
+  **([#459](https://github.com/grafana/tanka/pull/459))**
+- **api**: Refactor `EvalPattern` into `EvalScript`
+  **([#457](https://github.com/grafana/tanka/pull/457))**
+
+### Features
+
+- **tanka**: Handle multiple inline environments
+  **([#476](https://github.com/grafana/tanka/pull/476))**
+- **jsonnet**: Vendor jsonnet v0.17.0
+  **([#445](https://github.com/grafana/tanka/pull/445))**
+
+- **cli**: Extend Tanka with scripts through `tk-` prefix on PATH
+  **([#412](https://github.com/grafana/tanka/pull/412))**
+- **cli**: Initialize inline environments
+  **([#451](https://github.com/grafana/tanka/pull/451))**
+- **cli**: Add Helm Chart repositories with `tk tool charts add-repo`
+  **([#455](https://github.com/grafana/tanka/pull/455))**
+- **cli**: Add `--with-prune` option for `tk diff`
+  **([#469](https://github.com/grafana/tanka/pull/469))** (**@curusarn**)
+
+- **api**: `Peek`, similar to `Loader` interface but only for environment metadata
+  **([#467](https://github.com/grafana/tanka/pull/467))**
+- **api**: Faster environment discovery and faster `tk env list`
+  **([#468](https://github.com/grafana/tanka/pull/468))**
+
+### Bug Fixes
+
+- **jpath**: Support nested calling again
+  **([#456](https://github.com/grafana/tanka/pull/456))**
+- **cli**: Ensure TLACode works with `EvalScript`
+  **([#464](https://github.com/grafana/tanka/pull/464))**
+- **jsonnet**: Restore tk.env
+  **([#482](https://github.com/grafana/tanka/pull/482))**
+
 ## 0.13 (2020-12-11)
 
 #### :building_construction: Inline environments
