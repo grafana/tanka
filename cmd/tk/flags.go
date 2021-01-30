@@ -19,8 +19,8 @@ type workflowFlagVars struct {
 
 func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
-	fs.StringVar(&v.name, "name", "", "selects an environment from inline environments")
-	fs.StringSliceVarP(&v.targets, "target", "t", nil, "only use the specified objects (Format: <type>/<name>)")
+	fs.StringVar(&v.name, "name", "", "Selects an environment from inline environments")
+	fs.StringSliceVarP(&v.targets, "target", "t", nil, "Regex filter on '<kind>/<name>'. See https://tanka.dev/output-filtering")
 	return &v
 }
 
