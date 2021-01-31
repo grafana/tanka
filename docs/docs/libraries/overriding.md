@@ -36,11 +36,14 @@ For example, if `/vendor/foo/bar.libsonnet` contained an error, you could create
 > ```
 
 > **Important:** If the file you override is not the one you directly import,
-> but imported by another file first, you need to take care of that as well.
-> Because Jsonnet first looks if files are locally present before considering
-> the [import paths](/libraries/import-paths), you need to make sure your
-> override is actually picked up, for example by copying the one you actually
-> next to your override.
+> but instead imported by another file first, the override will only occur if
+> the placement of the file is along side your `main.libsonnet`.  This is due to
+> the logic behind the Jsonnet importer.  Example:  We import
+> `abc/main.libsonnet` located in `vendor/abc`.  Because Jsonnet first looks if
+> files are locally present before considering the [import
+> paths](/libraries/import-paths), you need to make sure your override is
+> actually picked up. In our example, you'd need to copy the `main.libsonnet`
+> into `lib/abc` as well.
 
 ## Per environment
 
