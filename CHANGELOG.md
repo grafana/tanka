@@ -2,12 +2,6 @@
 
 ## 0.14 (2021-02-01)
 
-#### :sparkles: `Loader` interface for parsing environments
-
-While introducing inline environments in the last release, the parsing logic became harder
-to understand and maintain. To improve the situation, it received a major overhaul so we
-can handle spec.json-based and inline environments more efficiently.
-
 #### :building_construction: Multiple inline environments
 
 As a next step in the inline environment area, this release supports multiple inline
@@ -77,7 +71,7 @@ $ tk export exportDir environments/ -r -l team=infra
 
 ### BREAKING
 
-- **cli** :sparkles:: Export multiple environments with a single `tk export` command
+- **cli** :sparkles:: Export multiple environments with a single `tk export` command, `<outputDir>` arg comes first now
   **([#450](https://github.com/grafana/tanka/pull/450))**
 - **api** :sparkles:: `Loader` interface, major rewrite of the parsing logic
   **([#459](https://github.com/grafana/tanka/pull/459))**
