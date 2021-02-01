@@ -47,7 +47,7 @@ $ tk export exportDir environments/ -r -l team=infra
 
 ### Features
 
-- **tanka** :sprakles:: Handle multiple inline environments
+- **tanka** :sparkles:: Handle multiple inline environments
   **([#476](https://github.com/grafana/tanka/pull/476))**
 - **jsonnet**: Vendor jsonnet v0.17.0
   **([#445](https://github.com/grafana/tanka/pull/445))**
