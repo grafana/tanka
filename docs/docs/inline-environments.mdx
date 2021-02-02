@@ -117,6 +117,59 @@ $ tk apply --tla-str apiServer=https://127.0.0.1:4758 environments/minikube-test
 Similarly this can be used to configure any part of the Environment object, like
 `namespace:`, `metadata.labels`, ...
 
+## Use case: consistent inline environments
+
+It is possible to define multiple inline environments in a single jsonnet. This
+enables an operator to generate consistent Tanka environments for multiple
+Kubernetes clusters.
+
+We can define a Tanka environment once and then repeat that for a set of
+clusters as shown in this example:
+
+```jsonnet
+// environments/monitoring-stack/main.jsonnet
+{
+  environment(cluster):: {
+    apiVersion: 'tanka.dev/v1alpha1',
+    kind: 'Environment',
+    metadata: {
+      name: 'environment/%s' % cluster.name,
+    },
+    spec: {
+      apiServer: cluster.apiServer,
+      namespace: 'monitoring',
+    },
+    data: { /* ... */ },
+  },
+
+  clusters:: [
+    { name: 'us-central1', apiServer: 'https://127.0.0.1:6433' },
+    { name: 'europe-west2', apiServer: 'https://127.0.0.2:6433' },
+  ],
+
+  envs: {
+    [cluster.name]: $.environment(cluster)
+    for cluster in $.clusters
+  },
+}
+```
+
+In the workflow you now have to use `--name` to select the environment you want
+to deploy:
+
+```bash
+$ tk apply --name environment/us-central1 environments/monitoring-stack/main.jsonnet
+$ tk diff --name environment/europe-west2 environments/monitoring-stack/main.jsonnet
+```
+
+For export, it is possible to use the same `--name` selector or you can do a
+recursive export while using the `--format` option:
+
+```bash
+$ tk export outputDir/ environments/monitoring-stack/main.jsonnet --recursive \
+  --format '{{env.metadata.name}}/{{.metadata.namespace}}/{{.kind}}-{{.metadata.name}}'
+```
+
 ## Caveats
 
 ### `import "tk"`
@@ -130,9 +183,3 @@ this information was populated before jsonnet evaluation by the existence of
 The different `tk env` subcommands are heavily based on the `spec.json`
 approach. `tk env list` will continue to work as expected, `tk env
 (add|remove|set)` will only work for `spec.json` based environments.
-
-### Multiple inline environments
-
-Having multiple inline environments is currently unsupported during Kubernetes
-operations, with an exception for `tk eval`, which will happily render it to
-json.
