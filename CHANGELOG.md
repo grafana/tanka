@@ -48,14 +48,14 @@ $ tk export exportDir environments/ -r -l team=infra
 
 * **cli**: Extend Tanka with scripts through `tk-` prefix on PATH
   **([#412](https://github.com/grafana/tanka/pull/412))**
+* **cli** :sparkles:: Export multiple environments with a single `tk export` command
+  **([#450](https://github.com/grafana/tanka/pull/450))**
 * **cli**: Initialize inline environments
   **([#451](https://github.com/grafana/tanka/pull/451))**
 * **cli**: Add Helm Chart repositories with `tk tool charts add-repo`
   **([#455](https://github.com/grafana/tanka/pull/455))**
 * **cli**: Add `--with-prune` option for `tk diff`
   **([#469](https://github.com/grafana/tanka/pull/469))** (**@curusarn**)
-- **cli** :sparkles:: Export multiple environments with a single `tk export` command
-  **([#450](https://github.com/grafana/tanka/pull/450))**
 
 - **api**: `Peek`, similar to `Loader` interface but only for environment metadata
   **([#467](https://github.com/grafana/tanka/pull/467))**
@@ -69,8 +69,8 @@ $ tk export exportDir environments/ -r -l team=infra
 - **cli**: Ensure TLACode works with `EvalScript`
   **([#464](https://github.com/grafana/tanka/pull/464))**
 - **jsonnet**: Restore tk.env
-  **([#482](https://github.com/grafana/tanka/pull/482))**
-  **([#498](https://github.com/grafana/tanka/pull/498))**
+  **([#482](https://github.com/grafana/tanka/pull/482),
+  [#498](https://github.com/grafana/tanka/pull/498))**
 
 ### BREAKING
 
