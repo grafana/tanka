@@ -1,7 +1,6 @@
 package tanka
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/fatih/color"
@@ -184,19 +183,4 @@ func Show(baseDir string, opts Opts) (manifest.List, error) {
 	}
 
 	return l.Resources, nil
-}
-
-// Eval returns the raw evaluated Jsonnet output (without any transformations)
-func Eval(dir string, opts Opts) (interface{}, error) {
-	raw, err := EvalJsonnet(dir, opts.JsonnetOpts)
-	if err != nil {
-		return nil, err
-	}
-
-	var data interface{}
-	if err := json.Unmarshal([]byte(raw), &data); err != nil {
-		return nil, err
-	}
-
-	return data, nil
 }
