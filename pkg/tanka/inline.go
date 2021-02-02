@@ -22,7 +22,7 @@ func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment
 		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
 	}
 
-	data, err := i.EvalJsonnet(path, opts)
+	data, err := i.Eval(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (i *InlineLoader) Peek(path string, opts LoaderOpts) (*v1alpha1.Environment
 
 func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
 	opts.JsonnetOpts.EvalScript = MetadataEvalScript
-	data, err := i.EvalJsonnet(path, opts)
+	data, err := i.Eval(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environme
 	return envs, nil
 }
 
-func (i *InlineLoader) EvalJsonnet(path string, opts LoaderOpts) (interface{}, error) {
+func (i *InlineLoader) Eval(path string, opts LoaderOpts) (interface{}, error) {
 	// Can't provide env as extVar, as we need to evaluate Jsonnet first to know it
 	opts.ExtCode.Set(environmentExtCode, `error "Using tk.env and std.extVar('tanka.dev/environment') is only supported for static environments. Directly access this data using standard Jsonnet instead."`)
 

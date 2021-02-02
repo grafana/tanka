@@ -84,14 +84,14 @@ func List(path string, opts Opts) ([]*v1alpha1.Environment, error) {
 	return loader.List(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
-// EvalJsonnet returns the raw evaluated Jsonnet
-func EvalJsonnet(path string, opts Opts) (interface{}, error) {
+// Eval returns the raw evaluated Jsonnet
+func Eval(path string, opts Opts) (interface{}, error) {
 	loader, err := DetectLoader(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return loader.EvalJsonnet(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.Eval(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
 // DetectLoader detects whether the environment is inline or static and picks
@@ -125,8 +125,8 @@ type Loader interface {
 	// loaded
 	List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error)
 
-	// EvalJsonnet returns the raw evaluated Jsonnet
-	EvalJsonnet(path string, opts LoaderOpts) (interface{}, error)
+	// Eval returns the raw evaluated Jsonnet
+	Eval(path string, opts LoaderOpts) (interface{}, error)
 }
 
 type LoaderOpts struct {

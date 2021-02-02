@@ -184,13 +184,3 @@ func Show(baseDir string, opts Opts) (manifest.List, error) {
 
 	return l.Resources, nil
 }
-
-// Eval returns the raw evaluated Jsonnet output (without any transformations)
-func Eval(dir string, opts Opts) (interface{}, error) {
-	data, err := EvalJsonnet(dir, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}

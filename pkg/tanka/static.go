@@ -18,7 +18,7 @@ func (s StaticLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment,
 		return nil, err
 	}
 
-	data, err := s.EvalJsonnet(path, opts)
+	data, err := s.Eval(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (s StaticLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environmen
 	return []*v1alpha1.Environment{env}, nil
 }
 
-func (s *StaticLoader) EvalJsonnet(path string, opts LoaderOpts) (interface{}, error) {
+func (s *StaticLoader) Eval(path string, opts LoaderOpts) (interface{}, error) {
 	config, err := s.Peek(path, opts)
 	if err != nil {
 		return nil, err
