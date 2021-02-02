@@ -57,8 +57,9 @@ $ tk export exportDir environments/ -r -l team=infra
 * **cli**: Add `--with-prune` option for `tk diff`
   **([#469](https://github.com/grafana/tanka/pull/469))** (**@curusarn**)
 
-- **api**: `Peek`, similar to `Loader` interface but only for environment metadata
-  **([#467](https://github.com/grafana/tanka/pull/467))**
+- **api**: `Loader` interface
+  **([#459](https://github.com/grafana/tanka/pull/459),
+  [#467](https://github.com/grafana/tanka/pull/467))**
 - **api**: Faster environment discovery and faster `tk env list`
   **([#468](https://github.com/grafana/tanka/pull/468))**
 
