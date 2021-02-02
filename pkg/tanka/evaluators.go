@@ -11,7 +11,7 @@ import (
 )
 
 // EvalJsonnet evaluates the jsonnet environment at the given file system path
-func EvalJsonnet(path string, opts jsonnet.Opts) (raw string, err error) {
+func evalJsonnet(path string, opts jsonnet.Opts) (raw string, err error) {
 	entrypoint, err := jpath.Entrypoint(path)
 	if err != nil {
 		return "", err
