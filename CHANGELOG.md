@@ -54,6 +54,8 @@ $ tk export exportDir environments/ -r -l team=infra
   **([#455](https://github.com/grafana/tanka/pull/455))**
 * **cli**: Add `--with-prune` option for `tk diff`
   **([#469](https://github.com/grafana/tanka/pull/469))** (**@curusarn**)
+- **cli** :sparkles:: Export multiple environments with a single `tk export` command
+  **([#450](https://github.com/grafana/tanka/pull/450))**
 
 - **api**: `Peek`, similar to `Loader` interface but only for environment metadata
   **([#467](https://github.com/grafana/tanka/pull/467))**
@@ -68,15 +70,20 @@ $ tk export exportDir environments/ -r -l team=infra
   **([#464](https://github.com/grafana/tanka/pull/464))**
 - **jsonnet**: Restore tk.env
   **([#482](https://github.com/grafana/tanka/pull/482))**
+  **([#498](https://github.com/grafana/tanka/pull/498))**
 
 ### BREAKING
 
-- **cli** :sparkles:: Export multiple environments with a single `tk export` command, `<outputDir>` arg comes first now
-  **([#450](https://github.com/grafana/tanka/pull/450))**
-- **api** :sparkles:: `Loader` interface, major rewrite of the parsing logic
-  **([#459](https://github.com/grafana/tanka/pull/459))**
-- **api**: Refactor `EvalPattern` into `EvalScript`
-  **([#457](https://github.com/grafana/tanka/pull/457))**
+- **cli**: The argument order of `tk export` changed due to 
+  **[#450](https://github.com/grafana/tanka/pull/450)**:
+
+```console
+# old:
+$ tk export <environment> <outputDir>
+
+# new:
+$ tk export <outputDir> <environment> [<environment...>]
+```
 
 ## 0.13 (2020-12-11)
 
