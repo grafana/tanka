@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.14 (2021-02-01)
+## 0.14 (2021-02-03)
 
 #### :building_construction: Multiple inline environments
 
