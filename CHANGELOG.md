@@ -1,5 +1,91 @@
 # Changelog
 
+## 0.14 (2021-02-03)
+
+#### :building_construction: Multiple inline environments
+
+As a next step in the inline environment area, this release supports multiple inline
+environments. In case there are multiple environments in your workflow, you can use
+`--name` to specify the environment you want to diff or apply.
+
+```console
+tk apply --name us-central1 environments/dev
+tk diff --name europe-west2 environments/prod
+```
+
+#### :hammer: Export multiple environments
+
+As part of Grafana Labs' continuous delivery setup, we developed a fast and effective way
+to export all our environments. In v0.14, we have built this into `tk export`.
+
+> :warning: breaking change: the arguments for `tk export` have switched places!
+
+`path` to an environment can be added multiple times:
+
+```console
+tk export <outputDir> <path> [<path>...] [flags]
+```
+
+Some examples:
+
+```bash
+# Format based on environment {{env.<...>}}
+$ tk export exportDir environments/dev/ --format '{{env.metadata.labels.cluster}}/{{env.spec.namespace}}//{{.kind}}-{{.metadata.name}}'
+# Export multiple environments
+$ tk export exportDir environments/dev/ environments/qa/
+# Recursive export
+$ tk export exportDir environments/ --recursive
+# Recursive export with labelSelector
+$ tk export exportDir environments/ -r -l team=infra
+```
+
+### Features
+
+- **tanka** :sparkles:: Handle multiple inline environments
+  **([#476](https://github.com/grafana/tanka/pull/476))**
+- **jsonnet**: Vendor jsonnet v0.17.0
+  **([#445](https://github.com/grafana/tanka/pull/445))**
+
+* **cli**: Extend Tanka with scripts through `tk-` prefix on PATH
+  **([#412](https://github.com/grafana/tanka/pull/412))**
+* **cli** :sparkles:: Export multiple environments with a single `tk export` command
+  **([#450](https://github.com/grafana/tanka/pull/450))**
+* **cli**: Initialize inline environments
+  **([#451](https://github.com/grafana/tanka/pull/451))**
+* **cli**: Add Helm Chart repositories with `tk tool charts add-repo`
+  **([#455](https://github.com/grafana/tanka/pull/455))**
+* **cli**: Add `--with-prune` option for `tk diff`
+  **([#469](https://github.com/grafana/tanka/pull/469))** (**@curusarn**)
+
+- **api**: `Loader` interface
+  **([#459](https://github.com/grafana/tanka/pull/459),
+  [#467](https://github.com/grafana/tanka/pull/467))**
+- **api**: Faster environment discovery and faster `tk env list`
+  **([#468](https://github.com/grafana/tanka/pull/468))**
+
+### Bug Fixes
+
+- **jpath**: Support nested calling again
+  **([#456](https://github.com/grafana/tanka/pull/456))**
+- **cli**: Ensure TLACode works with `EvalScript`
+  **([#464](https://github.com/grafana/tanka/pull/464))**
+- **jsonnet**: Restore tk.env
+  **([#482](https://github.com/grafana/tanka/pull/482),
+  [#498](https://github.com/grafana/tanka/pull/498))**
+
+### BREAKING
+
+- **cli**: The argument order of `tk export` changed due to 
+  **[#450](https://github.com/grafana/tanka/pull/450)**:
+
+```console
+# old:
+$ tk export <environment> <outputDir>
+
+# new:
+$ tk export <outputDir> <environment> [<environment...>]
+```
+
 ## 0.13 (2020-12-11)
 
 #### :building_construction: Inline environments
