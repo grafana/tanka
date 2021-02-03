@@ -1,5 +1,5 @@
 # download kubectl
-FROM golang:alpine as kubectl
+FROM golang:alpine3.12 as kubectl
 RUN apk add --no-cache curl
 RUN export VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt) &&\
     export OS=$(go env GOOS) && \
@@ -8,7 +8,7 @@ RUN export VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/r
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
-FROM golang:alpine as jb
+FROM golang:alpine3.12 as jb
 WORKDIR /tmp
 RUN apk add --no-cache git make bash &&\
     git clone https://github.com/jsonnet-bundler/jsonnet-bundler &&\
@@ -16,7 +16,7 @@ RUN apk add --no-cache git make bash &&\
     make static &&\
     mv _output/jb /usr/local/bin/jb
 
-FROM golang:alpine as helm
+FROM golang:alpine3.12 as helm
 WORKDIR /tmp/helm
 RUN apk add --no-cache jq curl
 RUN export TAG=$(curl --silent "https://api.github.com/repos/helm/helm/releases/latest" | jq -r .tag_name) &&\
@@ -26,7 +26,7 @@ RUN export TAG=$(curl --silent "https://api.github.com/repos/helm/helm/releases/
     tar -xvf helm.tgz --strip-components=1
 
 # assemble final container
-FROM alpine
+FROM alpine:3.12
 RUN apk add --no-cache coreutils diffutils less git openssh-client
 COPY tk /usr/local/bin/tk
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
