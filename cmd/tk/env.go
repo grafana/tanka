@@ -83,16 +83,20 @@ func envSetCmd() *cli.Command {
 		}
 
 		if tmp.Spec.APIServer != "" && tmp.Spec.APIServer != cfg.Spec.APIServer {
-			fmt.Printf("updated spec.apiServer (`%s -> `%s`)\n", cfg.Spec.APIServer, tmp.Spec.APIServer)
+			fmt.Printf("updated spec.apiServer (`%s` -> `%s`)\n", cfg.Spec.APIServer, tmp.Spec.APIServer)
 			cfg.Spec.APIServer = tmp.Spec.APIServer
 		}
 		if tmp.Spec.Namespace != "" && tmp.Spec.Namespace != cfg.Spec.Namespace {
-			fmt.Printf("updated spec.namespace (`%s -> `%s`)\n", cfg.Spec.Namespace, tmp.Spec.Namespace)
+			fmt.Printf("updated spec.namespace (`%s` -> `%s`)\n", cfg.Spec.Namespace, tmp.Spec.Namespace)
 			cfg.Spec.Namespace = tmp.Spec.Namespace
 		}
 		if tmp.Spec.DiffStrategy != "" && tmp.Spec.DiffStrategy != cfg.Spec.DiffStrategy {
-			fmt.Printf("updated spec.diffStrategy (`%s -> `%s`)\n", cfg.Spec.DiffStrategy, tmp.Spec.DiffStrategy)
+			fmt.Printf("updated spec.diffStrategy (`%s` -> `%s`)\n", cfg.Spec.DiffStrategy, tmp.Spec.DiffStrategy)
 			cfg.Spec.DiffStrategy = tmp.Spec.DiffStrategy
+		}
+		if tmp.Spec.InjectLabels != cfg.Spec.InjectLabels {
+			fmt.Printf("updated spec.injectLabels (`%t` -> `%t`)\n", cfg.Spec.InjectLabels, tmp.Spec.InjectLabels)
+			cfg.Spec.InjectLabels = tmp.Spec.InjectLabels
 		}
 
 		if err := writeJSON(cfg, filepath.Join(path, "spec.json")); err != nil {
