@@ -94,6 +94,8 @@ type DiffOpts struct {
 	Summarize bool
 	// WithPrune includes objects to be deleted by prune command in the diff
 	WithPrune bool
+	// Exit with 0 even when differences are found
+	ExitZero bool
 }
 
 // Diff parses the environment at the given directory (a `baseDir`) and returns
