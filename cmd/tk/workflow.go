@@ -114,6 +114,7 @@ func diffCmd() *cli.Command {
 	cmd.Flags().StringVar(&opts.Strategy, "diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
 	cmd.Flags().BoolVarP(&opts.Summarize, "summarize", "s", false, "print summary of the differences, not the actual contents")
 	cmd.Flags().BoolVarP(&opts.WithPrune, "with-prune", "p", false, "include objects deleted from the configuration in the differences")
+	cmd.Flags().BoolVarP(&opts.ExitZero, "exit-zero", "z", false, "Exit with 0 even when differences are found.")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -142,7 +143,11 @@ func diffCmd() *cli.Command {
 			return err
 		}
 
-		os.Exit(ExitStatusDiff)
+		exitStatusDiff := ExitStatusDiff
+		if opts.ExitZero {
+			exitStatusDiff = ExitStatusClean
+		}
+		os.Exit(exitStatusDiff)
 		return nil
 	}
 
