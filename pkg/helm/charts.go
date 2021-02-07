@@ -91,11 +91,6 @@ func (c Charts) Vendor() error {
 		return err
 	}
 
-	log.Println("Syncing Repositories ...")
-	if err := c.Helm.RepoUpdate(Opts{Repositories: c.Manifest.Repositories}); err != nil {
-		return err
-	}
-
 	log.Println("Pulling Charts ...")
 	for _, r := range c.Manifest.Requires {
 		chartName := parseReqName(r.Chart)

@@ -1,9 +1,7 @@
 package helm
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -15,9 +13,6 @@ import (
 type Helm interface {
 	// Pull downloads a Helm Chart from a remote
 	Pull(chart, version string, opts PullOpts) error
-
-	// RepoUpdate fetches the latest remote index
-	RepoUpdate(opts Opts) error
 
 	// Template returns the individual resources of a Helm Chart
 	Template(name, chart string, opts TemplateOpts) (manifest.List, error)
@@ -55,27 +50,6 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 	)
 
 	return cmd.Run()
-}
-
-// RepoUpdate implements Helm.RepoUpdate
-func (e ExecHelm) RepoUpdate(opts Opts) error {
-	repoFile, err := writeRepoTmpFile(opts.Repositories)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(repoFile)
-
-	cmd := e.cmd("repo", "update",
-		"--repository-config", repoFile,
-	)
-	var errBuf bytes.Buffer
-	cmd.Stderr = &errBuf
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s\n%s", errBuf.String(), err)
-	}
-
-	return nil
 }
 
 // cmd returns a prepared exec.Cmd to use the `helm` binary
