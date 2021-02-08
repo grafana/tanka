@@ -60,6 +60,7 @@ func pruneCmd() *cli.Command {
 	var opts tanka.PruneOpts
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	cmd.Flags().StringVar(&opts.Name, "name", "", "Selects an environment from inline environments")
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {

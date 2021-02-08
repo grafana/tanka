@@ -149,3 +149,8 @@ func TestLoad(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadFailsWhenDuplicateEnv(t *testing.T) {
+	_, err := Load("./testdata/cases/withduplicateenv", Opts{Name: "withenv"})
+	assert.NotNil(t, err)
+}
