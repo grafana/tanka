@@ -17,6 +17,10 @@ import (
 // Kubernetes resources are expected at the `data` key of this very type
 type InlineLoader struct{}
 
+func (i *InlineLoader) Detect(base string) (bool, error) {
+	return true, nil
+}
+
 func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
 	if opts.Name != "" {
 		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)

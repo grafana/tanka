@@ -3,6 +3,8 @@ package tanka
 import (
 	"encoding/json"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -11,6 +13,16 @@ import (
 // StaticLoader loads an environment from a static file called `spec.json`.
 // Jsonnet is evaluated as normal
 type StaticLoader struct{}
+
+func (StaticLoader) Detect(base string) (bool, error) {
+	if _, err := os.Stat(filepath.Join(base, spec.Specfile)); err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
 
 func (s StaticLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
 	config, err := s.Peek(path, opts)

@@ -2,9 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -94,6 +91,16 @@ func Eval(path string, opts Opts) (interface{}, error) {
 	return loader.Eval(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
+var registeredLoaders = []Loader{
+	&StaticLoader{},
+	&InlineLoader{},
+}
+
+// SetLoaders register custom loaders
+func SetLoaders(loaders ...Loader) {
+	registeredLoaders = loaders
+}
+
 // DetectLoader detects whether the environment is inline or static and picks
 // the approriate loader
 func DetectLoader(path string) (Loader, error) {
@@ -102,19 +109,24 @@ func DetectLoader(path string) (Loader, error) {
 		return nil, err
 	}
 
-	// check if spec.json exists
-	_, err = os.Stat(filepath.Join(base, spec.Specfile))
-	if os.IsNotExist(err) {
-		return &InlineLoader{}, nil
-	} else if err != nil {
-		return nil, err
+	for i := range registeredLoaders {
+		l := registeredLoaders[i]
+		ok, err := l.Detect(base)
+		if err != nil {
+			return nil, err
+		}
+		if ok {
+			return l, nil
+		}
 	}
-
-	return &StaticLoader{}, nil
+	return nil, errors.New("no matched loader")
 }
 
 // Loader is an abstraction over the process of loading Environments
 type Loader interface {
+	// Detect check loader for detecting
+	Detect(base string) (bool, error)
+
 	// Load a single environment at path
 	Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error)
 
