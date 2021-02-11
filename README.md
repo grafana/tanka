@@ -44,6 +44,7 @@
 - **:pushpin: Concise**: Using the Kubernetes library and abstraction, you will
   never see boilerplate again!
 - **:dart: Confidence**: Stop guessing and use `tk diff` to see what exactly will happen
+- **:telescope: Helm**: Vendor in, modify, and export [Helm charts reproducibly](https://tanka.dev/helm#helm-support)
 - **:rocket: Production ready**: Tanka deploys [Grafana Cloud](https://grafana.com/cloud) and many more production setups
 
 <br />
