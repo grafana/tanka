@@ -1,6 +1,7 @@
 package jsonnet
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"sort"
@@ -15,7 +16,7 @@ import (
 )
 
 // TransitiveImports returns all recursive imports of an environment
-func TransitiveImports(dir string) ([]string, error) {
+func TransitiveImports(dir string, verbose bool) ([]string, error) {
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
@@ -52,8 +53,11 @@ func TransitiveImports(dir string) ([]string, error) {
 		return nil, errors.Wrap(err, "creating Jsonnet AST")
 	}
 
+	if verbose {
+		fmt.Println("Starting at", entrypoint)
+	}
 	imports := make(map[string]bool)
-	if err = importRecursive(imports, vm, node, filepath.Base(entrypoint)); err != nil {
+	if err = importRecursive(imports, vm, node, filepath.Base(entrypoint), verbose); err != nil {
 		return nil, err
 	}
 
@@ -84,12 +88,14 @@ func TransitiveImports(dir string) ([]string, error) {
 // importRecursive takes a Jsonnet VM and recursively imports the AST. Every
 // found import is added to the `list` string slice, which will ultimately
 // contain all recursive imports
-func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, currentPath string) error {
+func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, currentPath string, verbose bool) error {
 	switch node := node.(type) {
 	// we have an `import`
 	case *ast.Import:
 		p := node.File.Value
-
+		if verbose {
+			fmt.Printf("Importing %s from %s\n", p, currentPath)
+		}
 		contents, foundAt, err := vm.ImportAST(currentPath, p)
 		if err != nil {
 			return errors.Wrap(err, "importing jsonnet")
@@ -102,7 +108,7 @@ func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, curren
 
 		list[abs] = true
 
-		if err := importRecursive(list, vm, contents, foundAt); err != nil {
+		if err := importRecursive(list, vm, contents, foundAt, verbose); err != nil {
 			return err
 		}
 
@@ -125,7 +131,7 @@ func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, curren
 	// neither `import` nor `importstr`, probably object or similar: try children
 	default:
 		for _, child := range toolutils.Children(node) {
-			if err := importRecursive(list, vm, child, currentPath); err != nil {
+			if err := importRecursive(list, vm, child, currentPath, verbose); err != nil {
 				return err
 			}
 		}

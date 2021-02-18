@@ -76,6 +76,7 @@ func importsCmd() *cli.Command {
 	}
 
 	check := cmd.Flags().StringP("check", "c", "", "git commit hash to check against")
+	verbose := cmd.Flags().BoolP("verbose", "v", false, "log as imports are walked, to help locate errors")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		var modFiles []string
@@ -101,7 +102,7 @@ func importsCmd() *cli.Command {
 			return fmt.Errorf("The argument must be an environment's directory, but this does not seem to be the case.")
 		}
 
-		deps, err := jsonnet.TransitiveImports(dir)
+		deps, err := jsonnet.TransitiveImports(dir, *verbose)
 		if err != nil {
 			return fmt.Errorf("Resolving imports: %s", err)
 		}
