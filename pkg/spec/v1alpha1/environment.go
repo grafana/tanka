@@ -1,6 +1,10 @@
 package v1alpha1
 
-import "strings"
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+)
 
 // New creates a new Environment object with internal values already set
 func New() *Environment {
@@ -46,7 +50,9 @@ func (m Metadata) Get(label string) (value string) {
 }
 
 func (m Metadata) NameLabel() string {
-	return strings.Replace(m.Name, "/", ".", -1)
+	partsHash := sha256.Sum256([]byte(fmt.Sprintf("%s:%s", m.Name, m.Namespace)))
+	chars := []rune(hex.EncodeToString(partsHash[:]))
+	return string(chars[:48])
 }
 
 // Spec defines Kubernetes properties
