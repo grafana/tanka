@@ -89,6 +89,7 @@ func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, curren
 	// we have an `import`
 	case *ast.Import:
 		p := node.File.Value
+
 		contents, foundAt, err := vm.ImportAST(currentPath, p)
 		if err != nil {
 			return errors.Wrapf(err, "importing %s from %s", p, currentPath)
