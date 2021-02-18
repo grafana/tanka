@@ -70,7 +70,7 @@ func jpathCmd() *cli.Command {
 
 func importsCmd() *cli.Command {
 	cmd := &cli.Command{
-		Use:   "imports <directory>",
+		Use:   "imports <path>",
 		Short: "list all transitive imports of an environment",
 		Args:  workflowArgs,
 	}
@@ -87,21 +87,12 @@ func importsCmd() *cli.Command {
 			}
 		}
 
-		dir, err := filepath.Abs(args[0])
+		path, err := filepath.Abs(args[0])
 		if err != nil {
 			return fmt.Errorf("Loading environment: %s", err)
 		}
 
-		fi, err := os.Stat(dir)
-		if err != nil {
-			return fmt.Errorf("Loading environment: %s", err)
-		}
-
-		if !fi.IsDir() {
-			return fmt.Errorf("The argument must be an environment's directory, but this does not seem to be the case.")
-		}
-
-		deps, err := jsonnet.TransitiveImports(dir)
+		deps, err := jsonnet.TransitiveImports(path)
 		if err != nil {
 			return fmt.Errorf("Resolving imports: %s", err)
 		}
