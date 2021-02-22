@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"text/tabwriter"
 
 	"github.com/go-clix/cli"
@@ -249,16 +250,38 @@ func envListCmd() *cli.Command {
 			return err
 		}
 
+		envNames := []string{}
+		for _, env := range envs {
+			envNames = append(envNames, env.Metadata.Name)
+		}
+		sort.Strings(envNames)
+
 		if *useJSON {
-			j, err := json.Marshal(envs)
+			// sort environments by name for consistent output
+			sorted := make([]*v1alpha1.Environment, 0, len(envs))
+			for _, name := range envNames {
+				index := 0
+				todo := make([]*v1alpha1.Environment, 0, len(envs))
+				for _, env := range envs {
+					index += 1
+					if env.Metadata.Name == name {
+						sorted = append(sorted, env)
+						break
+					}
+					todo = append(todo, env)
+				}
+				envs = append(todo, envs[index:]...)
+			}
+
+			j, err := json.Marshal(sorted)
 			if err != nil {
 				return fmt.Errorf("Formatting as json: %s", err)
 			}
 			fmt.Println(string(j))
 			return nil
 		} else if *useNames {
-			for _, e := range envs {
-				fmt.Println(e.Metadata.Name)
+			for _, name := range envNames {
+				fmt.Println(name)
 			}
 			return nil
 		}
