@@ -249,39 +249,18 @@ func envListCmd() *cli.Command {
 		if err != nil {
 			return err
 		}
-
-		envNames := []string{}
-		for _, env := range envs {
-			envNames = append(envNames, env.Metadata.Name)
-		}
-		sort.Strings(envNames)
+		sort.Slice(envs, func(i, j int) bool { return envs[i].Metadata.Name < envs[j].Metadata.Name })
 
 		if *useJSON {
-			// sort environments by name for consistent output
-			sorted := make([]*v1alpha1.Environment, 0, len(envs))
-			for _, name := range envNames {
-				index := 0
-				todo := make([]*v1alpha1.Environment, 0, len(envs))
-				for _, env := range envs {
-					index += 1
-					if env.Metadata.Name == name {
-						sorted = append(sorted, env)
-						break
-					}
-					todo = append(todo, env)
-				}
-				envs = append(todo, envs[index:]...)
-			}
-
-			j, err := json.Marshal(sorted)
+			j, err := json.Marshal(envs)
 			if err != nil {
 				return fmt.Errorf("Formatting as json: %s", err)
 			}
 			fmt.Println(string(j))
 			return nil
 		} else if *useNames {
-			for _, name := range envNames {
-				fmt.Println(name)
+			for _, e := range envs {
+				fmt.Println(e.Metadata.Name)
 			}
 			return nil
 		}
