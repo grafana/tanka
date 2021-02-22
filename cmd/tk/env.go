@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"text/tabwriter"
 
 	"github.com/go-clix/cli"
@@ -248,6 +249,7 @@ func envListCmd() *cli.Command {
 		if err != nil {
 			return err
 		}
+		sort.SliceStable(envs, func(i, j int) bool { return envs[i].Metadata.Name < envs[j].Metadata.Name })
 
 		if *useJSON {
 			j, err := json.Marshal(envs)
