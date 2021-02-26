@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"text/tabwriter"
 
 	"github.com/go-clix/cli"
@@ -249,6 +250,15 @@ func envListCmd() *cli.Command {
 			return err
 		}
 
+		// tanka.FindEnvs is not order-stable, but cli should be
+		sort.SliceStable(envs, func(i, j int) bool {
+			if envs[i].Metadata.Namespace != envs[j].Metadata.Namespace {
+				return envs[i].Metadata.Namespace < envs[j].Metadata.Namespace
+			}
+
+			return envs[i].Metadata.Name < envs[j].Metadata.Name
+		})
+
 		if *useJSON {
 			j, err := json.Marshal(envs)
 			if err != nil {
@@ -256,7 +266,8 @@ func envListCmd() *cli.Command {
 			}
 			fmt.Println(string(j))
 			return nil
-		} else if *useNames {
+		}
+		if *useNames {
 			for _, e := range envs {
 				fmt.Println(e.Metadata.Name)
 			}
