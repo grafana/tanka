@@ -1,6 +1,7 @@
 package jsonnet
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"sort"
@@ -92,7 +93,7 @@ func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, curren
 
 		contents, foundAt, err := vm.ImportAST(currentPath, p)
 		if err != nil {
-			return errors.Wrap(err, "importing jsonnet")
+			return fmt.Errorf("importing '%s' from '%s': %w", p, currentPath, err)
 		}
 
 		abs, _ := filepath.Abs(foundAt)
