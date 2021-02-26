@@ -34,7 +34,8 @@ type Opts struct {
 
 // Clone returns a deep copy of Opts
 func (o Opts) Clone() Opts {
-	var extCode, tlaCode InjectedCode
+	extCode, tlaCode := InjectedCode{}, InjectedCode{}
+
 	for k, v := range o.ExtCode {
 		extCode[k] = v
 	}
