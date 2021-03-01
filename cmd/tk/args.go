@@ -25,7 +25,7 @@ var workflowArgs = cli.Args{
 			return nil
 		}
 
-		envs, _ := tanka.FindEnvs(pwd, tanka.FindOpts{})
+		envs, err := tanka.FindEnvs(pwd, tanka.FindOpts{})
 		if err != nil && !errors.As(err, &tanka.ErrParallel{}) {
 			return nil
 		}
