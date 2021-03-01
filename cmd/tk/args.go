@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -24,8 +25,8 @@ var workflowArgs = cli.Args{
 			return nil
 		}
 
-		envs, err := tanka.FindEnvs(pwd, tanka.FindOpts{})
-		if err != nil {
+		envs, _ := tanka.FindEnvs(pwd, tanka.FindOpts{})
+		if err != nil && !errors.As(err, &tanka.ErrParallel{}) {
 			return nil
 		}
 
@@ -42,6 +43,6 @@ var workflowArgs = cli.Args{
 			return reldirs
 		}
 
-		return complete.PredictDirs("*").Predict(args)
+		return complete.PredictFiles("*").Predict(args)
 	}),
 }

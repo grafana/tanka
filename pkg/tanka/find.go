@@ -1,11 +1,14 @@
 package tanka
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
+	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/labels"
 )
 
@@ -21,9 +24,9 @@ type FindOpts struct {
 // are not checked.
 func FindEnvs(path string, opts FindOpts) ([]*v1alpha1.Environment, error) {
 	// find all environments at dir
-	envs, err := find(path, Opts{JsonnetOpts: opts.JsonnetOpts})
-	if err != nil {
-		return nil, err
+	envs, errs := find(path, Opts{JsonnetOpts: opts.JsonnetOpts})
+	if errs != nil {
+		return envs, ErrParallel{errors: errs}
 	}
 
 	// optionally filter
@@ -42,18 +45,28 @@ func FindEnvs(path string, opts FindOpts) ([]*v1alpha1.Environment, error) {
 	return filtered, nil
 }
 
+func findErr(path string, err error) []error {
+	return []error{fmt.Errorf("%s:\n %w", path, err)}
+}
+
 // find implements the actual functionality described at 'FindEnvs'
-func find(path string, opts Opts) ([]*v1alpha1.Environment, error) {
+func find(path string, opts Opts) ([]*v1alpha1.Environment, []error) {
 	// try if this has envs
 	list, err := List(path, opts)
-	if len(list) != 0 && err == nil {
+	if err != nil &&
+		// expected when looking for environments
+		!errors.As(err, &jpath.ErrorNoBase{}) &&
+		!errors.As(err, &jpath.ErrorFileNotFound{}) {
+		return nil, findErr(path, err)
+	}
+	if len(list) != 0 {
 		// it has. don't search deeper
 		return list, nil
 	}
 
 	stat, err := os.Stat(path)
 	if err != nil {
-		return nil, err
+		return nil, findErr(path, err)
 	}
 
 	// if path is a file, don't search deeper
@@ -64,7 +77,7 @@ func find(path string, opts Opts) ([]*v1alpha1.Environment, error) {
 	// list directory
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		return nil, err
+		return nil, findErr(path, err)
 	}
 
 	// it's not one. Maybe subdirectories are?
@@ -82,20 +95,20 @@ func find(path string, opts Opts) ([]*v1alpha1.Environment, error) {
 	}
 
 	// collect parallel results
-	var lastErr error
+	var errs []error
 	var envs []*v1alpha1.Environment
 
 	for i := 0; i < routines; i++ {
 		out := <-ch
-		if out.err != nil {
-			lastErr = out.err
+		if out.errs != nil {
+			errs = append(errs, out.errs...)
 		}
 
 		envs = append(envs, out.envs...)
 	}
 
-	if lastErr != nil {
-		return nil, lastErr
+	if len(errs) != 0 {
+		return envs, errs
 	}
 
 	return envs, nil
@@ -103,10 +116,10 @@ func find(path string, opts Opts) ([]*v1alpha1.Environment, error) {
 
 type findOut struct {
 	envs []*v1alpha1.Environment
-	err  error
+	errs []error
 }
 
 func findShim(dir string, opts Opts, ch chan findOut) {
-	envs, err := find(dir, opts)
-	ch <- findOut{envs: envs, err: err}
+	envs, errs := find(dir, opts)
+	ch <- findOut{envs: envs, errs: errs}
 }
