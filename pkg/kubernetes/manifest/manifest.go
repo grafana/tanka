@@ -62,7 +62,7 @@ func (m Manifest) Verify() error {
 		if !o.Get("metadata").IsMSI() {
 			fields["metadata"] = ErrInvalidMap
 		}
-		if !o.Get("metadata.name").IsStr() {
+		if !o.Get("metadata.name").IsStr() && !o.Get("metadata.generateName").IsStr() {
 			fields["metadata.name"] = ErrInvalidStr
 		}
 
