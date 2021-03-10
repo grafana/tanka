@@ -38,6 +38,7 @@ func Funcs() []*jsonnet.NativeFunction {
 
 		// PromQL manipulation functions
 		promQLRemoveByLabels(),
+		promQLAddMatcher(),
 	}
 }
 
@@ -184,6 +185,37 @@ func promQLRemoveByLabels() *jsonnet.NativeFunction {
 					return nil
 				}
 				agg.Grouping = nil
+				return nil
+			})
+
+			return expr.String(), nil
+		},
+	}
+}
+
+// promQLAddMatcher updates PromQl expressions to add a matcher
+// eg `promQLAddMatcher("sum (foo)","{bar!='baz'}")` -> `sum (bar{bar!='baz'})`.
+func promQLAddMatcher() *jsonnet.NativeFunction {
+	return &jsonnet.NativeFunction{
+		Name:   "promQLAddMatcher",
+		Params: ast.Identifiers{"expr"},
+		Func: func(data []interface{}) (interface{}, error) {
+			expr, err := parser.ParseExpr(data[0].(string))
+			if err != nil {
+				return "", err
+			}
+
+			matchers, err := parser.ParseMetricSelector(data[1].(string))
+			if err != nil {
+				return "", err
+			}
+
+			parser.Inspect(expr, func(node parser.Node, _ []parser.Node) error {
+				sel, ok := node.(*parser.VectorSelector)
+				if !ok {
+					return nil
+				}
+				sel.LabelMatchers = append(sel.LabelMatchers, matchers...)
 				return nil
 			})
 

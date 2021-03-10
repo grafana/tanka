@@ -196,3 +196,14 @@ func TestPromQLRemoveByLabels(t *testing.T) {
 	assert.Empty(t, err)
 	assert.EqualValues(t, ret, "sum(bar) / sum(blip)")
 }
+
+func TestPromQLAddMatcher(t *testing.T) {
+	ret, err, callerr := callNative("promQLAddMatcher", []interface{}{
+		"sum by(foo) (bar) / sum by(baz) (blip)",
+		"{batt!=\"blot\"}",
+	})
+
+	assert.Empty(t, callerr)
+	assert.Empty(t, err)
+	assert.EqualValues(t, ret, "sum by(foo) (bar{batt!=\"blot\"}) / sum by(baz) (blip{batt!=\"blot\"})")
+}
