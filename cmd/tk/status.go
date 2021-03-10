@@ -39,7 +39,7 @@ func statusCmd() *cli.Command {
 
 		specMap := structs.Map(status.Env.Spec)
 		var keys []string
-		for k, _ := range specMap {
+		for k := range specMap {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
