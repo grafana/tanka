@@ -3,6 +3,8 @@ package tanka
 import (
 	"fmt"
 
+	"github.com/fatih/color"
+
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/term"
 )
@@ -50,6 +52,22 @@ func Prune(baseDir string, opts PruneOpts) error {
 		return err
 	}
 	fmt.Print(term.Colordiff(*diff).String())
+
+	// print namespace removal warning
+	namespaces := []string{}
+	for _, obj := range orphaned {
+		if obj.Kind() == "Namespace" {
+			namespaces = append(namespaces, obj.Metadata().Name())
+		}
+	}
+	if len(namespaces) > 0 {
+		warning := color.New(color.FgHiYellow, color.Bold).PrintFunc()
+		warning("WARNING: This will delete following namespaces and all resources in them:\n")
+		for _, ns := range namespaces {
+			fmt.Printf(" - %s\n", ns)
+		}
+		fmt.Println("")
+	}
 
 	// prompt for confirm
 	if opts.AutoApprove {
