@@ -194,7 +194,7 @@ func promQLRemoveByLabels() *jsonnet.NativeFunction {
 }
 
 // promQLAddMatcher updates PromQl expressions to add a matcher
-// eg `promQLAddMatcher("sum (foo)","{bar!='baz'}")` -> `sum (bar{bar!='baz'})`.
+// eg `promQLAddMatcher("sum (foo)","{bar!='baz'}")` -> `sum (foo{bar!='baz'})`.
 func promQLAddMatcher() *jsonnet.NativeFunction {
 	return &jsonnet.NativeFunction{
 		Name:   "promQLAddMatcher",
