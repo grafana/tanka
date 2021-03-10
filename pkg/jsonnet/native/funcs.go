@@ -198,7 +198,7 @@ func promQLRemoveByLabels() *jsonnet.NativeFunction {
 func promQLAddMatcher() *jsonnet.NativeFunction {
 	return &jsonnet.NativeFunction{
 		Name:   "promQLAddMatcher",
-		Params: ast.Identifiers{"expr"},
+		Params: ast.Identifiers{"expr", "matchers"},
 		Func: func(data []interface{}) (interface{}, error) {
 			expr, err := parser.ParseExpr(data[0].(string))
 			if err != nil {
