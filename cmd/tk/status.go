@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 	"text/tabwriter"
 
 	"github.com/fatih/structs"
@@ -35,7 +36,15 @@ func statusCmd() *cli.Command {
 		fmt.Println("Context:", context.Name)
 		fmt.Println("Cluster:", context.Context.Cluster)
 		fmt.Println("Environment:")
-		for k, v := range structs.Map(status.Env.Spec) {
+
+		specMap := structs.Map(status.Env.Spec)
+		var keys []string
+		for k, _ := range specMap {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			v := specMap[k]
 			fmt.Printf("  %s: %v\n", k, v)
 		}
 
