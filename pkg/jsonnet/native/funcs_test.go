@@ -188,3 +188,11 @@ func TestRegexSubstInvalid(t *testing.T) {
 	assert.Empty(t, ret)
 	assert.NotEmpty(t, err)
 }
+
+func TestPromQLRemoveByLabels(t *testing.T) {
+	ret, err, callerr := callNative("promQLRemoveByLabels", []interface{}{"sum by (foo) (bar) / sum by (baz) (blip)"})
+
+	assert.Empty(t, callerr)
+	assert.Empty(t, err)
+	assert.EqualValues(t, ret, "sum(bar) / sum(blip)")
+}

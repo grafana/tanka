@@ -12,6 +12,7 @@ import (
 	"github.com/grafana/tanka/pkg/helm"
 	"github.com/grafana/tanka/pkg/kustomize"
 	"github.com/pkg/errors"
+	"github.com/prometheus/prometheus/promql/parser"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -34,6 +35,9 @@ func Funcs() []*jsonnet.NativeFunction {
 
 		helm.NativeFunc(helm.ExecHelm{}),
 		kustomize.NativeFunc(kustomize.ExecKustomize{}),
+
+		// PromQL manipulation functions
+		promQLRemoveByLabels(),
 	}
 }
 
@@ -158,6 +162,32 @@ func regexSubst() *jsonnet.NativeFunction {
 				return "", err
 			}
 			return r.ReplaceAllString(src, repl), nil
+		},
+	}
+}
+
+// promQLRemoveByLabels updates PromQl expressions to remove all aggregation by labels
+// eg `sum by(foo) (bar)` -> `sum (bar)`.
+func promQLRemoveByLabels() *jsonnet.NativeFunction {
+	return &jsonnet.NativeFunction{
+		Name:   "promQLRemoveByLabels",
+		Params: ast.Identifiers{"expr"},
+		Func: func(data []interface{}) (interface{}, error) {
+			expr, err := parser.ParseExpr(data[0].(string))
+			if err != nil {
+				return "", err
+			}
+
+			parser.Inspect(expr, func(node parser.Node, _ []parser.Node) error {
+				agg, ok := node.(*parser.AggregateExpr)
+				if !ok {
+					return nil
+				}
+				agg.Grouping = nil
+				return nil
+			})
+
+			return expr.String(), nil
 		},
 	}
 }
