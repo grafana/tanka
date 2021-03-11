@@ -6,10 +6,10 @@ menu: Libraries
 
 # Overriding vendor
 
-The `vendor` directory is immutable in it's nature. You can't and should never
-modify any files inside of it, `jb` will revert those changes on the next run anyways.
+The `vendor` directory is immutable in its nature. You can't and should never
+modify any files inside of it, `jb` will revert those changes on the next run anyway.
 
-Nevertheless, it can sometimes become required to to changes there, e.g. if an
+Nevertheless, it can sometimes become required to add changes there, e.g. if an
 upstream library contains a bug that needs to be fixed immediately, without
 waiting for the upstream maintainer to review it.
 
@@ -37,7 +37,7 @@ For example, if `/vendor/foo/bar.libsonnet` contained an error, you could create
 
 > **Important:** If the file you override is not the one you directly import,
 > but instead imported by another file first, the override will only occur if
-> the placement of the file is along side your `main.libsonnet`.  This is due to
+> the placement of the file is alongside your `main.libsonnet`.  This is due to
 > the logic behind the Jsonnet importer.  Example:  We import
 > `abc/main.libsonnet` located in `vendor/abc`.  Because Jsonnet first looks if
 > files are locally present before considering the [import
@@ -53,12 +53,12 @@ This is handy, when you for example want to test a change of an upstream
 library which is used in many environments (including `prod`) in a single one,
 without affecting all the others.
 
-For this, Tanka let's you have a separate `vendor`, `jsonnetfile.json` and
+For this, Tanka lets you have a separate `vendor`, `jsonnetfile.json` and
 `jsonnetfile.lock.json` per environment. To do so:
 
 #### Create `tkrc.yaml`
 
-Tanka normally uses the `jsonnetfile.json` from your project to find it's root.
+Tanka normally uses the `jsonnetfile.json` from your project to find its root.
 As we are going to create another one of that down the tree in the next step, we
 need another marker for `<rootDir>`.
 
@@ -66,7 +66,7 @@ For that, create an empty file called `tkrc.yaml` in your project's root,
 alongside the original `jsonnetfile.json`.
 
 > **Info**: While the name suggests that `tkrc.yaml` could be used for setting
-> parameters, this is not case yet.  
+> parameters, this is not the case yet.  
 > It might however be repurposed later, in case we need such functionality
 
 #### Add a `vendor` to your environment
