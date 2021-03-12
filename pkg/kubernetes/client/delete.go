@@ -14,7 +14,7 @@ func (k Kubectl) Delete(namespace, kind, name string, opts DeleteOpts) error {
 	}
 
 	cmd := k.ctl("delete", argv...)
-	cmd.Stdout = os.Stdout
+	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 
