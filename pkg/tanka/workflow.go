@@ -88,7 +88,7 @@ func confirmPrompt(action, namespace string, info client.Info) error {
 type DiffOpts struct {
 	Opts
 
-	// Strategy must be one of "native" or "subset"
+	// Strategy must be one of "native", "validate", or "subset"
 	Strategy string
 	// Summarize prints a summary, instead of the actual diff
 	Summarize bool

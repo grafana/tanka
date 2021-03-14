@@ -107,7 +107,7 @@ func diffCmd() *cli.Command {
 		Short: "differences between the configuration and the cluster",
 		Args:  workflowArgs,
 		Predictors: complete.Flags{
-			"diff-strategy": cli.PredictSet("native", "subset"),
+			"diff-strategy": cli.PredictSet("native", "subset", "validate"),
 		},
 	}
 

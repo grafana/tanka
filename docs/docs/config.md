@@ -39,8 +39,9 @@ Tanka's behavior can be customized per Environment using a file called `spec.jso
     // diffStrategy to use. Automatically chosen by default based on
     // the availability of "kubectl diff".
     // - native: uses "kubectl diff". Recommended
+    // - validate: uses "kubectl diff --server-side". Safest, but slower than "native"
     // - subset: fallback for k8s versions below 1.13.0
-    "diffStrategy": "[native, subset]" | default = "auto",
+    "diffStrategy": "[native, validate, subset]" | default = "auto",
 
     // Whether to add a "tanka.dev/environment" label to each created resource.
     // Required for garbage collection ("tk prune").

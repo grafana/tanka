@@ -21,6 +21,9 @@ You can specify the diff-strategy to use on the command line as well:
 # native
 tk diff --diff-strategy=native .
 
+# validate: Like native but with a server-side validation
+tk diff --diff-strategy=validate .
+
 # subset
 tk diff --diff-strategy=subset .
 ```
