@@ -74,17 +74,6 @@ Please don't ask individual project members or open GitHub issues for support
 requests. Use one of the above channels so everyone in the community can
 participate.
 
----
-
-[![Community
-Call](./docs/img/community-call.png)](https://docs.google.com/document/d/1mEsc0GxlnwbWAXzbIP7tBb6T5WgAI66_0gIWJzqB93o/edit)
-
-Grafana Labs hosts a monthly community call for the Tanka project. Notes and the
-meeting URL can be found in a [Google
-Doc](https://docs.google.com/document/d/1mEsc0GxlnwbWAXzbIP7tBb6T5WgAI66_0gIWJzqB93o/edit).  
-Join us to share why you love Tanka, why you have a hard time, tell us what you
-would like to see improved and hear about latest news!
-
 Furthermore, see [`LICENSE`](./LICENSE) and [`GOVERNANCE`](./GOVERNANCE.md).
 
 ## :book: Additional resources
