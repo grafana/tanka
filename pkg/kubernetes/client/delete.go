@@ -16,7 +16,6 @@ func (k Kubectl) Delete(namespace, kind, name string, opts DeleteOpts) error {
 	}
 
 	cmd := k.ctl("delete", argv...)
-	// https://stackoverflow.com/questions/18159704/how-to-debug-exit-status-1-error-when-running-exec-command-in-golang
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
