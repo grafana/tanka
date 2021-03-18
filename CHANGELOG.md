@@ -4,7 +4,7 @@
 
 Half the changes introduced in this version come from the community, great job y'all!
 
-### :warning: Pruning label changed
+#### :warning: Pruning label changed
 
 With enabling pruning on inline environments
 ([#511](https://github.com/grafana/tanka/pull/511)) we fixed pruning. Instead of just
@@ -16,12 +16,12 @@ This solves 2 problems:
 * Ensures pruning works properly on inline environments.
 * Label values in Kubernetes have a 63 characters limit, environment names can be longer.
 
-The effect of this is that all environments that use `spec.injectLabels` will show a diff
+The effect of this is that all environments using `spec.injectLabels` will show a diff
 on the `tanka.dev/environment` label. To ensure a proper migration, execute `tk apply` and
 `tk prune` with Tanka v0.14 before running v0.15 so all stale objects are pruned before
 the label changes.
 
-Thanks @craigfurman for pulling this together.
+Thanks **@craigfurman** for pulling this together.
 
 ### Features
 
@@ -31,7 +31,7 @@ Thanks @craigfurman for pulling this together.
   **([#506](https://github.com/grafana/tanka/pull/506))** (**@craigfurman**)
 - **cli**: `tk env list` sorts environments by name
   **([#521](https://github.com/grafana/tanka/pull/521))**
-- **cli**: pruning warns before deleting namespaces
+- **cli**: Pruning warns before deleting namespaces
   **([#531](https://github.com/grafana/tanka/pull/531))**
 - **cli**: Add `tk status --name` flag and sort Spec.data
   **([#533](https://github.com/grafana/tanka/pull/533))**
