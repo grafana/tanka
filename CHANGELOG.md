@@ -40,6 +40,8 @@ Thanks **@craigfurman** for pulling this together.
   **([#517](https://github.com/grafana/tanka/pull/517))**
 * **kubernetes**: support .metadata.generateName
   **([#529](https://github.com/grafana/tanka/pull/529))** (**@wojciechka**)
+* **helm**: Only update helm repositories when necessary
+  **([#535](https://github.com/grafana/tanka/pull/535))** (**@craigfurman**)
 
 ### Bug Fixes
 
