@@ -15,7 +15,7 @@ To accomplish this, it appends the `tanka.dev/environment: <hash>` label to each
 resource. This is used to identify those which are missing from the local state in the
 future.
 
-> **Note:** The label value changed from the <name> to a <hash> in v0.15.0.
+> **Note:** The label value changed from the `<name>` to a `<hash>` in v0.15.0.
 
 Because the label causes a `diff` for every single object in your cluster and
 not everybody wants this, it needs to be explicitly enabled. To do so, add the
