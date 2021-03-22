@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.15 (2021-03-18)
+## 0.15 (2021-03-22)
 
 Half the changes introduced in this version come from the community, great job y'all!
 
