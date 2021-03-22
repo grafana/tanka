@@ -1,5 +1,62 @@
 # Changelog
 
+## 0.15 (2021-03-18)
+
+Half the changes introduced in this version come from the community, great job y'all!
+
+#### :warning: Pruning label changed
+
+With enabling pruning on inline environments
+([#511](https://github.com/grafana/tanka/pull/511)) we fixed pruning. Instead of just
+setting the prune label `tanka.dev/environment` to the environment name, Tanka now sets it
+to a hash of the environment name and path it is on.
+
+This solves 2 problems:
+
+* Ensures pruning works properly on inline environments.
+* Label values in Kubernetes have a 63 characters limit, environment names can be longer.
+
+The effect of this is that all environments using `spec.injectLabels` will show a diff
+on the `tanka.dev/environment` label. To ensure a proper migration, execute `tk apply` and
+`tk prune` with Tanka v0.14 before running v0.15 so all stale objects are pruned before
+the label changes.
+
+Thanks **@craigfurman** for pulling this together.
+
+### Features
+
+- **cli**: Add  `tk env add|set --inject-labels` flag
+  **([#505](https://github.com/grafana/tanka/pull/505))** (**@curusarn**)
+- **cli**: Add `tk diff --exit-zero` flag
+  **([#506](https://github.com/grafana/tanka/pull/506))** (**@craigfurman**)
+- **cli**: `tk env list` sorts environments by name
+  **([#521](https://github.com/grafana/tanka/pull/521))**
+- **cli**: Pruning warns before deleting namespaces
+  **([#531](https://github.com/grafana/tanka/pull/531))**
+- **cli**: Add `tk status --name` flag and sort Spec.data
+  **([#533](https://github.com/grafana/tanka/pull/533))**
+
+* **tooling**: `tk tool imports` works on both files and paths
+  **([#517](https://github.com/grafana/tanka/pull/517))**
+* **kubernetes**: support .metadata.generateName
+  **([#529](https://github.com/grafana/tanka/pull/529))** (**@wojciechka**)
+* **helm**: Only update helm repositories when necessary
+  **([#535](https://github.com/grafana/tanka/pull/535))** (**@craigfurman**)
+
+### Bug Fixes
+
+- **cli** :sparkles:: Enable pruning on inline environments
+  **([#511](https://github.com/grafana/tanka/pull/511))** (**@craigfurman**)
+- **cli**: Do not silently fail on find/List
+  **([#515](https://github.com/grafana/tanka/pull/515))**
+- **cli**: Split diff and non-diff output
+  **([#537](https://github.com/grafana/tanka/pull/537))** (**@craigfurman**)
+
+* **tooling**: `tk tool imports` shows path info to error message
+  **([#518](https://github.com/grafana/tanka/pull/518))**
+* **jsonnet**: TLA in export panic
+  **([#519](https://github.com/grafana/tanka/pull/519))** (**@morlay**)
+
 ## 0.14 (2021-02-03)
 
 #### :building_construction: Multiple inline environments
