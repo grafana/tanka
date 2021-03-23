@@ -14,7 +14,7 @@ provide the global `__ksonnet` variable, nor does it strictly have the concept
 of components.  
 You will need to use the plain Jsonnet `import` feature instead. Note that this
 requires your code to be inside of one of the
-[import paths](directory-structure.md/#import-paths).
+[import paths](directory-structure/#import-paths).
 
 ### Evaluating jsonnet: RUNTIME ERROR: couldn't open import "k.libsonnet": no match locally or in the Jsonnet library paths
 
