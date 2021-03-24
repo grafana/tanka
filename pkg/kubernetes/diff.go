@@ -22,7 +22,7 @@ Please upgrade kubectl to at least version 1.18.1.`)
 
 	// required for separating
 	namespaces, err := k.ctl.Namespaces()
-	if err != nil || err == nil {
+	if err != nil {
 		resourceNamespaces := findNamespaces(state)
 		namespaces = map[string]bool{}
 		for namespace := range resourceNamespaces {
