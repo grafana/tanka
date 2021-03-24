@@ -22,8 +22,16 @@ Please upgrade kubectl to at least version 1.18.1.`)
 
 	// required for separating
 	namespaces, err := k.ctl.Namespaces()
-	if err != nil {
-		return nil, errors.Wrap(err, "listing namespaces")
+	if err != nil || err == nil {
+		resourceNamespaces := findNamespaces(state)
+		namespaces = map[string]bool{}
+		for namespace := range resourceNamespaces {
+			_, err = k.ctl.Namespace(namespace)
+			if err != nil {
+				return nil, errors.Wrap(err, "retrieving namespaces")
+			}
+			namespaces[namespace] = true
+		}
 	}
 	resources, err := k.ctl.Resources()
 	if err != nil {
@@ -208,4 +216,14 @@ func (m multiDiff) diff() (*string, error) {
 		return nil, nil
 	}
 	return &diff, nil
+}
+
+func findNamespaces(state manifest.List) map[string]bool {
+	namespaces := map[string]bool{}
+	for _, m := range state {
+		if m.Metadata().HasNamespace() {
+			namespaces[m.Metadata().Namespace()] = true
+		}
+	}
+	return namespaces
 }

@@ -76,6 +76,26 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 	return namespaces, nil
 }
 
+// Namespace finds a single namespace in the cluster
+func (k Kubectl) Namespace(namespace string) (manifest.Manifest, error) {
+	cmd := k.ctl("get", "namespaces", namespace, "-o", "json")
+
+	var sout bytes.Buffer
+	cmd.Stdout = &sout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	var ns manifest.Manifest
+	if err := json.Unmarshal(sout.Bytes(), &ns); err != nil {
+		return nil, err
+	}
+	return ns, nil
+}
+
 // FilterWriter is an io.Writer that discards every message that matches at
 // least one of the regular expressions.
 type FilterWriter struct {
