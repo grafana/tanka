@@ -51,12 +51,13 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 	cmd := k.ctl("get", "namespaces", "-o", "json")
 
 	var sout bytes.Buffer
+	var serr bytes.Buffer
 	cmd.Stdout = &sout
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = &serr
 
 	err := cmd.Run()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, string(serr.Bytes()))
 	}
 
 	var list manifest.Manifest
