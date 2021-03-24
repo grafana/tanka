@@ -221,7 +221,7 @@ func (m multiDiff) diff() (*string, error) {
 func findNamespaces(state manifest.List) map[string]bool {
 	namespaces := map[string]bool{}
 	for _, m := range state {
-		if m.Metadata().HasNamespace() {
+		if namespace := m.Metadata().Namespace(); namespace != "" {
 			namespaces[m.Metadata().Namespace()] = true
 		}
 	}
