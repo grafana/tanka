@@ -77,9 +77,15 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 	return namespaces, nil
 }
 
+type ErrNamespaceNotFound struct{}
+
+func (e ErrNamespaceNotFound) Error() string {
+	return "Namespace not found"
+}
+
 // Namespace finds a single namespace in the cluster
 func (k Kubectl) Namespace(namespace string) (manifest.Manifest, error) {
-	cmd := k.ctl("get", "namespaces", namespace, "-o", "json")
+	cmd := k.ctl("get", "namespaces", namespace, "-o", "json", "--ignore-not-found")
 
 	var sout bytes.Buffer
 	cmd.Stdout = &sout
@@ -89,7 +95,9 @@ func (k Kubectl) Namespace(namespace string) (manifest.Manifest, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if len(sout.Bytes()) == 0 {
+		return nil, ErrNamespaceNotFound{}
+	}
 	var ns manifest.Manifest
 	if err := json.Unmarshal(sout.Bytes(), &ns); err != nil {
 		return nil, err

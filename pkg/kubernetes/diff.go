@@ -28,6 +28,9 @@ Please upgrade kubectl to at least version 1.18.1.`)
 		for namespace := range resourceNamespaces {
 			_, err = k.ctl.Namespace(namespace)
 			if err != nil {
+				if errors.Is(err, client.ErrNamespaceNotFound{}) {
+					continue
+				}
 				return nil, errors.Wrap(err, "retrieving namespaces")
 			}
 			namespaces[namespace] = true
@@ -222,7 +225,7 @@ func findNamespaces(state manifest.List) map[string]bool {
 	namespaces := map[string]bool{}
 	for _, m := range state {
 		if namespace := m.Metadata().Namespace(); namespace != "" {
-			namespaces[m.Metadata().Namespace()] = true
+			namespaces[namespace] = true
 		}
 	}
 	return namespaces
