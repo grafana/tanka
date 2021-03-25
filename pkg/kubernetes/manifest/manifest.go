@@ -263,6 +263,20 @@ func (m List) String() string {
 	return buf.String()
 }
 
+func (m List) Namespaces() []string {
+	namespaces := map[string]struct{}{}
+	for _, manifest := range m {
+		if namespace := manifest.Metadata().Namespace(); namespace != "" {
+			namespaces[namespace] = struct{}{}
+		}
+	}
+	keys := []string{}
+	for k := range namespaces {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func m2o(m interface{}) objx.Map {
 	switch mm := m.(type) {
 	case Metadata:
