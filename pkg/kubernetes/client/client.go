@@ -24,6 +24,10 @@ type Client interface {
 
 	// Namespaces the cluster currently has
 	Namespaces() (map[string]bool, error)
+
+	// Namespace retrieves a namespace from the cluster
+	Namespace(namespace string) (manifest.Manifest, error)
+
 	// Resources returns all known api-resources of the cluster
 	Resources() (Resources, error)
 

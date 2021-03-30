@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"regexp"
 
@@ -51,12 +52,13 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 	cmd := k.ctl("get", "namespaces", "-o", "json")
 
 	var sout bytes.Buffer
+	var serr bytes.Buffer
 	cmd.Stdout = &sout
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = &serr
 
 	err := cmd.Run()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, string(serr.Bytes()))
 	}
 
 	var list manifest.Manifest
@@ -74,6 +76,38 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 		namespaces[m.Metadata().Name()] = true
 	}
 	return namespaces, nil
+}
+
+type ErrNamespaceNotFound struct {
+	Namespace string
+}
+
+func (e ErrNamespaceNotFound) Error() string {
+	return fmt.Sprintf("Namespace not found: %s", e.Namespace)
+}
+
+// Namespace finds a single namespace in the cluster
+func (k Kubectl) Namespace(namespace string) (manifest.Manifest, error) {
+	cmd := k.ctl("get", "namespaces", namespace, "-o", "json", "--ignore-not-found")
+
+	var sout bytes.Buffer
+	cmd.Stdout = &sout
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+	if len(sout.Bytes()) == 0 {
+		return nil, ErrNamespaceNotFound{
+			Namespace: namespace,
+		}
+	}
+	var ns manifest.Manifest
+	if err := json.Unmarshal(sout.Bytes(), &ns); err != nil {
+		return nil, err
+	}
+	return ns, nil
 }
 
 // FilterWriter is an io.Writer that discards every message that matches at
