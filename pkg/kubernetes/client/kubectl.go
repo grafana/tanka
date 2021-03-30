@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"regexp"
 
@@ -77,10 +78,12 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 	return namespaces, nil
 }
 
-type ErrNamespaceNotFound struct{}
+type ErrNamespaceNotFound struct {
+	Namespace string
+}
 
 func (e ErrNamespaceNotFound) Error() string {
-	return "Namespace not found"
+	return fmt.Sprintf("Namespace not found: %s", e.Namespace)
 }
 
 // Namespace finds a single namespace in the cluster
@@ -96,7 +99,9 @@ func (k Kubectl) Namespace(namespace string) (manifest.Manifest, error) {
 		return nil, err
 	}
 	if len(sout.Bytes()) == 0 {
-		return nil, ErrNamespaceNotFound{}
+		return nil, ErrNamespaceNotFound{
+			Namespace: namespace,
+		}
 	}
 	var ns manifest.Manifest
 	if err := json.Unmarshal(sout.Bytes(), &ns); err != nil {

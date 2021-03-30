@@ -28,7 +28,7 @@ Please upgrade kubectl to at least version 1.18.1.`)
 		for _, namespace := range resourceNamespaces {
 			_, err = k.ctl.Namespace(namespace)
 			if err != nil {
-				if errors.Is(err, client.ErrNamespaceNotFound{}) {
+				if errors.As(err, client.ErrNamespaceNotFound{}) {
 					continue
 				}
 				return nil, errors.Wrap(err, "retrieving namespaces")
