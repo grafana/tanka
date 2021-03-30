@@ -69,6 +69,8 @@ type TemplateOpts struct {
 	IncludeCRDs bool
 	// Namespace scope for this request
 	Namespace string
+	// NoHooks specifies whether hooks should be excluded from the template output
+	NoHooks bool
 }
 
 // Flags returns all options apart from Values as their respective `helm
@@ -83,6 +85,10 @@ func (t TemplateOpts) Flags() []string {
 
 	if t.IncludeCRDs {
 		flags = append(flags, "--include-crds")
+	}
+
+	if t.NoHooks {
+		flags = append(flags, "--no-hooks")
 	}
 
 	if t.Namespace != "" {
