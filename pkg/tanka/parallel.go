@@ -2,6 +2,7 @@ package tanka
 
 import (
 	"fmt"
+	"log"
 
 	"k8s.io/apimachinery/pkg/labels"
 
@@ -17,22 +18,9 @@ type parallelOpts struct {
 }
 
 // parallelLoadEnvironments evaluates multiple environments in parallel
-func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.Environment, error) {
+func parallelLoadEnvironments(paths map[string]string, opts parallelOpts) ([]*v1alpha1.Environment, error) {
 	jobsCh := make(chan parallelJob)
-	list := make(map[string]string)
-	for _, path := range paths {
-		envs, err := FindEnvs(path, FindOpts{Selector: opts.Selector, JsonnetOpts: opts.JsonnetOpts})
-		if err != nil {
-			return nil, err
-		}
-		for _, env := range envs {
-			if opts.Name != "" && opts.Name != env.Metadata.Name {
-				continue
-			}
-			list[env.Metadata.Name] = path
-		}
-	}
-	outCh := make(chan parallelOut, len(list))
+	outCh := make(chan parallelOut, len(paths))
 
 	if opts.Parallelism <= 0 {
 		opts.Parallelism = defaultParallelism
@@ -42,7 +30,7 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 		go parallelWorker(jobsCh, outCh)
 	}
 
-	for name, path := range list {
+	for name, path := range paths {
 		o := opts.Opts
 
 		// TODO: This is required because the map[string]string in here is not
@@ -62,7 +50,7 @@ func parallelLoadEnvironments(paths []string, opts parallelOpts) ([]*v1alpha1.En
 
 	var envs []*v1alpha1.Environment
 	var errors []error
-	for i := 0; i < len(list); i++ {
+	for i := 0; i < len(paths); i++ {
 		out := <-outCh
 		if out.err != nil {
 			errors = append(errors, out.err)
@@ -92,6 +80,7 @@ type parallelOut struct {
 
 func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
 	for job := range jobsCh {
+		log.Printf("Loading %s from %s", job.opts.Name, job.path)
 		env, err := LoadEnvironment(job.path, job.opts)
 		if err != nil {
 			err = fmt.Errorf("%s:\n %w", job.path, err)

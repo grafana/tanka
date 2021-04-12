@@ -62,15 +62,15 @@ func exportCmd() *cli.Command {
 			Parallelism: *parallel,
 		}
 
-		var paths []string
+		paths := make(map[string]string)
 		for _, path := range args[1:] {
+			rootDir, err := jpath.FindRoot(path)
+			if err != nil {
+				return errors.Wrap(err, "resolving jpath")
+			}
+
 			// find possible environments
 			if *recursive {
-				rootDir, err := jpath.FindRoot(path)
-				if err != nil {
-					return errors.Wrap(err, "resolving jpath")
-				}
-
 				// get absolute path to Environment
 				envs, err := tanka.FindEnvs(path, tanka.FindOpts{Selector: opts.Selector})
 				if err != nil {
@@ -78,13 +78,17 @@ func exportCmd() *cli.Command {
 				}
 
 				for _, env := range envs {
-					paths = append(paths, filepath.Join(rootDir, env.Metadata.Namespace))
+					if opts.Opts.Name != "" && opts.Opts.Name != env.Metadata.Name {
+						continue
+					}
+					paths[env.Metadata.Name] = filepath.Join(rootDir, env.Metadata.Namespace)
 				}
 				continue
 			}
 
 			// validate environment
-			if _, err := tanka.Peek(path, opts.Opts); err != nil {
+			env, err := tanka.Peek(path, opts.Opts)
+			if err != nil {
 				switch err.(type) {
 				case tanka.ErrMultipleEnvs:
 					fmt.Println("Please use --name to export a single environment or --recursive to export multiple environments.")
@@ -94,7 +98,7 @@ func exportCmd() *cli.Command {
 				}
 			}
 
-			paths = append(paths, path)
+			paths[env.Metadata.Name] = filepath.Join(rootDir, env.Metadata.Namespace)
 		}
 
 		// export them

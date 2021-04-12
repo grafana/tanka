@@ -43,7 +43,7 @@ type ExportEnvOpts struct {
 	Parallelism int
 }
 
-func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
+func ExportEnvironments(paths map[string]string, to string, opts *ExportEnvOpts) error {
 	// Keep track of which file maps to which environment
 	fileToEnv := map[string]string{}
 
