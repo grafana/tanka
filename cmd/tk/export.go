@@ -2,13 +2,11 @@ package main
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/go-clix/cli"
-	"github.com/pkg/errors"
 
-	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/process"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
@@ -62,13 +60,8 @@ func exportCmd() *cli.Command {
 			Parallelism: *parallel,
 		}
 
-		paths := make(map[string]string)
+		var exportEnvs []*v1alpha1.Environment
 		for _, path := range args[1:] {
-			rootDir, err := jpath.FindRoot(path)
-			if err != nil {
-				return errors.Wrap(err, "resolving jpath")
-			}
-
 			// find possible environments
 			if *recursive {
 				// get absolute path to Environment
@@ -81,7 +74,7 @@ func exportCmd() *cli.Command {
 					if opts.Opts.Name != "" && opts.Opts.Name != env.Metadata.Name {
 						continue
 					}
-					paths[env.Metadata.Name] = filepath.Join(rootDir, env.Metadata.Namespace)
+					exportEnvs = append(exportEnvs, env)
 				}
 				continue
 			}
@@ -98,11 +91,11 @@ func exportCmd() *cli.Command {
 				}
 			}
 
-			paths[env.Metadata.Name] = filepath.Join(rootDir, env.Metadata.Namespace)
+			exportEnvs = append(exportEnvs, env)
 		}
 
 		// export them
-		return tanka.ExportEnvironments(paths, args[0], &opts)
+		return tanka.ExportEnvironments(exportEnvs, args[0], &opts)
 	}
 	return cmd
 }
