@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
 // BelRune is a string of the Ascii character BEL which made computers ring in ancient times
@@ -43,7 +44,7 @@ type ExportEnvOpts struct {
 	Parallelism int
 }
 
-func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
+func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
 	// Keep track of which file maps to which environment
 	fileToEnv := map[string]string{}
 
@@ -57,7 +58,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 	}
 
 	// get all environments for paths
-	envs, err := parallelLoadEnvironments(paths, parallelOpts{
+	loadedEnvs, err := parallelLoadEnvironments(envs, parallelOpts{
 		Opts:        opts.Opts,
 		Selector:    opts.Selector,
 		Parallelism: opts.Parallelism,
@@ -66,7 +67,7 @@ func ExportEnvironments(paths []string, to string, opts *ExportEnvOpts) error {
 		return err
 	}
 
-	for _, env := range envs {
+	for _, env := range loadedEnvs {
 		// get the manifests
 		loaded, err := LoadManifests(env, opts.Opts.Filters)
 		if err != nil {
