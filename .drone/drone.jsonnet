@@ -39,6 +39,7 @@ local docker(arch) = pipeline('docker-' + arch) {
     arch: arch,
   },
   steps: [
+    go('fetch-tags', ['git fetch origin --tags']),
     make('static'),
     {
       name: 'container',
