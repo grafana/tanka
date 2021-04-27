@@ -1,3 +1,5 @@
+local vault = import 'vault.libsonnet';
+
 local golang = 'golang:1.15';
 
 local volumes = [{ name: 'gopath', temp: {} }];
@@ -48,8 +50,8 @@ local docker(arch) = pipeline('docker-' + arch) {
         repo: 'grafana/tanka',
         auto_tag: true,
         auto_tag_suffix: arch,
-        username: { from_secret: 'docker_username' },
-        password: { from_secret: 'docker_password' },
+        username: { from_secret: vault.dockerhub_username },
+        password: { from_secret: vault.dockerhub_password },
       },
     },
   ],
@@ -74,7 +76,7 @@ local docker(arch) = pipeline('docker-' + arch) {
         settings: {
           title: '${DRONE_TAG}',
           note: importstr 'release-note.md',
-          api_key: { from_secret: 'GITHUB_TOKEN' },
+          api_key: { from_secret: vault.grafanabot_public_account_token },
           files: 'dist/*',
           draft: true,
         },
@@ -94,8 +96,8 @@ local docker(arch) = pipeline('docker-' + arch) {
         auto_tag: true,
         ignore_missing: true,
         spec: '.drone/docker-manifest.tmpl',
-        username: { from_secret: 'docker_username' },
-        password: { from_secret: 'docker_password' },
+        username: { from_secret: vault.dockerhub_username },
+        password: { from_secret: vault.dockerhub_password },
       },
     }],
   } + {
@@ -105,4 +107,4 @@ local docker(arch) = pipeline('docker-' + arch) {
       'docker-arm64',
     ],
   } + constraints.onlyTagOrMaster,
-]
+] + vault.secrets
