@@ -151,7 +151,7 @@ If needed, we reserve the right to publicly announce removal.
 [announce]: https://groups.google.com/forum/#!forum/tanka-announce
 [coc]: https://github.com/grafana/grafana/blob/master/CODE_OF_CONDUCT.md
 [devs]: https://groups.google.com/forum/#!forum/tanka-developers
-[maintainers]: https://github.com/grafana/tanka/blob/master/MAINTAINERS.md
+[maintainers]: https://github.com/grafana/tanka/blob/main/MAINTAINERS.md
 [rough]: https://tools.ietf.org/html/rfc7282
 [team]: https://groups.google.com/forum/#!forum/tanka-team
 [users]: https://groups.google.com/forum/#!forum/tanka-users

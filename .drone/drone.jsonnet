@@ -6,9 +6,9 @@ local volumes = [{ name: 'gopath', temp: {} }];
 local mounts = [{ name: 'gopath', path: '/go' }];
 
 local constraints = {
-  onlyTagOrMaster: { trigger: {
+  onlyTagOrMain: { trigger: {
     ref: [
-      'refs/heads/master',
+      'refs/heads/main',
       'refs/heads/docker',
       'refs/tags/v*',
     ],
@@ -84,9 +84,9 @@ local docker(arch) = pipeline('docker-' + arch) {
     ],
   } + { depends_on: ['check'] } + constraints.onlyTags,
 
-  docker('amd64') { depends_on: ['check'] } + constraints.onlyTagOrMaster,
-  docker('arm') { depends_on: ['check'] } + constraints.onlyTagOrMaster,
-  docker('arm64') { depends_on: ['check'] } + constraints.onlyTagOrMaster,
+  docker('amd64') { depends_on: ['check'] } + constraints.onlyTagOrMain,
+  docker('arm') { depends_on: ['check'] } + constraints.onlyTagOrMain,
+  docker('arm64') { depends_on: ['check'] } + constraints.onlyTagOrMain,
 
   pipeline('manifest') {
     steps: [{
@@ -106,5 +106,5 @@ local docker(arch) = pipeline('docker-' + arch) {
       'docker-arm',
       'docker-arm64',
     ],
-  } + constraints.onlyTagOrMaster,
+  } + constraints.onlyTagOrMain,
 ] + vault.secrets

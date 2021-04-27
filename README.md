@@ -1,7 +1,7 @@
 <p align="center">
   <img
     width="400"
-    src="https://raw.githubusercontent.com/grafana/tanka/master/docs/img/logo.svg"
+    src="https://raw.githubusercontent.com/grafana/tanka/main/docs/img/logo.svg"
     alt="Grafana Tanka Logo"
   />
 </p>
@@ -30,7 +30,7 @@
 # Grafana Tanka
 
 <img
-  src="https://raw.githubusercontent.com/grafana/tanka/master/docs/img/example.png"
+  src="https://raw.githubusercontent.com/grafana/tanka/main/docs/img/example.png"
   width="50%"
   align="right"
 />

@@ -127,7 +127,7 @@ volumes:
 
 trigger:
   ref:
-  - refs/heads/master
+  - refs/heads/main
   - refs/heads/docker
   - refs/tags/v*
 
@@ -176,7 +176,7 @@ volumes:
 
 trigger:
   ref:
-  - refs/heads/master
+  - refs/heads/main
   - refs/heads/docker
   - refs/tags/v*
 
@@ -225,7 +225,7 @@ volumes:
 
 trigger:
   ref:
-  - refs/heads/master
+  - refs/heads/main
   - refs/heads/docker
   - refs/tags/v*
 
@@ -258,7 +258,7 @@ volumes:
 
 trigger:
   ref:
-  - refs/heads/master
+  - refs/heads/main
   - refs/heads/docker
   - refs/tags/v*
 

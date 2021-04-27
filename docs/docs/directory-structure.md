@@ -46,7 +46,7 @@ This file configures environment properties such as cluster connection
 (`spec.apiServer`), default namespace (`spec.namespace`), etc.
 
 For the full set of options, see the [Golang source
-code](https://github.com/grafana/tanka/blob/master/pkg/spec/v1alpha1/environment.go).
+code](https://github.com/grafana/tanka/blob/main/pkg/spec/v1alpha1/environment.go).
 
 #### main.jsonnet
 
