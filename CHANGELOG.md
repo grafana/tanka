@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.15.1 (2021-04-27)
+
+### Features
+
+- **helm**: Add support for `--no-hooks` switch in Helm template
+  **([#545](https://github.com/grafana/tanka/pull/545))** (**@PatTheSilent**)
+- **export**: Only call FindEnvs once
+  **([#553](https://github.com/grafana/tanka/pull/553))**
+
+### Bug Fixes
+
+- **kubernetes**: Don't fail on listing namespaces
+  **([#549](https://github.com/grafana/tanka/pull/549))**
+
 ## 0.15 (2021-03-22)
 
 Half the changes introduced in this version come from the community, great job y'all!
