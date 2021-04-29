@@ -66,6 +66,29 @@ a regular Jsonnet object that looks roughly like so:
 
 Above can be [manipulated](/tutorial/environments#patching) in the same way as any other Jsonnet data.
 
+Under the hood, this feature invokes the
+[`helm template`](https://helm.sh/docs/helm/helm_template/) CLI command.
+The following options control how the command is invoked:
+
+```jsonnet
+...
+
+{
+  grafana: helm.template("grafana", "./charts/grafana", {
+    namespace: "monitoring",
+    values: {
+      persistence: { enabled: true }
+    },
+    // Equivalent to: --include-crds; only relevant for Helm v3+.
+    includeCrds: true,
+    // Equivalent to: --api-versions v1 --api-versions apps/v1
+    apiVersions: ['v1', 'apps/v1']
+    // Equivalent to: --no-hooks
+    noHooks: true,
+}
+```
+
+
 ## Vendoring Helm Charts
 
 Tanka, like Jsonnet, is hermetic. It **always yields the same
