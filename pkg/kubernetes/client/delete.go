@@ -1,7 +1,9 @@
 package client
 
 import (
+	"bytes"
 	"os"
+	"strings"
 )
 
 func (k Kubectl) Delete(namespace, kind, name string, opts DeleteOpts) error {
@@ -14,11 +16,19 @@ func (k Kubectl) Delete(namespace, kind, name string, opts DeleteOpts) error {
 	}
 
 	cmd := k.ctl("delete", argv...)
-	cmd.Stdout = os.Stderr
-	cmd.Stderr = os.Stderr
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	cmd.Stdin = os.Stdin
 
 	if err := cmd.Run(); err != nil {
+		if strings.Contains(stderr.String(), "Error from server (NotFound):") {
+			print("Delete failed: " + stderr.String())
+			return nil
+		}
 		return err
 	}
 
