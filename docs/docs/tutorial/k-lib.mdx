@@ -79,7 +79,7 @@ libraries (including our wrapper) expect it as a simple `k.libsonnet` (without
 the package prefix).
 
 To support both, Tanka automatically created an alias file for you:
-`/lib/k.libsonnet` that just imports actual library, exposing it under this
+`/lib/k.libsonnet` that just imports the actual library, exposing it under this
 alternative name as well.
 
 > **More information**:
@@ -94,7 +94,7 @@ First we need to import it in `main.jsonnet`:
 ```diff
 - local k = import "kubernetes.libsonnet";
 + local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
-  local grafana import "grafana.jsonnet";
+  local grafana = import "grafana.jsonnet";
   local prometheus = import "prometheus.jsonnet";
   { /* ... */ }
 ```
