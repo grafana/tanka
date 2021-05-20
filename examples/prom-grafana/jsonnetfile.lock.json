@@ -20,14 +20,6 @@
       },
       "version": "b3200f1ead8ebb74932673a41748194950564686",
       "sum": "QVUm2JrNnhjorXlfsNBDV0uvPgSWUolMYG9UzWLo1qQ="
-    },
-    {
-      "source": {
-        "local": {
-          "directory": "vendor"
-        }
-      },
-      "version": ""
     }
   ],
   "legacyImports": false
