@@ -15,39 +15,41 @@ Writing and maintaining such a library could be a full-time job on it's own.
 Luckily, it is possible to generate such a library from the Kubernetes OpenAPI
 specification! Even better, it has already been done for you.
 
-## k.libsonnet
+## k8s-alpha
 
-The library is called `k.libsonnet` (sometimes also `ksonnet-lib`), currently
-available at https://github.com/ksonnet/ksonnet-lib.
+The library is called `k8s-alpha` (replacing the discontinued `ksonnet-lib`),
+currently available at https://github.com/jsonnet-libs/k8s-alpha.
 
-> **Note**: Being part of the discontinued `ksonnet` project, the library is not
-> really maintained at the moment. However, Grafana Labs will soon pick this up and
-> take care of it :D  
-> Nevertheless, it has already proven to be stable enough for our own production
-> setup to rely on it.
+> **Note**: The `ksonnet` project has been abandoned, the library is not maintained
+> anymore. However, the community backed by Grafana Labs has picked up on this with
+> the `k8s-alpha` library.
 
-However while using it internally we have discovered that the exposed API has
-several annoyances. To address them, we developed another library that builds on
-top of the generated one but improves the developer experience:
+As `k8s-alpha` has broken compatibility in a few places with `ksonnet-lib` (for good
+reason), we have instrumented the widely used `ksonnet-util` library with a
+compatibility layer to improve the developer and user experience:
 https://github.com/grafana/jsonnet-libs/tree/master/ksonnet-util
 
 If you do not have any strong reasons against it, just adopt the wrapper as
-well, it will ease your work. Ultimately, we hope to integrate our enhancements
-in the original library as well.
+well, it will ease your work. Many of the original `ksonnet-util` enhancements
+have already made their way into `k8s-alpha`.
+
+The docs for `k8s-alpha` library can be found here:
+https://jsonnet-libs.github.io/k8s-alpha/
 
 ## Installation
 
-Like every other external library, `ksonnet-lib` can be installed using
-`jsonnet-bundler`.  
+Like every other external library, `k8s-alpha` can be installed using
+`jsonnet-bundler`.
 However, Tanka already **did this for you** during [project
 creation (`tk init`)](/tutorial/jsonnet#creating-a-new-project):
 
 ```bash
 $ tk init
-  └─ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4 github.com/grafana/jsonnet-libs/ksonnet-util
+  └─ jb install github.com/jsonnet-libs/k8s-alpha/1.21 github.com/grafana/jsonnet-libs/ksonnet-util
+
 ```
 
-This created the following files in `/vendor`:
+This created the following structure in `/vendor`:
 
 ```bash
 vendor
@@ -55,13 +57,14 @@ vendor
 │   ├── grafana
 │   │   └── jsonnet-libs
 │   │       └── ksonnet-util
+│   │           ├── ...
 │   │           └── kausal.libsonnet # Grafana's wrapper
-│   └── ksonnet
-│       └── ksonnet-lib
-│           └── ksonnet.beta.4
-│               ├── k8s.libsonnet # literally the entire API as a library. Very huge file
-│               └── k.libsonnet # human friendly wrapper (this is what we use in our code)
-├── ksonnet.beta.4 -> github.com/ksonnet/ksonnet-lib/ksonnet.beta.4
+│   └── jsonnet-libs
+│       └── k8s-alpha
+│           └── 1.21
+│               ├── ...
+│               └── main.libsonnet   # k8s-alpha entrypoint
+├── 1.21 -> github.com/jsonnet-libs/k8s-alpha/1.21
 └── ksonnet-util -> github.com/grafana/jsonnet-libs/ksonnet-util
 ```
 
@@ -70,33 +73,36 @@ vendor
 > for more information.
 
 #### Aliasing
-Because of how `jb` works, the library can be imported as `github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k.libsonnet`.
-Most external libraries (including our wrapper) expect it as a simple `k.libsonnet` (without
+Because of how `jb` works, the library can be imported as
+`github.com/jsonnet-libs/k8s-alpha/1.21/main.libsonnet`.  Most external
+libraries (including our wrapper) expect it as a simple `k.libsonnet` (without
 the package prefix).
 
-To support both, Tanka automatically created an alias file for you: `/lib/k.libsonnet` that just imports actual library, exposing it under this alternative name as well.
+To support both, Tanka automatically created an alias file for you:
+`/lib/k.libsonnet` that just imports actual library, exposing it under this
+alternative name as well.
 
-> **More information**:  
-> This works, because `import` behaves like copy-pasting. So
-> the contents of `ksonnet.beta.4` are "copied" into our new file, making them
-> behave exactly the same.
+> **More information**:
+> This works, because `import` behaves like copy-pasting. So the contents of
+> `k8s-alpha/1.21` are "copied" into our new file, making them behave exactly the
+> same.
 
 ## Using it
 
 First we need to import it in `main.jsonnet`:
 
 ```diff
-- (import "kubernetes.libsonnet") +
-+ (import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet") +
-  (import "grafana.jsonnet") +
-  (import "prometheus.jsonnet") +
+- local k = import "kubernetes.libsonnet";
++ local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
+  local grafana import "grafana.jsonnet";
+  local prometheus = import "prometheus.jsonnet";
   { /* ... */ }
 ```
 
-> **Note**: `kausal.libsonnet` imports literal `k.libsonnet`, so
-> [aliasing](#aliasing) is a must here. This works, because `/lib` and `/vendor`
-> are automatically searched for libraries, and `k.libsonnet` can be found in
-> `/lib` due to aforementioned aliasing.
+> **Note**: `ksonnet-util` imports literal `k.libsonnet`, so [aliasing](#aliasing) is
+> a must here. This works, because `/lib` and `/vendor` are automatically searched
+> for libraries, and `k.libsonnet` can be found in `/lib` due to aforementioned
+> aliasing.
 
 Now that we have installed the correct version, let's use it in
 `/environments/default/grafana.jsonnet` instead of our own helper:
@@ -104,10 +110,10 @@ Now that we have installed the correct version, let's use it in
 ```jsonnet
 {
   // use locals to extract the parts we need
-  local deploy = $.apps.v1.deployment,
-  local container = $.core.v1.container,
-  local port = $.core.v1.containerPort,
-  local service = $.core.v1.service,
+  local deploy = k.apps.v1.deployment,
+  local container = k.core.v1.container,
+  local port = k.core.v1.containerPort,
+  local service = k.core.v1.service,
   // defining the objects:
   grafana: {
     // deployment constructor: name, replicas, containers
@@ -134,7 +140,8 @@ merge it all back into a single file (`main.jsonnet`) and take a look at the
 whole picture:
 
 ```jsonnet
-(import "ksonnet-util/kausal.libsonnet") +
+local k = import "ksonnet-util/kausal.libsonnet";
+
 {
   _config:: {
     grafana: {
@@ -147,10 +154,10 @@ whole picture:
     }
   },
 
-  local deployment = $.apps.v1.deployment,
-  local container = $.core.v1.container,
-  local port = $.core.v1.containerPort,
-  local service = $.core.v1.service,
+  local deployment = k.apps.v1.deployment,
+  local container = k.core.v1.container,
+  local port = k.core.v1.containerPort,
+  local service = k.core.v1.service,
 
   prometheus: {
     deployment: deployment.new(
@@ -160,7 +167,7 @@ whole picture:
         + container.withPorts([port.new("api", $._config.prometheus.port)]),
       ],
     ),
-    service: $.util.serviceFor(self.deployment),
+    service: k.util.serviceFor(self.deployment),
   },
   grafana: {
     deployment: deployment.new(
@@ -170,7 +177,9 @@ whole picture:
         + container.withPorts([port.new("ui", $._config.grafana.port)]),
       ],
     ),
-    service: $.util.serviceFor(self.deployment) + service.mixin.spec.withType("NodePort"),
+    service:
+      k.util.serviceFor(self.deployment)
+      + service.mixin.spec.withType("NodePort"),
   },
 }
 ```

@@ -4,7 +4,7 @@
     {
       "source": {
         "git": {
-          "remote": "https://github.com/grafana/jsonnet-libs",
+          "remote": "https://github.com/grafana/jsonnet-libs.git",
           "subdir": "ksonnet-util"
         }
       },
@@ -13,11 +13,19 @@
     {
       "source": {
         "git": {
-          "remote": "https://github.com/ksonnet/ksonnet-lib",
-          "subdir": "ksonnet.beta.4"
+          "remote": "https://github.com/jsonnet-libs/k8s-alpha.git",
+          "subdir": "1.21"
         }
       },
       "version": "master"
+    },
+    {
+      "source": {
+        "local": {
+          "directory": "vendor"
+        }
+      },
+      "version": ""
     }
   ],
   "legacyImports": true
