@@ -108,6 +108,8 @@ Now that we have installed the correct version, let's use it in
 `/environments/default/grafana.jsonnet` instead of our own helper:
 
 ```jsonnet
+local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
+
 {
   // use locals to extract the parts we need
   local deploy = k.apps.v1.deployment,
@@ -140,7 +142,7 @@ merge it all back into a single file (`main.jsonnet`) and take a look at the
 whole picture:
 
 ```jsonnet
-local k = import "ksonnet-util/kausal.libsonnet";
+local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
 
 {
   _config:: {
