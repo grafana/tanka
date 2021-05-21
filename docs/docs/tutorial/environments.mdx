@@ -79,13 +79,14 @@ For documentation purposes it is handy to have a separate file for parameters an
 ##### prom-grafana.libsonnet
 
 ```jsonnet
-(import "ksonnet-util/kausal.libsonnet") +
+local k = import "ksonnet-util/kausal.libsonnet";
+
 (import "./config.libsonnet") +
 {
-  local deployment = $.apps.v1.deployment,
-  local container = $.core.v1.container,
-  local port = $.core.v1.containerPort,
-  local service = $.core.v1.service,
+  local deployment = k.apps.v1.deployment,
+  local container = k.core.v1.container,
+  local port = k.core.v1.containerPort,
+  local service = k.core.v1.service,
 
   // alias our params, too long to type every time
   local c = $._config.promgrafana,
@@ -99,7 +100,7 @@ For documentation purposes it is handy to have a separate file for parameters an
           + container.withPorts([port.new("api", c.prometheus.port)]),
         ],
       ),
-      service: $.util.serviceFor(self.deployment),
+      service: k.util.serviceFor(self.deployment),
     },
 
     grafana: {
@@ -110,7 +111,9 @@ For documentation purposes it is handy to have a separate file for parameters an
           + container.withPorts([port.new("ui", c.grafana.port)]),
         ],
       ),
-      service: $.util.serviceFor(self.deployment) + service.mixin.spec.withType("NodePort"),
+      service: 
+        k.util.serviceFor(self.deployment)
+        + service.mixin.spec.withType("NodePort"),
     },
   }
 }
@@ -131,8 +134,7 @@ All that's left now is importing the library and configuring it. For `dev`, the 
 
 ```jsonnet
 // environments/prom-grafana/dev
-(import "ksonnet-util/kausal.libsonnet") +
-(import "prom-grafana/prom-grafana.libsonnet")
+import "prom-grafana/prom-grafana.libsonnet"
 ```
 
 For `prod` however, it is a bad idea to rely on `latest` for the images .. let's
@@ -140,7 +142,6 @@ add some proper tags:
 
 ```jsonnet
 // environments/prom-grafana/prod
-(import "ksonnet-util/kausal.libsonnet") +
 (import "prom-grafana/prom-grafana.libsonnet") +
 {
   // again, we only want to patch, not replace, thus +::
@@ -164,7 +165,6 @@ Here comes the already familiar `+:` (or `+::`) syntax into play. It allows to
 **partially** override values of an object. Let's say we wanted to add some labels to the Prometheus `Deployment`, but our `_config` params don't allow us to. We can still do this in our `main.jsonnet`:
 
 ```jsonnet
-(import "ksonnet-util/kausal.libsonnet") +
 (import "prom-grafana/prom-grafana.libsonnet") +
 {
   promgrafana+: {
