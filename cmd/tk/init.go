@@ -22,8 +22,8 @@ func initCmd() *cli.Command {
 	}
 
 	force := cmd.Flags().BoolP("force", "f", false, "ignore the working directory not being empty")
-	installK8sLibFlag := cmd.Flags().Bool("k8s", true, "set to false to skip installation of k.libsonnet")
-	installK8sVersion := cmd.Flags().String("k8sversion", "1.20", "set to false to skip installation of k.libsonnet")
+	installK8sLibFlag := cmd.Flags().Bool("k8s", true, "set to false to skip installation of k8s-alpha")
+	installK8sVersion := cmd.Flags().String("k8sversion", "1.20", "choose the version of k8s-alpha")
 	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
