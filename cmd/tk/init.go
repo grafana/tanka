@@ -7,11 +7,14 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/go-clix/cli"
 
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
+
+const defaultK8sVersion = "1.20"
 
 // initCmd creates a new application
 func initCmd() *cli.Command {
@@ -22,8 +25,7 @@ func initCmd() *cli.Command {
 	}
 
 	force := cmd.Flags().BoolP("force", "f", false, "ignore the working directory not being empty")
-	installK8sLibFlag := cmd.Flags().Bool("k8s", true, "set to false to skip installation of k8s-alpha")
-	installK8sVersion := cmd.Flags().String("k8sversion", "1.20", "choose the version of k8s-alpha")
+	installK8s := cmd.Flags().String("k8s", defaultK8sVersion, "choose the version of k8s-alpha, set to false to skip")
 	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
@@ -54,8 +56,18 @@ func initCmd() *cli.Command {
 			return err
 		}
 
-		if *installK8sLibFlag {
-			if err := installK8sLib(*installK8sVersion); err != nil {
+		version := *installK8s
+		doInstall, err := strconv.ParseBool(*installK8s)
+		if doInstall && err == nil {
+			// --k8s=true, fallback to default version
+			version = defaultK8sVersion
+		} else {
+			// --k8s=<non-boolean>
+			doInstall = true
+		}
+
+		if doInstall {
+			if err := installK8sLib(version); err != nil {
 				// This is not fatal, as most of Tanka will work anyways
 				log.Println("Installing k.libsonnet:", err)
 				failed = true
