@@ -7,11 +7,14 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/go-clix/cli"
 
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
+
+const defaultK8sVersion = "1.20"
 
 // initCmd creates a new application
 func initCmd() *cli.Command {
@@ -22,7 +25,7 @@ func initCmd() *cli.Command {
 	}
 
 	force := cmd.Flags().BoolP("force", "f", false, "ignore the working directory not being empty")
-	installK8sLibFlag := cmd.Flags().Bool("k8s", true, "set to false to skip installation of k.libsonnet")
+	installK8s := cmd.Flags().String("k8s", defaultK8sVersion, "choose the version of k8s-alpha, set to false to skip")
 	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
@@ -53,15 +56,29 @@ func initCmd() *cli.Command {
 			return err
 		}
 
-		if *installK8sLibFlag {
-			if err := installK8sLib(); err != nil {
+		version := *installK8s
+		doInstall, err := strconv.ParseBool(*installK8s)
+		if doInstall && err == nil {
+			// --k8s=true, fallback to default version
+			version = defaultK8sVersion
+		} else {
+			// --k8s=<non-boolean>
+			doInstall = true
+		}
+
+		if doInstall {
+			if err := installK8sLib(version); err != nil {
 				// This is not fatal, as most of Tanka will work anyways
 				log.Println("Installing k.libsonnet:", err)
 				failed = true
 			}
 		}
 
-		fmt.Println("Directory structure set up! Remember to configure the API endpoint:\n`tk env set environments/default --server=https://127.0.0.1:6443`")
+		if *inline {
+			fmt.Println("Directory structure set up! Remember to configure the API endpoint in environments/default/main.jsonnet")
+		} else {
+			fmt.Println("Directory structure set up! Remember to configure the API endpoint:\n`tk env set environments/default --server=https://127.0.0.1:6443`")
+		}
 		if failed {
 			log.Println("Errors occured while initializing the project. Check the above logs for details.")
 		}
@@ -71,7 +88,7 @@ func initCmd() *cli.Command {
 	return cmd
 }
 
-func installK8sLib() error {
+func installK8sLib(version string) error {
 	jbBinary := "jb"
 	if env := os.Getenv("TANKA_JB_PATH"); env != "" {
 		jbBinary = env
@@ -82,11 +99,11 @@ func installK8sLib() error {
 	}
 
 	var initialPackages = []string{
-		"github.com/ksonnet/ksonnet-lib/ksonnet.beta.4",
+		"github.com/jsonnet-libs/k8s-alpha/" + version,
 		"github.com/grafana/jsonnet-libs/ksonnet-util",
 	}
 
-	if err := writeNewFile("lib/k.libsonnet", "import 'github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k.libsonnet'\n"); err != nil {
+	if err := writeNewFile("lib/k.libsonnet", "import 'github.com/jsonnet-libs/k8s-alpha/"+version+"/main.libsonnet'\n"); err != nil {
 		return err
 	}
 

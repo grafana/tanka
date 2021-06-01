@@ -11,29 +11,26 @@ Below is a list of common errors and how to address them.
 
 When migrating from `ksonnet`, this error might occur, because Tanka does not
 provide the global `__ksonnet` variable, nor does it strictly have the concept
-of components.  
+of components.
 You will need to use the plain Jsonnet `import` feature instead. Note that this
 requires your code to be inside of one of the
 [import paths](directory-structure/#import-paths).
 
 ### Evaluating jsonnet: RUNTIME ERROR: couldn't open import "k.libsonnet": no match locally or in the Jsonnet library paths
 
-This error can occur when the `ksonnet` kubernetes libraries are missing in the
-import paths. While `ksonnet` used to magically include them, Tanka follows a
+This error can occur when the `k8s-alpha` kubernetes libraries are missing in the
+import paths. While `k8s-alpha` used to magically include them, Tanka follows a
 more explicit approach and requires you to install them using `jb`:
 
 ```bash
-$ jb install github.com/ksonnet/ksonnet-lib/ksonnet.beta.4
-$ echo "import 'github.com/ksonnet/ksonnet-lib/ksonnet.beta.4/k.libsonnet'" > lib/k.libsonnet
+$ jb install github.com/jsonnet-libs/k8s-alpha/1.21
+$ echo "import 'github.com/jsonnet-libs/k8s-alpha/1.21/main.libsonnet'" > lib/k.libsonnet
 ```
 
 This does 2 things:
 
-1) It installs the ksonnet library (in `vendor/github.com/ksonnet/ksonnet-lib/ksonnet.beta.4`).
-If you need a specific version, take a look at
-https://github.com/ksonnet/ksonnet-lib. When a pre-compiled version is
-available, install it using `jb`, otherwise compile it yourself and place it
-under `lib/`.
+1) It installs the `k8s-alpha` library (in `vendor/github.com/jsonnet-libs/k8s-alpha/1.21/`).
+You can replace the `1.21` matching the Kubernetes version you want to run against.
 
 2) It makes an alias for libraries importing `k.libsonnet` directly. See
 https://tanka.dev/tutorial/k-lib#aliasing for the alias rationale.
