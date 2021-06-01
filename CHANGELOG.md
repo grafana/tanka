@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.16.0 (2021-06-01)
+
+#### :sparkles: Tanka now defaults to [`k8s-alpha`](https://github.com/jsonnet-libs/k8s-alpha)
+
+`tk init` will now install `k8s-alpha` as the default library for `k.libsonnet`. It is currently defaults to `v1.20` however you can pick your own version or disable it:
+
+```console
+tk init --k8s=1.18
+tk init --k8s=false
+```
+
+### Features
+
+- **cli** :sparkles:: `tk init` now defaults to [`k8s-alpha`](https://github.com/jsonnet-libs/k8s-alpha)
+  **([#563](https://github.com/grafana/tanka/pull/563))**
+
+### Bug Fixes
+
+- **kubernetes**: Remove resources with altered state
+  **([#539](https://github.com/grafana/tanka/pull/539))** (**@StevenPG**)
+
+
 ## 0.15.1 (2021-04-27)
 
 ### Features
