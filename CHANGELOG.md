@@ -4,7 +4,7 @@
 
 #### :sparkles: Tanka now defaults to [`k8s-alpha`](https://github.com/jsonnet-libs/k8s-alpha)
 
-`tk init` will now install `k8s-alpha` as the default library for `k.libsonnet`. It is currently defaults to `v1.20` however you can pick your own version or disable it:
+`tk init` will now install `k8s-alpha` as the default library for `k.libsonnet`. It is currently defaults to Kubernetes v1.20 however you can pick your own version or disable it:
 
 ```console
 tk init --k8s=1.18
