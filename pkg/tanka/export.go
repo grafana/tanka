@@ -175,7 +175,7 @@ func writeExportFile(path string, data []byte) error {
 
 func createTemplate(format string, env manifest.Manifest) (*template.Template, error) {
 	// Replace all os.path separators in string with BelRune for creating subfolders
-	replaceFormat := strings.Replace(format, string(os.PathSeparator), BelRune, -1)
+	replaceFormat := replaceTmplText(format, string(os.PathSeparator), BelRune)
 
 	envMap := template.FuncMap{"env": func() manifest.Manifest { return env }}
 
@@ -187,6 +187,24 @@ func createTemplate(format string, env manifest.Manifest) (*template.Template, e
 		return nil, err
 	}
 	return template, nil
+}
+
+func replaceTmplText(s, old, new string) string {
+	parts := []string{}
+	l := strings.Index(s, "{{")
+	r := strings.Index(s, "}}") + 2
+
+	for l != -1 && l < r {
+		// replace only in text between template action blocks
+		text := strings.ReplaceAll(s[:l], old, new)
+		action := s[l:r]
+		parts = append(parts, text, action)
+		s = s[r:]
+		l = strings.Index(s, "{{")
+		r = strings.Index(s, "}}") + 2
+	}
+	parts = append(parts, strings.ReplaceAll(s, old, new))
+	return strings.Join(parts, "")
 }
 
 func applyTemplate(template *template.Template, m manifest.Manifest) (path string, err error) {
