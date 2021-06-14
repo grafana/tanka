@@ -21,7 +21,7 @@ func evalJsonnet(path string, opts jsonnet.Opts) (raw string, err error) {
 	if opts.EvalScript != "" {
 		var tla []string
 		for k := range opts.TLACode {
-			tla = append(tla, k)
+			tla = append(tla, k+"="+k)
 		}
 		evalScript := fmt.Sprintf(`
   local main = (import '%s');
