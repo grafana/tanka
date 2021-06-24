@@ -44,6 +44,7 @@ func applyCmd() *cli.Command {
 		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
+		opts.JsonPaths = vars.jsonPaths
 
 		return tanka.Apply(args[0], opts)
 	}
@@ -95,6 +96,7 @@ func deleteCmd() *cli.Command {
 		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
+		opts.JsonPaths = vars.jsonPaths
 
 		return tanka.Delete(args[0], opts)
 	}
@@ -128,6 +130,7 @@ func diffCmd() *cli.Command {
 		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
+		opts.JsonPaths = vars.jsonPaths
 
 		changes, err := tanka.Diff(args[0], opts)
 		if err != nil {

@@ -17,8 +17,9 @@ func TestProcess(t *testing.T) {
 		deep interface{}
 		flat manifest.List
 
-		targets Matchers
-		err     error
+		targets   Matchers
+		jsonPaths []string
+		err       error
 	}{
 		{
 			name: "regular",
@@ -121,7 +122,7 @@ func TestProcess(t *testing.T) {
 				}
 			}
 
-			got, err := Process(*env, c.targets)
+			got, err := Process(*env, c.targets, c.jsonPaths)
 			require.Equal(t, c.err, err)
 
 			Sort(c.flat)
@@ -146,7 +147,7 @@ func TestProcessOrder(t *testing.T) {
 		env := v1alpha1.New()
 		env.Data = testDataDeep().Deep.(map[string]interface{})
 
-		r, err := Process(*env, nil)
+		r, err := Process(*env, nil, nil)
 		require.NoError(t, err)
 		got[i] = r
 	}

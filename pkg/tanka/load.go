@@ -26,7 +26,7 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 		return nil, err
 	}
 
-	result, err := LoadManifests(env, opts.Filters)
+	result, err := LoadManifests(env, opts.Filters, opts.JsonPaths)
 	if err != nil {
 		return nil, err
 	}
@@ -48,12 +48,12 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 	return env, nil
 }
 
-func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
+func LoadManifests(env *v1alpha1.Environment, filters process.Matchers, jsonPaths []string) (*LoadResult, error) {
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}
 
-	processed, err := process.Process(*env, filters)
+	processed, err := process.Process(*env, filters, jsonPaths)
 	if err != nil {
 		return nil, err
 	}

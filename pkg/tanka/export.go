@@ -69,7 +69,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 
 	for _, env := range loadedEnvs {
 		// get the manifests
-		loaded, err := LoadManifests(env, opts.Opts.Filters)
+		loaded, err := LoadManifests(env, opts.Opts.Filters, opts.Opts.JsonPaths)
 		if err != nil {
 			return err
 		}

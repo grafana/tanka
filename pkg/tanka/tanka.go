@@ -24,6 +24,8 @@ type Opts struct {
 
 	// Name is used to extract a single environment from multiple environments
 	Name string
+
+	JsonPaths []string
 }
 
 // DEFAULT_DEV_VERSION is the placeholder version used when no actual semver is
