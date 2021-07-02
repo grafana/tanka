@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.17.0 (2021-07-02)
+
+:tada: Big shout out to the community in this release, well done!
+
+### Features
+
+- **helm**: Add support to specify `--kube-version`
+  **([#578](https://github.com/grafana/tanka/pull/578))** (**@olegmayko**)
+- **kubectl**: Add "validate" diff strategy with `kubectl diff --server-side`
+  **([#538](https://github.com/grafana/tanka/pull/538))**
+
+### Bug Fixes
+
+- **helm**: Pass multiple `--api-versions` flags
+  **([#576](https://github.com/grafana/tanka/pull/576))** (**@jtdoepke**)
+- **jsonnet**: Handle TLA code properly
+  **([#574](https://github.com/grafana/tanka/pull/574))** (**@mihaitodor**)
+- **export**: Make `--format` respect "/" in template actions
+  **([#572](https://github.com/grafana/tanka/pull/572))** (**@dewe**)
+
+
 ## 0.16.0 (2021-06-01)
 
 #### :sparkles: Tanka now defaults to [`k8s-alpha`](https://github.com/jsonnet-libs/k8s-alpha)
