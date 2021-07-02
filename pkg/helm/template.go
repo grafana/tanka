@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/pkg/errors"
@@ -78,8 +77,7 @@ type TemplateOpts struct {
 func (t TemplateOpts) Flags() []string {
 	var flags []string
 
-	if t.APIVersions != nil {
-		value := strings.Join(t.APIVersions, ",")
+	for _, value := range t.APIVersions {
 		flags = append(flags, "--api-versions="+value)
 	}
 
