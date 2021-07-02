@@ -66,6 +66,8 @@ type TemplateOpts struct {
 	// IncludeCRDs specifies whether CustomResourceDefinitions are included in
 	// the template output
 	IncludeCRDs bool
+	// Kubernetes version used for Capabilities.KubeVersion
+	KubeVersion string
 	// Namespace scope for this request
 	Namespace string
 	// NoHooks specifies whether hooks should be excluded from the template output
@@ -83,6 +85,10 @@ func (t TemplateOpts) Flags() []string {
 
 	if t.IncludeCRDs {
 		flags = append(flags, "--include-crds")
+	}
+
+	if t.KubeVersion != "" {
+		flags = append(flags, "--kube-version="+t.KubeVersion)
 	}
 
 	if t.NoHooks {
