@@ -18,18 +18,18 @@ requires your code to be inside of one of the
 
 ### Evaluating jsonnet: RUNTIME ERROR: couldn't open import "k.libsonnet": no match locally or in the Jsonnet library paths
 
-This error can occur when the `k8s-alpha` kubernetes libraries are missing in the
-import paths. While `k8s-alpha` used to magically include them, Tanka follows a
+This error can occur when the `k8s-libsonnet` kubernetes libraries are missing in the
+import paths. While `k8s-libsonnet` used to magically include them, Tanka follows a
 more explicit approach and requires you to install them using `jb`:
 
 ```bash
-$ jb install github.com/jsonnet-libs/k8s-alpha/1.21
-$ echo "import 'github.com/jsonnet-libs/k8s-alpha/1.21/main.libsonnet'" > lib/k.libsonnet
+$ jb install github.com/jsonnet-libs/k8s-libsonnet/1.21@main
+$ echo "import 'github.com/jsonnet-libs/k8s-libsonnet/1.21/main.libsonnet'" > lib/k.libsonnet
 ```
 
 This does 2 things:
 
-1) It installs the `k8s-alpha` library (in `vendor/github.com/jsonnet-libs/k8s-alpha/1.21/`).
+1) It installs the `k8s-libsonnet` library (in `vendor/github.com/jsonnet-libs/k8s-libsonnet/1.21/`).
 You can replace the `1.21` matching the Kubernetes version you want to run against.
 
 2) It makes an alias for libraries importing `k.libsonnet` directly. See

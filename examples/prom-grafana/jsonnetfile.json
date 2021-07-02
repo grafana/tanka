@@ -13,11 +13,11 @@
     {
       "source": {
         "git": {
-          "remote": "https://github.com/jsonnet-libs/k8s-alpha.git",
+          "remote": "https://github.com/jsonnet-libs/k8s-libsonnet.git",
           "subdir": "1.21"
         }
       },
-      "version": "master"
+      "version": "main"
     }
   ],
   "legacyImports": true
