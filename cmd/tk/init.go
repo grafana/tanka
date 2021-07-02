@@ -25,7 +25,7 @@ func initCmd() *cli.Command {
 	}
 
 	force := cmd.Flags().BoolP("force", "f", false, "ignore the working directory not being empty")
-	installK8s := cmd.Flags().String("k8s", defaultK8sVersion, "choose the version of k8s-alpha, set to false to skip")
+	installK8s := cmd.Flags().String("k8s", defaultK8sVersion, "choose the version of k8s-libsonnet, set to false to skip")
 	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
@@ -99,11 +99,11 @@ func installK8sLib(version string) error {
 	}
 
 	var initialPackages = []string{
-		"github.com/jsonnet-libs/k8s-alpha/" + version,
+		"github.com/jsonnet-libs/k8s-libsonnet/" + version + "@main",
 		"github.com/grafana/jsonnet-libs/ksonnet-util",
 	}
 
-	if err := writeNewFile("lib/k.libsonnet", "import 'github.com/jsonnet-libs/k8s-alpha/"+version+"/main.libsonnet'\n"); err != nil {
+	if err := writeNewFile("lib/k.libsonnet", "import 'github.com/jsonnet-libs/k8s-libsonnet/"+version+"/main.libsonnet'\n"); err != nil {
 		return err
 	}
 
