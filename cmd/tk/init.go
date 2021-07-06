@@ -58,12 +58,12 @@ func initCmd() *cli.Command {
 
 		version := *installK8s
 		doInstall, err := strconv.ParseBool(*installK8s)
-		if doInstall && err == nil {
-			// --k8s=true, fallback to default version
-			version = defaultK8sVersion
-		} else {
+		if err != nil {
 			// --k8s=<non-boolean>
 			doInstall = true
+		} else {
+			// --k8s=<boolean>, fallback to default version
+			version = defaultK8sVersion
 		}
 
 		if doInstall {
