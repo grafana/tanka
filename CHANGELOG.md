@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.17.1 (2021-07-08)
+
+### Bug Fixes
+
+- **cli**: Preserve compatibility for `tk init --k8s=false`
+  **([#582](https://github.com/grafana/tanka/pull/582))** (**harmjanblok**)
+
 ## 0.17.0 (2021-07-02)
 
 :tada: Big shout out to the community in this release, well done!
