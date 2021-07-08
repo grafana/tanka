@@ -28,7 +28,7 @@ func Process(cfg v1alpha1.Environment, exprs Matchers) (manifest.List, error) {
 	// Scan for everything that looks like a Kubernetes object
 	extracted, err := Extract(raw)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("got an error while extracting env `%s`: %w", cfg.Metadata.Name, err)
 	}
 
 	// Unwrap *List types
