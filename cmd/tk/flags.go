@@ -13,14 +13,23 @@ import (
 )
 
 type workflowFlagVars struct {
-	name    string
-	targets []string
+	name      string
+	targets   []string
+	jsonPaths []string
 }
 
 func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
 	fs.StringVar(&v.name, "name", "", "Selects an environment from inline environments")
 	fs.StringSliceVarP(&v.targets, "target", "t", nil, "Regex filter on '<kind>/<name>'. See https://tanka.dev/output-filtering")
+	fs.StringSliceVarP(&v.jsonPaths, "json-paths", "", nil, "json paths to target resources")
+
+	// all json paths shoud start with "."
+	for i, path := range v.jsonPaths {
+		if !strings.HasPrefix(path, ".") {
+			v.jsonPaths[i] = "." + path
+		}
+	}
 	return &v
 }
 

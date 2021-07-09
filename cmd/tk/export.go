@@ -55,6 +55,7 @@ func exportCmd() *cli.Command {
 				JsonnetOpts: getJsonnetOpts(),
 				Filters:     filters,
 				Name:        vars.name,
+				JsonPaths:   vars.jsonPaths,
 			},
 			Selector:    getLabelSelector(),
 			Parallelism: *parallel,

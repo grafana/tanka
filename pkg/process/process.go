@@ -3,6 +3,7 @@ package process
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -18,7 +19,7 @@ const (
 // - tanka.dev/** labels
 // - filtering
 // - best-effort sorting
-func Process(cfg v1alpha1.Environment, exprs Matchers) (manifest.List, error) {
+func Process(cfg v1alpha1.Environment, exprs Matchers, jsonPaths []string) (manifest.List, error) {
 	raw := cfg.Data
 
 	if raw == nil {
@@ -37,8 +38,17 @@ func Process(cfg v1alpha1.Environment, exprs Matchers) (manifest.List, error) {
 	}
 
 	out := make(manifest.List, 0, len(extracted))
-	for _, m := range extracted {
-		out = append(out, m)
+	for n, m := range extracted {
+		if len(jsonPaths) > 0 {
+			for _, path := range jsonPaths {
+				if strings.HasPrefix(n, path) {
+					out = append(out, m)
+					break
+				}
+			}
+		} else {
+			out = append(out, m)
+		}
 	}
 
 	// set default namespace
