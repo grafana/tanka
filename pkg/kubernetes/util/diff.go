@@ -23,8 +23,8 @@ func DiffName(m manifest.Manifest) string {
 	), "/", "-", -1)
 }
 
-// DiffStr computes the differences between the strings `is` and `should` using the
-// UNIX `diff(1)` utility.
+// DiffStr computes the differences between the strings `is` and `should` using diff
+// command specified in `KUBECTL_EXTERNAL_DIFF` (if set) or the UNIX `diff(1)` utility.
 func DiffStr(name, is, should string) (string, error) {
 	dir, err := ioutil.TempDir("", "diff")
 	if err != nil {
@@ -40,10 +40,13 @@ func DiffStr(name, is, should string) (string, error) {
 	}
 
 	buf := bytes.Buffer{}
+	errBuf := bytes.Buffer{}
 	merged := filepath.Join(dir, "MERGED-"+name)
 	live := filepath.Join(dir, "LIVE-"+name)
-	cmd := exec.Command("diff", "-u", "-N", live, merged)
+	command, args := diffCommand(live, merged)
+	cmd := exec.Command(command, args...)
 	cmd.Stdout = &buf
+	cmd.Stderr = &errBuf
 	err = cmd.Run()
 
 	// the diff utility exits with `1` if there are differences. We need to not fail there.
@@ -52,13 +55,46 @@ func DiffStr(name, is, should string) (string, error) {
 			return "", err
 		}
 	}
-
 	out := buf.String()
 	if out != "" {
-		out = fmt.Sprintf("diff -u -N %s %s\n%s", live, merged, out)
+		out = fmt.Sprintf("%s %s\n%s", command, strings.Join(args, " "), out)
+	}
+	errOut := errBuf.String()
+	if errOut != "" {
+		out += fmt.Sprintf("%s %s\n%s", command, strings.Join(args, " "), errOut)
 	}
 
 	return out, nil
+}
+
+// diffCommand returns command and arguments to run to compute differences between
+// `live` and `merged` files.
+// If set, env variable `KUBECTL_EXTERNAL_DIFF` is used. By default, "diff -u -N" is used.
+// For consistency, we want to process KUBECTL_EXTERNAL_DIFF just like kubectl does.
+// diffComand was adapted from this kubectl function:
+// https://github.com/kubernetes/kubectl/blob/ac49920c0ccb0dd0899d5300fc43713ee2dfcdc9/pkg/cmd/diff/diff.go#L173
+func diffCommand(live, merged string) (string, []string) {
+	diff := ""
+	args := []string{live, merged}
+	if envDiff := os.Getenv("KUBECTL_EXTERNAL_DIFF"); envDiff != "" {
+		diff = envDiff
+		diffCommand := strings.Split(envDiff, " ")
+		diff = diffCommand[0]
+
+		if len(diffCommand) > 1 {
+			// Regex accepts: Alphanumeric (case-insensitive) and dash
+			isValidChar := regexp.MustCompile(`^[a-zA-Z0-9-]+$`).MatchString
+			for i := 1; i < len(diffCommand); i++ {
+				if isValidChar(diffCommand[i]) {
+					args = append(args, diffCommand[i])
+				}
+			}
+		}
+	} else {
+		diff = "diff"
+		args = append([]string{"-u", "-N"}, args...)
+	}
+	return diff, args
 }
 
 // Diffstat uses `diffstat(1)` utility to summarize a `diff(1)` output
