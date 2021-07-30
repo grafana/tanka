@@ -85,18 +85,18 @@ local secret = {
 };
 ```
 
-To change the namespace only, we can use the special merge key `+::` like so:
+To change the namespace only, we can use the special merge key `+:` like so:
 
 ```jsonnet
 // define the patch:
 local patch = {
-  metadata+:: {
+  metadata+: {
     namespace: "myApp"
   }
 }
 ```
 
-The difference between `:` and `+::` is that the former replaces the original
+The difference between `:` and `+:` is that the former replaces the original
 data at that key, while the latter applies the new object as a patch on top,
 meaning that values will be updated if possible but all other stay like they
 are.  
