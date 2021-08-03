@@ -2,26 +2,55 @@ package process
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/labels"
 	"regexp"
 	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
-// Filter returns all elements of the list that match at least one expression
+type FilterOptions struct {
+	Exprs    Matchers
+	Selector labels.Selector
+}
+
+type FilterOption func(options *FilterOptions)
+
+// FilterWithOptions returns all elements of the list that match at least one expression
 // and are not ignored
-func Filter(list manifest.List, exprs Matchers) manifest.List {
+func FilterWithOptions(list manifest.List, options ...FilterOption) manifest.List {
+	opts := &FilterOptions{}
+	for _, o := range options {
+		o(opts)
+	}
+
+	if len(opts.Exprs) == 0 && opts.Selector == nil {
+		return list
+	}
+
 	out := make(manifest.List, 0, len(list))
 	for _, m := range list {
-		if !exprs.MatchString(m.KindName()) {
+		if len(opts.Exprs) > 0 && !opts.Exprs.MatchString(m.KindName()) {
 			continue
 		}
-		if exprs.IgnoreString(m.KindName()) {
+		if len(opts.Exprs) > 0 && opts.Exprs.IgnoreString(m.KindName()) {
 			continue
 		}
+
+		if opts.Selector != nil && !opts.Selector.Matches(m.Metadata()) {
+			continue
+		}
+
 		out = append(out, m)
 	}
 	return out
+}
+
+// Deprecated: Use FilterWithOptions instead
+func Filter(list manifest.List, exprs Matchers) manifest.List {
+	return FilterWithOptions(list, func(options *FilterOptions) {
+		options.Exprs = exprs
+	})
 }
 
 // Matcher is a single filter expression. The passed argument of Matcher is of the

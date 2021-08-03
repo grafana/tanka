@@ -179,3 +179,87 @@ func secret(name string, data map[string]interface{}) map[string]interface{} {
 		"data":       data,
 	}
 }
+
+func TestMetadata_Has(t *testing.T) {
+	type args struct {
+		label string
+	}
+	tests := []struct {
+		name       string
+		m          Metadata
+		args       args
+		wantExists bool
+	}{
+		{
+			name: "Given labels with key, expect true",
+			m: map[string]interface{}{
+				"labels": map[string]interface{}{
+					"foo": "bar",
+				},
+			},
+			args: args{
+				label: "foo",
+			},
+			wantExists: true,
+		},
+		{
+			name: "Given labels without key, expect false",
+			m: map[string]interface{}{
+				"labels": map[string]interface{}{
+					"foo": "bar",
+				},
+			},
+			args: args{
+				label: "notexists",
+			},
+			wantExists: false,
+		},
+		{
+			name: "Given nil labels, expect false",
+			m: map[string]interface{}{
+				"labels": nil,
+			},
+			args: args{
+				label: "foo",
+			},
+			wantExists: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotExists := tt.m.Has(tt.args.label); gotExists != tt.wantExists {
+				t.Errorf("Has() = %v, want %v", gotExists, tt.wantExists)
+			}
+		})
+	}
+}
+
+func TestMetadata_Get(t *testing.T) {
+	type args struct {
+		label string
+	}
+	tests := []struct {
+		name      string
+		m         Metadata
+		args      args
+		wantValue string
+	}{
+		{
+			name: "Given label, expect returns value",
+			m: map[string]interface{}{
+				"labels": map[string]interface{}{
+					"foo": "bar",
+				},
+			},
+			args:      args{label: "foo"},
+			wantValue: "bar",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotValue := tt.m.Get(tt.args.label); gotValue != tt.wantValue {
+				t.Errorf("Get() = %v, want %v", gotValue, tt.wantValue)
+			}
+		})
+	}
+}

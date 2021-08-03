@@ -2,6 +2,7 @@ package tanka
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/labels"
 	"os"
 	"path/filepath"
 
@@ -26,7 +27,10 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 		return nil, err
 	}
 
-	result, err := LoadManifests(env, opts.Filters)
+	result, err := LoadManifestsWithOptions(env, func(options *LoadManifestsOptions) {
+		options.Filters = opts.Filters
+		options.Selector = opts.Selector
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -48,17 +52,36 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 	return env, nil
 }
 
-func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
+type LoadManifestsOptions struct {
+	Filters  process.Matchers
+	Selector labels.Selector
+}
+
+type LoadManifestOption func(options *LoadManifestsOptions)
+
+func LoadManifestsWithOptions(env *v1alpha1.Environment, options ...LoadManifestOption) (*LoadResult, error) {
+	opts := &LoadManifestsOptions{}
+	for _, o := range options {
+		o(opts)
+	}
+
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}
 
-	processed, err := process.Process(*env, filters)
+	processed, err := process.Process(*env, opts.Filters)
 	if err != nil {
 		return nil, err
 	}
 
 	return &LoadResult{Env: env, Resources: processed}, nil
+}
+
+// Deprecated: Use LoadManifestsWithOptions instead
+func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
+	return LoadManifestsWithOptions(env, func(options *LoadManifestsOptions) {
+		options.Filters = filters
+	})
 }
 
 // Peek loads the metadata of the environment at path. To get resources as well,

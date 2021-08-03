@@ -6,6 +6,7 @@ package tanka
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/Masterminds/semver"
 
@@ -21,6 +22,9 @@ type Opts struct {
 
 	// Filters are used to optionally select a subset of the resources
 	Filters process.Matchers
+
+	// Selector is used to optionally select a subset of resources based on labels, similar to that of kubectl
+	Selector labels.Selector
 
 	// Name is used to extract a single environment from multiple environments
 	Name string

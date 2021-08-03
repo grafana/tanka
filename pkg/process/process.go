@@ -3,6 +3,7 @@ package process
 import (
 	"errors"
 	"fmt"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -13,12 +14,24 @@ const (
 	LabelEnvironment = MetadataPrefix + "/environment"
 )
 
-// Process converts the raw Jsonnet evaluation result (JSON tree) into a flat
+type ProcessOptions struct {
+	Expr     Matchers
+	Selector labels.Selector
+}
+
+type ProcessOption func(options *ProcessOptions)
+
+// ProcessWithOptions converts the raw Jsonnet evaluation result (JSON tree) into a flat
 // list of Kubernetes objects, also applying some transformations:
 // - tanka.dev/** labels
 // - filtering
 // - best-effort sorting
-func Process(cfg v1alpha1.Environment, exprs Matchers) (manifest.List, error) {
+func ProcessWithOptions(cfg v1alpha1.Environment, options ...ProcessOption) (manifest.List, error) {
+	opts := &ProcessOptions{}
+	for _, o := range options {
+		o(opts)
+	}
+
 	raw := cfg.Data
 
 	if raw == nil {
@@ -50,15 +63,23 @@ func Process(cfg v1alpha1.Environment, exprs Matchers) (manifest.List, error) {
 	// arbitrary labels and annotations from spec
 	out = ResourceDefaults(out, cfg)
 
-	// Perhaps filter for kind/name expressions
-	if len(exprs) > 0 {
-		out = Filter(out, exprs)
-	}
+	// Perhaps filter for kind/name expressions or labels
+	out = FilterWithOptions(out, func(options *FilterOptions) {
+		options.Exprs = opts.Expr
+		options.Selector = opts.Selector
+	})
 
 	// Best-effort dependency sort
 	Sort(out)
 
 	return out, nil
+}
+
+// Deprecated: Use ProcessWithOptions instead
+func Process(cfg v1alpha1.Environment, exprs Matchers) (manifest.List, error) {
+	return ProcessWithOptions(cfg, func(options *ProcessOptions) {
+		options.Expr = exprs
+	})
 }
 
 // Label conditionally adds tanka.dev/** labels to each manifest in the List

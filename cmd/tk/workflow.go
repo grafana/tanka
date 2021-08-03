@@ -35,6 +35,7 @@ func applyCmd() *cli.Command {
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getLabelSelector := labelSelectorFlag(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		filters, err := process.StrExps(vars.targets...)
@@ -44,6 +45,7 @@ func applyCmd() *cli.Command {
 		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
+		opts.Selector = getLabelSelector()
 
 		return tanka.Apply(args[0], opts)
 	}
@@ -61,10 +63,13 @@ func pruneCmd() *cli.Command {
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	cmd.Flags().StringVar(&opts.Name, "name", "", "Selects an environment from inline environments")
+
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getLabelSelector := labelSelectorFlag(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		opts.JsonnetOpts = getJsonnetOpts()
+		opts.Selector = getLabelSelector()
 
 		return tanka.Prune(args[0], opts)
 	}
@@ -86,6 +91,7 @@ func deleteCmd() *cli.Command {
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getLabelSelector := labelSelectorFlag(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		filters, err := process.StrExps(vars.targets...)
@@ -95,6 +101,7 @@ func deleteCmd() *cli.Command {
 		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
+		opts.Selector = getLabelSelector()
 
 		return tanka.Delete(args[0], opts)
 	}
@@ -119,6 +126,7 @@ func diffCmd() *cli.Command {
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getLabelSelector := labelSelectorFlag(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		filters, err := process.StrExps(vars.targets...)
@@ -128,6 +136,7 @@ func diffCmd() *cli.Command {
 		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
+		opts.Selector = getLabelSelector()
 
 		changes, err := tanka.Diff(args[0], opts)
 		if err != nil {
@@ -166,6 +175,7 @@ func showCmd() *cli.Command {
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getLabelSelector := labelSelectorFlag(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		if !interactive && !*allowRedirect {
@@ -184,6 +194,7 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			JsonnetOpts: getJsonnetOpts(),
 			Filters:     filters,
 			Name:        vars.name,
+			Selector:    getLabelSelector(),
 		})
 
 		if err != nil {

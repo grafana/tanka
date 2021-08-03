@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/labels"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -214,6 +215,21 @@ func (m Metadata) Namespace() string {
 		return ""
 	}
 	return m["namespace"].(string)
+}
+
+// compile time assertion that Metadata meets Labels interface
+var _ labels.Labels = &Metadata{}
+
+// Has and Get make Metadata a simple wrapper for labels.Labels to use our map in their querier
+func (m Metadata) Has(label string) (exists bool) {
+	_, exists = m.Labels()[label]
+	return exists
+}
+
+// Get implements Get for labels.Labels interface
+// Note: this is not safe if label does not exist. Test with Has() first.
+func (m Metadata) Get(label string) (value string) {
+	return m.Labels()[label].(string)
 }
 
 func (m Metadata) UID() string {
