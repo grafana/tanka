@@ -63,7 +63,7 @@ local noDataEnv(object) =
          && std.objectHas(object, 'kind')
       then
         if object.kind == 'Environment'
-        then object { data:: super.data }
+        then object { data+:: {} }
         else {}
       else
         std.mapWithKey(
