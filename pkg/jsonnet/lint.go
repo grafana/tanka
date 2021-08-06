@@ -49,9 +49,18 @@ func Lint(fds []string, opts *LintOpts) error {
 	lintWorker := func(fileCh <-chan string, resultCh chan result) {
 		for file := range fileCh {
 			buf := &bytes.Buffer{}
+			var err error
+			file, err = filepath.Abs(file)
+			if err != nil {
+				fmt.Fprintf(buf, "got an error get the absolute path for %s: %v", file, err)
+				resultCh <- result{failed: true, output: buf.String()}
+				continue
+			}
+
 			if opts.PrintNames {
 				fmt.Fprintf(buf, "Linting %s...\n", file)
 			}
+
 			vm := jsonnet.MakeVM()
 			for _, nf := range native.Funcs() {
 				vm.NativeFunction(nf)
@@ -60,8 +69,9 @@ func Lint(fds []string, opts *LintOpts) error {
 			dir := filepath.Dir(file)
 			jpath, _, _, err := jpath.Resolve(dir)
 			if err != nil {
-				buf.WriteString(errors.Wrap(err, "resolving JPATH").Error())
+				fmt.Fprintf(buf, "got an error resolving JPATH for %s: %v", dir, err)
 				resultCh <- result{failed: true, output: buf.String()}
+				continue
 			}
 
 			vm.Importer(NewExtendedImporter(jpath))
