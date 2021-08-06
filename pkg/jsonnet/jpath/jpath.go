@@ -14,14 +14,19 @@ const DEFAULT_ENTRYPOINT = "main.jsonnet"
 // It then constructs a jPath with the base directory, vendor/ and lib/.
 // This results in predictable imports, as it doesn't matter whether the user called
 // called the command further down tree or not. A little bit like git.
-func Resolve(path string) (jpath []string, base, root string, err error) {
+func Resolve(path string, allowMissingBase bool) (jpath []string, base, root string, err error) {
 	root, err = FindRoot(path)
 	if err != nil {
 		return nil, "", "", err
 	}
 
 	base, err = FindBase(path, root)
-	if err != nil {
+	if err != nil && allowMissingBase {
+		base, err = FsDir(path)
+		if err != nil {
+			return nil, "", "", err
+		}
+	} else if err != nil {
 		return nil, "", "", err
 	}
 

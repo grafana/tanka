@@ -188,7 +188,7 @@ func TestFindRoot(t *testing.T) {
 			dir := makeTestdata(t, s.testdata)
 			defer os.RemoveAll(dir)
 
-			_, base, root, err := Resolve(filepath.Join(dir, s.environment))
+			_, base, root, err := Resolve(filepath.Join(dir, s.environment), false)
 			assert.Equal(t, s.err, err)
 
 			if err == nil {

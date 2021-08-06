@@ -40,7 +40,7 @@ func TransitiveImports(dir string) ([]string, error) {
 		return nil, errors.Wrap(err, "opening file")
 	}
 
-	jpath, _, rootDir, err := jpath.Resolve(dir)
+	jpath, _, rootDir, err := jpath.Resolve(dir, false)
 	if err != nil {
 		return nil, errors.Wrap(err, "resolving JPATH")
 	}

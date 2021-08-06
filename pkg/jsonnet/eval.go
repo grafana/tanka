@@ -132,7 +132,7 @@ func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, e
 	}
 
 	// Create VM
-	jpath, _, _, err := jpath.Resolve(path)
+	jpath, _, _, err := jpath.Resolve(path, false)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving import paths")
 	}

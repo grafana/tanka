@@ -52,7 +52,7 @@ func Lint(fds []string, opts *LintOpts) error {
 			var err error
 			file, err = filepath.Abs(file)
 			if err != nil {
-				fmt.Fprintf(buf, "got an error get the absolute path for %s: %v", file, err)
+				fmt.Fprintf(buf, "got an error getting the absolute path for %s: %v\n\n", file, err)
 				resultCh <- result{failed: true, output: buf.String()}
 				continue
 			}
@@ -66,15 +66,14 @@ func Lint(fds []string, opts *LintOpts) error {
 				vm.NativeFunction(nf)
 			}
 
-			dir := filepath.Dir(file)
-			jpath, _, _, err := jpath.Resolve(dir)
+			jpaths, _, _, err := jpath.Resolve(file, true)
 			if err != nil {
-				fmt.Fprintf(buf, "got an error resolving JPATH for %s: %v", dir, err)
+				fmt.Fprintf(buf, "got an error getting JPATH for %s: %v\n\n", file, err)
 				resultCh <- result{failed: true, output: buf.String()}
 				continue
 			}
 
-			vm.Importer(NewExtendedImporter(jpath))
+			vm.Importer(NewExtendedImporter(jpaths))
 
 			content, _ := ioutil.ReadFile(file)
 			failed := linter.LintSnippet(vm, buf, file, string(content))
