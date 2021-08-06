@@ -44,6 +44,7 @@ func main() {
 	// jsonnet commands
 	rootCmd.AddCommand(
 		fmtCmd(),
+		lintCmd(),
 		evalCmd(),
 		initCmd(),
 		toolCmd(),
