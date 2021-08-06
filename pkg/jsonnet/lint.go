@@ -7,10 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/gobwas/glob"
-	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/linter"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
-	"github.com/grafana/tanka/pkg/jsonnet/native"
 	"github.com/pkg/errors"
 )
 
@@ -61,11 +59,7 @@ func Lint(fds []string, opts *LintOpts) error {
 				fmt.Fprintf(buf, "Linting %s...\n", file)
 			}
 
-			vm := jsonnet.MakeVM()
-			for _, nf := range native.Funcs() {
-				vm.NativeFunction(nf)
-			}
-
+			vm := MakeVM(Opts{})
 			jpaths, _, _, err := jpath.Resolve(file, true)
 			if err != nil {
 				fmt.Fprintf(buf, "got an error getting JPATH for %s: %v\n\n", file, err)
@@ -76,7 +70,7 @@ func Lint(fds []string, opts *LintOpts) error {
 			vm.Importer(NewExtendedImporter(jpaths))
 
 			content, _ := ioutil.ReadFile(file)
-			failed := linter.LintSnippet(vm, buf, file, string(content))
+			failed := linter.LintSnippet(vm, buf, []linter.Snippet{{FileName: file, Code: string(content)}})
 			resultCh <- result{failed: failed, output: buf.String()}
 		}
 	}
