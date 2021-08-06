@@ -1,9 +1,9 @@
 package jsonnet
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
-	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/gobwas/glob"
@@ -22,15 +22,14 @@ type LintOpts struct {
 
 	// PrintNames causes all filenames to be printed
 	PrintNames bool
+
+	// Parallelism determines the number of workers that will process files
+	Parallelism int
 }
 
 // Lint takes a list of files and directories, processes them and prints
 // out to stderr if there are linting warnings
 func Lint(fds []string, opts *LintOpts) error {
-	vm := jsonnet.MakeVM()
-	for _, nf := range native.Funcs() {
-		vm.NativeFunction(nf)
-	}
 
 	var paths []string
 	for _, f := range fds {
@@ -41,26 +40,54 @@ func Lint(fds []string, opts *LintOpts) error {
 		paths = append(paths, fs...)
 	}
 
-	lintingFailed := false
-	importedDirs := map[string]bool{}
-	for _, file := range paths {
-		if opts.PrintNames {
-			log.Printf("Linting %s...\n", file)
-		}
+	type result struct {
+		failed bool
+		output string
+	}
+	fileCh := make(chan string, len(paths))
+	resultCh := make(chan result, len(paths))
+	lintWorker := func(fileCh <-chan string, resultCh chan result) {
+		for file := range fileCh {
+			buf := &bytes.Buffer{}
+			if opts.PrintNames {
+				fmt.Fprintf(buf, "Linting %s...\n", file)
+			}
+			vm := jsonnet.MakeVM()
+			for _, nf := range native.Funcs() {
+				vm.NativeFunction(nf)
+			}
 
-		dir := filepath.Dir(file)
-		if _, ok := importedDirs[dir]; !ok {
+			dir := filepath.Dir(file)
 			jpath, _, _, err := jpath.Resolve(dir)
 			if err != nil {
-				return errors.Wrap(err, "resolving JPATH")
+				buf.WriteString(errors.Wrap(err, "resolving JPATH").Error())
+				resultCh <- result{failed: true, output: buf.String()}
 			}
 
 			vm.Importer(NewExtendedImporter(jpath))
-			importedDirs[dir] = true
-		}
 
-		content, _ := ioutil.ReadFile(file)
-		lintingFailed = lintingFailed || linter.LintSnippet(vm, os.Stderr, file, string(content))
+			content, _ := ioutil.ReadFile(file)
+			failed := linter.LintSnippet(vm, buf, file, string(content))
+			resultCh <- result{failed: failed, output: buf.String()}
+		}
+	}
+
+	for i := 0; i < opts.Parallelism; i++ {
+		go lintWorker(fileCh, resultCh)
+	}
+
+	for _, file := range paths {
+		fileCh <- file
+	}
+	close(fileCh)
+
+	lintingFailed := false
+	for i := 0; i < len(paths); i++ {
+		result := <-resultCh
+		lintingFailed = lintingFailed || result.failed
+		if result.output != "" {
+			fmt.Print(result.output)
+		}
 	}
 
 	if lintingFailed {
