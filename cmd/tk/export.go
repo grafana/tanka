@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/go-clix/cli"
 
@@ -34,6 +35,9 @@ func exportCmd() *cli.Command {
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
 	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
 	parallel := cmd.Flags().IntP("parallel", "p", 8, "Number of environments to process in parallel")
+	cachePath := cmd.Flags().StringP("cache-path", "c", "", "URL where cached evaluations should be stored. Supports file:// and gs://")
+	cacheEnvs := cmd.Flags().StringArrayP("cache-envs", "e", nil, "Regexes which define which environment should be cached (if caching is enabled)")
+	warnLongEvals := cmd.Flags().DurationP("warn-long-evals", "w", 0, "If set, will warn when environments take longer than this duration to evaluate")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -59,6 +63,15 @@ func exportCmd() *cli.Command {
 			Selector:    getLabelSelector(),
 			Parallelism: *parallel,
 		}
+		opts.Opts.CachePath = *cachePath
+		for _, expr := range *cacheEnvs {
+			regex, err := regexp.Compile(expr)
+			if err != nil {
+				return err
+			}
+			opts.Opts.CachePathRegexes = append(opts.Opts.CachePathRegexes, regex)
+		}
+		opts.Opts.WarnLongEvaluations = *warnLongEvals
 
 		var exportEnvs []*v1alpha1.Environment
 		for _, path := range args[1:] {

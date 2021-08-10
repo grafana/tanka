@@ -1,10 +1,14 @@
 package jsonnet
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
@@ -132,6 +136,44 @@ func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, curren
 		}
 	}
 	return nil
+}
+
+var fileHashes sync.Map
+
+// getSnippetHash takes a jsonnet snippet and calculates a hash from its content
+//   and the content of all of its dependencies.
+// File hashes are cached in-memory to optimize multiple executions of this function in a process
+func getSnippetHash(vm *jsonnet.VM, path, data string) (string, error) {
+	node, _ := jsonnet.SnippetToAST(path, data)
+	result := map[string]bool{}
+	if err := importRecursive(result, vm, node, path); err != nil {
+		return "", err
+	}
+	fileNames := []string{}
+	for file := range result {
+		fileNames = append(fileNames, file)
+	}
+	sort.Strings(fileNames)
+
+	fullHasher := sha256.New()
+	fullHasher.Write([]byte(data))
+	for _, file := range fileNames {
+		var fileHash []byte
+		if got, ok := fileHashes.Load(file); ok {
+			fileHash = got.([]byte)
+		} else {
+			bytes, err := os.ReadFile(file)
+			if err != nil {
+				return "", err
+			}
+			hash := sha256.New()
+			fileHash = hash.Sum(bytes)
+			fileHashes.Store(file, fileHash)
+		}
+		fullHasher.Write(fileHash)
+	}
+
+	return base64.URLEncoding.EncodeToString(fullHasher.Sum(nil)), nil
 }
 
 func uniqueStringSlice(s []string) []string {

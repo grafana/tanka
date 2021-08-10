@@ -1,9 +1,15 @@
 package jsonnet
 
 import (
+	"io/ioutil"
+	"log"
+	"time"
+
+	"github.com/fatih/color"
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
 
+	"github.com/grafana/tanka/pkg/jsonnet/evalcache"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/jsonnet/native"
 )
@@ -26,10 +32,13 @@ func (i *InjectedCode) Set(key, value string) {
 
 // Opts are additional properties for the Jsonnet VM
 type Opts struct {
+	evalcache.CacheOpts
 	ExtCode     InjectedCode
 	TLACode     InjectedCode
 	ImportPaths []string
 	EvalScript  string
+
+	WarnLongEvaluations time.Duration
 }
 
 // Clone returns a deep copy of Opts
@@ -45,10 +54,12 @@ func (o Opts) Clone() Opts {
 	}
 
 	return Opts{
-		TLACode:     tlaCode,
-		ExtCode:     extCode,
-		ImportPaths: append([]string{}, o.ImportPaths...),
-		EvalScript:  o.EvalScript,
+		CacheOpts:           o.CacheOpts,
+		TLACode:             tlaCode,
+		ExtCode:             extCode,
+		ImportPaths:         append([]string{}, o.ImportPaths...),
+		EvalScript:          o.EvalScript,
+		WarnLongEvaluations: o.WarnLongEvaluations,
 	}
 }
 
@@ -78,24 +89,62 @@ func MakeVM(opts Opts) *jsonnet.VM {
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
 func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
-	jpath, _, _, err := jpath.Resolve(jsonnetFile)
-	if err != nil {
-		return "", errors.Wrap(err, "resolving import paths")
-	}
-	opts.ImportPaths = jpath
+	bytes, _ := ioutil.ReadFile(jsonnetFile)
+	return Evaluate(jsonnetFile, string(bytes), opts)
 
-	vm := MakeVM(opts)
-	return vm.EvaluateFile(jsonnetFile)
 }
 
 // Evaluate renders the given jsonnet into a string
-// TODO: don't resolve jpath, this is ANONYMOUS AFTER ALL
+// If cache options are given, a hash from the data will be computed and
+//  the resulting string will be cached for future retrieval
 func Evaluate(path, data string, opts Opts) (string, error) {
+	var (
+		cache evalcache.EvalCache
+		err   error
+	)
+	if opts.CacheOpts.PathMatches(path) {
+		if cache, err = evalcache.GetCache(opts.CacheOpts); err != nil {
+			return "", err
+		}
+	}
+
+	// Create VM
 	jpath, _, _, err := jpath.Resolve(path)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving import paths")
 	}
 	opts.ImportPaths = jpath
 	vm := MakeVM(opts)
-	return vm.EvaluateAnonymousSnippet(path, data)
+
+	var hash string
+	if cache != nil {
+		if hash, err = getSnippetHash(vm, path, data); err != nil {
+			return "", err
+		}
+		if v, err := cache.Get(hash); err != nil {
+			return "", err
+		} else if v != "" {
+			return v, nil
+		}
+	}
+
+	startTime := time.Now()
+	content, err := vm.EvaluateAnonymousSnippet(path, data)
+	if err != nil {
+		return "", err
+	}
+
+	// Warn if this evaluation took too long
+	// But not if we're caching this evaluation
+	if cache == nil && opts.WarnLongEvaluations != 0 {
+		if evalTime := time.Since(startTime); evalTime > opts.WarnLongEvaluations {
+			log.Println(color.YellowString("[WARN] %s took %fs to evaluate", path, evalTime.Seconds()))
+		}
+	}
+
+	if cache != nil {
+		return content, cache.Store(hash, content)
+	}
+
+	return content, nil
 }
