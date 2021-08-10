@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.17.2 (2021-08-10)
+
+### Bug Fixes
+
+- **export**: Add more context when extract fails
+  **([#583](https://github.com/grafana/tanka/pull/583))**
+- **tanka**: Do not remove `data`, hide it
+  **([#585](https://github.com/grafana/tanka/pull/585))**
+
 ## 0.17.1 (2021-07-08)
 
 ### Bug Fixes
