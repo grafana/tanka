@@ -21,9 +21,9 @@ type parallelOpts struct {
 }
 
 // parallelLoadEnvironments evaluates multiple environments in parallel
-func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) ([]*v1alpha1.Environment, error) {
+func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) ([]*ParallelOut, error) {
 	jobsCh := make(chan parallelJob)
-	outCh := make(chan parallelOut, len(envs))
+	outCh := make(chan ParallelOut, len(envs))
 
 	if opts.Parallelism <= 0 {
 		opts.Parallelism = defaultParallelism
@@ -56,16 +56,16 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 	}
 	close(jobsCh)
 
-	var outenvs []*v1alpha1.Environment
+	var outenvs []*ParallelOut
 	var errors []error
 	for i := 0; i < len(envs); i++ {
 		out := <-outCh
-		if out.err != nil {
-			errors = append(errors, out.err)
+		if out.Err != nil {
+			errors = append(errors, out.Err)
 			continue
 		}
-		if opts.Selector == nil || opts.Selector.Empty() || opts.Selector.Matches(out.env.Metadata) {
-			outenvs = append(outenvs, out.env)
+		if opts.Selector == nil || opts.Selector.Empty() || opts.Selector.Matches(out.Env.Metadata) {
+			outenvs = append(outenvs, &out)
 		}
 	}
 
@@ -81,18 +81,19 @@ type parallelJob struct {
 	opts Opts
 }
 
-type parallelOut struct {
-	env *v1alpha1.Environment
-	err error
+type ParallelOut struct {
+	Env  *v1alpha1.Environment
+	Path string
+	Err  error
 }
 
-func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
+func parallelWorker(jobsCh <-chan parallelJob, outCh chan ParallelOut) {
 	for job := range jobsCh {
 		log.Printf("Loading %s from %s", job.opts.Name, job.path)
 		env, err := LoadEnvironment(job.path, job.opts)
 		if err != nil {
 			err = fmt.Errorf("%s:\n %w", job.path, err)
 		}
-		outCh <- parallelOut{env: env, err: err}
+		outCh <- ParallelOut{Env: env, Path: job.path, Err: err}
 	}
 }

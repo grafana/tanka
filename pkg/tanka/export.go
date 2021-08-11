@@ -58,7 +58,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 	}
 
 	// get all environments for paths
-	loadedEnvs, err := parallelLoadEnvironments(envs, parallelOpts{
+	loadedEnvOutputs, err := parallelLoadEnvironments(envs, parallelOpts{
 		Opts:        opts.Opts,
 		Selector:    opts.Selector,
 		Parallelism: opts.Parallelism,
@@ -67,11 +67,15 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 		return err
 	}
 
-	for _, env := range loadedEnvs {
+	for _, out := range loadedEnvOutputs {
+		rawenv := out.Env
+		// environment name used for error output.
+		envName := fmt.Sprintf("%s(%s)", out.Path, rawenv.Metadata.Name)
+
 		// get the manifests
-		loaded, err := LoadManifests(env, opts.Opts.Filters)
+		loaded, err := LoadManifests(rawenv, opts.Opts.Filters)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %s", envName, err)
 		}
 
 		env := loaded.Env
@@ -81,17 +85,17 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 		env.Data = nil
 		raw, err := json.Marshal(env)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %s", envName, err)
 		}
 		var menv manifest.Manifest
 		if err := json.Unmarshal(raw, &menv); err != nil {
-			return err
+			return fmt.Errorf("%s: %s", envName, err)
 		}
 
 		// create template
 		manifestTemplate, err := createTemplate(opts.Format, menv)
 		if err != nil {
-			return fmt.Errorf("Parsing format: %s", err)
+			return fmt.Errorf("%s: Parsing format: %s", envName, err)
 		}
 
 		// write each to a file
@@ -99,7 +103,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 			// apply template
 			name, err := applyTemplate(manifestTemplate, m)
 			if err != nil {
-				return fmt.Errorf("executing name template: %w", err)
+				return fmt.Errorf("%s: executing name template: %w", envName, err)
 			}
 
 			// Create all subfolders in path
