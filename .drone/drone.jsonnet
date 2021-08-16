@@ -85,7 +85,6 @@ local docker(arch) = pipeline('docker-' + arch) {
   } + { depends_on: ['check'] } + constraints.onlyTags,
 
   docker('amd64') { depends_on: ['check'] } + constraints.onlyTagOrMain,
-  docker('arm') { depends_on: ['check'] } + constraints.onlyTagOrMain,
   docker('arm64') { depends_on: ['check'] } + constraints.onlyTagOrMain,
 
   pipeline('manifest') {
@@ -103,7 +102,6 @@ local docker(arch) = pipeline('docker-' + arch) {
   } + {
     depends_on: [
       'docker-amd64',
-      'docker-arm',
       'docker-arm64',
     ],
   } + constraints.onlyTagOrMain,
