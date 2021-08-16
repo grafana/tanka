@@ -136,55 +136,6 @@ depends_on:
 
 ---
 kind: pipeline
-name: docker-arm
-
-platform:
-  os: linux
-  arch: arm
-
-steps:
-- name: fetch-tags
-  image: golang:1.15
-  commands:
-  - git fetch origin --tags
-  volumes:
-  - name: gopath
-    path: /go
-
-- name: static
-  image: golang:1.15
-  commands:
-  - make static
-  volumes:
-  - name: gopath
-    path: /go
-
-- name: container
-  image: plugins/docker
-  settings:
-    auto_tag: true
-    auto_tag_suffix: arm
-    password:
-      from_secret: dockerhub_password
-    repo: grafana/tanka
-    username:
-      from_secret: dockerhub_username
-
-volumes:
-- name: gopath
-  temp: {}
-
-trigger:
-  ref:
-  - refs/heads/main
-  - refs/heads/docker
-  - refs/tags/v*
-
-depends_on:
-- check
-
----
-kind: pipeline
 name: docker-arm64
 
 platform:
@@ -264,7 +215,6 @@ trigger:
 
 depends_on:
 - docker-amd64
-- docker-arm
 - docker-arm64
 
 ---
@@ -293,6 +243,6 @@ get:
 
 ---
 kind: signature
-hmac: 72469494de5902df2a0a375f1a38f1b064dcc2c3639d4978b86392f2b7c46f46
+hmac: c3ef3feca15523713fdd108f6d6708488514efb9958707b812db888b799b2244
 
 ...
