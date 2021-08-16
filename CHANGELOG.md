@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.17.3 (2021-08-16)
+
+### Features
+
+- **docker**: Add Kustomize binary
+  **([#597](https://github.com/grafana/tanka/pull/597))**
+
 ## 0.17.2 (2021-08-10)
 
 ### Bug Fixes
