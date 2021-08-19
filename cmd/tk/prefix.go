@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-clix/cli"
@@ -64,17 +64,27 @@ func executablesOnPath(prefix string) (map[string]string, error) {
 			continue
 		}
 
-		files, err := ioutil.ReadDir(p)
+		files, err := filepath.Glob(fmt.Sprintf("%s/%s*", p, prefix))
 		if err != nil {
 			return nil, err
 		}
 		for _, file := range files {
-			if !strings.HasPrefix(file.Name(), prefix) {
+			base := filepath.Base(file)
+			// guarding against a glob character in the prefix or path
+			if !strings.HasPrefix(base, prefix) {
 				continue
 			}
-			if file.Mode().IsRegular() && file.Mode().Perm()&0111 != 0 {
-				executables[file.Name()] = fmt.Sprintf("%s/%s", p, file.Name())
+			info, err := os.Stat(file)
+			if err != nil {
+				return nil, err
 			}
+			if !info.Mode().IsRegular() {
+				continue
+			}
+			if info.Mode().Perm()&0111 == 0 {
+				continue
+			}
+			executables[base] = file
 		}
 	}
 	return executables, nil
