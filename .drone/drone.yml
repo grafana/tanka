@@ -8,7 +8,7 @@ platform:
 
 steps:
 - name: download
-  image: golang:1.15
+  image: golang:1.16
   commands:
   - go mod download
   volumes:
@@ -16,7 +16,7 @@ steps:
     path: /go
 
 - name: lint
-  image: golang:1.15
+  image: golang:1.16
   commands:
   - make lint
   volumes:
@@ -26,7 +26,7 @@ steps:
   - download
 
 - name: test
-  image: golang:1.15
+  image: golang:1.16
   commands:
   - make test
   volumes:
@@ -49,7 +49,7 @@ platform:
 
 steps:
 - name: fetch-tags
-  image: golang:1.15
+  image: golang:1.16
   commands:
   - git fetch origin --tags
   volumes:
@@ -57,7 +57,7 @@ steps:
     path: /go
 
 - name: cross
-  image: golang:1.15
+  image: golang:1.16
   commands:
   - make cross
   volumes:
@@ -95,7 +95,7 @@ platform:
 
 steps:
 - name: fetch-tags
-  image: golang:1.15
+  image: golang:1.16
   commands:
   - git fetch origin --tags
   volumes:
@@ -103,7 +103,7 @@ steps:
     path: /go
 
 - name: static
-  image: golang:1.15
+  image: golang:1.16
   commands:
   - make static
   volumes:
@@ -144,7 +144,7 @@ platform:
 
 steps:
 - name: fetch-tags
-  image: golang:1.15
+  image: golang:1.16
   commands:
   - git fetch origin --tags
   volumes:
@@ -152,7 +152,7 @@ steps:
     path: /go
 
 - name: static
-  image: golang:1.15
+  image: golang:1.16
   commands:
   - make static
   volumes:
@@ -243,6 +243,6 @@ get:
 
 ---
 kind: signature
-hmac: c3ef3feca15523713fdd108f6d6708488514efb9958707b812db888b799b2244
+hmac: d23cf2eb1846155019d6159675b698388a196975b0d02a3814b031c847e64fb6
 
 ...
