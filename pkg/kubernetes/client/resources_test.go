@@ -20,10 +20,10 @@ func TestUnmarshalTable(t *testing.T) {
 			name: "normal",
 			tbl:  strings.TrimSpace(tblNormal),
 			want: &Resources{
-				{APIGroup: "apps", Name: "Deployment", Namespaced: true},
-				{APIGroup: "networking", Name: "Ingress", Namespaced: true},
-				{APIGroup: "", Name: "Namespace", Namespaced: false},
-				{APIGroup: "extensions", Name: "DaemonSet", Namespaced: true},
+				{APIVersion: "apps/v1", Name: "Deployment", Namespaced: true},
+				{APIVersion: "networking/v1", Name: "Ingress", Namespaced: true},
+				{APIVersion: "v1", Name: "Namespace", Namespaced: false},
+				{APIVersion: "extensions/v1", Name: "DaemonSet", Namespaced: true},
 			},
 			dest: &Resources{},
 		},
@@ -32,7 +32,7 @@ func TestUnmarshalTable(t *testing.T) {
 			tbl:  strings.TrimSpace(tblEmpty),
 			want: &Resources{},
 			dest: &Resources{
-				{APIGroup: "apps", Name: "Deployment", Namespaced: true},
+				{APIVersion: "apps/v1", Name: "Deployment", Namespaced: true},
 			},
 		},
 		{
@@ -57,15 +57,15 @@ func TestUnmarshalTable(t *testing.T) {
 }
 
 var tblNormal = `
-APIGROUP    NAME        NAMESPACED
-apps        Deployment  true
-networking  Ingress     true
-            Namespace   false
-extensions  DaemonSet   true
+APIVERSION     NAME        NAMESPACED
+apps/v1        Deployment  true
+networking/v1  Ingress     true
+v1             Namespace   false
+extensions/v1  DaemonSet   true
 `
 
 var tblEmpty = `
-APIGROUP    NAME        NAMESPACED
+APIVERSION    NAME        NAMESPACED
 `
 
 var tblNoHeader = `
