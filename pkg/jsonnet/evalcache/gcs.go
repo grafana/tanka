@@ -1,32 +1,35 @@
 package evalcache
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"log"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
-	"cloud.google.com/go/storage"
-	"google.golang.org/api/iterator"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 // GoogleStorageEvalCache is an evaluation cache that stores its data in Google Cloud Storage
 // Cache paths with the gs:// scheme are routed to this cache
 type GoogleStorageEvalCache struct {
 	initMutex    sync.Once
-	client       *storage.Client
+	client       *minio.Client
 	currentItems map[string]bool
 
-	Bucket, Prefix string
+	Endpoint, Bucket, Prefix string
 }
 
 func NewGoogleStorageEvalCache(url *url.URL) *GoogleStorageEvalCache {
 	return &GoogleStorageEvalCache{
-		Bucket: url.Host,
-		Prefix: strings.Trim(url.Path, "/"),
+		Endpoint: "https://storage.googleapis.com",
+		Bucket:   url.Host,
+		Prefix:   strings.Trim(url.Path, "/"),
 	}
 }
 
@@ -39,27 +42,24 @@ func (c *GoogleStorageEvalCache) Get(hash string) (string, error) {
 
 	var err error
 	c.initMutex.Do(func() {
-		log.Printf("Initializing the GCS cache. Bucket: %s, Prefix: %s", c.Bucket, c.Prefix)
-		if c.client, err = storage.NewClient(ctx); err != nil {
+		log.Printf("Initializing the S3 cache. Endpont: %s, Bucket: %s, Prefix: %s", c.Endpoint, c.Bucket, c.Prefix)
+		if c.client, err = minio.New(c.Endpoint, &minio.Options{
+			Creds:  credentials.NewStaticV4(os.Getenv("GCS_ACCESS_KEY_ID"), os.Getenv("GCS_SECRET_ACCESS_KEY"), ""),
+			Secure: true,
+		}); err != nil {
 			return
 		}
 
-		query := &storage.Query{Prefix: c.Prefix}
-
-		bkt := c.client.Bucket(c.Bucket)
-		it := bkt.Objects(ctx, query)
 		c.currentItems = map[string]bool{}
-		for {
-			var attrs *storage.ObjectAttrs
-			attrs, err = it.Next()
-			if err == iterator.Done {
-				err = nil
-				break
-			}
-			if err != nil {
+		objectCh := c.client.ListObjects(ctx, c.Bucket, minio.ListObjectsOptions{
+			Prefix:    c.Prefix,
+			Recursive: false,
+		})
+		for object := range objectCh {
+			if err = object.Err; err != nil {
 				return
 			}
-			c.currentItems[attrs.Name] = true
+			c.currentItems[object.Key] = true
 		}
 	})
 	if err != nil {
@@ -68,11 +68,11 @@ func (c *GoogleStorageEvalCache) Get(hash string) (string, error) {
 
 	cachePath := c.cachePath(hash)
 	if _, ok := c.currentItems[cachePath]; ok {
-		reader, err := c.client.Bucket(c.Bucket).Object(cachePath).NewReader(ctx)
+		object, err := c.client.GetObject(context.Background(), c.Bucket, cachePath, minio.GetObjectOptions{})
 		if err != nil {
 			return "", err
 		}
-		bytes, err := io.ReadAll(reader)
+		bytes, err := io.ReadAll(object)
 		return string(bytes), err
 	}
 
@@ -82,12 +82,18 @@ func (c *GoogleStorageEvalCache) Get(hash string) (string, error) {
 func (c *GoogleStorageEvalCache) Store(hash, content string) error {
 	ctx := context.Background()
 
-	cachePath := c.cachePath(hash)
-	writer := c.client.Bucket(c.Bucket).Object(cachePath).NewWriter(ctx)
-	if _, err := io.WriteString(writer, content); err != nil {
+	buffer := &bytes.Buffer{}
+	if _, err := io.WriteString(buffer, content); err != nil {
 		return err
 	}
+
+	cachePath := c.cachePath(hash)
+	_, err := c.client.PutObject(ctx, c.Bucket, cachePath, buffer, int64(buffer.Len()), minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	if err != nil {
+		return err
+	}
+
 	c.currentItems[cachePath] = true
 
-	return writer.Close()
+	return nil
 }

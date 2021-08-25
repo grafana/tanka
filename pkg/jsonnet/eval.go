@@ -2,10 +2,7 @@ package jsonnet
 
 import (
 	"io/ioutil"
-	"log"
-	"time"
 
-	"github.com/fatih/color"
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
 
@@ -37,8 +34,6 @@ type Opts struct {
 	TLACode     InjectedCode
 	ImportPaths []string
 	EvalScript  string
-
-	WarnLongEvaluations time.Duration
 }
 
 // Clone returns a deep copy of Opts
@@ -54,12 +49,11 @@ func (o Opts) Clone() Opts {
 	}
 
 	return Opts{
-		CacheOpts:           o.CacheOpts,
-		TLACode:             tlaCode,
-		ExtCode:             extCode,
-		ImportPaths:         append([]string{}, o.ImportPaths...),
-		EvalScript:          o.EvalScript,
-		WarnLongEvaluations: o.WarnLongEvaluations,
+		CacheOpts:   o.CacheOpts,
+		TLACode:     tlaCode,
+		ExtCode:     extCode,
+		ImportPaths: append([]string{}, o.ImportPaths...),
+		EvalScript:  o.EvalScript,
 	}
 }
 
@@ -128,18 +122,9 @@ func Evaluate(path, data string, opts Opts) (string, error) {
 		}
 	}
 
-	startTime := time.Now()
 	content, err := vm.EvaluateAnonymousSnippet(path, data)
 	if err != nil {
 		return "", err
-	}
-
-	// Warn if this evaluation took too long
-	// But not if we're caching this evaluation
-	if cache == nil && opts.WarnLongEvaluations != 0 {
-		if evalTime := time.Since(startTime); evalTime > opts.WarnLongEvaluations {
-			log.Println(color.YellowString("[WARN] %s took %fs to evaluate", path, evalTime.Seconds()))
-		}
 	}
 
 	if cache != nil {
