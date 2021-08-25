@@ -1,8 +1,7 @@
-package evalcache
+package jsonnet
 
 import (
 	"io/ioutil"
-	"net/url"
 	"os"
 	"path/filepath"
 )
@@ -13,9 +12,9 @@ type FileEvalCache struct {
 	Directory string
 }
 
-func NewFileEvalCache(url *url.URL) *FileEvalCache {
+func NewFileEvalCache(cachePath string) *FileEvalCache {
 	return &FileEvalCache{
-		Directory: filepath.Join(url.Host, url.Path),
+		Directory: cachePath,
 	}
 }
 

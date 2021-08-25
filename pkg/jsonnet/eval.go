@@ -2,14 +2,11 @@ package jsonnet
 
 import (
 	"io/ioutil"
-	"log"
-	"time"
+	"regexp"
 
-	"github.com/fatih/color"
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
 
-	"github.com/grafana/tanka/pkg/jsonnet/evalcache"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/jsonnet/native"
 )
@@ -32,13 +29,24 @@ func (i *InjectedCode) Set(key, value string) {
 
 // Opts are additional properties for the Jsonnet VM
 type Opts struct {
-	evalcache.CacheOpts
 	ExtCode     InjectedCode
 	TLACode     InjectedCode
 	ImportPaths []string
 	EvalScript  string
+	CachePath   string
 
-	WarnLongEvaluations time.Duration
+	CachePathRegexes []*regexp.Regexp
+}
+
+// PathIsCached determines if a given path is matched by any of the configured cached path regexes
+// If no path regexes are defined, all paths are matched
+func (opts Opts) PathIsCached(path string) bool {
+	for _, regex := range opts.CachePathRegexes {
+		if regex.MatchString(path) {
+			return true
+		}
+	}
+	return len(opts.CachePathRegexes) == 0
 }
 
 // Clone returns a deep copy of Opts
@@ -54,12 +62,13 @@ func (o Opts) Clone() Opts {
 	}
 
 	return Opts{
-		CacheOpts:           o.CacheOpts,
-		TLACode:             tlaCode,
-		ExtCode:             extCode,
-		ImportPaths:         append([]string{}, o.ImportPaths...),
-		EvalScript:          o.EvalScript,
-		WarnLongEvaluations: o.WarnLongEvaluations,
+		TLACode:     tlaCode,
+		ExtCode:     extCode,
+		ImportPaths: append([]string{}, o.ImportPaths...),
+		EvalScript:  o.EvalScript,
+
+		CachePath:        o.CachePath,
+		CachePathRegexes: o.CachePathRegexes,
 	}
 }
 
@@ -98,14 +107,9 @@ func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
 // If cache options are given, a hash from the data will be computed and
 //  the resulting string will be cached for future retrieval
 func Evaluate(path, data string, opts Opts) (string, error) {
-	var (
-		cache evalcache.EvalCache
-		err   error
-	)
-	if opts.CacheOpts.PathMatches(path) {
-		if cache, err = evalcache.GetCache(opts.CacheOpts); err != nil {
-			return "", err
-		}
+	var cache *FileEvalCache
+	if opts.CachePath != "" && opts.PathIsCached(path) {
+		cache = NewFileEvalCache(opts.CachePath)
 	}
 
 	// Create VM
@@ -128,18 +132,9 @@ func Evaluate(path, data string, opts Opts) (string, error) {
 		}
 	}
 
-	startTime := time.Now()
 	content, err := vm.EvaluateAnonymousSnippet(path, data)
 	if err != nil {
 		return "", err
-	}
-
-	// Warn if this evaluation took too long
-	// But not if we're caching this evaluation
-	if cache == nil && opts.WarnLongEvaluations != 0 {
-		if evalTime := time.Since(startTime); evalTime > opts.WarnLongEvaluations {
-			log.Println(color.YellowString("[WARN] %s took %fs to evaluate", path, evalTime.Seconds()))
-		}
 	}
 
 	if cache != nil {
