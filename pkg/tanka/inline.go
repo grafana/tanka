@@ -41,7 +41,7 @@ func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment
 	}
 
 	if len(envs) == 0 {
-		return nil, fmt.Errorf("Found no environments in '%s'", path)
+		return nil, fmt.Errorf("Found no matching environments; run 'tk env list %s' to view available options", path)
 	}
 
 	// TODO: Re-serializing the entire env here. This is horribly inefficient
