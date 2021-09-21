@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.1.0
 	github.com/fatih/color v1.9.0
 	github.com/fatih/structs v1.1.0
-	github.com/go-clix/cli v0.1.1
+	github.com/go-clix/cli v0.2.0
 	github.com/gobwas/glob v0.2.3
 	github.com/google/go-cmp v0.5.2-0.20200818193711-d2fcc899bdc2
 	github.com/google/go-jsonnet v0.17.0
