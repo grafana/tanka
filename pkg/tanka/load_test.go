@@ -150,7 +150,24 @@ func TestLoad(t *testing.T) {
 	}
 }
 
-func TestLoadFailsWhenDuplicateEnv(t *testing.T) {
-	_, err := Load("./testdata/cases/withduplicateenv", Opts{Name: "withenv"})
-	assert.NotNil(t, err)
+func TestLoadSelectEnvironment(t *testing.T) {
+	// No match
+	_, err := Load("./testdata/cases/multiple-inline-envs", Opts{Name: "no match"})
+	assert.EqualError(t, err, "found no matching environments; run 'tk env list ./testdata/cases/multiple-inline-envs' to view available options")
+
+	// Empty options, match all environments
+	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{})
+	assert.EqualError(t, err, "found multiple Environments in './testdata/cases/multiple-inline-envs': \n - project1-env1\n - project1-env2\n - project2-env1")
+
+	// Partial match two environments
+	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "env1"})
+	assert.EqualError(t, err, "found multiple Environments in './testdata/cases/multiple-inline-envs': \n - project1-env1\n - project2-env1")
+
+	// Partial match
+	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project2"})
+	assert.NoError(t, err)
+
+	// Full match
+	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project1-env1"})
+	assert.NoError(t, err)
 }

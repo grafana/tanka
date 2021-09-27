@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"sort"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -37,11 +38,12 @@ func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment
 		for _, e := range envs {
 			names = append(names, e.Metadata().Name())
 		}
+		sort.Strings(names)
 		return nil, ErrMultipleEnvs{path, names}
 	}
 
 	if len(envs) == 0 {
-		return nil, fmt.Errorf("Found no matching environments; run 'tk env list %s' to view available options", path)
+		return nil, fmt.Errorf("found no matching environments; run 'tk env list %s' to view available options", path)
 	}
 
 	// TODO: Re-serializing the entire env here. This is horribly inefficient
