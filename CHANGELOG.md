@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.18.0 (2021-10-01)
+
+### Features
+
+- **export**: Implement environment caching for `tk export`
+  **[#603](https://github.com/grafana/tanka/pull/603)**
+- **cli**: Allow partial matches in the --name option
+  **[#613](https://github.com/grafana/tanka/pull/613)**
+
+### Bug Fixes
+
+- **tanka**: Check executable prefix before calling stat
+  **[#601](https://github.com/grafana/tanka/pull/601)**  (**neerolyte**)
+- **cli**: Add hint to inline environment error
+  **[#606](https://github.com/grafana/tanka/pull/606)**
+- **cli**: Bump cli to `0.2.0`
+  **[#611](https://github.com/grafana/tanka/pull/611)**
+- **cli**: Add check to prevent using `spec.json` and inline envs simultaneously
+  **[#614](https://github.com/grafana/tanka/pull/614)**
+
 ## 0.17.3 (2021-08-16)
 
 ### Features
