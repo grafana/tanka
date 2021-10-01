@@ -29,6 +29,7 @@ func (r Resources) Namespaced(m manifest.Manifest) bool {
 
 // Resource is a Kubernetes API Resource
 type Resource struct {
+	APIGroup   string `json:"APIGROUP"`
 	APIVersion string `json:"APIVERSION"`
 	Kind       string `json:"KIND"`
 	Name       string `json:"NAME"`
@@ -39,7 +40,10 @@ type Resource struct {
 
 func (r Resource) FQN() string {
 	apiGroup := ""
-	if pos := strings.Index(r.APIVersion, "/"); pos > 0 {
+	if r.APIGroup != "" {
+		// this is only set in kubectl v1.18 and earlier
+		apiGroup = r.APIGroup
+	} else if pos := strings.Index(r.APIVersion, "/"); pos > 0 {
 		apiGroup = r.APIVersion[0:pos]
 	}
 	return strings.TrimSuffix(r.Name+"."+apiGroup, ".")
