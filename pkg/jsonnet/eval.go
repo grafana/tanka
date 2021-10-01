@@ -1,6 +1,9 @@
 package jsonnet
 
 import (
+	"io/ioutil"
+	"regexp"
+
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
 
@@ -30,6 +33,20 @@ type Opts struct {
 	TLACode     InjectedCode
 	ImportPaths []string
 	EvalScript  string
+	CachePath   string
+
+	CachePathRegexes []*regexp.Regexp
+}
+
+// PathIsCached determines if a given path is matched by any of the configured cached path regexes
+// If no path regexes are defined, all paths are matched
+func (opts Opts) PathIsCached(path string) bool {
+	for _, regex := range opts.CachePathRegexes {
+		if regex.MatchString(path) {
+			return true
+		}
+	}
+	return len(opts.CachePathRegexes) == 0
 }
 
 // Clone returns a deep copy of Opts
@@ -49,6 +66,9 @@ func (o Opts) Clone() Opts {
 		ExtCode:     extCode,
 		ImportPaths: append([]string{}, o.ImportPaths...),
 		EvalScript:  o.EvalScript,
+
+		CachePath:        o.CachePath,
+		CachePathRegexes: o.CachePathRegexes,
 	}
 }
 
@@ -78,24 +98,48 @@ func MakeVM(opts Opts) *jsonnet.VM {
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
 func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
-	jpath, _, _, err := jpath.Resolve(jsonnetFile)
-	if err != nil {
-		return "", errors.Wrap(err, "resolving import paths")
-	}
-	opts.ImportPaths = jpath
+	bytes, _ := ioutil.ReadFile(jsonnetFile)
+	return Evaluate(jsonnetFile, string(bytes), opts)
 
-	vm := MakeVM(opts)
-	return vm.EvaluateFile(jsonnetFile)
 }
 
 // Evaluate renders the given jsonnet into a string
-// TODO: don't resolve jpath, this is ANONYMOUS AFTER ALL
+// If cache options are given, a hash from the data will be computed and
+//  the resulting string will be cached for future retrieval
 func Evaluate(path, data string, opts Opts) (string, error) {
+	var cache *FileEvalCache
+	if opts.CachePath != "" && opts.PathIsCached(path) {
+		cache = NewFileEvalCache(opts.CachePath)
+	}
+
+	// Create VM
 	jpath, _, _, err := jpath.Resolve(path)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving import paths")
 	}
 	opts.ImportPaths = jpath
 	vm := MakeVM(opts)
-	return vm.EvaluateAnonymousSnippet(path, data)
+
+	var hash string
+	if cache != nil {
+		if hash, err = getSnippetHash(vm, path, data); err != nil {
+			return "", err
+		}
+		if v, err := cache.Get(hash); err != nil {
+			return "", err
+		} else if v != "" {
+			return v, nil
+		}
+	}
+
+	content, err := vm.EvaluateAnonymousSnippet(path, data)
+	if err != nil {
+		return "", err
+	}
+
+	if cache != nil {
+		return content, cache.Store(hash, content)
+	}
+
+	return content, nil
 }
