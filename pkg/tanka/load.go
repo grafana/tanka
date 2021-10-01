@@ -31,6 +31,12 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 		return nil, err
 	}
 
+	// Check if there are still any inline environments in the manifests
+	// They are not real k8s resources, and cannot be applied
+	if envs := process.Filter(result.Resources, process.MustStrExps("Environment/.*")); len(envs) > 0 {
+		return nil, errors.New("found a tanka Environment resource. Check that you aren't using a spec.json and inline environments simultaneously")
+	}
+
 	return result, nil
 }
 
