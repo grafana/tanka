@@ -7,7 +7,6 @@ import (
 )
 
 // FileEvalCache is an evaluation cache that stores its data on the local filesystem
-// Cache paths with the file:// scheme are routed to this cache
 type FileEvalCache struct {
 	Directory string
 }
