@@ -154,3 +154,8 @@ func TestLoadFailsWhenDuplicateEnv(t *testing.T) {
 	_, err := Load("./testdata/cases/withduplicateenv", Opts{Name: "withenv"})
 	assert.NotNil(t, err)
 }
+
+func TestLoadFailsWhenBothSpecAndInline(t *testing.T) {
+	_, err := Load("./testdata/cases/static_and_inline", Opts{Name: "inline"})
+	assert.EqualError(t, err, "found a tanka Environment resource. Check that you aren't using a spec.json and inline environments simultaneously")
+}
