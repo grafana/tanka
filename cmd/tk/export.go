@@ -35,7 +35,7 @@ func exportCmd() *cli.Command {
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
 	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
 	parallel := cmd.Flags().IntP("parallel", "p", 8, "Number of environments to process in parallel")
-	cachePath := cmd.Flags().StringP("cache-path", "c", "", "URL where cached evaluations should be stored. Supports file:// and gs://")
+	cachePath := cmd.Flags().StringP("cache-path", "c", "", "Local file path where cached evaluations should be stored")
 	cacheEnvs := cmd.Flags().StringArrayP("cache-envs", "e", nil, "Regexes which define which environment should be cached (if caching is enabled)")
 
 	vars := workflowFlags(cmd.Flags())
