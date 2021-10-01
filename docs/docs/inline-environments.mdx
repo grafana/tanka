@@ -160,6 +160,10 @@ to deploy:
 ```bash
 $ tk apply --name environment/us-central1 environments/monitoring-stack/main.jsonnet
 $ tk diff --name environment/europe-west2 environments/monitoring-stack/main.jsonnet
+
+# Partial matches also work (if they match a single environment)
+$ tk apply --name us-central1 environments/monitoring-stack/main.jsonnet
+$ tk diff --name west2 environments/monitoring-stack/main.jsonnet
 ```
 
 For export, it is possible to use the same `--name` selector or you can do a
