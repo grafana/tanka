@@ -1,117 +1,115 @@
 ---
 kind: pipeline
 name: check
-
-platform:
-  os: linux
-  arch: amd64
-
 steps:
-- name: download
-  image: golang:1.16
-  commands:
+- commands:
   - go mod download
+  image: golang:1.16
+  name: download
   volumes:
   - name: gopath
     path: /go
-
-- name: lint
-  image: golang:1.16
-  commands:
+- commands:
   - make lint
-  volumes:
-  - name: gopath
-    path: /go
   depends_on:
   - download
-
-- name: test
   image: golang:1.16
-  commands:
-  - make test
+  name: lint
   volumes:
   - name: gopath
     path: /go
+- commands:
+  - make test
   depends_on:
   - download
-
+  image: golang:1.16
+  name: test
+  volumes:
+  - name: gopath
+    path: /go
 volumes:
 - name: gopath
   temp: {}
-
 ---
+depends_on:
+- check
 kind: pipeline
 name: release
-
-platform:
-  os: linux
-  arch: amd64
-
 steps:
-- name: fetch-tags
-  image: golang:1.16
-  commands:
+- commands:
   - git fetch origin --tags
-  volumes:
-  - name: gopath
-    path: /go
-
-- name: cross
   image: golang:1.16
-  commands:
-  - make cross
+  name: fetch-tags
   volumes:
   - name: gopath
     path: /go
-
-- name: publish
-  image: plugins/github-release
+- commands:
+  - make cross
+  image: golang:1.16
+  name: cross
+  volumes:
+  - name: gopath
+    path: /go
+- image: plugins/github-release
+  name: publish
   settings:
     api_key:
       from_secret: grafanabot_pat
     draft: true
     files: dist/*
-    note: "This is release ${DRONE_TAG} of Tanka (`tk`). Check out the [CHANGELOG](CHANGELOG.md) for detailed release notes.\n## Install instructions\n\n#### Binary:\n```bash\n# download the binary (adapt os and arch as needed)\n$ curl -fSL -o \"/usr/local/bin/tk\" \"https://github.com/grafana/tanka/releases/download/${DRONE_TAG}/tk-linux-amd64\"\n\n# make it executable\n$ chmod a+x \"/usr/local/bin/tk\"\n\n# have fun :)\n$ tk --help\n```\n\n#### Docker container:\nhttps://hub.docker.com/r/grafana/tanka\n```bash\n$ docker pull grafana/tanka:${DRONE_TAG#v}\n```\n"
+    note: |
+      This is release ${DRONE_TAG} of Tanka (`tk`). Check out the [CHANGELOG](https://github.com/grafana/tanka/blob/main/CHANGELOG.md) for detailed release notes.
+      ## Install instructions
+
+      #### Binary:
+      ```bash
+      # download the binary (adapt os and arch as needed)
+      $ curl -fSL -o "/usr/local/bin/tk" "https://github.com/grafana/tanka/releases/download/${DRONE_TAG}/tk-linux-amd64"
+
+      # make it executable
+      $ chmod a+x "/usr/local/bin/tk"
+
+      # have fun :)
+      $ tk --help
+      ```
+
+      #### Docker container:
+      https://hub.docker.com/r/grafana/tanka
+      ```bash
+      $ docker pull grafana/tanka:${DRONE_TAG#v}
+      ```
     title: ${DRONE_TAG}
-
-volumes:
-- name: gopath
-  temp: {}
-
 trigger:
   event:
   - tag
-
+volumes:
+- name: gopath
+  temp: {}
+---
 depends_on:
 - check
-
----
 kind: pipeline
 name: docker-amd64
-
 platform:
-  os: linux
   arch: amd64
-
+  os: linux
 steps:
-- name: fetch-tags
-  image: golang:1.16
-  commands:
+- commands:
   - git fetch origin --tags
-  volumes:
-  - name: gopath
-    path: /go
-
-- name: static
   image: golang:1.16
-  commands:
-  - make static
+  name: fetch-tags
   volumes:
   - name: gopath
     path: /go
-
-- name: container
-  image: plugins/docker
+- commands:
+  - make static
+  image: golang:1.16
+  name: static
+  volumes:
+  - name: gopath
+    path: /go
+- image: plugins/docker
+  name: container
   settings:
     auto_tag: true
     auto_tag_suffix: amd64
@@ -120,47 +118,39 @@ steps:
     repo: grafana/tanka
     username:
       from_secret: dockerhub_username
-
-volumes:
-- name: gopath
-  temp: {}
-
 trigger:
   ref:
   - refs/heads/main
   - refs/heads/docker
   - refs/tags/v*
-
+volumes:
+- name: gopath
+  temp: {}
+---
 depends_on:
 - check
-
----
 kind: pipeline
 name: docker-arm64
-
 platform:
-  os: linux
   arch: arm64
-
+  os: linux
 steps:
-- name: fetch-tags
-  image: golang:1.16
-  commands:
+- commands:
   - git fetch origin --tags
-  volumes:
-  - name: gopath
-    path: /go
-
-- name: static
   image: golang:1.16
-  commands:
-  - make static
+  name: fetch-tags
   volumes:
   - name: gopath
     path: /go
-
-- name: container
-  image: plugins/docker
+- commands:
+  - make static
+  image: golang:1.16
+  name: static
+  volumes:
+  - name: gopath
+    path: /go
+- image: plugins/docker
+  name: container
   settings:
     auto_tag: true
     auto_tag_suffix: arm64
@@ -169,31 +159,23 @@ steps:
     repo: grafana/tanka
     username:
       from_secret: dockerhub_username
-
-volumes:
-- name: gopath
-  temp: {}
-
 trigger:
   ref:
   - refs/heads/main
   - refs/heads/docker
   - refs/tags/v*
-
-depends_on:
-- check
-
+volumes:
+- name: gopath
+  temp: {}
 ---
+depends_on:
+- docker-amd64
+- docker-arm64
 kind: pipeline
 name: manifest
-
-platform:
-  os: linux
-  arch: amd64
-
 steps:
-- name: manifest
-  image: plugins/manifest
+- image: plugins/manifest
+  name: manifest
   settings:
     auto_tag: true
     ignore_missing: true
@@ -202,47 +184,34 @@ steps:
     spec: .drone/docker-manifest.tmpl
     username:
       from_secret: dockerhub_username
-
-volumes:
-- name: gopath
-  temp: {}
-
 trigger:
   ref:
   - refs/heads/main
   - refs/heads/docker
   - refs/tags/v*
-
-depends_on:
-- docker-amd64
-- docker-arm64
-
+volumes:
+- name: gopath
+  temp: {}
 ---
+get:
+  name: pat
+  path: infra/data/ci/github/grafanabot
 kind: secret
 name: grafanabot_pat
-
-get:
-  path: infra/data/ci/github/grafanabot
-  name: pat
-
 ---
+get:
+  name: username
+  path: infra/data/ci/docker_hub
 kind: secret
 name: dockerhub_username
-
-get:
-  path: infra/data/ci/docker_hub
-  name: username
-
 ---
+get:
+  name: password
+  path: infra/data/ci/docker_hub
 kind: secret
 name: dockerhub_password
-
-get:
-  path: infra/data/ci/docker_hub
-  name: password
-
 ---
 kind: signature
-hmac: d23cf2eb1846155019d6159675b698388a196975b0d02a3814b031c847e64fb6
+hmac: 6a78c1955d6f1b5530dbfbe8710b08a7f6db1466598d0fe451caec891ec506bd
 
 ...
