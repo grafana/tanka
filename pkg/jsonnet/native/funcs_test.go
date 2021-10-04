@@ -109,6 +109,18 @@ func TestManifestYAMLFromJSONKeyValue(t *testing.T) {
 	assert.Empty(t, err)
 }
 
+func TestManifestYAMLFromJSONList(t *testing.T) {
+	ret, err, callerr := callNative("manifestYamlFromJson", []interface{}{`{ "list": ["a", "b", "c"]}`})
+
+	assert.Empty(t, callerr)
+	assert.Equal(t, `list:
+  - a
+  - b
+  - c
+`, ret)
+	assert.Empty(t, err)
+}
+
 func TestManifestYAMLFromJSONInvalid(t *testing.T) {
 	ret, err, callerr := callNative("manifestYamlFromJson", []interface{}{""})
 
