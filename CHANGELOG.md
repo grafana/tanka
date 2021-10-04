@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.18.1 (2021-10-04)
+
+### Bug Fixes
+
+- **kubernetes**: Fix api-resources table parsing
+  **[#605](https://github.com/grafana/tanka/pull/605)**
+- **yaml**: Revert yaml.v3 bump due to changes to indent
+  **[#616](https://github.com/grafana/tanka/pull/616)**
+
 ## 0.18.0 (2021-10-01)
 
 ### Features
