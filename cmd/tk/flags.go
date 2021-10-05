@@ -41,11 +41,13 @@ func labelSelectorFlag(fs *pflag.FlagSet) func() labels.Selector {
 
 func jsonnetFlags(fs *pflag.FlagSet) func() tanka.JsonnetOpts {
 	getExtCode, getTLACode := cliCodeParser(fs)
+	maxStack := fs.Int("max-stack", 0, "Jsonnet VM max stack. The default value is the value set in the go-jsonnet library. Increase this if you get: max stack frames exceeded")
 
 	return func() tanka.JsonnetOpts {
 		return tanka.JsonnetOpts{
-			ExtCode: getExtCode(),
-			TLACode: getTLACode(),
+			MaxStack: *maxStack,
+			ExtCode:  getExtCode(),
+			TLACode:  getTLACode(),
 		}
 	}
 }
