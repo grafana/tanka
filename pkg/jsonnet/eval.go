@@ -29,6 +29,7 @@ func (i *InjectedCode) Set(key, value string) {
 
 // Opts are additional properties for the Jsonnet VM
 type Opts struct {
+	MaxStack    int
 	ExtCode     InjectedCode
 	TLACode     InjectedCode
 	ImportPaths []string
@@ -89,6 +90,10 @@ func MakeVM(opts Opts) *jsonnet.VM {
 
 	for _, nf := range native.Funcs() {
 		vm.NativeFunction(nf)
+	}
+
+	if opts.MaxStack > 0 {
+		vm.MaxStack = opts.MaxStack
 	}
 
 	return vm
