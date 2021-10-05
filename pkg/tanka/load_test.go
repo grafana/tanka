@@ -164,15 +164,25 @@ func TestLoadSelectEnvironment(t *testing.T) {
 	assert.EqualError(t, err, "found multiple Environments in './testdata/cases/multiple-inline-envs': \n - project1-env1\n - project2-env1")
 
 	// Partial match
-	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project2"})
+	result, err := Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project2"})
 	assert.NoError(t, err)
+	assert.Equal(t, "project2-env1", result.Env.Metadata.Name)
 
 	// Full match
-	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project1-env1"})
+	result, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project1-env1"})
 	assert.NoError(t, err)
+	assert.Equal(t, "project1-env1", result.Env.Metadata.Name)
+}
+
+func TestLoadSelectEnvironmentFullMatchHasPriority(t *testing.T) {
+	// `base` matches both `base` and `base-and-more`
+	// However, the full match should win
+	result, err := Load("./testdata/cases/inline-name-conflict", Opts{Name: "base"})
+	assert.NoError(t, err)
+	assert.Equal(t, "base", result.Env.Metadata.Name)
 }
 
 func TestLoadFailsWhenBothSpecAndInline(t *testing.T) {
-	_, err := Load("./testdata/cases/static_and_inline", Opts{Name: "inline"})
+	_, err := Load("./testdata/cases/static-and-inline", Opts{Name: "inline"})
 	assert.EqualError(t, err, "found a tanka Environment resource. Check that you aren't using a spec.json and inline environments simultaneously")
 }
