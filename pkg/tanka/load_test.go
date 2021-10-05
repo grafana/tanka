@@ -172,7 +172,14 @@ func TestLoadSelectEnvironment(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestLoadSelectEnvironmentFullMatchHasPriority(t *testing.T) {
+	// `base` matches both `base` and `base-and-more`
+	// However, the full match should win
+	_, err := Load("./testdata/cases/inline-name-conflict", Opts{Name: "base"})
+	assert.NoError(t, err)
+}
+
 func TestLoadFailsWhenBothSpecAndInline(t *testing.T) {
-	_, err := Load("./testdata/cases/static_and_inline", Opts{Name: "inline"})
+	_, err := Load("./testdata/cases/static-and-inline", Opts{Name: "inline"})
 	assert.EqualError(t, err, "found a tanka Environment resource. Check that you aren't using a spec.json and inline environments simultaneously")
 }
