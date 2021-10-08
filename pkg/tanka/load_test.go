@@ -157,11 +157,11 @@ func TestLoadSelectEnvironment(t *testing.T) {
 
 	// Empty options, match all environments
 	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{})
-	assert.EqualError(t, err, "found multiple Environments in './testdata/cases/multiple-inline-envs': \n - project1-env1\n - project1-env2\n - project2-env1")
+	assert.EqualError(t, err, "found multiple Environments in './testdata/cases/multiple-inline-envs'. Use `--name` to select a single one: \n - project1-env1\n - project1-env2\n - project2-env1")
 
 	// Partial match two environments
 	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "env1"})
-	assert.EqualError(t, err, "found multiple Environments in './testdata/cases/multiple-inline-envs': \n - project1-env1\n - project2-env1")
+	assert.EqualError(t, err, "found multiple Environments in './testdata/cases/multiple-inline-envs'. Use `--name` to select a single one: \n - project1-env1\n - project2-env1")
 
 	// Partial match
 	result, err := Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project2"})
