@@ -22,7 +22,7 @@ type ErrMultipleEnvs struct {
 }
 
 func (e ErrMultipleEnvs) Error() string {
-	return fmt.Sprintf("found multiple Environments in '%s': \n - %s", e.path, strings.Join(e.names, "\n - "))
+	return fmt.Sprintf("found multiple Environments in '%s'. Use `--name` to select a single one: \n - %s", e.path, strings.Join(e.names, "\n - "))
 }
 
 // ErrParallel is an array of errors collected while processing in parallel
@@ -31,7 +31,7 @@ type ErrParallel struct {
 }
 
 func (e ErrParallel) Error() string {
-	returnErr := fmt.Sprintf("Errors occured during parallel processing:\n\n")
+	returnErr := "Errors occurred during parallel processing:\n\n"
 	for _, err := range e.errors {
 		returnErr = fmt.Sprintf("%s- %s\n\n", returnErr, err.Error())
 	}
