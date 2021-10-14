@@ -2,9 +2,11 @@ module github.com/grafana/tanka
 
 go 1.17
 
-// Pin gopkg.in/yaml.v3
-// yaml.v3 should be bumped with care. The new versions change all list indents
-replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+// exclude incompatible versions of yaml.v3 required from dependencies
+exclude (
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+)
 
 require (
 	github.com/Masterminds/semver v1.5.0
@@ -24,7 +26,8 @@ require (
 	github.com/thoas/go-funk v0.9.1
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	// yaml.v3 should be bumped with care. The new versions change all list indents
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	k8s.io/apimachinery v0.22.2
 	sigs.k8s.io/yaml v1.3.0
 )
