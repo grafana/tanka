@@ -26,8 +26,7 @@ func (c *FileEvalCache) Get(hash string) (string, error) {
 		return "", err
 	}
 
-	if _, err := os.Stat(cachePath); err == nil {
-		bytes, err := os.ReadFile(cachePath)
+	if bytes, err := os.ReadFile(cachePath); err == nil {
 		return string(bytes), err
 	} else if !os.IsNotExist(err) {
 		return "", err
