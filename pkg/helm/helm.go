@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -106,7 +105,7 @@ func writeRepoTmpFile(r []Repo) (string, error) {
 		"repositories": r,
 	}
 
-	f, err := ioutil.TempFile("", "charts-repos")
+	f, err := os.CreateTemp("", "charts-repos")
 	if err != nil {
 		return "", err
 	}

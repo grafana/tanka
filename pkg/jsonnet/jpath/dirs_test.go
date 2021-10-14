@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"io/ioutil"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -246,7 +244,7 @@ func scenarioPointer(ptr string) scenario {
 func makeTestdata(t *testing.T, td []string) string {
 	t.Helper()
 
-	tmp, err := ioutil.TempDir("", "tk-dirsTest")
+	tmp, err := os.MkdirTemp("", "tk-dirsTest")
 	require.NoError(t, err)
 
 	for _, f := range td {

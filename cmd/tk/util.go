@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -52,7 +51,7 @@ func writeJSON(i interface{}, path string) error {
 		return fmt.Errorf("marshalling: %s", err)
 	}
 
-	if err := ioutil.WriteFile(path, append(out, '\n'), 0644); err != nil {
+	if err := os.WriteFile(path, append(out, '\n'), 0644); err != nil {
 		return fmt.Errorf("writing %s: %s", path, err)
 	}
 
@@ -71,7 +70,7 @@ func writeJsonnet(i interface{}, path string) error {
 		return fmt.Errorf("formatting %s: %s", path, err)
 	}
 
-	if err := ioutil.WriteFile(path, []byte(main), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(main), 0644); err != nil {
 		return fmt.Errorf("writing %s: %s", path, err)
 	}
 

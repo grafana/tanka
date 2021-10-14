@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 
@@ -98,7 +98,7 @@ func fmtCmd() *cli.Command {
 }
 
 func fmtStdin(test bool) error {
-	content, err := ioutil.ReadAll(os.Stdin)
+	content, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return err
 	}

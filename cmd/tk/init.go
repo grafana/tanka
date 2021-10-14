@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -31,7 +30,7 @@ func initCmd() *cli.Command {
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		failed := false
 
-		files, err := ioutil.ReadDir(".")
+		files, err := os.ReadDir(".")
 		if err != nil {
 			return fmt.Errorf("Error listing files: %s", err)
 		}
@@ -117,7 +116,7 @@ func installK8sLib(version string) error {
 // writeNewFile writes the content to a file if it does not exist
 func writeNewFile(name, content string) error {
 	if _, err := os.Stat(name); os.IsNotExist(err) {
-		return ioutil.WriteFile(name, []byte(content), 0644)
+		return os.WriteFile(name, []byte(content), 0644)
 	}
 	return nil
 }

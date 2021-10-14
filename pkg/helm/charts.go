@@ -3,7 +3,6 @@ package helm
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -24,7 +23,7 @@ func LoadChartfile(projectRoot string) (*Charts, error) {
 
 	// open chartfile
 	chartfile := filepath.Join(abs, Filename)
-	data, err := ioutil.ReadFile(chartfile)
+	data, err := os.ReadFile(chartfile)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +99,7 @@ func (c Charts) Vendor() error {
 		_, err := os.Stat(chartPath)
 		if err == nil {
 			chartManifestPath := filepath.Join(chartPath, "Chart.yaml")
-			chartManifestBytes, err := ioutil.ReadFile(chartManifestPath)
+			chartManifestBytes, err := os.ReadFile(chartManifestPath)
 			if err != nil {
 				return fmt.Errorf("reading chart manifest: %w", err)
 			}
@@ -233,7 +232,7 @@ func write(c Chartfile, dest string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(dest, data, 0644)
+	return os.WriteFile(dest, data, 0644)
 }
 
 var chartExp = regexp.MustCompile(`\w+\/.+@.+`)
