@@ -103,15 +103,29 @@ func MakeVM(opts Opts) *jsonnet.VM {
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
 func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
-	bytes, _ := ioutil.ReadFile(jsonnetFile)
-	return Evaluate(jsonnetFile, string(bytes), opts)
-
+	evalFunc := func(vm *jsonnet.VM) (string, error) {
+		return vm.EvaluateFile(jsonnetFile)
+	}
+	data, err := ioutil.ReadFile(jsonnetFile)
+	if err != nil {
+		return "", err
+	}
+	return evaluateSnippet(evalFunc, jsonnetFile, string(data), opts)
 }
 
 // Evaluate renders the given jsonnet into a string
 // If cache options are given, a hash from the data will be computed and
 //  the resulting string will be cached for future retrieval
 func Evaluate(path, data string, opts Opts) (string, error) {
+	evalFunc := func(vm *jsonnet.VM) (string, error) {
+		return vm.EvaluateAnonymousSnippet(path, data)
+	}
+	return evaluateSnippet(evalFunc, path, data, opts)
+}
+
+type evalFunc func(vm *jsonnet.VM) (string, error)
+
+func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, error) {
 	var cache *FileEvalCache
 	if opts.CachePath != "" && opts.PathIsCached(path) {
 		cache = NewFileEvalCache(opts.CachePath)
@@ -137,7 +151,7 @@ func Evaluate(path, data string, opts Opts) (string, error) {
 		}
 	}
 
-	content, err := vm.EvaluateAnonymousSnippet(path, data)
+	content, err := evalFunc(vm)
 	if err != nil {
 		return "", err
 	}
