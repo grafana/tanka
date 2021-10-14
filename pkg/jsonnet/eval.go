@@ -1,7 +1,7 @@
 package jsonnet
 
 import (
-	"io/ioutil"
+	"os"
 	"regexp"
 
 	jsonnet "github.com/google/go-jsonnet"
@@ -106,7 +106,7 @@ func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
 	evalFunc := func(vm *jsonnet.VM) (string, error) {
 		return vm.EvaluateFile(jsonnetFile)
 	}
-	data, err := ioutil.ReadFile(jsonnetFile)
+	data, err := os.ReadFile(jsonnetFile)
 	if err != nil {
 		return "", err
 	}

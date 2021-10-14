@@ -1,7 +1,7 @@
 package term
 
 import (
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 
@@ -87,7 +87,7 @@ func TestColordiff(t *testing.T) {
 	}, "\n")
 
 	r := Colordiff(data)
-	got, err := ioutil.ReadAll(r)
+	got, err := io.ReadAll(r)
 	require.NoError(t, err)
 
 	assert.Equal(t, want, string(got))

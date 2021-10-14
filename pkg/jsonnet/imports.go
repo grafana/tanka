@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -36,7 +35,7 @@ func TransitiveImports(dir string) ([]string, error) {
 		return nil, err
 	}
 
-	sonnet, err := ioutil.ReadFile(entrypoint)
+	sonnet, err := os.ReadFile(entrypoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "opening file")
 	}

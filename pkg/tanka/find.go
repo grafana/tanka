@@ -2,7 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -75,7 +74,7 @@ func find(path string, opts Opts) ([]*v1alpha1.Environment, []error) {
 	}
 
 	// list directory
-	files, err := ioutil.ReadDir(path)
+	files, err := os.ReadDir(path)
 	if err != nil {
 		return nil, findErr(path, err)
 	}

@@ -1,7 +1,6 @@
 package jpath
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -81,7 +80,7 @@ func FindBase(path string, root string) (string, error) {
 // FindParentFile traverses the parent directory tree for the given `file`,
 // starting from `start` and ending in `stop`. If the file is not found an error is returned.
 func FindParentFile(file, start, stop string) (string, error) {
-	files, err := ioutil.ReadDir(start)
+	files, err := os.ReadDir(start)
 	if err != nil {
 		return "", err
 	}
