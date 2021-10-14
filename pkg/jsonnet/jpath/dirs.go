@@ -94,7 +94,7 @@ func FindParentFile(file, start, stop string) (string, error) {
 }
 
 // dirContainsFile returns whether a file is included in a directory.
-func dirContainsFile(files []os.FileInfo, filename string) bool {
+func dirContainsFile(files []os.DirEntry, filename string) bool {
 	for _, f := range files {
 		if f.Name() == filename {
 			return true
