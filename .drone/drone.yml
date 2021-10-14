@@ -4,7 +4,7 @@ name: check
 steps:
 - commands:
   - go mod download
-  image: golang:1.16
+  image: golang:1.17
   name: download
   volumes:
   - name: gopath
@@ -13,7 +13,7 @@ steps:
   - make lint
   depends_on:
   - download
-  image: golang:1.16
+  image: golang:1.17
   name: lint
   volumes:
   - name: gopath
@@ -22,7 +22,7 @@ steps:
   - make test
   depends_on:
   - download
-  image: golang:1.16
+  image: golang:1.17
   name: test
   volumes:
   - name: gopath
@@ -38,14 +38,14 @@ name: release
 steps:
 - commands:
   - git fetch origin --tags
-  image: golang:1.16
+  image: golang:1.17
   name: fetch-tags
   volumes:
   - name: gopath
     path: /go
 - commands:
   - make cross
-  image: golang:1.16
+  image: golang:1.17
   name: cross
   volumes:
   - name: gopath
@@ -96,14 +96,14 @@ platform:
 steps:
 - commands:
   - git fetch origin --tags
-  image: golang:1.16
+  image: golang:1.17
   name: fetch-tags
   volumes:
   - name: gopath
     path: /go
 - commands:
   - make static
-  image: golang:1.16
+  image: golang:1.17
   name: static
   volumes:
   - name: gopath
@@ -137,14 +137,14 @@ platform:
 steps:
 - commands:
   - git fetch origin --tags
-  image: golang:1.16
+  image: golang:1.17
   name: fetch-tags
   volumes:
   - name: gopath
     path: /go
 - commands:
   - make static
-  image: golang:1.16
+  image: golang:1.17
   name: static
   volumes:
   - name: gopath
@@ -212,6 +212,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: 6a78c1955d6f1b5530dbfbe8710b08a7f6db1466598d0fe451caec891ec506bd
+hmac: 63407a11388174089d6101453901ecc1aaafbe8a87a075237001f608d612c120
 
 ...

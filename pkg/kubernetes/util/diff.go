@@ -3,7 +3,6 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -26,16 +25,16 @@ func DiffName(m manifest.Manifest) string {
 // DiffStr computes the differences between the strings `is` and `should` using the
 // UNIX `diff(1)` utility.
 func DiffStr(name, is, should string) (string, error) {
-	dir, err := ioutil.TempDir("", "diff")
+	dir, err := os.MkdirTemp("", "diff")
 	if err != nil {
 		return "", err
 	}
 	defer os.RemoveAll(dir)
 
-	if err := ioutil.WriteFile(filepath.Join(dir, "LIVE-"+name), []byte(is), os.ModePerm); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "LIVE-"+name), []byte(is), os.ModePerm); err != nil {
 		return "", err
 	}
-	if err := ioutil.WriteFile(filepath.Join(dir, "MERGED-"+name), []byte(should), os.ModePerm); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "MERGED-"+name), []byte(should), os.ModePerm); err != nil {
 		return "", err
 	}
 

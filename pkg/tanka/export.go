@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -170,7 +169,7 @@ func writeExportFile(path string, data []byte) error {
 		return fmt.Errorf("creating filepath '%s': %s", filepath.Dir(path), err)
 	}
 
-	return ioutil.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0644)
 }
 
 func createTemplate(format string, env manifest.Manifest) (*template.Template, error) {

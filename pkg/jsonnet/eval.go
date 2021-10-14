@@ -1,7 +1,7 @@
 package jsonnet
 
 import (
-	"io/ioutil"
+	"os"
 	"regexp"
 
 	jsonnet "github.com/google/go-jsonnet"
@@ -103,7 +103,7 @@ func MakeVM(opts Opts) *jsonnet.VM {
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
 func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
-	bytes, _ := ioutil.ReadFile(jsonnetFile)
+	bytes, _ := os.ReadFile(jsonnetFile)
 	return Evaluate(jsonnetFile, string(bytes), opts)
 
 }

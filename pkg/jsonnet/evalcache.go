@@ -1,7 +1,6 @@
 package jsonnet
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -28,7 +27,7 @@ func (c *FileEvalCache) Get(hash string) (string, error) {
 	}
 
 	if _, err := os.Stat(cachePath); err == nil {
-		bytes, err := ioutil.ReadFile(cachePath)
+		bytes, err := os.ReadFile(cachePath)
 		return string(bytes), err
 	} else if !os.IsNotExist(err) {
 		return "", err
@@ -46,5 +45,5 @@ func (c *FileEvalCache) Store(hash, content string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(cachePath, []byte(content), 0644)
+	return os.WriteFile(cachePath, []byte(content), 0644)
 }

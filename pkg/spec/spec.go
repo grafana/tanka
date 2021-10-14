@@ -2,7 +2,6 @@ package spec
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -43,7 +42,7 @@ func ParseDir(path string) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	data, err := ioutil.ReadFile(filepath.Join(base, Specfile))
+	data, err := os.ReadFile(filepath.Join(base, Specfile))
 	if err != nil {
 		if os.IsNotExist(err) {
 			c := v1alpha1.New()
