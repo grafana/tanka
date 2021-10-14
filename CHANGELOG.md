@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.18.2 (2021-10-14)
+
+### Features
+
+- **cli**: Add `--max-stack` jsonnet option
+  **[#619](https://github.com/grafana/tanka/pull/619)**
+
+### Bug Fixes/Enhancements
+
+- **cli**: If there's a full match on an inline environment name, use it
+  **[#620](https://github.com/grafana/tanka/pull/620)**
+- **cli**: Add instructions to use `--name` on multiple envs error
+  **[#621](https://github.com/grafana/tanka/pull/621)**
+- **export**: Remove unnecessary `os.Stat` in eval cache
+  **[#624](https://github.com/grafana/tanka/pull/624)**
+- **tanka**: Upgrade to Go 1.17
+  **[#625](https://github.com/grafana/tanka/pull/625)**
+- **jsonnet**: Fix `std.thisFile`
+  **[#626](https://github.com/grafana/tanka/pull/626)**
+
 ## 0.18.1 (2021-10-04)
 
 ### Bug Fixes
