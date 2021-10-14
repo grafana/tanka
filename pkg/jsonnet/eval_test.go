@@ -16,3 +16,9 @@ func TestEvaluateFile(t *testing.T) {
 }
 `, result)
 }
+
+func TestEvaluateFileDoesntExist(t *testing.T) {
+	result, err := EvaluateFile("testdata/doesnt-exist/main.jsonnet", Opts{})
+	assert.EqualError(t, err, "open testdata/doesnt-exist/main.jsonnet: no such file or directory")
+	assert.Equal(t, "", result)
+}
