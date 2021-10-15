@@ -54,9 +54,28 @@
 
 ## :rocket: Getting started
 
-To get started, [install Tanka](https://tanka.dev/install) first, and then
-[follow the tutorial](https://tanka.dev/tutorial/overview). This should get you
-on track quickly.
+The very :1st_place_medal: first step of getting started is to [install Tanka](https://tanka.dev/install). 
+Then follow the Tutorial to get on the track quickly.
+
+  ### <span> <img src = 'https://raw.githubusercontent.com/grafana/tanka/main/docs/img/logo.svg' width = '30' > </span> Turorial <br>
+  The following sections will explain how to deploy an example stack, ([Grafana](https://hub.docker.com/r/grafana/grafana) and [Prometheus](https://hub.docker.com/r/prom/prometheus)), to Kubernetes. 
+  We will also deal with parameters, differences between dev and prod and how to stop worrying and love libraries.
+  
+  To do so, we have the following steps:
+
+  - **[Deploying without Tanka first](https://tanka.dev/tutorial/refresher)**: Using good old kubectl to understand what Tanka will do for us.
+  - **[Using Jsonnet](https://tanka.dev/tutorial/jsonnet)**: Doing the same thing once again, but this time with Tanka and Jsonnet.
+  - **[Parameterizing](https://tanka.dev/tutorial/parameters)**: Using Variables to avoid data duplication.
+  - **[Abstraction](https://tanka.dev/tutorial/abstraction)**: Splitting components into individual parts.
+  - **[Environments](https://tanka.dev/tutorial/environments)**: Dealing with differences between dev and prod.
+  - **[k.libsonnet](https://tanka.dev/tutorial/k-lib)**: Avoid having to remember API resources.
+
+
+  Completing this gives a solid knowledge of Tanka's fundamentals. Let's get started!
+  
+  For more information, visit [Tanka Tutorial](https://tanka.dev/tutorial/overview). The final outcome of this tutorial can be seen here: [example/prom-grafana](https://github.com/grafana/tanka/examples/prom-grafana)
+
+  
 
 ## :busts_in_silhouette: Community
 
