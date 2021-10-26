@@ -41,6 +41,18 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 }
 
 func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		oldPath := path
+		path, err = os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		opts.Name = oldPath
+	} else if err != nil {
+		return nil, err
+	}
+
 	loader, err := DetectLoader(path)
 	if err != nil {
 		return nil, err
