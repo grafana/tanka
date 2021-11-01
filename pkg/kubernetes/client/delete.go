@@ -15,6 +15,10 @@ func (k Kubectl) Delete(namespace, kind, name string, opts DeleteOpts) error {
 		argv = append(argv, "--force")
 	}
 
+        if !opts.InsecureSkipTlsVerify {
+                argv = append(argv, "--insecure-skip-tls-verify")
+        }
+
 	cmd := k.ctl("delete", argv...)
 
 	var stdout bytes.Buffer

@@ -50,6 +50,9 @@ type ApplyOpts struct {
 
 	// autoApprove allows to skip the interactive approval
 	AutoApprove bool
+
+	// InsecureSkipTlsVerify allows to ignore tls verification
+	InsecureSkipTlsVerify bool   
 }
 
 // DeleteOpts allow to specify additional parameters for delete operations

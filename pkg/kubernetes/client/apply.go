@@ -18,6 +18,10 @@ func (k Kubectl) Apply(data manifest.List, opts ApplyOpts) error {
 		argv = append(argv, "--validate=false")
 	}
 
+	if !opts.InsecureSkipTlsVerify {
+		argv = append(argv, "--insecure-skip-tls-verify")
+	}
+
 	cmd := k.ctl("apply", argv...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
