@@ -30,6 +30,7 @@ func applyCmd() *cli.Command {
 
 	var opts tanka.ApplyOpts
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force applying (kubectl apply --force)")
+	cmd.Flags().BoolVar(&opts.InsecureSkipTlsVerify, "insecure-skip-tls-verify", false, "ignore tls verififcation (kubectl --insecure-skip-tls-verification)")
 	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 

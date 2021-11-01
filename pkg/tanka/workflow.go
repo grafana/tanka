@@ -23,6 +23,8 @@ type ApplyOpts struct {
 
 	// Force ignores any warnings kubectl might have
 	Force bool
+
+	InsecureSkipTlsVerify bool
 	// Validate set to false ignores invalid Kubernetes schemas
 	Validate bool
 }
