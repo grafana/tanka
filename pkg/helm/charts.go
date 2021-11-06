@@ -147,10 +147,6 @@ func (c Charts) Vendor() error {
 func (c *Charts) Add(reqs []string) error {
 	log.Printf("Adding %v Charts ...", len(reqs))
 
-	skip := func(s string, err error) {
-		log.Printf(" Skipping %s: %s.", s, err)
-	}
-
 	// parse new charts, append in memory
 	added := 0
 	for _, s := range reqs {
@@ -189,11 +185,13 @@ func (c *Charts) AddRepos(repos ...Repo) error {
 	added := 0
 	for _, r := range repos {
 		if c.Manifest.Repositories.Has(r) {
-			log.Printf("Skipping %s: Already exists", r.Name)
+			skip(r.Name, fmt.Errorf("already exists"))
 			continue
 		}
 
 		c.Manifest.Repositories = append(c.Manifest.Repositories, r)
+		added++
+		log.Println(" OK:", r.Name)
 	}
 
 	// write out
@@ -202,7 +200,7 @@ func (c *Charts) AddRepos(repos ...Repo) error {
 	}
 
 	if added != len(repos) {
-		return fmt.Errorf("%v Chart(s) were skipped. Please check above logs for details", len(repos)-added)
+		return fmt.Errorf("%v Repo(s) were skipped. Please check above logs for details", len(repos)-added)
 	}
 
 	return nil
@@ -263,4 +261,8 @@ func parseReqName(s string) string {
 	elems := strings.Split(s, "/")
 	name := elems[1]
 	return name
+}
+
+func skip(s string, err error) {
+	log.Printf(" Skipping %s: %s.", s, err)
 }
