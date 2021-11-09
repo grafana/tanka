@@ -144,7 +144,7 @@ func (c Charts) Vendor() error {
 
 // Add adds every Chart in reqs to the Manifest after validation, and runs
 // Vendor afterwards
-func (c *Charts) Add(reqs []string) error {
+func (c *Charts) Add(reqs []string, vendor bool) error {
 	log.Printf("Adding %v Charts ...", len(reqs))
 
 	// parse new charts, append in memory
@@ -173,12 +173,17 @@ func (c *Charts) Add(reqs []string) error {
 
 	// skipped some? fail then
 	if added != len(reqs) {
-		return fmt.Errorf("%v Charts were skipped. Please check above logs for details", len(reqs)-added)
+		return fmt.Errorf("%v Chart(s) were skipped. Please check above logs for details", len(reqs)-added)
 	}
 
 	// worked fine? vendor it
-	log.Printf("Added %v Charts to helmfile.yaml. Vendoring ...", added)
-	return c.Vendor()
+	log.Printf("Added %v Charts to helmfile.yaml", added)
+
+	if vendor {
+		log.Print("Vendoring ...")
+		return c.Vendor()
+	}
+	return nil
 }
 
 func (c *Charts) AddRepos(repos ...Repo) error {
