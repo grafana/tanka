@@ -144,7 +144,7 @@ func (c Charts) Vendor() error {
 
 // Add adds every Chart in reqs to the Manifest after validation, and runs
 // Vendor afterwards
-func (c *Charts) Add(reqs []string, vendor bool) error {
+func (c *Charts) Add(reqs []string) error {
 	log.Printf("Adding %v Charts ...", len(reqs))
 
 	// parse new charts, append in memory
@@ -177,13 +177,8 @@ func (c *Charts) Add(reqs []string, vendor bool) error {
 	}
 
 	// worked fine? vendor it
-	log.Printf("Added %v Charts to helmfile.yaml", added)
-
-	if vendor {
-		log.Print("Vendoring ...")
-		return c.Vendor()
-	}
-	return nil
+	log.Printf("Added %v Charts to helmfile.yaml. Vendoring ...", added)
+	return c.Vendor()
 }
 
 func (c *Charts) AddRepos(repos ...Repo) error {

@@ -58,7 +58,7 @@ func chartsAddCmd() *cli.Command {
 			return err
 		}
 
-		return c.Add(args, true)
+		return c.Add(args)
 	}
 
 	return cmd
