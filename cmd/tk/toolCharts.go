@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-clix/cli"
 	"github.com/grafana/tanka/pkg/helm"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func chartsCmd() *cli.Command {
