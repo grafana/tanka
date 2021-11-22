@@ -29,7 +29,9 @@ RUN export TAG=$(curl --silent "https://api.github.com/repos/helm/helm/releases/
 FROM golang:alpine3.13 as kustomize
 WORKDIR /tmp/kustomize
 RUN apk add --no-cache jq curl
-RUN export TAG=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest" | jq -r .tag_name) &&\
+# Get the latest version of kustomize
+# Releases are filtered by their name since the kustomize repository exposes multiple products in the releases
+RUN export TAG=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kustomize/releases" | jq -r '[ .[] | select(.name | startswith("kustomize")) ] | .[0].tag_name') &&\
     export VERSION_TAG=${TAG#*/} &&\
     export OS=$(go env GOOS) &&\
     export ARCH=$(go env GOARCH) &&\
