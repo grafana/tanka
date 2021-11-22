@@ -2,10 +2,6 @@ module github.com/grafana/tanka
 
 go 1.17
 
-// Pin gopkg.in/yaml.v3
-// yaml.v3 should be bumped with care. The new versions change all list indents
-replace gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
-
 require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig/v3 v3.2.2

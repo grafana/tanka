@@ -114,9 +114,9 @@ func TestManifestYAMLFromJSONList(t *testing.T) {
 
 	assert.Empty(t, callerr)
 	assert.Equal(t, `list:
-  - a
-  - b
-  - c
+    - a
+    - b
+    - c
 `, ret)
 	assert.Empty(t, err)
 }
