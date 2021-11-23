@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.19.0 (2021-11-22)
+
+### Notice
+
+The go.yaml library's version lock was removed. Sequence items in YAML generated from the `manifestYamlFromJson` native function will have a different indent level.
+
+If you are exporting manifests from multiple environments with `tk export` and you wish to do it gradually, you can do it using the `--selector` argument. Here's an example where environments have a `cluster` label:
+
+```console
+// Export the dev cluster with the new version
+tk-new export outputs-dir tanka-dir --merge --selector cluster=dev
+// Export other clusters with the old version
+tk export outputs-dir tanka-dir --merge --selector cluster!=dev
+```
+
+### Bug Fixes
+
+- **helm**: match `Add()` and `AddRepos()` and correct typos
+  **[#641](https://github.com/grafana/tanka/pull/641)** (**redradrat**)
+- **yaml**: Remove yaml.v3's version lock
+  **[#643](https://github.com/grafana/tanka/pull/643)**
+
 ## 0.18.2 (2021-10-14)
 
 ### Features
