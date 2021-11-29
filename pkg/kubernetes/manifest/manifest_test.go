@@ -165,11 +165,18 @@ func TestManifestMarshalMultiline(t *testing.T) {
 
 	const expectedYAML = `apiVersion: core/v1
 data:
-  script.sh: "#/bin/sh\nset -e\n\n# This is a sample secript as configmap\n\necho
-    \"test\"if test -f 'test'; then\n\techo \"If test\"\nfi"
+    script.sh: |-
+        #/bin/sh
+        set -e
+
+        # This is a sample secript as configmap
+
+        echo "test"if test -f 'test'; then
+        	echo "If test"
+        fi
 kind: ConfigMap
 metadata:
-  name: MyConfigMap
+    name: MyConfigMap
 `
 	var m Manifest
 	err := json.Unmarshal([]byte(data), &m)
