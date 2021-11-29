@@ -6,14 +6,24 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/Masterminds/semver"
+
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 // Test-ability: isolate applyCtl to build and return exec.Cmd from ApplyOpts
 func (k Kubectl) applyCtl(data manifest.List, opts ApplyOpts) *exec.Cmd {
 	argv := []string{"-f", "-"}
+	serverSide := !k.info.ServerVersion.LessThan(semver.MustParse("1.22.0"))
+	if serverSide {
+		argv = append(argv, "--server-side")
+	}
 	if opts.Force {
-		argv = append(argv, "--force")
+		if serverSide {
+			argv = append(argv, "--force-conflicts")
+		} else {
+			argv = append(argv, "--force")
+		}
 	}
 
 	if !opts.Validate {
