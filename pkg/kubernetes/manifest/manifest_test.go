@@ -149,6 +149,38 @@ func TestListAsMap(t *testing.T) {
 	}
 }
 
+func TestManifestMarshalMultiline(t *testing.T) {
+	const data = `
+{
+   "apiVersion":"core/v1",
+   "kind":"ConfigMap",
+   "metadata":{
+	  "name":"MyConfigMap"
+   },
+   "data":{
+	"script.sh": "#/bin/sh\nset -e\n\n# This is a sample secript as configmap\n\necho \"test\"if test -f 'test'; then\n\techo \"If test\"\nfi"
+   }
+}
+`
+
+	const expectedYAML = `apiVersion: core/v1
+data:
+  script.sh: "#/bin/sh\nset -e\n\n# This is a sample secript as configmap\n\necho
+    \"test\"if test -f 'test'; then\n\techo \"If test\"\nfi"
+kind: ConfigMap
+metadata:
+  name: MyConfigMap
+`
+	var m Manifest
+	err := json.Unmarshal([]byte(data), &m)
+	require.NoError(t, err)
+
+	outYAML := m.String()
+	if diff := cmp.Diff(outYAML, expectedYAML); diff != "" {
+		t.Fatal(diff)
+	}
+}
+
 func configMap(name string) map[string]interface{} {
 	return map[string]interface{}{
 		"apiVersion": "v1",
