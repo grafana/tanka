@@ -20,7 +20,8 @@ type ApplyOpts struct {
 	AutoApprove bool
 	// DiffStrategy to use for printing the diff before approval
 	DiffStrategy string
-
+	// DiffStrategy decides how kubectl will apply the manifest
+	ApplyStrategy string
 	// Force ignores any warnings kubectl might have
 	Force bool
 	// Validate set to false ignores invalid Kubernetes schemas
@@ -69,10 +70,10 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	}
 
 	return kube.Apply(l.Resources, kubernetes.ApplyOpts{
-		Force:      opts.Force,
-		Validate:   opts.Validate,
-		DryRun:     opts.DryRun,
-		ServerSide: opts.ServerSide,
+		Force:         opts.Force,
+		Validate:      opts.Validate,
+		DryRun:        opts.DryRun,
+		ApplyStrategy: l.Env.Spec.ApplyStrategy,
 	})
 }
 

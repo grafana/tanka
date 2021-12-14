@@ -6,17 +6,15 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/Masterminds/semver"
-
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
 // Test-ability: isolate applyCtl to build and return exec.Cmd from ApplyOpts
 func (k Kubectl) applyCtl(data manifest.List, opts ApplyOpts) *exec.Cmd {
 	argv := []string{"-f", "-"}
-	serverSide := !k.info.ServerVersion.LessThan(semver.MustParse("1.22.0"))
+	serverSide := (opts.ApplyStrategy == "server")
 	if serverSide {
-		argv = append(argv, "--server-side")
+		argv = append(argv, "--server-side", "--field-manager=tanka")
 	}
 	if opts.Force {
 		if serverSide {
@@ -33,10 +31,6 @@ func (k Kubectl) applyCtl(data manifest.List, opts ApplyOpts) *exec.Cmd {
 	if opts.DryRun != "" {
 		dryRun := fmt.Sprintf("--dry-run=%s", opts.DryRun)
 		argv = append(argv, dryRun)
-	}
-
-	if opts.ServerSide {
-		argv = append(argv, "--server-side")
 	}
 
 	return k.ctl("apply", argv...)
