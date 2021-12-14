@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/Masterminds/semver"
+
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
@@ -14,7 +16,10 @@ func (k Kubectl) applyCtl(data manifest.List, opts ApplyOpts) *exec.Cmd {
 	argv := []string{"-f", "-"}
 	serverSide := (opts.ApplyStrategy == "server")
 	if serverSide {
-		argv = append(argv, "--server-side", "--field-manager=tanka")
+		argv = append(argv, "--server-side")
+		if k.info.ClientVersion.GreaterThan(semver.MustParse("1.19.0")) {
+			argv = append(argv, "--field-manager=tanka")
+		}
 	}
 	if opts.Force {
 		if serverSide {
