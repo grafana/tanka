@@ -53,6 +53,9 @@ type ApplyOpts struct {
 
 	// DryRun string passed to kubectl as --dry-run=<DryRun>
 	DryRun string
+
+	// ApplyStrategy to pick a final method for deploying generated objects
+	ApplyStrategy string
 }
 
 // DeleteOpts allow to specify additional parameters for delete operations
