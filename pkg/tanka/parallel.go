@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
 
@@ -89,10 +90,14 @@ type parallelOut struct {
 func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
 	for job := range jobsCh {
 		log.Printf("Loading %s from %s", job.opts.Name, job.path)
+		startTime := time.Now()
+
 		env, err := LoadEnvironment(job.path, job.opts)
 		if err != nil {
 			err = fmt.Errorf("%s:\n %w", job.path, err)
 		}
 		outCh <- parallelOut{env: env, err: err}
+
+		log.Printf("Loaded %s from %s, time elapsed: %s", job.opts.Name, job.path, time.Since(startTime))
 	}
 }
