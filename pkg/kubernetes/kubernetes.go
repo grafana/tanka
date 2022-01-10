@@ -35,7 +35,11 @@ func New(env v1alpha1.Environment) (*Kubernetes, error) {
 
 	// setup diffing
 	if env.Spec.DiffStrategy == "" {
-		env.Spec.DiffStrategy = "native"
+		if env.Spec.ApplyStrategy == "server" {
+			env.Spec.DiffStrategy = "server"
+		} else {
+			env.Spec.DiffStrategy = "native"
+		}
 
 		if ctl.Info().ServerVersion.LessThan(semver.MustParse("1.13.0")) {
 			env.Spec.DiffStrategy = "subset"

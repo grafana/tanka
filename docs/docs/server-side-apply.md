@@ -20,6 +20,9 @@ To enable server-side diff in tanka, add the following field to `spec.json`:
 }
 ```
 
+This also has the effect of changing the default [diff strategy](/diff-strategy)
+to `server`, but this can be overridden via command line flags or `spec.json`.
+
 While server-side apply doesn't have any effect on the resources being applied
 and is intended to be a general in-place upgrade to client-side apply, there are
 differences in how fields are managed that can make converting existing cluster
