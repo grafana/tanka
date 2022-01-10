@@ -47,7 +47,8 @@ func New(env v1alpha1.Environment) (*Kubernetes, error) {
 		ctl: ctl,
 		differs: map[string]Differ{
 			"native":   ctl.DiffClientSide,
-			"validate": ctl.DiffServerSide,
+			"validate": ctl.ValidateServerSide,
+			"server":   ctl.DiffServerSide,
 			"subset":   SubsetDiffer(ctl),
 		},
 	}
