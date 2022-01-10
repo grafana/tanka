@@ -64,6 +64,11 @@ func Apply(baseDir string, opts ApplyOpts) error {
 		return ErrorApplyStrategyUnknown{Requested: opts.ApplyStrategy}
 	}
 
+	// Default to `server` diff in server apply mode
+	if opts.ApplyStrategy == "server" && opts.DiffStrategy == "" && l.Env.Spec.DiffStrategy == "" {
+		l.Env.Spec.DiffStrategy = "server"
+	}
+
 	kube, err := l.Connect()
 	if err != nil {
 		return err
