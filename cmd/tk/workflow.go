@@ -34,6 +34,10 @@ func applyCmd() *cli.Command {
 		Use:   "apply <path>",
 		Short: "apply the configuration to the cluster",
 		Args:  workflowArgs,
+		Predictors: complete.Flags{
+			"diff-strategy":  cli.PredictSet("native", "subset", "validate", "server"),
+			"apply-strategy": cli.PredictSet("client", "server"),
+		},
 	}
 
 	var opts tanka.ApplyOpts
@@ -41,6 +45,8 @@ func applyCmd() *cli.Command {
 	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
+	cmd.Flags().StringVar(&opts.ApplyStrategy, "apply-strategy", "", "force the apply strategy to use. Automatically chosen if not set.")
+	cmd.Flags().StringVar(&opts.DiffStrategy, "diff-strategy", "", "force the diff strategy to use. Automatically chosen if not set.")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -133,7 +139,7 @@ func diffCmd() *cli.Command {
 		Short: "differences between the configuration and the cluster",
 		Args:  workflowArgs,
 		Predictors: complete.Flags{
-			"diff-strategy": cli.PredictSet("native", "subset", "validate"),
+			"diff-strategy": cli.PredictSet("native", "subset", "validate", "server"),
 		},
 	}
 
