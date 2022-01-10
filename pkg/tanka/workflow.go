@@ -20,7 +20,7 @@ type ApplyOpts struct {
 	AutoApprove bool
 	// DiffStrategy to use for printing the diff before approval
 	DiffStrategy string
-	// DiffStrategy decides how kubectl will apply the manifest
+	// ApplyStrategy decides how kubectl will apply the manifest
 	ApplyStrategy string
 	// Force ignores any warnings kubectl might have
 	Force bool
@@ -28,6 +28,17 @@ type ApplyOpts struct {
 	Validate bool
 	// DryRun string passed to kubectl as --dry-run=<DryRun>
 	DryRun string
+}
+
+// ErrorApplyStrategyUnknown occurs when an apply-strategy is requested that does
+// not exist. Unlike ErrorDiffStrategyUnknown, this needs to be used before things
+// reach the `kube.Apply` function.
+type ErrorApplyStrategyUnknown struct {
+	Requested string
+}
+
+func (e ErrorApplyStrategyUnknown) Error() string {
+	return fmt.Sprintf("apply strategy `%s` does not exist. Pick one of: [server, client].", e.Requested)
 }
 
 // Apply parses the environment at the given directory (a `baseDir`) and applies
@@ -38,6 +49,19 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	if err != nil {
 		return err
 	}
+
+	// If the apply strategy was not set on the command-line, draw from spec or use default
+	if opts.ApplyStrategy == "" {
+		if l.Env.Spec.ApplyStrategy != "" {
+			opts.ApplyStrategy = l.Env.Spec.ApplyStrategy
+		} else {
+			opts.ApplyStrategy = "client"
+		}
+	}
+	if opts.ApplyStrategy != "client" && opts.ApplyStrategy != "server" {
+		return ErrorApplyStrategyUnknown{Requested: opts.ApplyStrategy}
+	}
+
 	kube, err := l.Connect()
 	if err != nil {
 		return err
@@ -71,7 +95,7 @@ func Apply(baseDir string, opts ApplyOpts) error {
 		Force:         opts.Force,
 		Validate:      opts.Validate,
 		DryRun:        opts.DryRun,
-		ApplyStrategy: l.Env.Spec.ApplyStrategy,
+		ApplyStrategy: opts.ApplyStrategy,
 	})
 }
 
@@ -94,7 +118,7 @@ func confirmPrompt(action, namespace string, info client.Info) error {
 type DiffOpts struct {
 	Opts
 
-	// Strategy must be one of "native", "validate", or "subset"
+	// Strategy must be one of "native", "validate", "subset" or "server"
 	Strategy string
 	// Summarize prints a summary, instead of the actual diff
 	Summarize bool
