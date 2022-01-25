@@ -56,7 +56,7 @@ func Lint(fds []string, opts *LintOpts) error {
 			}
 
 			if opts.PrintNames {
-				fmt.Fprintf(buf, "Linting %s...\n", file)
+				fmt.Printf("Linting %s...\n", file)
 			}
 
 			vm := MakeVM(Opts{})
