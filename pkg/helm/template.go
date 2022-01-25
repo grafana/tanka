@@ -66,6 +66,8 @@ type TemplateOpts struct {
 	// IncludeCRDs specifies whether CustomResourceDefinitions are included in
 	// the template output
 	IncludeCRDs bool
+	// skip tests from templated output
+	SkipTests bool
 	// Kubernetes version used for Capabilities.KubeVersion
 	KubeVersion string
 	// Namespace scope for this request
@@ -85,6 +87,10 @@ func (t TemplateOpts) Flags() []string {
 
 	if t.IncludeCRDs {
 		flags = append(flags, "--include-crds")
+	}
+
+	if t.SkipTests {
+		flags = append(flags, "--skip-tests")
 	}
 
 	if t.KubeVersion != "" {
