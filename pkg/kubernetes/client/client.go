@@ -50,6 +50,9 @@ type ApplyOpts struct {
 
 	// autoApprove allows to skip the interactive approval
 	AutoApprove bool
+
+	// DryRun string passed to kubectl as --dry-run=<DryRun>
+	DryRun string
 }
 
 // DeleteOpts allow to specify additional parameters for delete operations
