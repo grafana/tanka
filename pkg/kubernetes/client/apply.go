@@ -30,7 +30,6 @@ func (k Kubectl) applyCtl(data manifest.List, opts ApplyOpts) *exec.Cmd {
 
 // Apply applies the given yaml to the cluster
 func (k Kubectl) Apply(data manifest.List, opts ApplyOpts) error {
-
 	cmd := k.applyCtl(data, opts)
 
 	cmd.Stdout = os.Stdout

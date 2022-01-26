@@ -1,12 +1,5 @@
 # Changelog
 
-## 0.19.1 (2022-xx-xx)
-
-### Features
-
-- **cli**: Add `--dry-run` option
-  **[#667](https://github.com/grafana/tanka/pull/667)**
-
 ## 0.19.0 (2021-11-22)
 
 ### Notice

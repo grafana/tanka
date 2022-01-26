@@ -26,7 +26,7 @@ func validateDryRun(dryRunStr string) error {
 	case "", "none", "client", "server":
 		return nil
 	}
-	return fmt.Errorf("--dry-run must be either: \"\", \"none\", \"server\" or \"client\"")
+	return fmt.Errorf(`--dry-run must be either: "", "none", "server" or "client"`)
 }
 
 func applyCmd() *cli.Command {
@@ -40,7 +40,7 @@ func applyCmd() *cli.Command {
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force applying (kubectl apply --force)")
 	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
-	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", "--dry-run parameter to pass down to kubectl, must be \"none\", \"server\", or \"client\"")
+	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -72,7 +72,7 @@ func pruneCmd() *cli.Command {
 	}
 
 	var opts tanka.PruneOpts
-	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "none", "--dry-run parameter to pass down to kubectl, must be \"none\", \"server\", or \"client\"")
+	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	cmd.Flags().StringVar(&opts.Name, "name", "", "string that only a single inline environment contains in its name")
@@ -100,7 +100,7 @@ func deleteCmd() *cli.Command {
 	}
 
 	var opts tanka.DeleteOpts
-	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "none", "--dry-run parameter to pass down to kubectl, must be \"none\", \"server\", or \"client\"")
+	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
 	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
