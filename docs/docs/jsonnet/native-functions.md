@@ -23,10 +23,10 @@ To use them in your code, you need to access them using `std.native` from the st
 ### Signature
 
 ```ts
-parseJSON(string json) Object
+parseJson(string json) Object
 ```
 
-`parseJSON` parses a json string and returns the respective Jsonnet type (`Object`, `Array`,  etc).
+`parseJson` parses a json string and returns the respective Jsonnet type (`Object`, `Array`,  etc).
 
 ### Examples
 
@@ -53,10 +53,10 @@ Evaluating with Tanka results in the JSON:
 ### Signature
 
 ```ts
-parseYAML(string yaml) []Object
+parseYaml(string yaml) []Object
 ```
 
-`parseYAML` wraps `yaml.Unmarshal` to convert a string of yaml document(s) into
+`parseYaml` wraps `yaml.Unmarshal` to convert a string of yaml document(s) into
 a set of dicts. If `yaml` only contains a single document, a single value array
 will be returned.
 
@@ -93,10 +93,10 @@ Evaluating with Tanka results in the JSON:
 ### Signature
 
 ```ts
-manifestJSONFromJSON(string json, int indent) string
+manifestJsonFromJson(string json, int indent) string
 ```
 
-`manifestJSONFromJSON` reserializes JSON and allows to change the indentation.
+`manifestJsonFromJson` reserializes JSON and allows to change the indentation.
 
 ### Examples
 
@@ -119,10 +119,10 @@ Evaluating with Tanka results in the JSON:
 ### Signature
 
 ```ts
-manifestYAMLFromJSON(string json) string
+manifestYamlFromJson(string json) string
 ```
 
-`manifestYamlFromJSON` serializes a JSON string as a YAML document.
+`manifestYamlFromJson` serializes a JSON string as a YAML document.
 
 ### Examples
 
