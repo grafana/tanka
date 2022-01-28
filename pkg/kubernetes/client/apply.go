@@ -1,14 +1,16 @@
 package client
 
 import (
+	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
-// Apply applies the given yaml to the cluster
-func (k Kubectl) Apply(data manifest.List, opts ApplyOpts) error {
+// Test-ability: isolate applyCtl to build and return exec.Cmd from ApplyOpts
+func (k Kubectl) applyCtl(data manifest.List, opts ApplyOpts) *exec.Cmd {
 	argv := []string{"-f", "-"}
 	if opts.Force {
 		argv = append(argv, "--force")
@@ -18,7 +20,18 @@ func (k Kubectl) Apply(data manifest.List, opts ApplyOpts) error {
 		argv = append(argv, "--validate=false")
 	}
 
-	cmd := k.ctl("apply", argv...)
+	if opts.DryRun != "" {
+		dryRun := fmt.Sprintf("--dry-run=%s", opts.DryRun)
+		argv = append(argv, dryRun)
+	}
+
+	return k.ctl("apply", argv...)
+}
+
+// Apply applies the given yaml to the cluster
+func (k Kubectl) Apply(data manifest.List, opts ApplyOpts) error {
+	cmd := k.applyCtl(data, opts)
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

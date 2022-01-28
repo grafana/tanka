@@ -18,6 +18,8 @@ type PruneOpts struct {
 	AutoApprove bool
 	// Force ignores any warnings kubectl might have
 	Force bool
+	// DryRun string passed to kubectl as --dry-run=<DryRun>
+	DryRun string
 }
 
 // Prune deletes all resources from the cluster, that are no longer present in

@@ -25,6 +25,8 @@ type ApplyOpts struct {
 	Force bool
 	// Validate set to false ignores invalid Kubernetes schemas
 	Validate bool
+	// DryRun string passed to kubectl as --dry-run=<DryRun>
+	DryRun string
 }
 
 // Apply parses the environment at the given directory (a `baseDir`) and applies
@@ -59,7 +61,7 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	}
 
 	// prompt for confirmation
-	if opts.AutoApprove {
+	if opts.AutoApprove || opts.DryRun != "" {
 	} else if err := confirmPrompt("Applying to", l.Env.Spec.Namespace, kube.Info()); err != nil {
 		return err
 	}
@@ -67,6 +69,7 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	return kube.Apply(l.Resources, kubernetes.ApplyOpts{
 		Force:    opts.Force,
 		Validate: opts.Validate,
+		DryRun:   opts.DryRun,
 	})
 }
 
@@ -134,6 +137,8 @@ type DeleteOpts struct {
 	Force bool
 	// Validate set to false ignores invalid Kubernetes schemas
 	Validate bool
+	// DryRun string passed to kubectl as --dry-run=<DryRun>
+	DryRun string
 }
 
 // Delete parses the environment at the given directory (a `baseDir`) and deletes
@@ -150,22 +155,24 @@ func Delete(baseDir string, opts DeleteOpts) error {
 	}
 	defer kube.Close()
 
-	// show diff
-	// static differ will never fail and always return something if input is not nil
-	diff, err := kubernetes.StaticDiffer(false)(l.Resources)
+	if opts.DryRun == "" {
+		// show diff
+		// static differ will never fail and always return something if input is not nil
+		diff, err := kubernetes.StaticDiffer(false)(l.Resources)
 
-	if err != nil {
-		fmt.Println("Error diffing:", err)
-	}
+		if err != nil {
+			fmt.Println("Error diffing:", err)
+		}
 
-	// in case of non-fatal error diff may be nil
-	if diff != nil {
-		b := term.Colordiff(*diff)
-		fmt.Print(b.String())
+		// in case of non-fatal error diff may be nil
+		if diff != nil {
+			b := term.Colordiff(*diff)
+			fmt.Print(b.String())
+		}
 	}
 
 	// prompt for confirmation
-	if opts.AutoApprove {
+	if opts.AutoApprove || opts.DryRun != "" {
 	} else if err := confirmPrompt("Deleting from", l.Env.Spec.Namespace, kube.Info()); err != nil {
 		return err
 	}
@@ -173,6 +180,7 @@ func Delete(baseDir string, opts DeleteOpts) error {
 	return kube.Delete(l.Resources, kubernetes.DeleteOpts{
 		Force:    opts.Force,
 		Validate: opts.Validate,
+		DryRun:   opts.DryRun,
 	})
 }
 

@@ -21,6 +21,14 @@ const (
 	ExitStatusDiff = 16
 )
 
+func validateDryRun(dryRunStr string) error {
+	switch dryRunStr {
+	case "", "none", "client", "server":
+		return nil
+	}
+	return fmt.Errorf(`--dry-run must be either: "", "none", "server" or "client"`)
+}
+
 func applyCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "apply <path>",
@@ -32,11 +40,17 @@ func applyCmd() *cli.Command {
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force applying (kubectl apply --force)")
 	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		err := validateDryRun(opts.DryRun)
+		if err != nil {
+			return err
+		}
+
 		filters, err := process.StrExps(vars.targets...)
 		if err != nil {
 			return err
@@ -58,12 +72,18 @@ func pruneCmd() *cli.Command {
 	}
 
 	var opts tanka.PruneOpts
+	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	cmd.Flags().StringVar(&opts.Name, "name", "", "string that only a single inline environment contains in its name")
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		err := validateDryRun(opts.DryRun)
+		if err != nil {
+			return err
+		}
+
 		opts.JsonnetOpts = getJsonnetOpts()
 
 		return tanka.Prune(args[0], opts)
@@ -80,6 +100,7 @@ func deleteCmd() *cli.Command {
 	}
 
 	var opts tanka.DeleteOpts
+	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
 	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
 	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
@@ -88,6 +109,11 @@ func deleteCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		err := validateDryRun(opts.DryRun)
+		if err != nil {
+			return err
+		}
+
 		filters, err := process.StrExps(vars.targets...)
 		if err != nil {
 			return err
