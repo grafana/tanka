@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"runtime"
 
 	"github.com/go-clix/cli"
 
@@ -37,6 +38,7 @@ func exportCmd() *cli.Command {
 	parallel := cmd.Flags().IntP("parallel", "p", 8, "Number of environments to process in parallel")
 	cachePath := cmd.Flags().StringP("cache-path", "c", "", "Local file path where cached evaluations should be stored")
 	cacheEnvs := cmd.Flags().StringArrayP("cache-envs", "e", nil, "Regexes which define which environment should be cached (if caching is enabled)")
+	ballastBytes := cmd.Flags().Int("mem-ballast-size-bytes", 0, "Size of memory ballast to allocate.")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -45,6 +47,10 @@ func exportCmd() *cli.Command {
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		// Allocate a block of memory to alter GC behaviour. See https://github.com/golang/go/issues/23044
+		ballast := make([]byte, *ballastBytes)
+		defer runtime.KeepAlive(ballast)
+
 		filters, err := process.StrExps(vars.targets...)
 		if err != nil {
 			return err
