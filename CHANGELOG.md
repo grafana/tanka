@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.20.0 (2022-02-01)
+
+### Features
+
+- **jsonnet**: Update `go-jsonnet` to version 0.18.0
+  **[#660](https://github.com/grafana/tanka/pull/660)**
+- **cli**: Add `--dry-run` kubectl option
+  **[#667](https://github.com/grafana/tanka/pull/667)**
+- **helm**: Add option to pass `--skip-tests`
+  **[#654](https://github.com/grafana/tanka/pull/654)** (**jouve**)
+- **export**: Introduce a configurable memory ballast
+  **[#669](https://github.com/grafana/tanka/pull/669)**
+
 ## 0.19.0 (2021-11-22)
 
 ### Notice
