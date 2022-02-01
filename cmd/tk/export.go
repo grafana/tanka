@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"runtime"
 
 	"github.com/go-clix/cli"
 
@@ -38,6 +40,11 @@ func exportCmd() *cli.Command {
 	cachePath := cmd.Flags().StringP("cache-path", "c", "", "Local file path where cached evaluations should be stored")
 	cacheEnvs := cmd.Flags().StringArrayP("cache-envs", "e", nil, "Regexes which define which environment should be cached (if caching is enabled)")
 
+	ballastBytes := cmd.Flags().Int("mem-ballast-size-bytes", 0, "(Experimental) Size of memory ballast to allocate.")
+	if err := cmd.Flags().MarkHidden("mem-ballast-size-bytes"); err != nil {
+		log.Fatalf("Could not mark flag as hidden: %s", err)
+	}
+
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 	getLabelSelector := labelSelectorFlag(cmd.Flags())
@@ -45,6 +52,10 @@ func exportCmd() *cli.Command {
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		// Allocate a block of memory to alter GC behaviour. See https://github.com/golang/go/issues/23044
+		ballast := make([]byte, *ballastBytes)
+		defer runtime.KeepAlive(ballast)
+
 		filters, err := process.StrExps(vars.targets...)
 		if err != nil {
 			return err
