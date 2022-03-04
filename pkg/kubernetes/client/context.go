@@ -12,9 +12,9 @@ import (
 	funk "github.com/thoas/go-funk"
 )
 
-// findContext returns a valid context from $KUBECONFIG that uses the given
+// findContextFromEndpoint returns a valid context from $KUBECONFIG that uses the given
 // apiServer endpoint.
-func findContext(endpoint string) (Config, error) {
+func findContextFromEndpoint(endpoint string) (Config, error) {
 	cluster, context, err := ContextFromIP(endpoint)
 	if err != nil {
 		return Config{}, err
@@ -24,6 +24,59 @@ func findContext(endpoint string) (Config, error) {
 		Context: *context,
 		Cluster: *cluster,
 	}, nil
+}
+
+// findContextFromNames will try to match a context name from names
+func findContextFromNames(names []string) (Config, error) {
+	for _, name := range names {
+		cluster, context, err := ContextFromName(name)
+
+		if _, ok := err.(ErrorNoContext); ok {
+			continue
+		} else if err != nil {
+			return Config{}, err
+		}
+		return Config{
+			Context: *context,
+			Cluster: *cluster,
+		}, nil
+	}
+	return Config{}, ErrorNoContext(fmt.Sprintf("%v", names))
+}
+
+func ContextFromName(contextName string) (*Cluster, *Context, error) {
+	cfg, err := Kubeconfig()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// find the context by name
+	var context Context
+	contexts, err := tryMSISlice(cfg.Get("contexts"), "contexts")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = find(contexts, "name", contextName, &context)
+	if err == ErrorNoMatch {
+		return nil, nil, ErrorNoContext(contextName)
+	} else if err != nil {
+		return nil, nil, err
+	}
+	var cluster Cluster
+	clusters, err := tryMSISlice(cfg.Get("clusters"), "clusters")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = find(clusters, "name", context.Context.Cluster, &cluster)
+	if err == ErrorNoMatch {
+		return nil, nil, ErrorNoCluster(contextName)
+	} else if err != nil {
+		return nil, nil, err
+	}
+
+	return &cluster, &context, nil
 }
 
 // Kubeconfig returns the merged $KUBECONFIG of the host
@@ -161,7 +214,6 @@ func find(list []map[string]interface{}, prop string, expected string, ptr inter
 			findErr = fmt.Errorf("testing whether `%s` is `%s`: unable to parse `%v` as string", prop, expected, got)
 			return false
 		}
-
 		return str == expected
 	})
 	if findErr != nil {

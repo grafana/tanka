@@ -28,7 +28,13 @@ type Differ func(manifest.List) (*string, error)
 // New creates a new Kubernetes with an initialized client
 func New(env v1alpha1.Environment) (*Kubernetes, error) {
 	// setup client
-	ctl, err := client.New(env.Spec.APIServer)
+	var ctl *client.Kubectl
+	var err error
+	if len(env.Spec.ContextNames) < 1 {
+		ctl, err = client.New(env.Spec.APIServer)
+	} else {
+		ctl, err = client.NewFromNames(env.Spec.ContextNames)
+	}
 	if err != nil {
 		return nil, err
 	}
