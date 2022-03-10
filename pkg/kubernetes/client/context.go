@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/stretchr/objx"
@@ -214,7 +215,7 @@ func find(list []map[string]interface{}, prop string, expected string, ptr inter
 			findErr = fmt.Errorf("testing whether `%s` is `%s`: unable to parse `%v` as string", prop, expected, got)
 			return false
 		}
-		return str == expected
+		return regexp.MustCompile(expected).MatchString(str)
 	})
 	if findErr != nil {
 		return findErr
