@@ -150,9 +150,9 @@ func (l LoadResult) Connect() (*kubernetes.Kubernetes, error) {
 
 	// check env is complete
 	s := ""
-	if env.Spec.APIServer == "" && len(env.Spec.ContextNames) < 1 {
+	if env.Spec.APIServer == "https://" && len(env.Spec.ContextNames) < 1 {
 		s += "  * spec.apiServer|spec.contextNames: No Kubernetes cluster endpoint or context names specified. Please specify only one."
-	} else if env.Spec.APIServer != "" && len(env.Spec.ContextNames) > 0 {
+	} else if env.Spec.APIServer != "https://" && len(env.Spec.ContextNames) > 0 {
 		s += "  * spec.apiServer|spec.contextNames: These fields are mutually exclusive, please only specify one."
 	}
 	if env.Spec.Namespace == "" {
