@@ -33,7 +33,7 @@ legit cases where it's handy to have them span multiple namespaces, for example:
 Some resources in Kubernetes are cluster-wide, meaning they don't belong to a single namespace at all.
 
 Tanka will make an attempt to not add namespaces to _known_ cluster-wide types.
-It does this with a short list of types in [the source code](https://github.com/grafana/tanka/blob/master/pkg/process/namespace.go).
+It does this with a short list of types in [the source code](https://github.com/grafana/tanka/blob/main/pkg/process/namespace.go).
 
 Tanka cannot feasibly maintain this list for all known custom resource types. In those cases, resources will have namespaces added to their manifests,
 and kubectl should happily apply them as non-namespaced resources.

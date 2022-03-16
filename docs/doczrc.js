@@ -4,6 +4,7 @@ export default {
 
   public: "/static",
   ignore: ["design/**", ".vscodeext/**"],
+  editBranch: "main",
 
   themeConfig: {
     showDarkModeSwitch: false,
