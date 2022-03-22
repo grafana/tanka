@@ -27,6 +27,15 @@ steps:
   volumes:
   - name: gopath
     path: /go
+- commands:
+  - make cross
+  depends_on:
+  - download
+  image: golang:1.17
+  name: build
+  volumes:
+  - name: gopath
+    path: /go
 volumes:
 - name: gopath
   temp: {}
@@ -210,8 +219,3 @@ get:
   path: infra/data/ci/docker_hub
 kind: secret
 name: dockerhub_password
----
-kind: signature
-hmac: 63407a11388174089d6101453901ecc1aaafbe8a87a075237001f608d612c120
-
-...
