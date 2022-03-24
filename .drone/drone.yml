@@ -219,3 +219,8 @@ get:
   path: infra/data/ci/docker_hub
 kind: secret
 name: dockerhub_password
+---
+kind: signature
+hmac: b9fec0540b6d6242fa80c2196bb0664fd312230c4026b19ef6fa6dcc8657a35e
+
+...
