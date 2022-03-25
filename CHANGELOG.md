@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+- **cli**: Add Apple Silicon binary
+- **[#685](https://github.com/grafana/tanka/pull/685)**
+
 ## 0.20.0 (2022-02-01)
 
 ### Features

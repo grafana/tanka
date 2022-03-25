@@ -63,6 +63,7 @@ local docker(arch) = pipeline('docker-' + arch) {
       go('download', ['go mod download']),
       make('lint') { depends_on: ['download'] },
       make('test') { depends_on: ['download'] },
+      make('cross') { name: 'build', depends_on: ['download'] },
     ],
   } + constraints.always,
 
