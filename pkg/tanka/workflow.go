@@ -3,6 +3,7 @@ package tanka
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/fatih/color"
 
@@ -83,8 +84,11 @@ func Apply(baseDir string, opts ApplyOpts) error {
 			// This is not fatal, the diff is not strictly required
 			log.Println("Error diffing:", err)
 		case diff == nil:
-			tmp := "Warning: There are no differences. Your apply may not do anything at all."
-			diff = &tmp
+			// If using KUBECTL_EXTERNAL_DIFF, the stdout buffer is always empty
+			if os.Getenv("KUBECTL_EXTERNAL_DIFF") == "" {
+				tmp := "Warning: There are no differences. Your apply may not do anything at all."
+				diff = &tmp
+			}
 		}
 
 		// in case of non-fatal error diff may be nil
