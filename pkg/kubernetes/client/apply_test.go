@@ -58,6 +58,13 @@ func TestKubectl_applyCtl(t *testing.T) {
 			expectedArgs:   []string{"--dry-run=server"},
 			unExpectedArgs: []string{"--validate=false"},
 		},
+		{
+			name: "test server-side",
+			args: args{
+				opts: ApplyOpts{ServerSide: true},
+			},
+			expectedArgs: []string{"--server-side"},
+		},
 	}
 
 	for _, tt := range tests {

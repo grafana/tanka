@@ -27,6 +27,8 @@ type ApplyOpts struct {
 	Validate bool
 	// DryRun string passed to kubectl as --dry-run=<DryRun>
 	DryRun string
+	// ServerSide bool passed to kubectl as --server-side
+	ServerSide bool
 }
 
 // Apply parses the environment at the given directory (a `baseDir`) and applies
@@ -67,9 +69,10 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	}
 
 	return kube.Apply(l.Resources, kubernetes.ApplyOpts{
-		Force:    opts.Force,
-		Validate: opts.Validate,
-		DryRun:   opts.DryRun,
+		Force:      opts.Force,
+		Validate:   opts.Validate,
+		DryRun:     opts.DryRun,
+		ServerSide: opts.ServerSide,
 	})
 }
 
