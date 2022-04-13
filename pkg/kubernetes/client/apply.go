@@ -25,6 +25,10 @@ func (k Kubectl) applyCtl(data manifest.List, opts ApplyOpts) *exec.Cmd {
 		argv = append(argv, dryRun)
 	}
 
+	if opts.ServerSide {
+		argv = append(argv, "--server-side")
+	}
+
 	return k.ctl("apply", argv...)
 }
 
