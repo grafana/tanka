@@ -35,7 +35,7 @@ func (k Kubectl) diff(data manifest.List, serverSide bool) (*string, error) {
 
 	args := []string{"-f", "-"}
 	if serverSide {
-		args = append(args, "--server-side")
+		args = append(args, "--server-side", "--force-conflicts")
 		if k.info.ClientVersion.GreaterThan(semver.MustParse("1.19.0")) {
 			args = append(args, "--field-manager=tanka")
 		}
