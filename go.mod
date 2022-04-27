@@ -1,6 +1,6 @@
 module github.com/grafana/tanka
 
-go 1.17
+go 1.18
 
 require (
 	github.com/Masterminds/semver v1.5.0
@@ -9,19 +9,19 @@ require (
 	github.com/fatih/structs v1.1.0
 	github.com/go-clix/cli v0.2.0
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.8
 	github.com/google/go-jsonnet v0.18.0
 	github.com/karrick/godirwalk v1.16.1
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete v1.2.3
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/objx v0.3.0
-	github.com/stretchr/testify v1.7.0
-	github.com/thoas/go-funk v0.9.1
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	github.com/stretchr/testify v1.7.1
+	github.com/thoas/go-funk v0.9.2
+	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-	k8s.io/apimachinery v0.22.2
+	k8s.io/apimachinery v0.23.6
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -45,4 +45,5 @@ require (
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	k8s.io/klog/v2 v2.40.1 // indirect
+	k8s.io/utils v0.0.0-20211116205334-6203023598ed // indirect
 )
