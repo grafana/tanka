@@ -23,7 +23,7 @@ func New(endpoint string) (*Kubectl, error) {
 
 	// discover context
 	var err error
-	k.info.Kubeconfig, err = findContext(endpoint)
+	k.info.Kubeconfig, err = findContextFromEndpoint(endpoint)
 	if err != nil {
 		return nil, errors.Wrap(err, "finding usable context")
 	}
@@ -35,6 +35,25 @@ func New(endpoint string) (*Kubectl, error) {
 	}
 
 	return &k, nil
+}
+
+func NewFromNames(names []string) (*Kubectl, error) {
+	k := Kubectl{}
+
+	var err error
+	k.info.Kubeconfig, err = findContextFromNames(names)
+	if err != nil {
+		return nil, errors.Wrap(err, "finding usable context")
+	}
+
+	// query versions (requires context)
+	k.info.ClientVersion, k.info.ServerVersion, err = k.version()
+	if err != nil {
+		return nil, errors.Wrap(err, "obtaining versions")
+	}
+
+	return &k, nil
+
 }
 
 // Info returns known informational data about the client and its environment

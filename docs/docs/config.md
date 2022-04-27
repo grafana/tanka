@@ -33,6 +33,10 @@ Tanka's behavior can be customized per Environment using a file called `spec.jso
     // Must be the full URL, e.g. https://cluster.fqdn:6443
     "apiServer": "<url>",
 
+    // The Kubernetes context name(s) to use.
+    // This field supports regular expressions and is mutually exclusive with apiServer field.
+    "contextNames": ["<string>"],
+    
     // Default namespace for objects that don't explicitely specify one
     "namespace": "<string>" | default = "default",
 

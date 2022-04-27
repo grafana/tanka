@@ -74,7 +74,7 @@ func Parse(data []byte, namespace string) (*v1alpha1.Environment, error) {
 	}
 
 	// default apiServer URL to https
-	if !regexp.MustCompile("^.+://").MatchString(config.Spec.APIServer) {
+	if config.Spec.APIServer != "" && !regexp.MustCompile("^.+://").MatchString(config.Spec.APIServer) {
 		config.Spec.APIServer = "https://" + config.Spec.APIServer
 	}
 
