@@ -234,6 +234,19 @@ func (m Metadata) Annotations() map[string]interface{} {
 	return safeMSI(m, "annotations")
 }
 
+// Managed fields of the manifest
+func (m Metadata) ManagedFields() []interface{} {
+	items, ok := m["managedFields"]
+	if !ok {
+		return make([]interface{}, 0)
+	}
+	list, ok := items.([]interface{})
+	if !ok {
+		return make([]interface{}, 0)
+	}
+	return list
+}
+
 func safeMSI(m map[string]interface{}, key string) map[string]interface{} {
 	switch t := m[key].(type) {
 	case map[string]interface{}:

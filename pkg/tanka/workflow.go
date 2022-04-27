@@ -20,7 +20,8 @@ type ApplyOpts struct {
 	AutoApprove bool
 	// DiffStrategy to use for printing the diff before approval
 	DiffStrategy string
-
+	// ApplyStrategy decides how kubectl will apply the manifest
+	ApplyStrategy string
 	// Force ignores any warnings kubectl might have
 	Force bool
 	// Validate set to false ignores invalid Kubernetes schemas
@@ -31,6 +32,17 @@ type ApplyOpts struct {
 	ServerSide bool
 }
 
+// ErrorApplyStrategyUnknown occurs when an apply-strategy is requested that does
+// not exist. Unlike ErrorDiffStrategyUnknown, this needs to be used before things
+// reach the `kube.Apply` function.
+type ErrorApplyStrategyUnknown struct {
+	Requested string
+}
+
+func (e ErrorApplyStrategyUnknown) Error() string {
+	return fmt.Sprintf("apply strategy `%s` does not exist. Pick one of: [server, client].", e.Requested)
+}
+
 // Apply parses the environment at the given directory (a `baseDir`) and applies
 // the evaluated jsonnet to the Kubernetes cluster defined in the environments
 // `spec.json`.
@@ -39,6 +51,24 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	if err != nil {
 		return err
 	}
+
+	// If the apply strategy was not set on the command-line, draw from spec or use default
+	if opts.ApplyStrategy == "" {
+		if l.Env.Spec.ApplyStrategy != "" {
+			opts.ApplyStrategy = l.Env.Spec.ApplyStrategy
+		} else {
+			opts.ApplyStrategy = "client"
+		}
+	}
+	if opts.ApplyStrategy != "client" && opts.ApplyStrategy != "server" {
+		return ErrorApplyStrategyUnknown{Requested: opts.ApplyStrategy}
+	}
+
+	// Default to `server` diff in server apply mode
+	if opts.ApplyStrategy == "server" && opts.DiffStrategy == "" && l.Env.Spec.DiffStrategy == "" {
+		l.Env.Spec.DiffStrategy = "server"
+	}
+
 	kube, err := l.Connect()
 	if err != nil {
 		return err
@@ -69,10 +99,10 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	}
 
 	return kube.Apply(l.Resources, kubernetes.ApplyOpts{
-		Force:      opts.Force,
-		Validate:   opts.Validate,
-		DryRun:     opts.DryRun,
-		ServerSide: opts.ServerSide,
+		Force:         opts.Force,
+		Validate:      opts.Validate,
+		DryRun:        opts.DryRun,
+		ApplyStrategy: opts.ApplyStrategy,
 	})
 }
 
@@ -95,7 +125,7 @@ func confirmPrompt(action, namespace string, info client.Info) error {
 type DiffOpts struct {
 	Opts
 
-	// Strategy must be one of "native", "validate", or "subset"
+	// Strategy must be one of "native", "validate", "subset" or "server"
 	Strategy string
 	// Summarize prints a summary, instead of the actual diff
 	Summarize bool

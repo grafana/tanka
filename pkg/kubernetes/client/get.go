@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Masterminds/semver"
+
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
@@ -22,7 +24,10 @@ func (k Kubectl) GetByLabels(namespace, kind string, labels map[string]string) (
 	for k, v := range labels {
 		lArgs = append(lArgs, fmt.Sprintf("-l=%s=%s", k, v))
 	}
-
+	// Needed to properly filter for resources that should be pruned
+	if k.info.ClientVersion.GreaterThan(semver.MustParse("1.21.0")) {
+		lArgs = append(lArgs, "--show-managed-fields")
+	}
 	var opts getOpts
 	if namespace == "" {
 		opts.allNamespaces = true

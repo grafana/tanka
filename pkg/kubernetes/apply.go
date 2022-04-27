@@ -75,8 +75,8 @@ See https://tanka.dev/garbage-collection for more details.`)
 			continue
 		}
 
-		// skip objects not created explicitely
-		if _, ok := m.Metadata().Annotations()[AnnotationLastApplied]; !ok {
+		// skip objects not created explicitly (e.g. pods created from deployments)
+		if !k.isKubectlCreated(m) {
 			continue
 		}
 
@@ -86,6 +86,21 @@ See https://tanka.dev/garbage-collection for more details.`)
 	}
 
 	return orphaned, nil
+}
+
+func (k *Kubernetes) isKubectlCreated(manifest manifest.Manifest) bool {
+	// Check if created by client-side apply
+	if _, ok := manifest.Metadata().Annotations()[AnnotationLastApplied]; ok {
+		return true
+	}
+	// Check if created by server-side apply
+	for _, manager := range manifest.Metadata().ManagedFields() {
+		manager_name := manager.(map[string]interface{})["manager"]
+		if manager_name == "tanka" || manager_name == "kubectl-client-side-apply" {
+			return true
+		}
+	}
+	return false
 }
 
 func (k *Kubernetes) uids(state manifest.List) (map[string]bool, error) {
