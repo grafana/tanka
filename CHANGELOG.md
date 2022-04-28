@@ -1,11 +1,22 @@
 # Changelog
 
-## Unreleased
+## 0.21.0 (2022-04-28)
 
 ### Features
 
 - **cli**: Add Apple Silicon binary
-- **[#685](https://github.com/grafana/tanka/pull/685)**
+  **[#685](https://github.com/grafana/tanka/pull/685)** (**BeyondEvil**)
+- **tanka/cli**: Add server-side apply mode
+  **[#651](https://github.com/grafana/tanka/pull/651)** (**smuth4**)
+
+### Bug Fixes/Enhancements
+
+- **cli**: Remove backticks from -inject-labels flag desc
+  **[#688](https://github.com/grafana/tanka/pull/688)** (**colega**)
+- **tanka**: Fix target must be a non-nil pointer
+  **[#684](https://github.com/grafana/tanka/pull/684)** (**maoueh**)
+- **tanka**: Upgrade to Go 1.18 + Upgrade dependencies
+  **[#697](https://github.com/grafana/tanka/pull/697)**
 
 ## 0.20.0 (2022-02-01)
 
