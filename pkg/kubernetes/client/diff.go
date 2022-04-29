@@ -45,7 +45,7 @@ func (k Kubectl) diff(data manifest.List, serverSide bool) (*string, error) {
 
 	raw := bytes.Buffer{}
 	// If using an external diff tool, let it keep the parent's stdout
-	if os.Getenv("KUBECTL_EXTERNAL_DIFF") != "" {
+	if os.Getenv("KUBECTL_INTERACTIVE_DIFF") != "" {
 		cmd.Stdout = os.Stdout
 	} else {
 		cmd.Stdout = &raw

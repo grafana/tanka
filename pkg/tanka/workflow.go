@@ -84,8 +84,8 @@ func Apply(baseDir string, opts ApplyOpts) error {
 			// This is not fatal, the diff is not strictly required
 			log.Println("Error diffing:", err)
 		case diff == nil:
-			// If using KUBECTL_EXTERNAL_DIFF, the stdout buffer is always empty
-			if os.Getenv("KUBECTL_EXTERNAL_DIFF") == "" {
+			// If using KUBECTL_INTERACTIVE_DIFF, the stdout buffer is always empty
+			if os.Getenv("KUBECTL_INTERACTIVE_DIFF") == "" {
 				tmp := "Warning: There are no differences. Your apply may not do anything at all."
 				diff = &tmp
 			}
