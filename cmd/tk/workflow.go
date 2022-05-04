@@ -35,7 +35,7 @@ func applyCmd() *cli.Command {
 		Short: "apply the configuration to the cluster",
 		Args:  workflowArgs,
 		Predictors: complete.Flags{
-			"diff-strategy":  cli.PredictSet("native", "subset", "validate", "server"),
+			"diff-strategy":  cli.PredictSet("native", "subset", "validate", "server", "none"),
 			"apply-strategy": cli.PredictSet("client", "server"),
 		},
 	}
