@@ -46,7 +46,7 @@ func jpathCmd() *cli.Command {
 			return fmt.Errorf("Resolving JPATH: %s", err)
 		}
 
-		jsonnetpath, base, root, err := jpath.Resolve(entrypoint)
+		jsonnetpath, base, root, err := jpath.Resolve(entrypoint, false)
 		if err != nil {
 			return fmt.Errorf("Resolving JPATH: %s", err)
 		}
