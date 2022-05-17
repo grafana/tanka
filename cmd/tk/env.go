@@ -88,7 +88,7 @@ func envSetCmd() *cli.Command {
 			fmt.Printf("updated spec.apiServer (`%s` -> `%s`)\n", cfg.Spec.APIServer, tmp.Spec.APIServer)
 			cfg.Spec.APIServer = tmp.Spec.APIServer
 		}
-		if tmp.Spec.ContextNames != nil && ! slices.Equal(tmp.Spec.ContextNames, cfg.Spec.ContextNames) {
+		if tmp.Spec.ContextNames != nil && !slices.Equal(tmp.Spec.ContextNames, cfg.Spec.ContextNames) {
 			fmt.Printf("updated spec.contextNames (`%v` -> `%v`)\n", cfg.Spec.ContextNames, tmp.Spec.ContextNames)
 			cfg.Spec.ContextNames = tmp.Spec.ContextNames
 		}
