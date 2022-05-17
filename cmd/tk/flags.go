@@ -90,6 +90,7 @@ func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[stri
 func envSettingsFlags(env *v1alpha1.Environment, fs *pflag.FlagSet) {
 	fs.StringVar(&env.Spec.APIServer, "server", env.Spec.APIServer, "endpoint of the Kubernetes API")
 	fs.StringVar(&env.Spec.APIServer, "server-from-context", env.Spec.APIServer, "set the server to a known one from $KUBECONFIG")
+	fs.StringSliceVar(&env.Spec.ContextNames, "context-name", env.Spec.ContextNames, "valid context name for environment, can pass multiple, regex supported.")
 	fs.StringVar(&env.Spec.Namespace, "namespace", env.Spec.Namespace, "namespace to create objects in")
 	fs.StringVar(&env.Spec.DiffStrategy, "diff-strategy", env.Spec.DiffStrategy, "specify diff-strategy. Automatically detected otherwise.")
 	fs.BoolVar(&env.Spec.InjectLabels, "inject-labels", env.Spec.InjectLabels, "add tanka environment label to each created resource. Required for 'tk prune'.")

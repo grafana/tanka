@@ -77,6 +77,13 @@ func envSetCmd() *cli.Command {
 			}
 			tmp.Spec.APIServer = server
 		}
+		// This ensures the environment is valid before setting it
+		if cmd.Flags().Changed("server-from-context") || cmd.Flags().Changed("context-name") {
+			l := tanka.LoadResult{Env: &tmp}
+			if _, err := l.Connect(); err != nil {
+				return err
+			}
+		}
 
 		cfg, err := tanka.Peek(path, tanka.Opts{})
 		if err != nil {
@@ -126,6 +133,13 @@ func envAddCmd() *cli.Command {
 				return fmt.Errorf("Resolving IP from context: %s", err)
 			}
 			cfg.Spec.APIServer = server
+		}
+		// This ensures the environment is valid before adding it
+		if cmd.Flags().Changed("server-from-context") || cmd.Flags().Changed("context-name") {
+			l := tanka.LoadResult{Env: cfg}
+			if _, err := l.Connect(); err != nil {
+				return err
+			}
 		}
 
 		if err := addEnv(args[0], cfg, *inline); err != nil {
