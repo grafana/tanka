@@ -129,7 +129,7 @@ local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet"
 
     // instead of using a service constructor, our wrapper provides
     // a handy helper to automatically generate a service for a Deployment
-    service: $.util.serviceFor(self.deployment)
+    service: k.util.serv.util.serviceFor(self.deployment)
              + service.mixin.spec.withType("NodePort"),
   }
 }
