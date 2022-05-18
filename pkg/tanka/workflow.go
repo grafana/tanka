@@ -75,21 +75,23 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	}
 	defer kube.Close()
 
-	// show diff
-	diff, err := kube.Diff(l.Resources, kubernetes.DiffOpts{Strategy: opts.DiffStrategy})
-	switch {
-	case err != nil:
-		// This is not fatal, the diff is not strictly required
-		log.Println("Error diffing:", err)
-	case diff == nil:
-		tmp := "Warning: There are no differences. Your apply may not do anything at all."
-		diff = &tmp
-	}
+	if opts.DiffStrategy != "none" {
+		// show diff
+		diff, err := kube.Diff(l.Resources, kubernetes.DiffOpts{Strategy: opts.DiffStrategy})
+		switch {
+		case err != nil:
+			// This is not fatal, the diff is not strictly required
+			log.Println("Error diffing:", err)
+		case diff == nil:
+			tmp := "Warning: There are no differences. Your apply may not do anything at all."
+			diff = &tmp
+		}
 
-	// in case of non-fatal error diff may be nil
-	if diff != nil {
-		b := term.Colordiff(*diff)
-		fmt.Print(b.String())
+		// in case of non-fatal error diff may be nil
+		if diff != nil {
+			b := term.Colordiff(*diff)
+			fmt.Print(b.String())
+		}
 	}
 
 	// prompt for confirmation
