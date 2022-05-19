@@ -69,7 +69,7 @@ type Charts struct {
 
 // chartManifest represents a Helm chart's Chart.yaml
 type chartManifest struct {
-	Version string `yaml:"version"`
+	Version semver.Version `yaml:"version"`
 }
 
 // ChartDir returns the directory pulled charts are saved in
@@ -108,7 +108,7 @@ func (c Charts) Vendor() error {
 				return fmt.Errorf("unmarshalling chart manifest: %w", err)
 			}
 
-			if chartYAML.Version == r.Version.String() {
+			if chartYAML.Version.String() == r.Version.String() {
 				log.Printf(" %s@%s exists", r.Chart, r.Version.String())
 				continue
 			} else {
