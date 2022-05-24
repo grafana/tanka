@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -43,7 +44,12 @@ func (k Kubectl) diff(data manifest.List, serverSide bool) (*string, error) {
 	cmd := k.ctl("diff", args...)
 
 	raw := bytes.Buffer{}
-	cmd.Stdout = &raw
+	// If using an external diff tool, let it keep the parent's stdout
+	if os.Getenv("KUBECTL_INTERACTIVE_DIFF") != "" {
+		cmd.Stdout = os.Stdout
+	} else {
+		cmd.Stdout = &raw
+	}
 	cmd.Stderr = &fw
 	cmd.Stdin = strings.NewReader(data.String())
 	err := cmd.Run()

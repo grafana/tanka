@@ -75,3 +75,10 @@ runtime, which we cannot know of on the client side. To produce a somewhat
 usable output, we can effectively only compare what we already know about.
 
 If this is a problem for you, consider switching to [native](#native) mode.
+
+## External diff utilities
+
+You can use external diff utilities by setting the environment variable
+`KUBECTL_EXTERNAL_DIFF`. If you want to use a GUI or interactive diff utility
+you must also set `KUBECTL_INTERACTIVE_DIFF=1` to prevent Tanka from capturing
+stdout.
