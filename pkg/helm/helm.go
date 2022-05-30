@@ -1,3 +1,5 @@
+//go:generate mockgen -destination=./helm_mock_test.go -package=helm . Helm
+
 package helm
 
 import (
@@ -6,8 +8,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"sigs.k8s.io/yaml"
 )
 
 // Helm provides high level access to some Helm operations
@@ -28,6 +32,9 @@ type PullOpts struct {
 
 	// Directory to put the resulting .tgz into
 	Destination string
+
+	// Where to extract the chart to, defaults to the name of the chart
+	ExtractDirectory string
 }
 
 // Opts are additional, non-required options that all Helm operations accept
@@ -46,14 +53,38 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 	}
 	defer os.Remove(repoFile)
 
+	tempDir, err := os.MkdirTemp("", "charts-pull")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tempDir)
+
 	cmd := e.cmd("pull", chart,
 		"--version", version,
-		"--destination", opts.Destination,
 		"--repository-config", repoFile,
+		"--destination", tempDir,
 		"--untar",
 	)
 
-	return cmd.Run()
+	if err = cmd.Run(); err != nil {
+		return err
+	}
+
+	chartYAML, err := e.info(chart, version, opts.Opts)
+	if err != nil {
+		return err
+	}
+
+	if opts.ExtractDirectory == "" {
+		opts.ExtractDirectory = chartYAML.Name
+	}
+
+	// It is not possible to tell `helm pull` to extract to a specific directory
+	// so we extract to a temp dir and then move the files to the destination
+	return os.Rename(
+		filepath.Join(tempDir, chartYAML.Name),
+		filepath.Join(opts.Destination, opts.ExtractDirectory),
+	)
 }
 
 // RepoUpdate implements Helm.RepoUpdate
@@ -75,6 +106,30 @@ func (e ExecHelm) RepoUpdate(opts Opts) error {
 	}
 
 	return nil
+}
+
+// info returns the Chart.yaml content of a Helm Chart
+func (e ExecHelm) info(chart, version string, opts Opts) (*chartManifest, error) {
+	repoFile, err := writeRepoTmpFile(opts.Repositories)
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(repoFile)
+
+	cmd := e.cmd("show", "chart", chart,
+		"--version", version,
+		"--repository-config", repoFile,
+	)
+	b, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	var chartYAML chartManifest
+	if err := yaml.Unmarshal(b, &chartYAML); err != nil {
+		return nil, err
+	}
+
+	return &chartYAML, nil
 }
 
 // cmd returns a prepared exec.Cmd to use the `helm` binary

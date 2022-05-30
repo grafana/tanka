@@ -59,8 +59,9 @@ func (r Repos) Has(repo Repo) bool {
 // Requirement describes a single required Helm Chart.
 // Both, Chart and Version are required
 type Requirement struct {
-	Chart   string         `json:"chart"`
-	Version semver.Version `json:"version"`
+	Chart     string         `json:"chart"`
+	Version   semver.Version `json:"version"`
+	Directory string         `json:"directory,omitempty"`
 }
 
 // Requirements is an aggregate of all required Charts
