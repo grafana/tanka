@@ -10,27 +10,39 @@ steps:
   - name: gopath
     path: /go
 - commands:
+  - if [ ! -f linux-amd64/helm ]; then
+  - '  wget -q https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz'
+  - '  tar -zxvf helm-v3.9.0-linux-amd64.tar.gz'
+  - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
+  - fi
+  - cp linux-amd64/helm /usr/local/bin/helm
   - make lint
-  depends_on:
-  - download
   image: golang:1.18
   name: lint
   volumes:
   - name: gopath
     path: /go
 - commands:
+  - if [ ! -f linux-amd64/helm ]; then
+  - '  wget -q https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz'
+  - '  tar -zxvf helm-v3.9.0-linux-amd64.tar.gz'
+  - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
+  - fi
+  - cp linux-amd64/helm /usr/local/bin/helm
   - make test
-  depends_on:
-  - download
   image: golang:1.18
   name: test
   volumes:
   - name: gopath
     path: /go
 - commands:
+  - if [ ! -f linux-amd64/helm ]; then
+  - '  wget -q https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz'
+  - '  tar -zxvf helm-v3.9.0-linux-amd64.tar.gz'
+  - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
+  - fi
+  - cp linux-amd64/helm /usr/local/bin/helm
   - make cross
-  depends_on:
-  - download
   image: golang:1.18
   name: build
   volumes:
@@ -53,6 +65,12 @@ steps:
   - name: gopath
     path: /go
 - commands:
+  - if [ ! -f linux-amd64/helm ]; then
+  - '  wget -q https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz'
+  - '  tar -zxvf helm-v3.9.0-linux-amd64.tar.gz'
+  - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
+  - fi
+  - cp linux-amd64/helm /usr/local/bin/helm
   - make cross
   image: golang:1.18
   name: cross
@@ -111,6 +129,12 @@ steps:
   - name: gopath
     path: /go
 - commands:
+  - if [ ! -f linux-amd64/helm ]; then
+  - '  wget -q https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz'
+  - '  tar -zxvf helm-v3.9.0-linux-amd64.tar.gz'
+  - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
+  - fi
+  - cp linux-amd64/helm /usr/local/bin/helm
   - make static
   image: golang:1.18
   name: static
@@ -152,6 +176,12 @@ steps:
   - name: gopath
     path: /go
 - commands:
+  - if [ ! -f linux-amd64/helm ]; then
+  - '  wget -q https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz'
+  - '  tar -zxvf helm-v3.9.0-linux-amd64.tar.gz'
+  - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
+  - fi
+  - cp linux-amd64/helm /usr/local/bin/helm
   - make static
   image: golang:1.18
   name: static
@@ -221,6 +251,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: ff2f11c8d385d1b0f6a4f0d3d1a25193119d8ac8c950dc7492dfb1aed156aa45
+hmac: b8c8f657e5cc61d3b58dc956fc329f5af82e4b0b9157d8ea45d2e4e18a4463ab
 
 ...
