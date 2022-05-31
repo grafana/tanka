@@ -114,10 +114,10 @@ func (c Charts) Vendor() error {
 			}
 
 			if chartYAML.Version.String() == r.Version.String() {
-				log.Printf(" %s@%s exists", r.Chart, r.Version.String())
+				log.Printf(" %s exists", r)
 				continue
 			} else {
-				log.Printf("Removing %s@%s", r.Chart, r.Version.String())
+				log.Printf("Removing %s", r)
 				if err := os.RemoveAll(chartPath); err != nil {
 					return err
 				}

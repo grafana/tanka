@@ -1,6 +1,8 @@
 package helm
 
 import (
+	"fmt"
+
 	"github.com/Masterminds/semver"
 )
 
@@ -62,6 +64,14 @@ type Requirement struct {
 	Chart     string         `json:"chart"`
 	Version   semver.Version `json:"version"`
 	Directory string         `json:"directory,omitempty"`
+}
+
+func (r Requirement) String() string {
+	s := r.Chart + "@" + r.Version.String()
+	if r.Directory != "" {
+		s += fmt.Sprintf(" (dir: %s)", r.Directory)
+	}
+	return s
 }
 
 // Requirements is an aggregate of all required Charts
