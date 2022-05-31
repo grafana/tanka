@@ -1,5 +1,3 @@
-//go:generate mockgen -destination=./helm_mock_test.go -package=helm . Helm
-
 package helm
 
 import (
