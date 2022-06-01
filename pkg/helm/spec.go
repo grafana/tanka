@@ -2,6 +2,7 @@ package helm
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Masterminds/semver"
 )
@@ -86,4 +87,26 @@ func (r Requirements) Has(req Requirement) bool {
 	}
 
 	return false
+}
+
+func (r Requirements) CheckForOutputConflicts() error {
+	outputDirs := make(map[string]Requirement)
+	errs := make([]string, 0)
+
+	for _, req := range r {
+		dir := req.Directory
+		if dir == "" {
+			dir = parseReqName(req.Chart)
+		}
+		if previous, ok := outputDirs[dir]; ok {
+			errs = append(errs, fmt.Sprintf(`output directory %q is used twice, by charts "%s@%s" and "%s@%s"`, dir, previous.Chart, previous.Version.String(), req.Chart, req.Version.String()))
+		}
+		outputDirs[dir] = req
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("Output directory conflicts found:\n - " + strings.Join(errs, "\n - "))
+	}
+
+	return nil
 }
