@@ -33,6 +33,7 @@ func chartsVendorCmd() *cli.Command {
 		Use:   "vendor",
 		Short: "Download Charts to a local folder",
 	}
+	prune := cmd.Flags().Bool("prune", false, "also remove non-vendored files from the destination directory")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		c, err := loadChartfile()
@@ -40,7 +41,7 @@ func chartsVendorCmd() *cli.Command {
 			return err
 		}
 
-		return c.Vendor()
+		return c.Vendor(*prune)
 	}
 
 	return cmd

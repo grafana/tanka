@@ -85,17 +85,20 @@ func (c Charts) ManifestFile() string {
 
 // Vendor pulls all Charts specified in the manifest into the local charts
 // directory. It fetches the repository index before doing so.
-func (c Charts) Vendor() error {
+func (c Charts) Vendor(prune bool) error {
 	dir := c.ChartDir()
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return err
 	}
+
+	expectedDirs := make(map[string]bool)
 
 	repositoriesUpdated := false
 	log.Println("Pulling Charts ...")
 	for _, r := range c.Manifest.Requires {
 		chartName := parseReqName(r.Chart)
 		chartPath := filepath.Join(dir, chartName)
+		expectedDirs[chartName] = true
 
 		if r.Directory != "" {
 			chartPath = filepath.Join(dir, r.Directory)
@@ -145,6 +148,25 @@ func (c Charts) Vendor() error {
 		log.Printf(" %s@%s downloaded", r.Chart, r.Version.String())
 	}
 
+	if prune {
+		items, err := os.ReadDir(dir)
+		if err != nil {
+			return fmt.Errorf("error listing the content of the charts dir: %w", err)
+		}
+		for _, i := range items {
+			if !expectedDirs[i.Name()] {
+				itemType := "file"
+				if i.IsDir() {
+					itemType = "directory"
+				}
+				log.Printf("Pruning %s: %s", itemType, i.Name())
+				if err := os.RemoveAll(filepath.Join(dir, i.Name())); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -184,7 +206,7 @@ func (c *Charts) Add(reqs []string) error {
 
 	// worked fine? vendor it
 	log.Printf("Added %v Charts to helmfile.yaml. Vendoring ...", added)
-	return c.Vendor()
+	return c.Vendor(false)
 }
 
 func (c *Charts) AddRepos(repos ...Repo) error {

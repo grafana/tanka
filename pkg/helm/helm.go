@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
@@ -68,7 +67,7 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 		return err
 	}
 
-	chartName := strings.Split(chart, "/")[1]
+	chartName := parseReqName(chart)
 
 	if opts.ExtractDirectory == "" {
 		opts.ExtractDirectory = chartName

@@ -2,7 +2,6 @@ package helm
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Masterminds/semver"
 )
@@ -70,7 +69,7 @@ type Requirement struct {
 func (r Requirement) String() string {
 	dir := r.Directory
 	if dir == "" {
-		dir = strings.Split(r.Chart, "/")[1]
+		dir = parseReqName(r.Chart)
 	}
 	return fmt.Sprintf("%s@%s (dir: %s)", r.Chart, r.Version.String(), dir)
 }
