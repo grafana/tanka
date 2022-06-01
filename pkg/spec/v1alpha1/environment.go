@@ -57,8 +57,8 @@ func (m Metadata) NameLabel() string {
 
 // Spec defines Kubernetes properties
 type Spec struct {
-	APIServer        string           `json:"apiServer"`
-	ContextNames     []string         `json:"contextNames"`
+	APIServer        string           `json:"apiServer,omitempty"`
+	ContextNames     []string         `json:"contextNames,omitempty"`
 	Namespace        string           `json:"namespace"`
 	DiffStrategy     string           `json:"diffStrategy,omitempty"`
 	ApplyStrategy    string           `json:"applyStrategy,omitempty"`
