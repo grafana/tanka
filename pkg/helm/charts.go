@@ -91,11 +91,14 @@ func (c Charts) Vendor() error {
 		return err
 	}
 
+	expectedDirs := make(map[string]bool)
+
 	repositoriesUpdated := false
 	log.Println("Pulling Charts ...")
 	for _, r := range c.Manifest.Requires {
 		chartName := parseReqName(r.Chart)
 		chartPath := filepath.Join(dir, chartName)
+		expectedDirs[chartName] = true
 
 		if r.Directory != "" {
 			chartPath = filepath.Join(dir, r.Directory)
@@ -143,6 +146,25 @@ func (c Charts) Vendor() error {
 		}
 
 		log.Printf(" %s@%s downloaded", r.Chart, r.Version.String())
+	}
+
+	if c.Manifest.Prune {
+		items, err := os.ReadDir(dir)
+		if err != nil {
+			return fmt.Errorf("error listing the content of the charts dir: %w", err)
+		}
+		for _, i := range items {
+			if !expectedDirs[i.Name()] {
+				itemType := "file"
+				if i.IsDir() {
+					itemType = "directory"
+				}
+				log.Printf("Pruning %s: %s", itemType, i.Name())
+				if err := os.RemoveAll(filepath.Join(dir, i.Name())); err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	return nil
@@ -212,7 +234,7 @@ func (c *Charts) AddRepos(repos ...Repo) error {
 	return nil
 }
 
-func InitChartfile(path string) (*Charts, error) {
+func InitChartfile(path string, prune bool) (*Charts, error) {
 	c := Chartfile{
 		Version: Version,
 		Repositories: []Repo{{
@@ -220,6 +242,7 @@ func InitChartfile(path string) (*Charts, error) {
 			URL:  "https://charts.helm.sh/stable",
 		}},
 		Requires: make(Requirements, 0),
+		Prune:    prune,
 	}
 
 	if err := write(c, path); err != nil {

@@ -2,7 +2,6 @@ package helm
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Masterminds/semver"
 )
@@ -33,6 +32,9 @@ type Chartfile struct {
 
 	// Folder to use for storing Charts. Defaults to 'charts'
 	Directory string `json:"directory,omitempty"`
+
+	// Whether or not to delete unexpected files in the charts directory after vendoring
+	Prune bool `json:"prune,omitempty"`
 }
 
 // Repo describes a single Helm repository
@@ -70,7 +72,7 @@ type Requirement struct {
 func (r Requirement) String() string {
 	dir := r.Directory
 	if dir == "" {
-		dir = strings.Split(r.Chart, "/")[1]
+		dir = parseReqName(r.Chart)
 	}
 	return fmt.Sprintf("%s@%s (dir: %s)", r.Chart, r.Version.String(), dir)
 }

@@ -116,6 +116,7 @@ func chartsInitCmd() *cli.Command {
 		Use:   "init",
 		Short: "Create a new Chartfile",
 	}
+	prune := cmd.Flags().Bool("prune", false, "when vendoring, also remove non-vendored files from the destination directory")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		wd, err := os.Getwd()
@@ -128,7 +129,7 @@ func chartsInitCmd() *cli.Command {
 			return fmt.Errorf("Chartfile at '%s' already exists. Aborting", path)
 		}
 
-		if _, err := helm.InitChartfile(path); err != nil {
+		if _, err := helm.InitChartfile(path, *prune); err != nil {
 			return err
 		}
 
