@@ -2,6 +2,7 @@ package helm
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Masterminds/semver"
 )
@@ -67,11 +68,11 @@ type Requirement struct {
 }
 
 func (r Requirement) String() string {
-	s := r.Chart + "@" + r.Version.String()
-	if r.Directory != "" {
-		s += fmt.Sprintf(" (dir: %s)", r.Directory)
+	dir := r.Directory
+	if dir == "" {
+		dir = strings.Split(r.Chart, "/")[1]
 	}
-	return s
+	return fmt.Sprintf("%s@%s (dir: %s)", r.Chart, r.Version.String(), dir)
 }
 
 // Requirements is an aggregate of all required Charts

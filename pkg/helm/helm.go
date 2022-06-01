@@ -7,9 +7,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
-	"sigs.k8s.io/yaml"
 )
 
 // Helm provides high level access to some Helm operations
@@ -68,19 +68,16 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 		return err
 	}
 
-	chartYAML, err := e.info(chart, version, opts.Opts)
-	if err != nil {
-		return err
-	}
+	chartName := strings.Split(chart, "/")[1]
 
 	if opts.ExtractDirectory == "" {
-		opts.ExtractDirectory = chartYAML.Name
+		opts.ExtractDirectory = chartName
 	}
 
 	// It is not possible to tell `helm pull` to extract to a specific directory
 	// so we extract to a temp dir and then move the files to the destination
 	return os.Rename(
-		filepath.Join(tempDir, chartYAML.Name),
+		filepath.Join(tempDir, chartName),
 		filepath.Join(opts.Destination, opts.ExtractDirectory),
 	)
 }
@@ -104,30 +101,6 @@ func (e ExecHelm) RepoUpdate(opts Opts) error {
 	}
 
 	return nil
-}
-
-// info returns the Chart.yaml content of a Helm Chart
-func (e ExecHelm) info(chart, version string, opts Opts) (*chartManifest, error) {
-	repoFile, err := writeRepoTmpFile(opts.Repositories)
-	if err != nil {
-		return nil, err
-	}
-	defer os.Remove(repoFile)
-
-	cmd := e.cmd("show", "chart", chart,
-		"--version", version,
-		"--repository-config", repoFile,
-	)
-	b, err := cmd.Output()
-	if err != nil {
-		return nil, err
-	}
-	var chartYAML chartManifest
-	if err := yaml.Unmarshal(b, &chartYAML); err != nil {
-		return nil, err
-	}
-
-	return &chartYAML, nil
 }
 
 // cmd returns a prepared exec.Cmd to use the `helm` binary
