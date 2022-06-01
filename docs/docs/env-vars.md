@@ -34,4 +34,4 @@ menu: "References"
 ### PAGER
 
 **Description**: Pager to use when displaying output. Set to an empty string to disable paging.
-**Default**: `less`
+**Default**: `less --RAW-CONTROL-CHARS --quit-if-one-screen --no-init`
