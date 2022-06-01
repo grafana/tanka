@@ -11,7 +11,7 @@ import (
 )
 
 func TestAddRepos(t *testing.T) {
-	c, err := InitChartfile(filepath.Join(t.TempDir(), Filename), false)
+	c, err := InitChartfile(filepath.Join(t.TempDir(), Filename))
 	require.NoError(t, err)
 
 	err = c.AddRepos(
@@ -28,7 +28,7 @@ func TestAddRepos(t *testing.T) {
 
 func TestAdd(t *testing.T) {
 	tempDir := t.TempDir()
-	c, err := InitChartfile(filepath.Join(tempDir, Filename), false)
+	c, err := InitChartfile(filepath.Join(tempDir, Filename))
 	require.NoError(t, err)
 
 	err = c.Add([]string{"stable/prometheus@11.12.1"})
@@ -62,7 +62,7 @@ func TestPrune(t *testing.T) {
 	for _, prune := range []bool{false, true} {
 		t.Run(fmt.Sprintf("%t", prune), func(t *testing.T) {
 			tempDir := t.TempDir()
-			c, err := InitChartfile(filepath.Join(tempDir, Filename), prune)
+			c, err := InitChartfile(filepath.Join(tempDir, Filename))
 			require.NoError(t, err)
 
 			// Add a chart
@@ -76,7 +76,7 @@ func TestPrune(t *testing.T) {
 			err = os.WriteFile(filepath.Join(tempDir, "charts", "foo", "Chart.yaml"), []byte("foo"), 0644)
 			require.NoError(t, err)
 
-			err = c.Vendor()
+			err = c.Vendor(prune)
 			require.NoError(t, err)
 
 			// Check if files are pruned

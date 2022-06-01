@@ -32,9 +32,6 @@ type Chartfile struct {
 
 	// Folder to use for storing Charts. Defaults to 'charts'
 	Directory string `json:"directory,omitempty"`
-
-	// Whether or not to delete unexpected files in the charts directory after vendoring
-	Prune bool `json:"prune,omitempty"`
 }
 
 // Repo describes a single Helm repository

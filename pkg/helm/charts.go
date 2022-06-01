@@ -85,7 +85,7 @@ func (c Charts) ManifestFile() string {
 
 // Vendor pulls all Charts specified in the manifest into the local charts
 // directory. It fetches the repository index before doing so.
-func (c Charts) Vendor() error {
+func (c Charts) Vendor(prune bool) error {
 	dir := c.ChartDir()
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return err
@@ -148,7 +148,7 @@ func (c Charts) Vendor() error {
 		log.Printf(" %s@%s downloaded", r.Chart, r.Version.String())
 	}
 
-	if c.Manifest.Prune {
+	if prune {
 		items, err := os.ReadDir(dir)
 		if err != nil {
 			return fmt.Errorf("error listing the content of the charts dir: %w", err)
@@ -206,7 +206,7 @@ func (c *Charts) Add(reqs []string) error {
 
 	// worked fine? vendor it
 	log.Printf("Added %v Charts to helmfile.yaml. Vendoring ...", added)
-	return c.Vendor()
+	return c.Vendor(false)
 }
 
 func (c *Charts) AddRepos(repos ...Repo) error {
@@ -234,7 +234,7 @@ func (c *Charts) AddRepos(repos ...Repo) error {
 	return nil
 }
 
-func InitChartfile(path string, prune bool) (*Charts, error) {
+func InitChartfile(path string) (*Charts, error) {
 	c := Chartfile{
 		Version: Version,
 		Repositories: []Repo{{
@@ -242,7 +242,6 @@ func InitChartfile(path string, prune bool) (*Charts, error) {
 			URL:  "https://charts.helm.sh/stable",
 		}},
 		Requires: make(Requirements, 0),
-		Prune:    prune,
 	}
 
 	if err := write(c, path); err != nil {
