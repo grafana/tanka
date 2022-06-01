@@ -69,6 +69,7 @@ type Charts struct {
 
 // chartManifest represents a Helm chart's Chart.yaml
 type chartManifest struct {
+	Name    string         `yaml:"name"`
 	Version semver.Version `yaml:"version"`
 }
 
@@ -96,6 +97,10 @@ func (c Charts) Vendor() error {
 		chartName := parseReqName(r.Chart)
 		chartPath := filepath.Join(dir, chartName)
 
+		if r.Directory != "" {
+			chartPath = filepath.Join(dir, r.Directory)
+		}
+
 		_, err := os.Stat(chartPath)
 		if err == nil {
 			chartManifestPath := filepath.Join(chartPath, "Chart.yaml")
@@ -109,10 +114,10 @@ func (c Charts) Vendor() error {
 			}
 
 			if chartYAML.Version.String() == r.Version.String() {
-				log.Printf(" %s@%s exists", r.Chart, r.Version.String())
+				log.Printf(" %s exists", r)
 				continue
 			} else {
-				log.Printf("Removing %s@%s", r.Chart, r.Version.String())
+				log.Printf("Removing %s", r)
 				if err := os.RemoveAll(chartPath); err != nil {
 					return err
 				}
@@ -129,8 +134,9 @@ func (c Charts) Vendor() error {
 			repositoriesUpdated = true
 		}
 		err = c.Helm.Pull(r.Chart, r.Version.String(), PullOpts{
-			Destination: dir,
-			Opts:        Opts{Repositories: c.Manifest.Repositories},
+			Destination:      dir,
+			ExtractDirectory: r.Directory,
+			Opts:             Opts{Repositories: c.Manifest.Repositories},
 		})
 		if err != nil {
 			return err
@@ -233,15 +239,23 @@ func write(c Chartfile, dest string) error {
 	return os.WriteFile(dest, data, 0644)
 }
 
-var chartExp = regexp.MustCompile(`\w+\/.+@.+`)
+// https://regex101.com/r/VAklNg/1
+var chartExp = regexp.MustCompile(`\w+\/.+@.+(\:.+)?`)
 
 // parseReq parses a requirement from a string of the format `repo/name@version`
 func parseReq(s string) (*Requirement, error) {
 	if !chartExp.MatchString(s) {
-		return nil, fmt.Errorf("not of form 'repo/chart@version'")
+		return nil, fmt.Errorf("not of form 'repo/chart@version(:path)'")
 	}
 
-	elems := strings.Split(s, "@")
+	elems := strings.Split(s, ":")
+	directory := ""
+	if len(elems) > 1 {
+		s = elems[0]
+		directory = elems[1]
+	}
+
+	elems = strings.Split(s, "@")
 	chart := elems[0]
 	ver, err := semver.NewVersion(elems[1])
 	if errors.Is(err, semver.ErrInvalidSemVer) {
@@ -251,8 +265,9 @@ func parseReq(s string) (*Requirement, error) {
 	}
 
 	return &Requirement{
-		Chart:   chart,
-		Version: *ver,
+		Chart:     chart,
+		Version:   *ver,
+		Directory: directory,
 	}, nil
 }
 

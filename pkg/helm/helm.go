@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
@@ -28,6 +30,9 @@ type PullOpts struct {
 
 	// Directory to put the resulting .tgz into
 	Destination string
+
+	// Where to extract the chart to, defaults to the name of the chart
+	ExtractDirectory string
 }
 
 // Opts are additional, non-required options that all Helm operations accept
@@ -46,14 +51,35 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 	}
 	defer os.Remove(repoFile)
 
+	tempDir, err := os.MkdirTemp("", "charts-pull")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tempDir)
+
 	cmd := e.cmd("pull", chart,
 		"--version", version,
-		"--destination", opts.Destination,
 		"--repository-config", repoFile,
+		"--destination", tempDir,
 		"--untar",
 	)
 
-	return cmd.Run()
+	if err = cmd.Run(); err != nil {
+		return err
+	}
+
+	chartName := strings.Split(chart, "/")[1]
+
+	if opts.ExtractDirectory == "" {
+		opts.ExtractDirectory = chartName
+	}
+
+	// It is not possible to tell `helm pull` to extract to a specific directory
+	// so we extract to a temp dir and then move the files to the destination
+	return os.Rename(
+		filepath.Join(tempDir, chartName),
+		filepath.Join(opts.Destination, opts.ExtractDirectory),
+	)
 }
 
 // RepoUpdate implements Helm.RepoUpdate

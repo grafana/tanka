@@ -26,7 +26,16 @@ local go(name, commands) = {
   commands: commands,
 };
 
-local make(target) = go(target, ['make ' + target]);
+local make(target) = go(target, [
+  // Only download it once, then for every step, copy it to the right place.
+  'if [ ! -f linux-amd64/helm ]; then',
+  '  wget -q https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz',
+  '  tar -zxvf helm-v3.9.0-linux-amd64.tar.gz',
+  '  rm -f helm-v3.9.0-linux-amd64.tar.gz',
+  'fi',
+  'cp linux-amd64/helm /usr/local/bin/helm',
+  'make ' + target,
+]);
 
 local pipeline(name) = {
   kind: 'pipeline',
@@ -61,9 +70,9 @@ local docker(arch) = pipeline('docker-' + arch) {
   pipeline('check') {
     steps: [
       go('download', ['go mod download']),
-      make('lint') { depends_on: ['download'] },
-      make('test') { depends_on: ['download'] },
-      make('cross') { name: 'build', depends_on: ['download'] },
+      make('lint'),
+      make('test'),
+      make('cross') { name: 'build' },
     ],
   } + constraints.always,
 

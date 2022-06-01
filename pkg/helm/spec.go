@@ -1,6 +1,9 @@
 package helm
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/Masterminds/semver"
 )
 
@@ -59,8 +62,17 @@ func (r Repos) Has(repo Repo) bool {
 // Requirement describes a single required Helm Chart.
 // Both, Chart and Version are required
 type Requirement struct {
-	Chart   string         `json:"chart"`
-	Version semver.Version `json:"version"`
+	Chart     string         `json:"chart"`
+	Version   semver.Version `json:"version"`
+	Directory string         `json:"directory,omitempty"`
+}
+
+func (r Requirement) String() string {
+	dir := r.Directory
+	if dir == "" {
+		dir = strings.Split(r.Chart, "/")[1]
+	}
+	return fmt.Sprintf("%s@%s (dir: %s)", r.Chart, r.Version.String(), dir)
 }
 
 // Requirements is an aggregate of all required Charts
