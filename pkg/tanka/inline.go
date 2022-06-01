@@ -46,7 +46,7 @@ func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment
 		}
 		if len(envs) > 1 {
 			sort.Strings(names)
-			return nil, ErrMultipleEnvs{path, names}
+			return nil, ErrMultipleEnvs{path, opts.Name, names}
 		}
 	}
 

@@ -17,12 +17,17 @@ func (e ErrNoEnv) Error() string {
 
 // ErrMultipleEnvs means that the given jsonnet has multiple Environment objects
 type ErrMultipleEnvs struct {
-	path  string
-	names []string
+	path      string
+	givenName string
+	foundEnvs []string
 }
 
 func (e ErrMultipleEnvs) Error() string {
-	return fmt.Sprintf("found multiple Environments in '%s'. Use `--name` to select a single one: \n - %s", e.path, strings.Join(e.names, "\n - "))
+	if e.givenName != "" {
+		return fmt.Sprintf("found multiple Environments in %q matching %q. Provide a more specific name that matches a single one: \n - %s", e.path, e.givenName, strings.Join(e.foundEnvs, "\n - "))
+	}
+
+	return fmt.Sprintf("found multiple Environments in %q. Use `--name` to select a single one: \n - %s", e.path, strings.Join(e.foundEnvs, "\n - "))
 }
 
 // ErrParallel is an array of errors collected while processing in parallel
