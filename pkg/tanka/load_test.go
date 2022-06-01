@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"os"
 	"testing"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -157,11 +158,11 @@ func TestLoadSelectEnvironment(t *testing.T) {
 
 	// Empty options, match all environments
 	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{})
-	assert.EqualError(t, err, "found multiple Environments in './testdata/cases/multiple-inline-envs'. Use `--name` to select a single one: \n - project1-env1\n - project1-env2\n - project2-env1")
+	assert.EqualError(t, err, "found multiple Environments in \"./testdata/cases/multiple-inline-envs\". Use `--name` to select a single one: \n - project1-env1\n - project1-env2\n - project2-env1")
 
 	// Partial match two environments
 	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "env1"})
-	assert.EqualError(t, err, "found multiple Environments in './testdata/cases/multiple-inline-envs'. Use `--name` to select a single one: \n - project1-env1\n - project2-env1")
+	assert.EqualError(t, err, "found multiple Environments in \"./testdata/cases/multiple-inline-envs\" matching \"env1\". Provide a more specific name that matches a single one: \n - project1-env1\n - project2-env1")
 
 	// Partial match
 	result, err := Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project2"})
@@ -171,6 +172,30 @@ func TestLoadSelectEnvironment(t *testing.T) {
 	// Full match
 	result, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project1-env1"})
 	assert.NoError(t, err)
+	assert.Equal(t, "project1-env1", result.Env.Metadata.Name)
+}
+
+// Tests that the load function will consider the path to be an environment name if it is not found
+func TestLoadEnvironmentFallbackToName(t *testing.T) {
+	// Temporarily change the working directory to the testdata directory
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+	err = os.Chdir("./testdata/cases/multiple-inline-envs")
+	require.NoError(t, err)
+	defer os.Chdir(cwd)
+
+	// Partial match two environments
+	_, err = Load("env1", Opts{})
+	assert.EqualError(t, err, "found multiple Environments in \".\" matching \"env1\". Provide a more specific name that matches a single one: \n - project1-env1\n - project2-env1")
+
+	// Partial match
+	result, err := Load("project2", Opts{})
+	require.NoError(t, err)
+	assert.Equal(t, "project2-env1", result.Env.Metadata.Name)
+
+	// Full match
+	result, err = Load("project1-env1", Opts{})
+	require.NoError(t, err)
 	assert.Equal(t, "project1-env1", result.Env.Metadata.Name)
 }
 
