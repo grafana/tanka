@@ -30,3 +30,8 @@ menu: "References"
 
 **Description**: Path to the `kustomize` executable  
 **Default**: `$PATH/kustomize`
+
+### PAGER
+
+**Description**: Pager to use when displaying output. Set to an empty string to disable paging.
+**Default**: `less`
