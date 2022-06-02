@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"k8s.io/utils/strings/slices"
 	"os"
 	"path/filepath"
 	"sort"
@@ -87,6 +88,10 @@ func envSetCmd() *cli.Command {
 			fmt.Printf("updated spec.apiServer (`%s` -> `%s`)\n", cfg.Spec.APIServer, tmp.Spec.APIServer)
 			cfg.Spec.APIServer = tmp.Spec.APIServer
 		}
+		if tmp.Spec.ContextNames != nil && !slices.Equal(tmp.Spec.ContextNames, cfg.Spec.ContextNames) {
+			fmt.Printf("updated spec.contextNames (`%v` -> `%v`)\n", cfg.Spec.ContextNames, tmp.Spec.ContextNames)
+			cfg.Spec.ContextNames = tmp.Spec.ContextNames
+		}
 		if tmp.Spec.Namespace != "" && tmp.Spec.Namespace != cfg.Spec.Namespace {
 			fmt.Printf("updated spec.namespace (`%s` -> `%s`)\n", cfg.Spec.Namespace, tmp.Spec.Namespace)
 			cfg.Spec.Namespace = tmp.Spec.Namespace
@@ -98,6 +103,12 @@ func envSetCmd() *cli.Command {
 		if tmp.Spec.InjectLabels != cfg.Spec.InjectLabels {
 			fmt.Printf("updated spec.injectLabels (`%t` -> `%t`)\n", cfg.Spec.InjectLabels, tmp.Spec.InjectLabels)
 			cfg.Spec.InjectLabels = tmp.Spec.InjectLabels
+		}
+
+		// This ensures the environment is valid before setting it
+		l := tanka.LoadResult{Env: cfg}
+		if _, err := l.Connect(); err != nil {
+			return err
 		}
 
 		if err := writeJSON(cfg, filepath.Join(path, "spec.json")); err != nil {
@@ -126,6 +137,13 @@ func envAddCmd() *cli.Command {
 				return fmt.Errorf("Resolving IP from context: %s", err)
 			}
 			cfg.Spec.APIServer = server
+		}
+		// This ensures the environment is valid before adding it
+		if cmd.Flags().Changed("server-from-context") || cmd.Flags().Changed("context-name") {
+			l := tanka.LoadResult{Env: cfg}
+			if _, err := l.Connect(); err != nil {
+				return err
+			}
 		}
 
 		if err := addEnv(args[0], cfg, *inline); err != nil {
