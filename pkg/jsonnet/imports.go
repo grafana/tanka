@@ -57,7 +57,7 @@ func TransitiveImports(dir string) ([]string, error) {
 	}
 
 	imports := make(map[string]bool)
-	if err = importRecursive(imports, vm, node, filepath.Base(entrypoint)); err != nil {
+	if err = importRecursiveStrict(imports, vm, node, filepath.Base(entrypoint)); err != nil {
 		return nil, err
 	}
 
@@ -85,10 +85,16 @@ func TransitiveImports(dir string) ([]string, error) {
 	return paths, nil
 }
 
+// importRecursiveStrict does the same as importRecursive, but returns an error
+// if a file is not found during when importing
+func importRecursiveStrict(list map[string]bool, vm *jsonnet.VM, node ast.Node, currentPath string) error {
+	return importRecursive(list, vm, node, currentPath, false)
+}
+
 // importRecursive takes a Jsonnet VM and recursively imports the AST. Every
 // found import is added to the `list` string slice, which will ultimately
 // contain all recursive imports
-func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, currentPath string) error {
+func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, currentPath string, ignoreMissing bool) error {
 	switch node := node.(type) {
 	// we have an `import`
 	case *ast.Import:
@@ -96,6 +102,9 @@ func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, curren
 
 		contents, foundAt, err := vm.ImportAST(currentPath, p)
 		if err != nil {
+			if ignoreMissing {
+				return nil
+			}
 			return fmt.Errorf("importing '%s' from '%s': %w", p, currentPath, err)
 		}
 
@@ -106,7 +115,7 @@ func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, curren
 
 		list[abs] = true
 
-		if err := importRecursive(list, vm, contents, foundAt); err != nil {
+		if err := importRecursive(list, vm, contents, foundAt, ignoreMissing); err != nil {
 			return err
 		}
 
@@ -116,6 +125,9 @@ func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, curren
 
 		foundAt, err := vm.ResolveImport(currentPath, p)
 		if err != nil {
+			if ignoreMissing {
+				return nil
+			}
 			return errors.Wrap(err, "importing string")
 		}
 
@@ -129,7 +141,7 @@ func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, curren
 	// neither `import` nor `importstr`, probably object or similar: try children
 	default:
 		for _, child := range toolutils.Children(node) {
-			if err := importRecursive(list, vm, child, currentPath); err != nil {
+			if err := importRecursive(list, vm, child, currentPath, ignoreMissing); err != nil {
 				return err
 			}
 		}
@@ -145,7 +157,7 @@ var fileHashes sync.Map
 func getSnippetHash(vm *jsonnet.VM, path, data string) (string, error) {
 	node, _ := jsonnet.SnippetToAST(path, data)
 	result := map[string]bool{}
-	if err := importRecursive(result, vm, node, path); err != nil {
+	if err := importRecursive(result, vm, node, path, true); err != nil {
 		return "", err
 	}
 	fileNames := []string{}
