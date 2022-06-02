@@ -38,6 +38,11 @@ func TestAdd(t *testing.T) {
 	err = c.Add([]string{"stable/prometheus@11.12.1"})
 	assert.EqualError(t, err, "1 Chart(s) were skipped. Please check above logs for details")
 
+	// Adding a chart with a different version to the same path, causes a conflict
+	err = c.Add([]string{"stable/prometheus@11.12.0"})
+	assert.EqualError(t, err, `Output directory conflicts found:
+ - output directory "prometheus" is used twice, by charts "stable/prometheus@11.12.1" and "stable/prometheus@11.12.0"`)
+
 	// Add a chart with a specific extract directory
 	err = c.Add([]string{"stable/prometheus@11.12.0:prometheus-11.12.0"})
 	assert.NoError(t, err)

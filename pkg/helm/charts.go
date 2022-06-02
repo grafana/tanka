@@ -91,6 +91,11 @@ func (c Charts) Vendor(prune bool) error {
 		return err
 	}
 
+	// Check that there are no output conflicts before vendoring
+	if err := c.Manifest.Requires.CheckForOutputConflicts(); err != nil {
+		return err
+	}
+
 	expectedDirs := make(map[string]bool)
 
 	repositoriesUpdated := false
@@ -176,7 +181,7 @@ func (c *Charts) Add(reqs []string) error {
 	log.Printf("Adding %v Charts ...", len(reqs))
 
 	// parse new charts, append in memory
-	added := 0
+	requirements := c.Manifest.Requires
 	for _, s := range reqs {
 		r, err := parseReq(s)
 		if err != nil {
@@ -184,17 +189,22 @@ func (c *Charts) Add(reqs []string) error {
 			continue
 		}
 
-		if c.Manifest.Requires.Has(*r) {
+		if requirements.Has(*r) {
 			skip(s, fmt.Errorf("already exists"))
 			continue
 		}
 
-		c.Manifest.Requires = append(c.Manifest.Requires, *r)
-		added++
+		requirements = append(requirements, *r)
 		log.Println(" OK:", s)
 	}
 
+	if err := requirements.CheckForOutputConflicts(); err != nil {
+		return err
+	}
+
 	// write out
+	added := len(requirements) - len(c.Manifest.Requires)
+	c.Manifest.Requires = requirements
 	if err := write(c.Manifest, c.ManifestFile()); err != nil {
 		return err
 	}
