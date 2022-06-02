@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"runtime"
 
@@ -39,11 +38,7 @@ func exportCmd() *cli.Command {
 	parallel := cmd.Flags().IntP("parallel", "p", 8, "Number of environments to process in parallel")
 	cachePath := cmd.Flags().StringP("cache-path", "c", "", "Local file path where cached evaluations should be stored")
 	cacheEnvs := cmd.Flags().StringArrayP("cache-envs", "e", nil, "Regexes which define which environment should be cached (if caching is enabled)")
-
-	ballastBytes := cmd.Flags().Int("mem-ballast-size-bytes", 0, "(Experimental) Size of memory ballast to allocate.")
-	if err := cmd.Flags().MarkHidden("mem-ballast-size-bytes"); err != nil {
-		log.Fatalf("Could not mark flag as hidden: %s", err)
-	}
+	ballastBytes := cmd.Flags().Int("mem-ballast-size-bytes", 0, "Size of memory ballast to allocate. This may improve performance for large environments.")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
