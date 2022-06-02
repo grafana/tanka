@@ -13,6 +13,12 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+var (
+	// https://regex101.com/r/7xFFtU/3
+	chartExp = regexp.MustCompile(`^(?P<chart>\w+\/.+)@(?P<version>[^:\n\s]+)(?:\:(?P<path>[\w-. ]+))?$`)
+	repoExp  = regexp.MustCompile(`^\w+$`)
+)
+
 // LoadChartfile opens a Chartfile tree
 func LoadChartfile(projectRoot string) (*Charts, error) {
 	// make sure project root is valid
@@ -99,7 +105,7 @@ func (c Charts) Vendor(prune bool) error {
 	expectedDirs := make(map[string]bool)
 
 	repositoriesUpdated := false
-	log.Println("Pulling Charts ...")
+	log.Println("Vendoring...")
 	for _, r := range c.Manifest.Requires {
 		chartName := parseReqName(r.Chart)
 		chartPath := filepath.Join(dir, chartName)
@@ -140,6 +146,10 @@ func (c Charts) Vendor(prune bool) error {
 				return err
 			}
 			repositoriesUpdated = true
+		}
+		log.Println("Pulling Charts ...")
+		if repoName := parseReqRepo(r.Chart); !c.Manifest.Repositories.HasName(repoName) {
+			return fmt.Errorf("repository %q not found for chart %q", repoName, r.Chart)
 		}
 		err = c.Helm.Pull(r.Chart, r.Version.String(), PullOpts{
 			Destination:      dir,
@@ -227,6 +237,11 @@ func (c *Charts) AddRepos(repos ...Repo) error {
 			continue
 		}
 
+		if !repoExp.MatchString(r.Name) {
+			skip(r.Name, fmt.Errorf("invalid name. cannot contain any special characters"))
+			continue
+		}
+
 		c.Manifest.Repositories = append(c.Manifest.Repositories, r)
 		added++
 		log.Println(" OK:", r.Name)
@@ -271,29 +286,25 @@ func write(c Chartfile, dest string) error {
 	return os.WriteFile(dest, data, 0644)
 }
 
-// https://regex101.com/r/VAklNg/1
-var chartExp = regexp.MustCompile(`\w+\/.+@.+(\:.+)?`)
-
 // parseReq parses a requirement from a string of the format `repo/name@version`
 func parseReq(s string) (*Requirement, error) {
-	if !chartExp.MatchString(s) {
-		return nil, fmt.Errorf("not of form 'repo/chart@version(:path)'")
+	matches := chartExp.FindStringSubmatch(s)
+	if matches == nil {
+		return nil, fmt.Errorf("not of form 'repo/chart@version(:path)' where repo contains no special characters")
 	}
 
-	elems := strings.Split(s, ":")
-	directory := ""
-	if len(elems) > 1 {
-		s = elems[0]
-		directory = elems[1]
-	}
+	chart := matches[1]
 
-	elems = strings.Split(s, "@")
-	chart := elems[0]
-	ver, err := semver.NewVersion(elems[1])
+	ver, err := semver.NewVersion(matches[2])
 	if errors.Is(err, semver.ErrInvalidSemVer) {
-		return nil, fmt.Errorf("version is invalid")
+		return nil, fmt.Errorf("version is invalid: %s", matches[2])
 	} else if err != nil {
-		return nil, fmt.Errorf("version is invalid: %s", err)
+		return nil, fmt.Errorf("error parsing semver: %s", err)
+	}
+
+	directory := ""
+	if len(matches) == 4 {
+		directory = matches[3]
 	}
 
 	return &Requirement{
@@ -303,9 +314,16 @@ func parseReq(s string) (*Requirement, error) {
 	}, nil
 }
 
+// parseReqRepo parses a repo from a string of the format `repo/name`
+func parseReqRepo(s string) string {
+	elems := strings.SplitN(s, "/", 2)
+	repo := elems[0]
+	return repo
+}
+
 // parseReqName parses a name from a string of the format `repo/name`
 func parseReqName(s string) string {
-	elems := strings.Split(s, "/")
+	elems := strings.SplitN(s, "/", 2)
 	name := elems[1]
 	return name
 }
