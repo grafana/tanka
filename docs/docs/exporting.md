@@ -103,7 +103,7 @@ $ tk export exportDir environments/ -r -l team=infra
 
 _Read [this blog post](https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap/) for more information about memory ballasts._
 
-For large environments that have to load lots of data into memory when evaluation, a memory ballast can dramatically improve performance. This is exposed through the `--mem-ballast-size-bytes` flag on the export command.
+For large environments that load lots of data into memory on evaluation, a memory ballast can dramatically improve performance. This feature is exposed through the `--mem-ballast-size-bytes` flag on the export command.
 
 Anecdotally (Grafana Labs), environments that took around a minute to load were able to load in around 45 secs with a ballast of 5GB (`--mem-ballast-size-bytes=5368709120`). Decreasing the ballast size resulted in negative impact on performance, and increasing it more did not result in any noticeable impact.
 
