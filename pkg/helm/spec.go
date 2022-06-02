@@ -59,6 +59,17 @@ func (r Repos) Has(repo Repo) bool {
 	return false
 }
 
+// Has reports whether one of the repos has the given name
+func (r Repos) HasName(repoName string) bool {
+	for _, x := range r {
+		if x.Name == repoName {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Requirement describes a single required Helm Chart.
 // Both, Chart and Version are required
 type Requirement struct {

@@ -1,14 +1,71 @@
 package helm
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/Masterminds/semver"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestParseReq(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected *Requirement
+		err      error
+	}{
+		{
+			name:  "valid",
+			input: "stable/package@1.0.0",
+			expected: &Requirement{
+				Chart:     "stable/package",
+				Version:   *semver.MustParse("1.0.0"),
+				Directory: "",
+			},
+		},
+		{
+			name:  "invalid-semver",
+			input: "stable/package@not-semver",
+			err:   fmt.Errorf("version is invalid: not-semver"),
+		},
+		{
+			name:  "with-path",
+			input: "stable/package-name@1.0.0:my-path",
+			expected: &Requirement{
+				Chart:     "stable/package-name",
+				Version:   *semver.MustParse("1.0.0"),
+				Directory: "my-path",
+			},
+		},
+		{
+			name:  "with-path-with-special-chars",
+			input: "stable/package@v1.24.0:my weird-path_test",
+			expected: &Requirement{
+				Chart:     "stable/package",
+				Version:   *semver.MustParse("v1.24.0"),
+				Directory: "my weird-path_test",
+			},
+		},
+		{
+			name:  "url-instead-of-repo",
+			input: "https://helm.releases.hashicorp.com/vault@0.19.0",
+			err:   errors.New("not of form 'repo/chart@version(:path)' where repo contains no special characters"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := parseReq(tc.input)
+			assert.Equal(t, tc.err, err)
+			assert.Equal(t, tc.expected, req)
+		})
+	}
+}
 
 func TestAddRepos(t *testing.T) {
 	c, err := InitChartfile(filepath.Join(t.TempDir(), Filename))
@@ -19,6 +76,12 @@ func TestAddRepos(t *testing.T) {
 		Repo{Name: "foo2", URL: "https://foo2.com"},
 	)
 	assert.NoError(t, err)
+
+	// Only \w characters are allowed in repo names
+	err = c.AddRepos(
+		Repo{Name: "with-dashes", URL: "https://foo.com"},
+	)
+	assert.EqualError(t, err, "1 Repo(s) were skipped. Please check above logs for details")
 
 	err = c.AddRepos(
 		Repo{Name: "foo", URL: "https://foo.com"},
