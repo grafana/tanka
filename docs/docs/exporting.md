@@ -98,3 +98,17 @@ $ tk export exportDir environments/ --recursive
 # Recursive export with labelSelector
 $ tk export exportDir environments/ -r -l team=infra
 ```
+
+## Caching
+
+Tanka can also cache the results of the export. This is useful if you often export the same files and want to avoid recomputing them. The cache key is calculated from the main file and all of its transitive imports, so any change to any file possibly used in an environment will invalidate the cache.
+
+This is configured by two flags:
+
+- `--cache-path`: The local filesystem path where the cache will be stored. The cache is a flat directory of json files (one per environment).
+- `--cache-envs`: If exporting multiple environments, this flag can be used to specify, with regexes, which environments to cache. If not specified, all environments are cached.
+
+Notes:
+
+- Using the cache might be slower than evaluating jsonnet directy. It is only recommended for environments that are very CPU intensive to evaluate.
+- To use object storage, you can point the `--cache-path` to a FUSE mount, such as [`s3fs`](https://github.com/s3fs-fuse/s3fs-fuse)
