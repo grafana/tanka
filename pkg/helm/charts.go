@@ -107,13 +107,12 @@ func (c Charts) Vendor(prune bool) error {
 	repositoriesUpdated := false
 	log.Println("Vendoring...")
 	for _, r := range c.Manifest.Requires {
-		chartName := parseReqName(r.Chart)
-		chartPath := filepath.Join(dir, chartName)
-		expectedDirs[chartName] = true
-
+		chartSubDir := parseReqName(r.Chart)
 		if r.Directory != "" {
-			chartPath = filepath.Join(dir, r.Directory)
+			chartSubDir = r.Directory
 		}
+		chartPath := filepath.Join(dir, chartSubDir)
+		expectedDirs[chartSubDir] = true
 
 		_, err := os.Stat(chartPath)
 		if err == nil {
