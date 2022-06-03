@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.22.0 (2022-06-03)
+
+### Features
+
+- **cli**: Add lint command
+  **[#592](https://github.com/grafana/tanka/pull/592)**
+- **cli**: Support a diff-strategy of "none" for "tk apply" to suppress diffing
+  **[#700](https://github.com/grafana/tanka/pull/700)** (**jphx**)
+- **cli**: Add a fallback to inline environment when path doesn't exist
+  **[#637](https://github.com/grafana/tanka/pull/637)** (**josephglanville**)
+- **kubectl**: Support interactive diff utilities
+  **[#690](https://github.com/grafana/tanka/pull/690)** (**partcyborg**)
+- **helm**: Allow defining a custom dir for each chart
+  **[#706](https://github.com/grafana/tanka/pull/706)**
+- **helm**: Add `--prune` option to the vendor command
+  **[#707](https://github.com/grafana/tanka/pull/707)**
+- **helm**: Check for output dir conflicts
+  **[#710](https://github.com/grafana/tanka/pull/710)**
+- **cli/tanka**: Adds support for contextNames in tk env subcommands
+  **[#704](https://github.com/grafana/tanka/pull/704)** (**Nashluffy**)
+
+### Bug Fixes/Enhancements
+
+- **helm**: Compare semvers when checking if existing chart is up-to-date
+  **[#702](https://github.com/grafana/tanka/pull/702)** (**kklimonda-fn**)
+- **tanka**: Omit empty `apiServer` or `contextNames` when listing environments
+  **[#709](https://github.com/grafana/tanka/pull/709)**
+- **export**: Fix caching in case of missing import
+  **[#712](https://github.com/grafana/tanka/pull/712)**
+- **helm**: Tighten validations for `add` and `add-repo` commands
+  **[#713](https://github.com/grafana/tanka/pull/713)**
+- **cli/export**: Un-hide the memory ballast setting
+  **[#714](https://github.com/grafana/tanka/pull/714)**
+
 ## 0.21.0 (2022-04-28)
 
 ### Features
@@ -8,6 +42,8 @@
   **[#685](https://github.com/grafana/tanka/pull/685)** (**BeyondEvil**)
 - **tanka/cli**: Add server-side apply mode
   **[#651](https://github.com/grafana/tanka/pull/651)** (**smuth4**)
+- **tanka**: Adds support for specifying valid context names for an environment
+  **[#674](https://github.com/grafana/tanka/pull/674)** (**Nashluffy**)
 
 ### Bug Fixes/Enhancements
 
