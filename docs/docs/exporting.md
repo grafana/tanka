@@ -99,6 +99,14 @@ $ tk export exportDir environments/ --recursive
 $ tk export exportDir environments/ -r -l team=infra
 ```
 
+## Using a memory ballast
+
+_Read [this blog post](https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap/) for more information about memory ballasts._
+
+For large environments that load lots of data into memory on evaluation, a memory ballast can dramatically improve performance. This feature is exposed through the `--mem-ballast-size-bytes` flag on the export command.
+
+Anecdotally (Grafana Labs), environments that took around a minute to load were able to load in around 45 secs with a ballast of 5GB (`--mem-ballast-size-bytes=5368709120`). Decreasing the ballast size resulted in negative impact on performance, and increasing it more did not result in any noticeable impact.
+
 ## Caching
 
 Tanka can also cache the results of the export. This is useful if you often export the same files and want to avoid recomputing them. The cache key is calculated from the main file and all of its transitive imports, so any change to any file possibly used in an environment will invalidate the cache.
