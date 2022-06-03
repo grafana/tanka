@@ -103,7 +103,7 @@ func TestAdd(t *testing.T) {
 
 	// Adding a chart with a different version to the same path, causes a conflict
 	err = c.Add([]string{"stable/prometheus@11.12.0"})
-	assert.EqualError(t, err, `Output directory conflicts found:
+	assert.EqualError(t, err, `Validation errors:
  - output directory "prometheus" is used twice, by charts "stable/prometheus@11.12.1" and "stable/prometheus@11.12.0"`)
 
 	// Add a chart with a specific extract directory
@@ -166,4 +166,19 @@ func TestPrune(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInvalidChartName(t *testing.T) {
+	tempDir := t.TempDir()
+	c, err := InitChartfile(filepath.Join(tempDir, Filename))
+	require.NoError(t, err)
+
+	c.Manifest.Requires = append(c.Manifest.Requires, Requirement{
+		Chart:   "noslash",
+		Version: *semver.MustParse("1.0.0"),
+	})
+
+	err = c.Vendor(false)
+	assert.EqualError(t, err, `Validation errors:
+ - Chart name "noslash" is not valid. Expecting a repo/name format.`)
 }

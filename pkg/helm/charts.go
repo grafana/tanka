@@ -98,7 +98,7 @@ func (c Charts) Vendor(prune bool) error {
 	}
 
 	// Check that there are no output conflicts before vendoring
-	if err := c.Manifest.Requires.CheckForOutputConflicts(); err != nil {
+	if err := c.Manifest.Requires.Validate(); err != nil {
 		return err
 	}
 
@@ -207,7 +207,7 @@ func (c *Charts) Add(reqs []string) error {
 		log.Println(" OK:", s)
 	}
 
-	if err := requirements.CheckForOutputConflicts(); err != nil {
+	if err := requirements.Validate(); err != nil {
 		return err
 	}
 
@@ -323,6 +323,9 @@ func parseReqRepo(s string) string {
 // parseReqName parses a name from a string of the format `repo/name`
 func parseReqName(s string) string {
 	elems := strings.SplitN(s, "/", 2)
+	if len(elems) == 1 {
+		return ""
+	}
 	name := elems[1]
 	return name
 }
