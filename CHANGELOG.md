@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.22.1 (2022-06-06)
+## Unreleased
 
-### Bug Fixes
+### Bug Fixes/Enhancements
 
 - **helm**: Fix `vendor --prune` deleting charts with a custom directory
   **[#717](https://github.com/grafana/tanka/pull/717)**
