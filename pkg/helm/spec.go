@@ -100,11 +100,16 @@ func (r Requirements) Has(req Requirement) bool {
 	return false
 }
 
-func (r Requirements) CheckForOutputConflicts() error {
+func (r Requirements) Validate() error {
 	outputDirs := make(map[string]Requirement)
 	errs := make([]string, 0)
 
 	for _, req := range r {
+		if !strings.Contains(req.Chart, "/") {
+			errs = append(errs, fmt.Sprintf("Chart name %q is not valid. Expecting a repo/name format.", req.Chart))
+			continue
+		}
+
 		dir := req.Directory
 		if dir == "" {
 			dir = parseReqName(req.Chart)
@@ -116,7 +121,7 @@ func (r Requirements) CheckForOutputConflicts() error {
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("Output directory conflicts found:\n - " + strings.Join(errs, "\n - "))
+		return fmt.Errorf("Validation errors:\n - " + strings.Join(errs, "\n - "))
 	}
 
 	return nil
