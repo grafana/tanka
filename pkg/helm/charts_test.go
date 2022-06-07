@@ -137,6 +137,10 @@ func TestPrune(t *testing.T) {
 			err = c.Add([]string{"stable/prometheus@11.12.1"})
 			require.NoError(t, err)
 
+			// Add a chart with a directory
+			err = c.Add([]string{"stable/prometheus@11.12.1:custom-dir"})
+			require.NoError(t, err)
+
 			// Add unrelated files and folders
 			err = os.WriteFile(filepath.Join(tempDir, "charts", "foo.txt"), []byte("foo"), 0644)
 			err = os.Mkdir(filepath.Join(tempDir, "charts", "foo"), 0755)
@@ -151,9 +155,11 @@ func TestPrune(t *testing.T) {
 			listResult, err := os.ReadDir(filepath.Join(tempDir, "charts"))
 			assert.NoError(t, err)
 			if prune {
-				assert.Equal(t, 1, len(listResult))
+				assert.Equal(t, 2, len(listResult))
+				assert.Equal(t, "custom-dir", listResult[0].Name())
+				assert.Equal(t, "prometheus", listResult[1].Name())
 			} else {
-				assert.Equal(t, 3, len(listResult))
+				assert.Equal(t, 4, len(listResult))
 				chartContent, err := os.ReadFile(filepath.Join(tempDir, "charts", "foo", "Chart.yaml"))
 				assert.NoError(t, err)
 				assert.Contains(t, string(chartContent), `foo`)
