@@ -50,7 +50,8 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 	}
 	defer os.Remove(repoFile)
 
-	tempDir, err := os.MkdirTemp("", "charts-pull")
+	// Pull to a temp dir within the destination directory (not /tmp) to avoid possible cross-device issues when renaming
+	tempDir, err := os.MkdirTemp(opts.Destination, ".pull-")
 	if err != nil {
 		return err
 	}
