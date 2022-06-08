@@ -8,6 +8,8 @@
   **[#717](https://github.com/grafana/tanka/pull/717)**
 - **helm**: Add validation at vendoring time for invalid chart names
   **[#718](https://github.com/grafana/tanka/pull/718)**
+- **helm**: Fix cross-device link error when tmp is mounted on a different device
+  **[#720](https://github.com/grafana/tanka/pull/720)**
 
 ## 0.22.0 (2022-06-03)
 
