@@ -6,16 +6,19 @@ Just grab the latest version from there, download it and put somewhere in your
 
 #### Linux, macOS
 
-For Linux and macOS, download the binary for your architecture and put it somewhere on your `$PATH`:
+For Linux and macOS, download the binary for your architecture, put it somewhere on your `$PATH`, and make it an executable:
 
 ```bash
 # Linux amd64:
 sudo curl -Lo /usr/local/bin/tk https://github.com/grafana/tanka/releases/latest/download/tk-linux-amd64
+sudo chmod +X /usr/local/bin/tk
 
 # Linux arm / arm64 (e.g. RaspberryPi):
 sudo curl -Lo /usr/local/bin/tk https://github.com/grafana/tanka/releases/latest/download/tk-linux-arm
 sudo curl -Lo /usr/local/bin/tk https://github.com/grafana/tanka/releases/latest/download/tk-linux-arm64
+sudo chmod +X /usr/local/bin/tk
 
 # macOS:
 sudo curl -Lo /usr/local/bin/tk https://github.com/grafana/tanka/releases/latest/download/tk-darwin-amd64
+sudo chmod +X /usr/local/bin/tk
 ```
