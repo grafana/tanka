@@ -100,6 +100,7 @@ func installK8sLib(version string) error {
 	var initialPackages = []string{
 		"github.com/jsonnet-libs/k8s-libsonnet/" + version + "@main",
 		"github.com/grafana/jsonnet-libs/ksonnet-util",
+		"github.com/jsonnet-libs/docsonnet/doc-util", // install docsonnet to make `tk lint` work
 	}
 
 	if err := writeNewFile("lib/k.libsonnet", "import 'github.com/jsonnet-libs/k8s-libsonnet/"+version+"/main.libsonnet'\n"); err != nil {
