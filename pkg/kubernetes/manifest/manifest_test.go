@@ -9,28 +9,79 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// UnmarshalExpect defines the expected Unmarshal result. Types are very
-// important here, only nil, float64, bool, string, map[string]interface{} and
-// []interface{} may exist.
-var UnmarshalExpect = Manifest{
-	"apiVersion": string("apps/v1"),
-	"kind":       string("Deployment"),
-	"metadata": map[string]interface{}{
-		"name": string("MyDeployment"),
-	},
-	"spec": map[string]interface{}{
-		"replicas": float64(3),
-		"template": map[string]interface{}{
-			"spec": map[string]interface{}{
-				"containers": []interface{}{
-					map[string]interface{}{
-						"name":  string("nginx"),
-						"image": string("nginx:1.14.2"),
+var (
+	// UnmarshalExpect defines the expected Unmarshal result. Types are very
+	// important here, only nil, float64, bool, string, map[string]interface{} and
+	// []interface{} may exist.
+	UnmarshalExpect = Manifest{
+		"apiVersion": string("apps/v1"),
+		"kind":       string("Deployment"),
+		"metadata": map[string]interface{}{
+			"name": string("MyDeployment"),
+		},
+		"spec": map[string]interface{}{
+			"replicas": float64(3),
+			"template": map[string]interface{}{
+				"spec": map[string]interface{}{
+					"containers": []interface{}{
+						map[string]interface{}{
+							"name":  string("nginx"),
+							"image": string("nginx:1.14.2"),
+						},
 					},
 				},
 			},
 		},
-	},
+	}
+
+	// Manifest defines the manifest we're comparing the marshal results below to.
+	SubstituteManifest = Manifest{
+		"apiVersion": string("test/v1"),
+		"kind":       string("Test"),
+		"metadata": map[string]interface{}{
+			"name": string("test"),
+		},
+		"spec": map[string]interface{}{
+			"integer": float64(3),
+			"string":  string("${TEST_ENV}"),
+		},
+	}
+
+	// SubstituteManifestString defines the expected Marshal result when using String(forceQuotedStrings=true).
+	SubstituteManifestString = `apiVersion: test/v1
+kind: Test
+metadata:
+    name: test
+spec:
+    integer: 3
+    string: ${TEST_ENV}
+`
+
+	// SubstituteManifestQuotedString defines the expected Marshal result when using String(forceQuotedStrings=falsetrue).
+	SubstituteManifestQuotedString = `"apiVersion": "test/v1"
+"kind": "Test"
+"metadata":
+    "name": "test"
+"spec":
+    "integer": 3
+    "string": "${TEST_ENV}"
+`
+)
+
+func TestMarshalString(t *testing.T) {
+	m := SubstituteManifest.String(false)
+
+	if s := cmp.Diff(SubstituteManifestString, m); s != "" {
+		t.Error(s)
+	}
+}
+
+func TestMarshalQuotedString(t *testing.T) {
+	m := SubstituteManifest.String(true)
+
+	if s := cmp.Diff(SubstituteManifestQuotedString, m); s != "" {
+		t.Error(s)
+	}
 }
 
 func TestUnmarshalJSON(t *testing.T) {
