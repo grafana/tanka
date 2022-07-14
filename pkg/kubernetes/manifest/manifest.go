@@ -9,8 +9,18 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
+
+func yamlForceStringQuotationRecursivePatch(n *yaml.Node) {
+	if n.Tag == "!!str" {
+		n.Style = yaml.DoubleQuotedStyle
+	}
+	for _, cNode := range n.Content {
+		// for all child nodes
+		yamlForceStringQuotationRecursivePatch(cNode)
+	}
+}
 
 // Manifest represents a Kubernetes API object. The fields `apiVersion` and
 // `kind` are required, `metadata.name` should be present as well
@@ -31,8 +41,17 @@ func NewFromObj(raw objx.Map) (Manifest, error) {
 }
 
 // String returns the Manifest in yaml representation
-func (m Manifest) String() string {
-	y, err := yaml.Marshal(m)
+func (m Manifest) String(forceQuotedStrings bool) string {
+
+	yamlNode := &yaml.Node{}
+	if err := yamlNode.Encode(m); err != nil {
+		panic(errors.Wrap(err, "converting manifest to yaml.Node"))
+	}
+	if forceQuotedStrings {
+		yamlForceStringQuotationRecursivePatch(yamlNode)
+	}
+
+	y, err := yaml.Marshal(yamlNode)
 	if err != nil {
 		// this should never go wrong in normal operations
 		panic(errors.Wrap(err, "formatting manifest"))
@@ -262,12 +281,19 @@ type List []Manifest
 
 // String returns the List as a yaml stream. In case of an error, it is
 // returned as a string instead.
-func (m List) String() string {
+func (m List) String(forceQuotedStrings bool) string {
 	buf := bytes.Buffer{}
 	enc := yaml.NewEncoder(&buf)
 
 	for _, d := range m {
-		if err := enc.Encode(d); err != nil {
+		yamlNode := &yaml.Node{}
+		if err := yamlNode.Encode(d); err != nil {
+			panic(errors.Wrap(err, "converting manifest to yaml.Node"))
+		}
+		if forceQuotedStrings {
+			yamlForceStringQuotationRecursivePatch(yamlNode)
+		}
+		if err := enc.Encode(yamlNode); err != nil {
 			// This should never happen in normal operations
 			panic(errors.Wrap(err, "formatting manifests"))
 		}

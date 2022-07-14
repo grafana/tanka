@@ -24,6 +24,16 @@ func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	return &v
 }
 
+func yamlStyleFlags(fs *pflag.FlagSet) func() tanka.YAMLOpts {
+	forceStringQuotation := fs.Bool("force-yaml-string-quotation", false, "enforce YAML quotation for strings")
+
+	return func() tanka.YAMLOpts {
+		return tanka.YAMLOpts{
+			ForceStringQuotation: *forceStringQuotation,
+		}
+	}
+}
+
 func labelSelectorFlag(fs *pflag.FlagSet) func() labels.Selector {
 	labelSelector := fs.StringP("selector", "l", "", "Label selector. Uses the same syntax as kubectl does")
 

@@ -92,10 +92,10 @@ func subsetDiff(c client.Client, m manifest.Manifest) (*difference, error) {
 		return nil, errors.Wrap(err, "getting state from cluster")
 	}
 
-	should := m.String()
+	should := m.String(false)
 
 	sub := subset(m, rawIs)
-	is := manifest.Manifest(sub).String()
+	is := manifest.Manifest(sub).String(false)
 	if is == "{}\n" {
 		is = ""
 	}

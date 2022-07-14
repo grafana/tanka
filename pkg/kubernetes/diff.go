@@ -174,7 +174,7 @@ func StaticDiffer(create bool) Differ {
 	return func(state manifest.List) (*string, error) {
 		s := ""
 		for _, m := range state {
-			is, should := m.String(), ""
+			is, should := m.String(false), ""
 			if create {
 				is, should = should, is
 			}

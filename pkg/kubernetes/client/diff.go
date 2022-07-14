@@ -51,7 +51,7 @@ func (k Kubectl) diff(data manifest.List, serverSide bool) (*string, error) {
 		cmd.Stdout = &raw
 	}
 	cmd.Stderr = &fw
-	cmd.Stdin = strings.NewReader(data.String())
+	cmd.Stdin = strings.NewReader(data.String(false))
 	err := cmd.Run()
 	if diffErr := parseDiffErr(err, fw.buf, k.Info().ClientVersion); diffErr != nil {
 		return nil, diffErr

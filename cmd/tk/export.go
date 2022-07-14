@@ -43,6 +43,7 @@ func exportCmd() *cli.Command {
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 	getLabelSelector := labelSelectorFlag(cmd.Flags())
+	getYAMLOpts := yamlStyleFlags(cmd.Flags())
 
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
@@ -62,6 +63,7 @@ func exportCmd() *cli.Command {
 			Merge:     *merge,
 			Opts: tanka.Opts{
 				JsonnetOpts: getJsonnetOpts(),
+				YamlOpts:    getYAMLOpts(),
 				Filters:     filters,
 				Name:        vars.name,
 			},

@@ -48,7 +48,7 @@ func (k Kubectl) Apply(data manifest.List, opts ApplyOpts) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	cmd.Stdin = strings.NewReader(data.String())
+	cmd.Stdin = strings.NewReader(data.String(false))
 
 	return cmd.Run()
 }

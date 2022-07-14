@@ -38,7 +38,7 @@ func (s *SchemaError) Error() string {
 
 	if s.Manifest != nil {
 		msg += bluef("\nPlease check below object:\n")
-		msg += SampleString(s.Manifest.String()).Indent(2)
+		msg += SampleString(s.Manifest.String(false)).Indent(2)
 	}
 
 	return msg

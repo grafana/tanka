@@ -115,7 +115,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 			}
 
 			// Write manifest
-			data := m.String()
+			data := m.String(opts.Opts.YamlOpts.ForceStringQuotation)
 			if err := writeExportFile(path, []byte(data)); err != nil {
 				return err
 			}

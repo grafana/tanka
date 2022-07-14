@@ -198,6 +198,7 @@ func showCmd() *cli.Command {
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getYAMLOpts := yamlStyleFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		if !interactive && !*allowRedirect {
@@ -212,17 +213,20 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return err
 		}
 
-		pretty, err := tanka.Show(args[0], tanka.Opts{
+		opts := tanka.Opts{
 			JsonnetOpts: getJsonnetOpts(),
+			YamlOpts:    getYAMLOpts(),
 			Filters:     filters,
 			Name:        vars.name,
-		})
+		}
+
+		pretty, err := tanka.Show(args[0], opts)
 
 		if err != nil {
 			return err
 		}
 
-		return pageln(pretty.String())
+		return pageln(pretty.String(opts.YamlOpts.ForceStringQuotation))
 	}
 	return cmd
 }

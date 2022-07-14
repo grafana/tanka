@@ -15,9 +15,14 @@ import (
 
 type JsonnetOpts = jsonnet.Opts
 
+type YAMLOpts struct {
+	ForceStringQuotation bool
+}
+
 // Opts specify general, optional properties that apply to all actions
 type Opts struct {
 	JsonnetOpts
+	YamlOpts YAMLOpts
 
 	// Filters are used to optionally select a subset of the resources
 	Filters process.Matchers

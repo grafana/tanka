@@ -45,7 +45,7 @@ func (k Kubectl) GetByLabels(namespace, kind string, labels map[string]string) (
 func (k Kubectl) GetByState(data manifest.List, opts GetByStateOpts) (manifest.List, error) {
 	list, err := k.get("", "", []string{"-f", "-"}, getOpts{
 		ignoreNotFound: opts.IgnoreNotFound,
-		stdin:          data.String(),
+		stdin:          data.String(false),
 	})
 	if err != nil {
 		return nil, err
