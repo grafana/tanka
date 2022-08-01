@@ -10,5 +10,5 @@
     checkExternal = true
 
     skipPatterns = [
-      'Failed loading inline Css'
+      '.*inline Css.*'
     ]
