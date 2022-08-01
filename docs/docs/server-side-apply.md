@@ -1,6 +1,6 @@
 ---
 name: "Server-Side Apply"
-route: "/server-side-apply"
+route: "/server-side-apply/"
 menu: Advanced features
 ---
 

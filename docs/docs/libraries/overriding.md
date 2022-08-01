@@ -1,6 +1,6 @@
 ---
 name: Overriding
-route: /libraries/overriding
+route: /libraries/overriding/
 menu: Libraries
 ---
 

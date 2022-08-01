@@ -1,6 +1,6 @@
 ---
 name: Syntax overview
-route: /jsonnet/overview
+route: /jsonnet/overview/
 menu: Writing Jsonnet
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: "Frequently asked questions"
-route: "/faq"
+route: "/faq/"
 ---
 
 # Frequently asked questions

@@ -1,6 +1,6 @@
 ---
 name: "Command-line completion"
-route: "/completion"
+route: "/completion/"
 menu: "References"
 ---
 

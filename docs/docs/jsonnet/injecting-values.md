@@ -1,6 +1,6 @@
 ---
 name: "Injecting Values"
-route: "/jsonnet/injecting-values"
+route: "/jsonnet/injecting-values/"
 menu: "Writing Jsonnet"
 ---
 
@@ -10,9 +10,10 @@ Sometimes it might be required to pass externally acquired data into Jsonnet.
 
 There are three ways of doing so:
 
-1. [JSON files](#json-files)
-2. [External variables](#external-variables)
-3. [Top level arguments](#top-level-arguments)
+- [Injecting Values](#injecting-values)
+  - [JSON files](#json-files)
+  - [External variables](#external-variables)
+  - [Top Level Arguments](#top-level-arguments)
 
 Also check out the [official Jsonnet docs on this
 topic](https://jsonnet.org/ref/language.html#passing-data-to-jsonnet).

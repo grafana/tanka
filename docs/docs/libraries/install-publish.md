@@ -1,6 +1,6 @@
 ---
 name: Installing and publishing
-route: /libraries/install-publish
+route: /libraries/install-publish/
 menu: Libraries
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: "Configuration Reference"
-route: "/config"
+route: "/config/"
 menu: "References"
 ---
 

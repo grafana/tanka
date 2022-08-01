@@ -1,6 +1,6 @@
 ---
 name: "Formatting"
-route: "/formatting"
+route: "/formatting/"
 menu: "References"
 ---
 

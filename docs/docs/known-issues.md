@@ -1,6 +1,6 @@
 ---
 name: "Known issues"
-route: "/known-issues"
+route: "/known-issues/"
 ---
 
 # Known Issues

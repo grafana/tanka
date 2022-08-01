@@ -1,6 +1,6 @@
 ---
 name: "main.jsonnet"
-route: "/jsonnet/main"
+route: "/jsonnet/main/"
 menu: "Writing Jsonnet"
 ---
 

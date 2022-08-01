@@ -1,6 +1,6 @@
 ---
 name: "Native Functions"
-route: "/jsonnet/native"
+route: "/jsonnet/native/"
 menu: "Writing Jsonnet"
 ---
 

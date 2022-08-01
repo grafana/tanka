@@ -1,6 +1,6 @@
 ---
 name: "Garbage collection"
-route: "/garbage-collection"
+route: "/garbage-collection/"
 menu: Advanced features
 ---
 

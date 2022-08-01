@@ -1,6 +1,6 @@
 ---
 name: Import paths
-route: /libraries/import-paths
+route: /libraries/import-paths/
 menu: Libraries
 ---
 

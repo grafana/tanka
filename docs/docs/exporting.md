@@ -1,6 +1,6 @@
 ---
 name: "Exporting as YAML"
-route: "/exporting"
+route: "/exporting/"
 menu: Advanced features
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: Namespaces
-route: /namespaces
+route: /namespaces/
 menu: "References"
 ---
 
