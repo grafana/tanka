@@ -8,7 +8,4 @@
 
   [plugins.inputs]
     checkExternal = true
-
-    skipPatterns = [
-      ".*inline Css.*"
-    ]
+    skipPatterns = [".*inline Css.*"]
