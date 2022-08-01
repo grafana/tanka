@@ -10,5 +10,5 @@
     checkExternal = true
 
     skipPatterns = [
-      '.*inline Css.*'
+      ".*inline Css.*"
     ]
