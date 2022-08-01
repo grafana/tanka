@@ -3,3 +3,8 @@
   publish = "docs/public"
   command = "yarn build"
 
+[[plugins]]
+  package = "netlify-plugin-checklinks"
+  
+  [plugins.inputs]
+    checkExternal = true

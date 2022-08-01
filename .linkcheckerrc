@@ -1,0 +1,5 @@
+[checking]
+localwebroot=docs/public/
+
+[filtering]
+checkextern=1
