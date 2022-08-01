@@ -5,6 +5,7 @@
   "author": "sh0rez <me@shorez.de>",
   "repository": "https://github.com/grafana/tanka.git",
   "dependencies": {
+    "@emotion/core": "^10.0.5",
     "docz": "^2.4.0",
     "gatsby": "^2.0.0",
     "gatsby-image": "^3.11.0",
