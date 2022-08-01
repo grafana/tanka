@@ -5,6 +5,10 @@
 
 [[plugins]]
   package = "netlify-plugin-checklinks"
-  
+
   [plugins.inputs]
     checkExternal = true
+
+    skipPatterns = [
+      'Failed loading inline Css'
+    ]
