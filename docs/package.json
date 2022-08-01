@@ -5,9 +5,10 @@
   "author": "sh0rez <me@shorez.de>",
   "repository": "https://github.com/grafana/tanka.git",
   "dependencies": {
-    "docz": "^2.3.0-alpha.5",
-    "gatsby": "^2.18.12",
-    "gatsby-image": "^2.2.34",
+    "@emotion/core": "^10.0.5",
+    "docz": "^2.4.0",
+    "gatsby": "^2.0.0",
+    "gatsby-image": "^3.11.0",
     "gatsby-plugin-algolia-docsearch": "^1.0.5",
     "gatsby-plugin-catch-links": "^2.1.21",
     "gatsby-plugin-manifest": "^2.2.34",
@@ -16,13 +17,14 @@
     "gatsby-plugin-sharp": "^2.3.10",
     "gatsby-remark-images": "^3.1.39",
     "gatsby-remark-vscode": "^1.4.0",
-    "gatsby-theme-docz": "^2.3.0-alpha.5",
+    "gatsby-theme-docz": "^2.4.0",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-helmet": "^5.2.1",
     "typeface-fira-mono": "^0.0.72",
-    "typeface-source-sans-pro": "^0.0.75"
+    "typeface-source-sans-pro": "^0.0.75",
+    "typescript": "^4.0.0"
   },
   "devDependencies": {
     "prettier": "^1.19.1"
