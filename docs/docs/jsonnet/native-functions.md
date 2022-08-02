@@ -176,7 +176,7 @@ regexMatch(string regex, string s) boolean
 ```
 
 `regexMatch` returns whether the given string is matched by the given
-[RE2](https://golang.org/s/re2syntax) regular expression.
+[RE2](https://github.com/google/re2/wiki/Syntax) regular expression.
 
 ### Examples
 

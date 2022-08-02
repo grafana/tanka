@@ -45,7 +45,7 @@ If that does not fit your need, you can provide your own pattern using the `--fo
 tk export promtail environments/promtail --format='{{.metadata.labels.app}}-{{.metadata.name}}-{{.kind}}'
 ```
 
-> The syntax is Go `text/template`. See https://golang.org/pkg/text/template/
+> The syntax is Go `text/template`. See <https://pkg.go.dev/text/template>
 > for reference.
 
 This would include the label named `app`, the `name` and `kind` of the resource:
