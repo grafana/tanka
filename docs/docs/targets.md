@@ -34,7 +34,7 @@ multiple objects.
 ## Regular Expressions
 
 The argument passed to the `--target` flag is interpreted as a
-[RE2](https://golang.org/s/re2syntax) regular expression.
+[RE2](https://github.com/google/re2/wiki/Syntax) regular expression.
 
 This allows you to use all sorts of wildcards and other advanced matching
 functionality to select Kubernetes objects:
