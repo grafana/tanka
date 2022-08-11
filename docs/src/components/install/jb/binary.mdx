@@ -2,16 +2,19 @@ The `jb` binary is primarily distributed using [GitHub releases](https://github.
 
 #### Linux, macOS
 
-For Linux and macOS, download the binary for your architecture and put it somewhere on your `$PATH`:
+For Linux and macOS, download the binary for your architecture, put it somewhere on your `$PATH`, and make it an executable:
 
 ```bash
 # Linux amd64:
 sudo curl -Lo /usr/local/bin/jb https://github.com/jsonnet-bundler/jsonnet-bundler/releases/latest/download/jb-linux-amd64
+sudo chmod a+x /usr/local/bin/jb
 
 # Linux arm / arm64 (e.g. RaspberryPi):
 sudo curl -Lo /usr/local/bin/jb https://github.com/jsonnet-bundler/jsonnet-bundler/releases/latest/download/jb-linux-arm
 sudo curl -Lo /usr/local/bin/jb https://github.com/jsonnet-bundler/jsonnet-bundler/releases/latest/download/jb-linux-arm64
+sudo chmod a+x /usr/local/bin/jb
 
 # macOS:
 sudo curl -Lo /usr/local/bin/jb https://github.com/jsonnet-bundler/jsonnet-bundler/releases/latest/download/jb-darwin-amd64
+sudo chmod a+x /usr/local/bin/jb
 ```
