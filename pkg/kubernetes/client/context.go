@@ -135,7 +135,8 @@ func ContextFromIP(apiServer string) (*Cluster, *Context, error) {
 		return nil, nil, err
 	}
 
-	err = find(contexts, "context.cluster", cluster.Name, &context)
+	// find the context that uses the cluster, it should be an exact match
+	err = find(contexts, "context.cluster", fmt.Sprintf("^%s$", cluster.Name), &context)
 	if err == ErrorNoMatch {
 		return nil, nil, ErrorNoContext(cluster.Name)
 	} else if err != nil {
