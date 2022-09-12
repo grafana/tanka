@@ -126,6 +126,38 @@ func TestAdd(t *testing.T) {
 	assert.Contains(t, string(chartContent), `version: 11.12.0`)
 }
 
+func TestRevendorDeletedFiles(t *testing.T) {
+	tempDir := t.TempDir()
+	c, err := InitChartfile(filepath.Join(tempDir, Filename))
+	require.NoError(t, err)
+
+	err = c.Add([]string{"stable/prometheus@11.12.1"})
+	assert.NoError(t, err)
+
+	// Check file contents
+	chartContent, err := os.ReadFile(filepath.Join(tempDir, "charts", "prometheus", "Chart.yaml"))
+	assert.NoError(t, err)
+	assert.Contains(t, string(chartContent), `version: 11.12.1`)
+
+	// Delete the whole dir and revendor
+	require.NoError(t, os.RemoveAll(filepath.Join(tempDir, "charts", "prometheus")))
+	assert.NoError(t, c.Vendor(true))
+
+	// Check file contents
+	chartContent, err = os.ReadFile(filepath.Join(tempDir, "charts", "prometheus", "Chart.yaml"))
+	assert.NoError(t, err)
+	assert.Contains(t, string(chartContent), `version: 11.12.1`)
+
+	// Delete just the Chart.yaml and revendor
+	require.NoError(t, os.Remove(filepath.Join(tempDir, "charts", "prometheus", "Chart.yaml")))
+	assert.NoError(t, c.Vendor(true))
+
+	// Check file contents
+	chartContent, err = os.ReadFile(filepath.Join(tempDir, "charts", "prometheus", "Chart.yaml"))
+	assert.NoError(t, err)
+	assert.Contains(t, string(chartContent), `version: 11.12.1`)
+}
+
 func TestPrune(t *testing.T) {
 	for _, prune := range []bool{false, true} {
 		t.Run(fmt.Sprintf("%t", prune), func(t *testing.T) {
