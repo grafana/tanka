@@ -112,11 +112,22 @@ func (c Charts) Vendor(prune bool) error {
 			chartSubDir = r.Directory
 		}
 		chartPath := filepath.Join(dir, chartSubDir)
+		chartManifestPath := filepath.Join(chartPath, "Chart.yaml")
 		expectedDirs[chartSubDir] = true
 
-		_, err := os.Stat(chartPath)
-		if err == nil {
-			chartManifestPath := filepath.Join(chartPath, "Chart.yaml")
+		chartDirExists, chartManifestExists := false, false
+		if _, err := os.Stat(chartPath); err == nil {
+			chartDirExists = true
+			if _, err := os.Stat(chartManifestPath); err == nil {
+				chartManifestExists = true
+			} else if !os.IsNotExist(err) {
+				return err
+			}
+		} else if !os.IsNotExist(err) {
+			return err
+		}
+
+		if chartManifestExists {
 			chartManifestBytes, err := os.ReadFile(chartManifestPath)
 			if err != nil {
 				return fmt.Errorf("reading chart manifest: %w", err)
@@ -135,8 +146,12 @@ func (c Charts) Vendor(prune bool) error {
 					return err
 				}
 			}
-		} else if !os.IsNotExist(err) {
-			return err
+		} else if chartDirExists {
+			// If the chart dir exists but the manifest doesn't, we'll clear it out and re-download the chart
+			log.Printf("Removing %s", r)
+			if err := os.RemoveAll(chartPath); err != nil {
+				return err
+			}
 		}
 
 		if !repositoriesUpdated {
@@ -150,7 +165,7 @@ func (c Charts) Vendor(prune bool) error {
 		if repoName := parseReqRepo(r.Chart); !c.Manifest.Repositories.HasName(repoName) {
 			return fmt.Errorf("repository %q not found for chart %q", repoName, r.Chart)
 		}
-		err = c.Helm.Pull(r.Chart, r.Version.String(), PullOpts{
+		err := c.Helm.Pull(r.Chart, r.Version.String(), PullOpts{
 			Destination:      dir,
 			ExtractDirectory: r.Directory,
 			Opts:             Opts{Repositories: c.Manifest.Repositories},
