@@ -24,6 +24,18 @@ func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	return &v
 }
 
+func addApplyFlags(fs *pflag.FlagSet, opts *tanka.ApplyBaseOpts, autoApproveDeprecated *bool, autoApprove *string) {
+	fs.StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
+	fs.BoolVar(&opts.Force, "force", false, "force applying (kubectl apply --force)")
+
+	// Parse the auto-approve flag (choice), still supporting the deprecated dangerous-auto-approve flag (boolean)
+	fs.BoolVar(autoApproveDeprecated, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
+	if err := fs.MarkDeprecated("dangerous-auto-approve", "use --auto-approve instead"); err != nil {
+		log.Fatalf("failed to mark deprecated flag: %s", err)
+	}
+	fs.StringVar(autoApprove, "auto-approve", "", "skip interactive approval. Only for automation! Allowed values: 'always', 'never', 'if-no-changes'")
+}
+
 func labelSelectorFlag(fs *pflag.FlagSet) func() labels.Selector {
 	labelSelector := fs.StringP("selector", "l", "", "Label selector. Uses the same syntax as kubectl does")
 

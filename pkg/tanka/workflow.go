@@ -13,22 +13,39 @@ import (
 	"github.com/grafana/tanka/pkg/term"
 )
 
-// ApplyOpts specify additional properties for the Apply action
-type ApplyOpts struct {
+type AutoApproveSetting string
+
+const (
+	// AutoApproveNever disables auto-approval
+	AutoApproveNever AutoApproveSetting = "never"
+	// AutoApproveAlways enables auto-approval
+	AutoApproveAlways AutoApproveSetting = "always"
+	// AutoApproveNoChanges enables auto-approval if there were no changes found in the diff
+	AutoApproveNoChanges AutoApproveSetting = "if-no-changes"
+)
+
+type ApplyBaseOpts struct {
 	Opts
 
 	// AutoApprove skips the interactive approval
-	AutoApprove bool
+	AutoApprove AutoApproveSetting
+	// DryRun string passed to kubectl as --dry-run=<DryRun>
+	DryRun string
+	// Force ignores any warnings kubectl might have
+	Force bool
+}
+
+// ApplyOpts specify additional properties for the Apply action
+type ApplyOpts struct {
+	ApplyBaseOpts
+
 	// DiffStrategy to use for printing the diff before approval
 	DiffStrategy string
 	// ApplyStrategy decides how kubectl will apply the manifest
 	ApplyStrategy string
-	// Force ignores any warnings kubectl might have
-	Force bool
 	// Validate set to false ignores invalid Kubernetes schemas
 	Validate bool
-	// DryRun string passed to kubectl as --dry-run=<DryRun>
-	DryRun string
+
 	// ServerSide bool passed to kubectl as --server-side
 	ServerSide bool
 }
@@ -76,6 +93,7 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	}
 	defer kube.Close()
 
+	var noChanges bool
 	if opts.DiffStrategy != "none" {
 		// show diff
 		diff, err := kube.Diff(l.Resources, kubernetes.DiffOpts{Strategy: opts.DiffStrategy})
@@ -84,6 +102,7 @@ func Apply(baseDir string, opts ApplyOpts) error {
 			// This is not fatal, the diff is not strictly required
 			log.Println("Error diffing:", err)
 		case diff == nil:
+			noChanges = true
 			// If using KUBECTL_INTERACTIVE_DIFF, the stdout buffer is always empty
 			if os.Getenv("KUBECTL_INTERACTIVE_DIFF") == "" {
 				tmp := "Warning: There are no differences. Your apply may not do anything at all."
@@ -99,7 +118,8 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	}
 
 	// prompt for confirmation
-	if opts.AutoApprove || opts.DryRun != "" {
+	if opts.AutoApprove == AutoApproveAlways || (noChanges && opts.AutoApprove == AutoApproveNoChanges) || opts.DryRun != "" {
+		// Skip approval
 	} else if err := confirmPrompt("Applying to", l.Env.Spec.Namespace, kube.Info()); err != nil {
 		return err
 	}
@@ -167,17 +187,7 @@ func Diff(baseDir string, opts DiffOpts) (*string, error) {
 
 // DeleteOpts specify additional properties for the Delete operation
 type DeleteOpts struct {
-	Opts
-
-	// AutoApprove skips the interactive approval
-	AutoApprove bool
-
-	// Force ignores any warnings kubectl might have
-	Force bool
-	// Validate set to false ignores invalid Kubernetes schemas
-	Validate bool
-	// DryRun string passed to kubectl as --dry-run=<DryRun>
-	DryRun string
+	ApplyBaseOpts
 }
 
 // Delete parses the environment at the given directory (a `baseDir`) and deletes
@@ -211,15 +221,15 @@ func Delete(baseDir string, opts DeleteOpts) error {
 	}
 
 	// prompt for confirmation
-	if opts.AutoApprove || opts.DryRun != "" {
+	if opts.AutoApprove == AutoApproveAlways || opts.DryRun != "" {
+		// Skip approval
 	} else if err := confirmPrompt("Deleting from", l.Env.Spec.Namespace, kube.Info()); err != nil {
 		return err
 	}
 
 	return kube.Delete(l.Resources, kubernetes.DeleteOpts{
-		Force:    opts.Force,
-		Validate: opts.Validate,
-		DryRun:   opts.DryRun,
+		Force:  opts.Force,
+		DryRun: opts.DryRun,
 	})
 }
 

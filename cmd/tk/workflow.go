@@ -29,6 +29,28 @@ func validateDryRun(dryRunStr string) error {
 	return fmt.Errorf(`--dry-run must be either: "", "none", "server" or "client"`)
 }
 
+func validateAutoApprove(autoApproveDeprecated bool, autoApproveString string) (tanka.AutoApproveSetting, error) {
+	var result tanka.AutoApproveSetting
+
+	if autoApproveString != "" && autoApproveDeprecated {
+		return result, fmt.Errorf("--dangerous-auto-approve and --auto-approve are mutually exclusive")
+	}
+	if autoApproveString == "" {
+		if autoApproveDeprecated {
+			result = tanka.AutoApproveAlways
+		} else {
+			result = tanka.AutoApproveNever
+		}
+	} else {
+		if autoApproveString != string(tanka.AutoApproveAlways) && autoApproveString != string(tanka.AutoApproveNever) && autoApproveString != string(tanka.AutoApproveNoChanges) {
+			return result, fmt.Errorf("invalid value for --auto-approve: %s", autoApproveString)
+		}
+		result = tanka.AutoApproveSetting(autoApproveString)
+	}
+
+	return result, nil
+}
+
 func applyCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "apply <path>",
@@ -41,19 +63,24 @@ func applyCmd() *cli.Command {
 	}
 
 	var opts tanka.ApplyOpts
-	cmd.Flags().BoolVar(&opts.Force, "force", false, "force applying (kubectl apply --force)")
 	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
-	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
-	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
 	cmd.Flags().StringVar(&opts.ApplyStrategy, "apply-strategy", "", "force the apply strategy to use. Automatically chosen if not set.")
 	cmd.Flags().StringVar(&opts.DiffStrategy, "diff-strategy", "", "force the diff strategy to use. Automatically chosen if not set.")
 
+	var (
+		autoApproveDeprecated bool
+		autoApproveString     string
+	)
+	addApplyFlags(cmd.Flags(), &opts.ApplyBaseOpts, &autoApproveDeprecated, &autoApproveString)
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
+			return err
+		}
+		if opts.AutoApprove, err = validateAutoApprove(autoApproveDeprecated, autoApproveString); err != nil {
 			return err
 		}
 
@@ -78,15 +105,20 @@ func pruneCmd() *cli.Command {
 	}
 
 	var opts tanka.PruneOpts
-	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
-	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
-	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	cmd.Flags().StringVar(&opts.Name, "name", "", "string that only a single inline environment contains in its name")
+	var (
+		autoApproveDeprecated bool
+		autoApproveString     string
+	)
+	addApplyFlags(cmd.Flags(), &opts.ApplyBaseOpts, &autoApproveDeprecated, &autoApproveString)
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
+			return err
+		}
+		if opts.AutoApprove, err = validateAutoApprove(autoApproveDeprecated, autoApproveString); err != nil {
 			return err
 		}
 
@@ -106,17 +138,21 @@ func deleteCmd() *cli.Command {
 	}
 
 	var opts tanka.DeleteOpts
-	cmd.Flags().StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
-	cmd.Flags().BoolVar(&opts.Force, "force", false, "force deleting (kubectl delete --force)")
-	cmd.Flags().BoolVar(&opts.Validate, "validate", true, "validation of resources (kubectl --validate=false)")
-	cmd.Flags().BoolVar(&opts.AutoApprove, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 
+	var (
+		autoApproveDeprecated bool
+		autoApproveString     string
+	)
+	addApplyFlags(cmd.Flags(), &opts.ApplyBaseOpts, &autoApproveDeprecated, &autoApproveString)
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
+			return err
+		}
+		if opts.AutoApprove, err = validateAutoApprove(autoApproveDeprecated, autoApproveString); err != nil {
 			return err
 		}
 
