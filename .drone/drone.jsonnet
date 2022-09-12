@@ -6,17 +6,15 @@ local volumes = [{ name: 'gopath', temp: {} }];
 local mounts = [{ name: 'gopath', path: '/go' }];
 
 local constraints = {
-  onlyTagOrMain: { trigger: {
-    ref: [
-      'refs/heads/main',
-      'refs/heads/docker',
-      'refs/tags/v*',
-    ],
-  } },
-  onlyTags: { trigger: {
-    event: ['tag'],
-  } },
-  always: {},
+  local withRef(ref) = {
+    trigger+: {
+      ref+: [ref],
+    },
+  },
+
+  tags: withRef('refs/tags/v*'),
+  mainPush: withRef('refs/heads/main'),
+  pullRequest: withRef('refs/pull/*/head'),
 };
 
 local go(name, commands) = {
@@ -74,7 +72,7 @@ local docker(arch) = pipeline('docker-' + arch) {
       make('test'),
       make('cross') { name: 'build' },
     ],
-  } + constraints.always,
+  } + constraints.pullRequest + constraints.mainPush,
 
   pipeline('release') {
     steps: [
@@ -92,10 +90,10 @@ local docker(arch) = pipeline('docker-' + arch) {
         },
       },
     ],
-  } + { depends_on: ['check'] } + constraints.onlyTags,
+  } + { depends_on: ['check'] } + constraints.tags,
 
-  docker('amd64') { depends_on: ['check'] } + constraints.onlyTagOrMain,
-  docker('arm64') { depends_on: ['check'] } + constraints.onlyTagOrMain,
+  docker('amd64') { depends_on: ['check'] } + constraints.tags + constraints.mainPush,
+  docker('arm64') { depends_on: ['check'] } + constraints.tags + constraints.mainPush,
 
   pipeline('manifest') {
     steps: [{
@@ -114,5 +112,5 @@ local docker(arch) = pipeline('docker-' + arch) {
       'docker-amd64',
       'docker-arm64',
     ],
-  } + constraints.onlyTagOrMain,
+  } + constraints.tags + constraints.mainPush,
 ] + vault.secrets

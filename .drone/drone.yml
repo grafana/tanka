@@ -48,6 +48,10 @@ steps:
   volumes:
   - name: gopath
     path: /go
+trigger:
+  ref:
+  - refs/pull/*/head
+  - refs/heads/main
 volumes:
 - name: gopath
   temp: {}
@@ -107,8 +111,8 @@ steps:
       ```
     title: ${DRONE_TAG}
 trigger:
-  event:
-  - tag
+  ref:
+  - refs/tags/v*
 volumes:
 - name: gopath
   temp: {}
@@ -153,9 +157,8 @@ steps:
       from_secret: dockerhub_username
 trigger:
   ref:
-  - refs/heads/main
-  - refs/heads/docker
   - refs/tags/v*
+  - refs/heads/main
 volumes:
 - name: gopath
   temp: {}
@@ -200,9 +203,8 @@ steps:
       from_secret: dockerhub_username
 trigger:
   ref:
-  - refs/heads/main
-  - refs/heads/docker
   - refs/tags/v*
+  - refs/heads/main
 volumes:
 - name: gopath
   temp: {}
@@ -225,9 +227,8 @@ steps:
       from_secret: dockerhub_username
 trigger:
   ref:
-  - refs/heads/main
-  - refs/heads/docker
   - refs/tags/v*
+  - refs/heads/main
 volumes:
 - name: gopath
   temp: {}
@@ -251,6 +252,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: b8c8f657e5cc61d3b58dc956fc329f5af82e4b0b9157d8ea45d2e4e18a4463ab
+hmac: aa117bd836d20ce27017ef23f9a1c369b4a201a3ee6365befa03a33701ea8d20
 
 ...
