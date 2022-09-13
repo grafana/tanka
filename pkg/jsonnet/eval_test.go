@@ -100,5 +100,5 @@ func TestEvaluateFileWithCaching(t *testing.T) {
 	assert.Equal(t, "BYfdlr1ZOVwiOfbd89JYTcK-eRQh05bi8ky3k1vVW5o=.json", result)
 	result, err = EvaluateFile("testdata/importTree/main.jsonnet", Opts{CachePath: cachePath})
 	assert.NoError(t, err)
-	assert.Equal(t, "R_3hy-dRfOwXN-fezQ50ZF4dnrFcBcbQ9LztR_XWzJA=.json", result)
+	assert.Equal(t, "V9nxRZInkJhqYJlkrncM-hEzKb3JgqdVCWHsns8sEeY=.json", result)
 }

@@ -115,7 +115,7 @@ func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
 
 // Evaluate renders the given jsonnet into a string
 // If cache options are given, a hash from the data will be computed and
-//  the resulting string will be cached for future retrieval
+// the resulting string will be cached for future retrieval
 func Evaluate(path, data string, opts Opts) (string, error) {
 	evalFunc := func(vm *jsonnet.VM) (string, error) {
 		return vm.EvaluateAnonymousSnippet(path, data)
