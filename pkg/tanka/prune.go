@@ -12,14 +12,7 @@ import (
 
 // PruneOpts specify additional properties for the Prune action
 type PruneOpts struct {
-	Opts
-
-	// AutoApprove skips the interactive approval
-	AutoApprove bool
-	// Force ignores any warnings kubectl might have
-	Force bool
-	// DryRun string passed to kubectl as --dry-run=<DryRun>
-	DryRun string
+	ApplyBaseOpts
 }
 
 // Prune deletes all resources from the cluster, that are no longer present in
@@ -73,13 +66,15 @@ func Prune(baseDir string, opts PruneOpts) error {
 	}
 
 	// prompt for confirm
-	if opts.AutoApprove {
+	if opts.AutoApprove == AutoApproveAlways {
+		// Skip approval
 	} else if err := confirmPrompt("Pruning from", p.Env.Spec.Namespace, kube.Info()); err != nil {
 		return err
 	}
 
 	// delete resources
 	return kube.Delete(orphaned, kubernetes.DeleteOpts{
-		Force: opts.Force,
+		Force:  opts.Force,
+		DryRun: opts.DryRun,
 	})
 }
