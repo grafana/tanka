@@ -4,7 +4,7 @@ BIN_DIR := $(GOPATH)/bin
 GOX := $(BIN_DIR)/gox
 
 lint:
-	test -z $$(gofmt -s -l cmd/ pkg/)
+	test -z $$(gofmt -s -l cmd/ pkg/ | tee /dev/stderr)
 	go vet ./...
 
 test:

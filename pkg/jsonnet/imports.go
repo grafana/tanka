@@ -152,7 +152,7 @@ func importRecursive(list map[string]bool, vm *jsonnet.VM, node ast.Node, curren
 var fileHashes sync.Map
 
 // getSnippetHash takes a jsonnet snippet and calculates a hash from its content
-//   and the content of all of its dependencies.
+// and the content of all of its dependencies.
 // File hashes are cached in-memory to optimize multiple executions of this function in a process
 func getSnippetHash(vm *jsonnet.VM, path, data string) (string, error) {
 	node, _ := jsonnet.SnippetToAST(path, data)
