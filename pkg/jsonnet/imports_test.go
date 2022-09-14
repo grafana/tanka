@@ -38,6 +38,7 @@ local myFunc = function() <IMPORT>;
 	attribute: {
 		name: 'test',
 		value: self.name,
+		otherValue: 'other ' + self.value,
 	},
 	nested: {
 		nested: {
