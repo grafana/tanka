@@ -4,7 +4,7 @@ name: check
 steps:
 - commands:
   - go mod download
-  image: golang:1.18
+  image: golang:1.19
   name: download
   volumes:
   - name: gopath
@@ -17,7 +17,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make lint
-  image: golang:1.18
+  image: golang:1.19
   name: lint
   volumes:
   - name: gopath
@@ -30,7 +30,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make test
-  image: golang:1.18
+  image: golang:1.19
   name: test
   volumes:
   - name: gopath
@@ -43,7 +43,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make cross
-  image: golang:1.18
+  image: golang:1.19
   name: build
   volumes:
   - name: gopath
@@ -63,7 +63,7 @@ name: release
 steps:
 - commands:
   - git fetch origin --tags
-  image: golang:1.18
+  image: golang:1.19
   name: fetch-tags
   volumes:
   - name: gopath
@@ -76,7 +76,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make cross
-  image: golang:1.18
+  image: golang:1.19
   name: cross
   volumes:
   - name: gopath
@@ -127,7 +127,7 @@ platform:
 steps:
 - commands:
   - git fetch origin --tags
-  image: golang:1.18
+  image: golang:1.19
   name: fetch-tags
   volumes:
   - name: gopath
@@ -140,7 +140,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make static
-  image: golang:1.18
+  image: golang:1.19
   name: static
   volumes:
   - name: gopath
@@ -173,7 +173,7 @@ platform:
 steps:
 - commands:
   - git fetch origin --tags
-  image: golang:1.18
+  image: golang:1.19
   name: fetch-tags
   volumes:
   - name: gopath
@@ -186,7 +186,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make static
-  image: golang:1.18
+  image: golang:1.19
   name: static
   volumes:
   - name: gopath
@@ -252,6 +252,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: aa117bd836d20ce27017ef23f9a1c369b4a201a3ee6365befa03a33701ea8d20
+hmac: 9d1c433944d46ded93d8637f570568e8a9e9887d4a4b3c790a25e9c83cd58921
 
 ...

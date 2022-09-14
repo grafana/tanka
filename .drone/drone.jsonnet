@@ -1,6 +1,6 @@
 local vault = import 'vault.libsonnet';
 
-local golang = 'golang:1.18';
+local golang = 'golang:1.19';
 
 local volumes = [{ name: 'gopath', temp: {} }];
 local mounts = [{ name: 'gopath', path: '/go' }];

@@ -11,12 +11,12 @@ import (
 
 // TestSeparate checks that separate properly separates resources:
 //
+// - `namespace: ""` should be properly translated into the default namespace
 // - cluster-wide resources are always `live`
 // - resources with missing namespaces:
 //   - `soon` if their namespace is included in the Jsonnet
 //   - `live` otherwise, to cause a helpful error message
-//      for the user that the namespace is indeed missing
-// - `namespace: ""` should be properly translated into the default namespace
+//     for the user that the namespace is indeed missing
 func TestSeparate(t *testing.T) {
 	cases := []struct {
 		name string
