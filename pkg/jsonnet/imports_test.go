@@ -100,6 +100,6 @@ func BenchmarkGetSnippetHash(b *testing.B) {
 		fileHashes = sync.Map{}
 		hash, err := getSnippetHash(vm, filepath.Join(tempDir, "main.jsonnet"), string(content))
 		require.NoError(b, err)
-		require.Equal(b, "S2PQwBobyEP1_1H5ATuPMzv3Zej9hzcGoUmtZj_2JM4=", hash)
+		require.Equal(b, "XrkW8N2EvkFMvdIuHTsGsQespVUl9_xiFmM7v1mqX5s=", hash)
 	}
 }
