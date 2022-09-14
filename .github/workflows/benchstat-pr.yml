@@ -1,0 +1,75 @@
+name: benchstat
+
+on: [pull_request]
+
+jobs:
+  benchstat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.19'
+
+      # Generate benchmark report for main branch
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: main
+      - name: Benchmark
+        run: &benchmark go test ./... -count=10 -run=Benchmark -bench=. | tee -a bench.txt
+      - name: Upload Benchmark
+        uses: actions/upload-artifact@v3
+        with:
+          name: bench-current
+          path: bench.txt
+
+      # Generate benchmark report for the PR
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Benchmark
+        run: *benchmark
+      - name: Upload Benchmark
+        uses: actions/upload-artifact@v3
+        with:
+          name: bench-incoming
+          path: bench.txt
+
+      # Compare the two reports
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install benchstat
+        run: go install golang.org/x/perf/cmd/benchstat@latest
+      - name: Download Incoming
+        uses: actions/download-artifact@v3
+        with:
+          name: bench-incoming
+          path: bench-incoming
+      - name: Download Current
+        uses: actions/download-artifact@v3
+        with:
+          name: bench-current
+          path: bench-current
+      - name: Benchstat Results
+        run: benchstat bench-current/bench.txt bench-incoming/bench.txt | tee -a benchstat.txt
+      - name: Upload benchstat results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchstat
+          path: benchstat.txt
+      - name: Read benchstat.txt
+        id: benchstat_content
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./benchstat.txt
+      - name: Post PR Comment
+        uses: thollander/actions-comment-pull-request@v1
+        with:
+          message: |
+            Benchstat (compared to main):
+            
+            ```
+            ${{ steps.benchstat_content.outputs.content }}
+            ```
+          comment_includes: 'Benchstat (compared to main):'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
