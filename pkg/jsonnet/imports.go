@@ -200,7 +200,10 @@ func findImportRecursiveRegexp(list map[string]bool, vm *jsonnet.VM, filename, c
 		if err != nil {
 			continue
 		}
-		abs, _ := filepath.Abs(foundAt)
+		abs, err := filepath.Abs(foundAt)
+		if err != nil {
+			return err
+		}
 
 		if list[abs] {
 			return nil
