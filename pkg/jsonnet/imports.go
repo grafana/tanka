@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"sync"
 
@@ -17,6 +18,8 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/jsonnet/native"
 )
+
+var importsRegexp = regexp.MustCompile(`import(str)?\s+['"]([^'"%()]+)['"]`)
 
 // TransitiveImports returns all recursive imports of an environment
 func TransitiveImports(dir string) ([]string, error) {
@@ -155,9 +158,8 @@ var fileHashes sync.Map
 // and the content of all of its dependencies.
 // File hashes are cached in-memory to optimize multiple executions of this function in a process
 func getSnippetHash(vm *jsonnet.VM, path, data string) (string, error) {
-	node, _ := jsonnet.SnippetToAST(path, data)
 	result := map[string]bool{}
-	if err := importRecursive(result, vm, node, path, true); err != nil {
+	if err := findImportRecursiveRegexp(result, vm, path, data); err != nil {
 		return "", err
 	}
 	fileNames := []string{}
@@ -187,16 +189,34 @@ func getSnippetHash(vm *jsonnet.VM, path, data string) (string, error) {
 	return base64.URLEncoding.EncodeToString(fullHasher.Sum(nil)), nil
 }
 
-func uniqueStringSlice(s []string) []string {
-	seen := make(map[string]struct{}, len(s))
-	j := 0
-	for _, v := range s {
-		if _, ok := seen[v]; ok {
+// findImportRecursiveRegexp does the same as `importRecursive` but uses a regexp
+// rather than parsing the AST of all files. This is much faster, but can lead to
+// false positives (e.g. if a string contains `import "foo"`).
+func findImportRecursiveRegexp(list map[string]bool, vm *jsonnet.VM, filename, content string) error {
+	matches := importsRegexp.FindAllStringSubmatch(content, -1)
+
+	for _, match := range matches {
+		importContents, foundAt, err := vm.ImportData(filename, match[2])
+		if err != nil {
 			continue
 		}
-		seen[v] = struct{}{}
-		s[j] = v
-		j++
+		abs, err := filepath.Abs(foundAt)
+		if err != nil {
+			return err
+		}
+
+		if list[abs] {
+			return nil
+		}
+		list[abs] = true
+
+		if match[1] == "str" {
+			continue
+		}
+
+		if err := findImportRecursiveRegexp(list, vm, abs, importContents); err != nil {
+			return err
+		}
 	}
-	return s[:j]
+	return nil
 }
