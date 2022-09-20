@@ -75,10 +75,10 @@ func TestProcess(t *testing.T) {
 		},
 		{
 			name: "unwrap-list",
-			deep: loadFixture("list").Deep,
+			deep: loadFixture("tdList.jsonnet").Deep,
 			flat: manifest.List{
-				loadFixture("list").Flat["foo.items[0]"],
-				loadFixture("list").Flat["foo.items[1]"],
+				loadFixture("tdList.jsonnet").Flat["foo.items[0]"],
+				loadFixture("tdList.jsonnet").Flat["foo.items[1]"],
 			},
 		},
 		{
