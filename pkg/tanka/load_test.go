@@ -182,7 +182,7 @@ func TestLoadEnvironmentFallbackToName(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chdir("./testdata/cases/multiple-inline-envs")
 	require.NoError(t, err)
-	defer os.Chdir(cwd)
+	defer func() { require.NoError(t, os.Chdir(cwd)) }()
 
 	// Partial match two environments
 	_, err = Load("env1", Opts{})

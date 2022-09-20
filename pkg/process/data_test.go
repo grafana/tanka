@@ -3,7 +3,7 @@ package process
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
+	"path/filepath"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -16,7 +16,7 @@ type testData struct {
 }
 
 func loadFixture(name string) testData {
-	filename := "./testdata/td" + strings.Title(name) + ".jsonnet"
+	filename := filepath.Join("./testdata", name)
 
 	vm := jsonnet.MakeVM(jsonnet.Opts{
 		ImportPaths: []string{"./testdata"},
@@ -38,27 +38,27 @@ func loadFixture(name string) testData {
 // testDataRegular is a regular output of jsonnet without special things, but it
 // is nested.
 func testDataRegular() testData {
-	return loadFixture("regular")
+	return loadFixture("tdRegular.jsonnet")
 }
 
 // testDataFlat is a flat manifest that does not need reconciliation
 func testDataFlat() testData {
-	return loadFixture("flat")
+	return loadFixture("tdFlat.jsonnet")
 }
 
 // testDataPrimitive is an invalid manifest, because it ends with a primitive
 // without including required fields
 func testDataPrimitive() testData {
-	return loadFixture("invalidPrimitive")
+	return loadFixture("tdInvalidPrimitive.jsonnet")
 }
 
 // testDataDeep is super deeply nested on multiple levels
 func testDataDeep() testData {
-	return loadFixture("deep")
+	return loadFixture("tdDeep.jsonnet")
 }
 
 // testDataArray is an array of (deeply nested) dicts that should be fully
 // flattened
 func testDataArray() testData {
-	return loadFixture("array")
+	return loadFixture("tdArray.jsonnet")
 }

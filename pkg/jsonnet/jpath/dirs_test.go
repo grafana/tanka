@@ -99,7 +99,7 @@ func TestDirs(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			defer os.Chdir(origDir)
+			defer func() { require.NoError(t, os.Chdir(origDir)) }()
 
 			// go to testdata
 			require.NoError(t, os.Chdir(c.data))

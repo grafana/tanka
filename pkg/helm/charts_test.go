@@ -166,22 +166,17 @@ func TestPrune(t *testing.T) {
 			require.NoError(t, err)
 
 			// Add a chart
-			err = c.Add([]string{"stable/prometheus@11.12.1"})
-			require.NoError(t, err)
+			require.NoError(t, c.Add([]string{"stable/prometheus@11.12.1"}))
 
 			// Add a chart with a directory
-			err = c.Add([]string{"stable/prometheus@11.12.1:custom-dir"})
-			require.NoError(t, err)
+			require.NoError(t, c.Add([]string{"stable/prometheus@11.12.1:custom-dir"}))
 
 			// Add unrelated files and folders
-			err = os.WriteFile(filepath.Join(tempDir, "charts", "foo.txt"), []byte("foo"), 0644)
-			err = os.Mkdir(filepath.Join(tempDir, "charts", "foo"), 0755)
-			require.NoError(t, err)
-			err = os.WriteFile(filepath.Join(tempDir, "charts", "foo", "Chart.yaml"), []byte("foo"), 0644)
-			require.NoError(t, err)
+			require.NoError(t, os.WriteFile(filepath.Join(tempDir, "charts", "foo.txt"), []byte("foo"), 0644))
+			require.NoError(t, os.Mkdir(filepath.Join(tempDir, "charts", "foo"), 0755))
+			require.NoError(t, os.WriteFile(filepath.Join(tempDir, "charts", "foo", "Chart.yaml"), []byte("foo"), 0644))
 
-			err = c.Vendor(prune)
-			require.NoError(t, err)
+			require.NoError(t, c.Vendor(prune))
 
 			// Check if files are pruned
 			listResult, err := os.ReadDir(filepath.Join(tempDir, "charts"))

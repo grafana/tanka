@@ -3,7 +3,7 @@ package jsonnet
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/gobwas/glob"
@@ -69,7 +69,7 @@ func Lint(fds []string, opts *LintOpts) error {
 
 			vm.Importer(NewExtendedImporter(jpaths))
 
-			content, _ := ioutil.ReadFile(file)
+			content, _ := os.ReadFile(file)
 			failed := linter.LintSnippet(vm, buf, []linter.Snippet{{FileName: file, Code: string(content)}})
 			resultCh <- result{failed: failed, output: buf.String()}
 		}
