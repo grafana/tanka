@@ -49,7 +49,7 @@ func FormatFiles(fds []string, opts *FormatOpts) ([]string, error) {
 	}
 
 	// print each file?
-	printFn := func(...interface{}) { return }
+	printFn := func(...interface{}) {}
 	if opts.PrintNames {
 		printFn = func(i ...interface{}) { fmt.Println(i...) }
 	}

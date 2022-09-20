@@ -6,16 +6,12 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/go-clix/cli"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
-// describing variables
-var (
-	verbose     = false
-	interactive = terminal.IsTerminal(int(os.Stdout.Fd()))
-)
+var interactive = term.IsTerminal(int(os.Stdout.Fd()))
 
 func main() {
 	log.SetFlags(0)

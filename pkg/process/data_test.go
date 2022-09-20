@@ -3,10 +3,11 @@ package process
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // testData holds data for tests
@@ -16,7 +17,8 @@ type testData struct {
 }
 
 func loadFixture(name string) testData {
-	filename := "./testdata/td" + strings.Title(name) + ".jsonnet"
+	caser := cases.Title(language.English)
+	filename := "./testdata/td" + caser.String(name) + ".jsonnet"
 
 	vm := jsonnet.MakeVM(jsonnet.Opts{
 		ImportPaths: []string{"./testdata"},

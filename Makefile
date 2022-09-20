@@ -1,11 +1,17 @@
 .PHONY: lint test static install uninstall cross
+GOPATH := $(shell go env GOPATH)
 VERSION := $(shell git describe --tags --dirty --always)
 BIN_DIR := $(GOPATH)/bin
 GOX := $(BIN_DIR)/gox
+GOLINTER := $(GOPATH)/bin/golangci-lint
 
-lint:
+$(GOLINTER):
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+
+lint: $(GOLINTER)
 	test -z $$(gofmt -s -l cmd/ pkg/ | tee /dev/stderr)
 	go vet ./...
+	$(GOLINTER) run
 
 test:
 	go test ./...

@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // Filter returns all elements of the list that match at least one expression
@@ -105,7 +107,8 @@ type ErrBadExpr struct {
 }
 
 func (e ErrBadExpr) Error() string {
-	return fmt.Sprintf("%s.\nSee https://tanka.dev/output-filtering/#regular-expressions for details on regular expressions.", strings.Title(e.inner.Error()))
+	caser := cases.Title(language.English)
+	return fmt.Sprintf("%s.\nSee https://tanka.dev/output-filtering/#regular-expressions for details on regular expressions.", caser.String(e.inner.Error()))
 }
 
 // NexMatcher is a matcher that inverts the original behaviour

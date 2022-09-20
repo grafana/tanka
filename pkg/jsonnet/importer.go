@@ -1,14 +1,9 @@
 package jsonnet
 
 import (
-	"encoding/json"
-	"io"
 	"path/filepath"
-	"strings"
 
 	jsonnet "github.com/google/go-jsonnet"
-	"github.com/pkg/errors"
-	"gopkg.in/yaml.v3"
 )
 
 const locationInternal = "<internal>"
@@ -38,12 +33,7 @@ func NewExtendedImporter(jpath []string) *ExtendedImporter {
 			newFileLoader(&jsonnet.FileImporter{
 				JPaths: jpath,
 			})},
-		processors: []importProcessor{
-			// TODO: re-enable this once we can without side-effects
-			// (https://github.com/grafana/tanka/issues/135)
-			//
-			// yamlProcessor,
-		},
+		processors: []importProcessor{},
 	}
 }
 
@@ -94,39 +84,4 @@ func newFileLoader(fi *jsonnet.FileImporter) importLoader {
 		c, foundAt, err = fi.Import(importedFrom, importedPath)
 		return &c, foundAt, err
 	}
-}
-
-// yamlProcessor catches yaml files and converts them to JSON so that they can
-// be used with `import`
-func yamlProcessor(contents, foundAt string) (c *jsonnet.Contents, err error) {
-	ext := filepath.Ext(foundAt)
-	if yaml := ext == ".yaml" || ext == ".yml"; !yaml {
-		return nil, nil
-	}
-
-	ret := []interface{}{}
-	d := yaml.NewDecoder(strings.NewReader(contents))
-	for {
-		var doc interface{}
-		if err := d.Decode(&doc); err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, errors.Wrapf(err, "unmarshalling yaml import '%s'", foundAt)
-		}
-		ret = append(ret, doc)
-	}
-
-	var data interface{} = ret
-	if len(ret) == 1 {
-		data = ret[0]
-	}
-
-	out, err := json.Marshal(data)
-	if err != nil {
-		return nil, errors.Wrapf(err, "converting '%s' to json", foundAt)
-	}
-
-	s := jsonnet.MakeContents(string(out))
-	return &s, nil
 }

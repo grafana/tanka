@@ -1,8 +1,6 @@
 package kubernetes
 
 import (
-	"fmt"
-
 	"github.com/Masterminds/semver"
 
 	"github.com/grafana/tanka/pkg/kubernetes/client"
@@ -85,11 +83,4 @@ type DiffOpts struct {
 // Info about the client, etc.
 func (k *Kubernetes) Info() client.Info {
 	return k.ctl.Info()
-}
-
-func objectspec(m manifest.Manifest) string {
-	return fmt.Sprintf("%s/%s",
-		m.Kind(),
-		m.Metadata().Name(),
-	)
 }

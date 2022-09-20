@@ -77,7 +77,7 @@ func (k Kubectl) Namespaces() (map[string]bool, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return nil, errors.Wrap(err, string(serr.Bytes()))
+		return nil, errors.Wrap(err, serr.String())
 	}
 
 	var list manifest.Manifest
