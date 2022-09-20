@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -41,6 +44,8 @@ type ExportEnvOpts struct {
 	Selector labels.Selector
 	// optional: number of environments to process in parallel
 	Parallelism int
+	// optional: If set, target an existing export directory, delete files previously exported by the targeted envs and re-export targeted envs.
+	DeletePrevious bool
 }
 
 func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
@@ -54,6 +59,13 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 	}
 	if !empty && !opts.Merge {
 		return fmt.Errorf("output dir `%s` not empty. Pass --merge to ignore this", to)
+	}
+
+	// delete files previously exported by the targeted envs.
+	if opts.DeletePrevious {
+		if err := deletePreviouslyExportedManifests(to, envs); err != nil {
+			return fmt.Errorf("deleting previously exported manifests: %w", err)
+		}
 	}
 
 	// get all environments for paths
@@ -122,19 +134,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 		}
 	}
 
-	// Write manifest file
-	if len(fileToEnv) != 0 {
-		data, err := json.MarshalIndent(fileToEnv, "", "    ")
-		if err != nil {
-			return err
-		}
-		path := filepath.Join(to, manifestFile)
-		if err := writeExportFile(path, data); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return exportManifestFile(to, fileToEnv, nil)
 }
 
 func fileExists(name string) (bool, error) {
@@ -162,6 +162,74 @@ func dirEmpty(dir string) (bool, error) {
 		return true, nil
 	}
 	return false, err
+}
+
+func deletePreviouslyExportedManifests(path string, envs []*v1alpha1.Environment) error {
+	fileToEnvMap := make(map[string]string)
+
+	manifestFilePath := filepath.Join(path, manifestFile)
+	manifestContent, err := os.ReadFile(manifestFilePath)
+	if err != nil && errors.Is(err, fs.ErrNotExist) {
+		log.Printf("Warning: No manifest file found at %s, skipping deletion of previously exported manifests\n", manifestFilePath)
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(manifestContent, &fileToEnvMap); err != nil {
+		return err
+	}
+
+	envNames := make(map[string]struct{})
+	for _, env := range envs {
+		envNames[env.Metadata.Namespace] = struct{}{}
+	}
+
+	var deletedManifestKeys []string
+	for exportedManifest, manifestEnv := range fileToEnvMap {
+		if _, ok := envNames[manifestEnv]; ok {
+			deletedManifestKeys = append(deletedManifestKeys, exportedManifest)
+			if err := os.Remove(filepath.Join(path, exportedManifest)); err != nil {
+				return err
+			}
+		}
+	}
+
+	return exportManifestFile(path, nil, deletedManifestKeys)
+}
+
+// exportManifestFile writes a manifest file that maps the exported files to their environment.
+// If the file already exists, the new entries will be merged with the existing ones.
+func exportManifestFile(path string, newFileToEnvMap map[string]string, deletedKeys []string) error {
+	if len(newFileToEnvMap) == 0 && len(deletedKeys) == 0 {
+		return nil
+	}
+
+	manifestFilePath := filepath.Join(path, manifestFile)
+	manifestContent, err := os.ReadFile(manifestFilePath)
+	currentFileToEnvMap := make(map[string]string)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("reading existing manifest file: %w", err)
+	} else if err == nil {
+		if err := json.Unmarshal(manifestContent, &currentFileToEnvMap); err != nil {
+			return fmt.Errorf("unmarshalling existing manifest file: %w", err)
+		}
+	}
+
+	for k, v := range newFileToEnvMap {
+		currentFileToEnvMap[k] = v
+	}
+	for _, k := range deletedKeys {
+		delete(currentFileToEnvMap, k)
+	}
+
+	// Write manifest file
+	data, err := json.MarshalIndent(currentFileToEnvMap, "", "    ")
+	if err != nil {
+		return fmt.Errorf("marshalling manifest file: %w", err)
+	}
+
+	return writeExportFile(manifestFilePath, data)
 }
 
 func writeExportFile(path string, data []byte) error {

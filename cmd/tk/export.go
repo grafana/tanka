@@ -39,6 +39,7 @@ func exportCmd() *cli.Command {
 	cachePath := cmd.Flags().StringP("cache-path", "c", "", "Local file path where cached evaluations should be stored")
 	cacheEnvs := cmd.Flags().StringArrayP("cache-envs", "e", nil, "Regexes which define which environment should be cached (if caching is enabled)")
 	ballastBytes := cmd.Flags().Int("mem-ballast-size-bytes", 0, "Size of memory ballast to allocate. This may improve performance for large environments.")
+	deletePrevious := cmd.Flags().Bool("delete-previous", false, "If set, before exporting, delete files previously exported by the targeted envs, leaving untargeted envs intact. To be used with --merge.")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -57,9 +58,10 @@ func exportCmd() *cli.Command {
 		}
 
 		opts := tanka.ExportEnvOpts{
-			Format:    *format,
-			Extension: *extension,
-			Merge:     *merge,
+			Format:         *format,
+			Extension:      *extension,
+			Merge:          *merge,
+			DeletePrevious: *deletePrevious,
 			Opts: tanka.Opts{
 				JsonnetOpts: getJsonnetOpts(),
 				Filters:     filters,
