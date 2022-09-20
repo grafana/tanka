@@ -6,7 +6,7 @@ import (
 )
 
 // ErrorNoRoot means no rootDir was found in the parent directories
-var ErrorNoRoot = errors.New(`Unable to identify the project root.
+var ErrorNoRoot = errors.New(`unable to identify the project root.
 Tried to find 'tkrc.yaml' or 'jsonnetfile.json' in the parent directories.
 Please refer to https://tanka.dev/directory-structure for more information`)
 

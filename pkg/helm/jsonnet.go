@@ -40,12 +40,12 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 		Func: func(data []interface{}) (interface{}, error) {
 			name, ok := data[0].(string)
 			if !ok {
-				return nil, fmt.Errorf("First argument 'name' must be of 'string' type, got '%T' instead", data[0])
+				return nil, fmt.Errorf("first argument 'name' must be of 'string' type, got '%T' instead", data[0])
 			}
 
 			chartpath, ok := data[1].(string)
 			if !ok {
-				return nil, fmt.Errorf("Second argument 'chart' must be of 'string' type, got '%T' instead", data[1])
+				return nil, fmt.Errorf("second argument 'chart' must be of 'string' type, got '%T' instead", data[1])
 			}
 
 			// TODO: validate data[2] actually follows the struct scheme
@@ -90,7 +90,7 @@ func parseOpts(data interface{}) (*JsonnetOpts, error) {
 
 	// Charts are only allowed at relative paths. Use conf.CalledFrom to find the callers directory
 	if opts.CalledFrom == "" {
-		return nil, fmt.Errorf("helmTemplate: 'opts.calledFrom' is unset or empty.\nTanka needs this to find your charts. See https://tanka.dev/helm#optscalledfrom-unset\n")
+		return nil, fmt.Errorf("helmTemplate: 'opts.calledFrom' is unset or empty.\nTanka needs this to find your charts. See https://tanka.dev/helm#optscalledfrom-unset")
 	}
 
 	return &opts, nil

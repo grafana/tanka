@@ -43,12 +43,12 @@ func jpathCmd() *cli.Command {
 
 		entrypoint, err := jpath.Entrypoint(path)
 		if err != nil {
-			return fmt.Errorf("Resolving JPATH: %s", err)
+			return fmt.Errorf("resolving JPATH: %s", err)
 		}
 
 		jsonnetpath, base, root, err := jpath.Resolve(entrypoint, false)
 		if err != nil {
-			return fmt.Errorf("Resolving JPATH: %s", err)
+			return fmt.Errorf("resolving JPATH: %s", err)
 		}
 
 		if *debug {
@@ -89,17 +89,17 @@ func importsCmd() *cli.Command {
 
 		path, err := filepath.Abs(args[0])
 		if err != nil {
-			return fmt.Errorf("Loading environment: %s", err)
+			return fmt.Errorf("loading environment: %s", err)
 		}
 
 		deps, err := jsonnet.TransitiveImports(path)
 		if err != nil {
-			return fmt.Errorf("Resolving imports: %s", err)
+			return fmt.Errorf("resolving imports: %s", err)
 		}
 
 		root, err := gitRoot()
 		if err != nil {
-			return fmt.Errorf("Invoking git: %s", err)
+			return fmt.Errorf("invoking git: %s", err)
 		}
 		if modFiles != nil {
 			for _, m := range modFiles {
@@ -121,7 +121,7 @@ func importsCmd() *cli.Command {
 
 		s, err := json.Marshal(deps)
 		if err != nil {
-			return fmt.Errorf("Formatting: %s", err)
+			return fmt.Errorf("formatting: %s", err)
 		}
 		fmt.Println(string(s))
 

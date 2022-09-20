@@ -41,13 +41,13 @@ type Opts struct {
 
 // PathIsCached determines if a given path is matched by any of the configured cached path regexes
 // If no path regexes are defined, all paths are matched
-func (opts Opts) PathIsCached(path string) bool {
-	for _, regex := range opts.CachePathRegexes {
+func (o Opts) PathIsCached(path string) bool {
+	for _, regex := range o.CachePathRegexes {
 		if regex.MatchString(path) {
 			return true
 		}
 	}
-	return len(opts.CachePathRegexes) == 0
+	return len(o.CachePathRegexes) == 0
 }
 
 // Clone returns a deep copy of Opts

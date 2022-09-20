@@ -1,0 +1,22 @@
+linters:
+  enable:
+    - depguard
+    - dogsled
+    - errcheck
+    - exportloopref
+    - goconst
+    - gocritic
+    - gofmt
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - megacheck
+    - misspell
+    - revive
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unused
+    - whitespace

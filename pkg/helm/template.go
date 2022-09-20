@@ -12,13 +12,13 @@ import (
 
 // Template expands a Helm Chart into a regular manifest.List using the `helm
 // template` command
-func (h ExecHelm) Template(name, chart string, opts TemplateOpts) (manifest.List, error) {
+func (e ExecHelm) Template(name, chart string, opts TemplateOpts) (manifest.List, error) {
 	args := []string{name, chart,
 		"--values", "-", // values from stdin
 	}
 	args = append(args, opts.Flags()...)
 
-	cmd := h.cmd("template", args...)
+	cmd := e.cmd("template", args...)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = os.Stderr

@@ -41,8 +41,8 @@ func (m Manifest) String() string {
 }
 
 var (
-	ErrInvalidStr = fmt.Errorf("Missing or not of string type")
-	ErrInvalidMap = fmt.Errorf("Missing or not an object")
+	ErrInvalidStr = fmt.Errorf("missing or not of string type")
+	ErrInvalidMap = fmt.Errorf("missing or not an object")
 )
 
 // Verify checks whether the manifest is correctly structured
@@ -96,12 +96,12 @@ func verifyMSS(ptr interface{}) error {
 	case map[string]interface{}:
 		for k, v := range t {
 			if _, ok := v.(string); !ok {
-				return fmt.Errorf("Contains non-string field '%s' of type '%T'", k, v)
+				return fmt.Errorf("contains non-string field '%s' of type '%T'", k, v)
 			}
 		}
 		return nil
 	default:
-		return fmt.Errorf("Must be object, but got '%T' instead", ptr)
+		return fmt.Errorf("must be object, but got '%T' instead", ptr)
 	}
 }
 
@@ -120,7 +120,7 @@ func (m Manifest) IsList() bool {
 // Items returns list items if the manifest is of List type
 func (m Manifest) Items() (List, error) {
 	if !m.IsList() {
-		return nil, fmt.Errorf("Attempt to unwrap non-list object '%s' of kind '%s'", m.Metadata().Name(), m.Kind())
+		return nil, fmt.Errorf("attempt to unwrap non-list object '%s' of kind '%s'", m.Metadata().Name(), m.Kind())
 	}
 
 	// This is safe, IsList() asserts this
@@ -129,7 +129,7 @@ func (m Manifest) Items() (List, error) {
 	for _, i := range items {
 		child, ok := i.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("Unwrapped list item is not an object, but '%T'", child)
+			return nil, fmt.Errorf("unwrapped list item is not an object, but '%T'", child)
 		}
 
 		m := Manifest(child)
@@ -312,7 +312,7 @@ func ListAsMap(list List, nameFormat string) (map[string]interface{}, error) {
 		Funcs(sprig.TxtFuncMap()).
 		Parse(nameFormat)
 	if err != nil {
-		return nil, fmt.Errorf("Parsing name format: %w", err)
+		return nil, fmt.Errorf("parsing name format: %w", err)
 	}
 
 	out := make(map[string]interface{})

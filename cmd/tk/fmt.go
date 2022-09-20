@@ -24,7 +24,7 @@ func fmtCmd() *cli.Command {
 		Args: cli.Args{
 			Validator: cli.ValidateFunc(func(args []string) error {
 				if len(args) == 0 {
-					return errors.New("At least one file or directory is required")
+					return errors.New("at least one file or directory is required")
 				}
 				return nil
 			}),
@@ -51,7 +51,7 @@ func fmtCmd() *cli.Command {
 			globs[i] = g
 		}
 
-		var outFn tanka.OutFn = nil
+		var outFn tanka.OutFn
 		switch {
 		case *test:
 			outFn = func(name, content string) error { return nil }

@@ -28,7 +28,6 @@ func (k Kubectl) deleteCtl(namespace, kind, name string, opts DeleteOpts) *exec.
 
 // Delete deletes the given Kubernetes resource from the cluster
 func (k Kubectl) Delete(namespace, kind, name string, opts DeleteOpts) error {
-
 	cmd := k.deleteCtl(namespace, kind, name, opts)
 
 	var stdout bytes.Buffer

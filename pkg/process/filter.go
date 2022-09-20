@@ -32,13 +32,13 @@ type Matcher interface {
 	MatchString(string) bool
 }
 
-// Ignorer is like matcher, but for explicitely ignoring resources
+// Ignorer is like matcher, but for explicitly ignoring resources
 type Ignorer interface {
 	IgnoreString(string) bool
 }
 
 // Matchers is a collection of multiple expressions.
-// A matcher may also implement Ignorer to explicitely ignore fields
+// A matcher may also implement Ignorer to explicitly ignore fields
 type Matchers []Matcher
 
 // MatchString returns whether at least one expression (OR) matches the string

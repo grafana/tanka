@@ -28,7 +28,6 @@ type LintOpts struct {
 // Lint takes a list of files and directories, processes them and prints
 // out to stderr if there are linting warnings
 func Lint(fds []string, opts *LintOpts) error {
-
 	var paths []string
 	for _, f := range fds {
 		fs, err := FindFiles(f, opts.Excludes)
