@@ -48,7 +48,7 @@ func BenchmarkGetSnippetHash(b *testing.B) {
 		b.Run(tc.name, func(b *testing.B) {
 			// Create a very large and complex project
 			tempDir := b.TempDir()
-			generateTestProject(b, tempDir, 10000, tc.importFromMain)
+			generateTestProject(b, tempDir, 1000, tc.importFromMain)
 
 			// Create a VM. It's important to reuse the same VM
 			// While there is a caching mechanism that normally shouldn't be shared in a benchmark iteration,
@@ -118,7 +118,7 @@ func generateTestProject(t testing.TB, dir string, depth int, importAllFromMain 
 	var allFiles []string
 
 	var mainContentSplit []string
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < depth; i++ {
 		mainContentSplit = append(mainContentSplit, fmt.Sprintf("(import 'file%d.libsonnet')", i))
 		filePath := filepath.Join(dir, fmt.Sprintf("file%d.libsonnet", i))
 		err := os.WriteFile(
@@ -134,8 +134,8 @@ func generateTestProject(t testing.TB, dir string, depth int, importAllFromMain 
 	}
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "main.jsonnet"), []byte(strings.Join(mainContentSplit, " + ")), 0644))
 	allFiles = append(allFiles, filepath.Join(dir, "main.jsonnet"))
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "file1000.libsonnet"), []byte(`"a string"`), 0644))
-	allFiles = append(allFiles, filepath.Join(dir, "file1000.libsonnet"))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, fmt.Sprintf("file%d.libsonnet", depth)), []byte(`"a string"`), 0644))
+	allFiles = append(allFiles, filepath.Join(dir, fmt.Sprintf("file%d.libsonnet", depth)))
 
 	return allFiles
 }
