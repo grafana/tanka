@@ -2,7 +2,7 @@ package tanka
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -47,7 +47,7 @@ func Test_replaceTmplText(t *testing.T) {
 func TestExportEnvironments(t *testing.T) {
 	tempDir := t.TempDir()
 	require.NoError(t, os.Chdir("testdata"))
-	defer os.Chdir("..")
+	defer func() { require.NoError(t, os.Chdir("..")) }()
 
 	// Find envs
 	envs, err := FindEnvs("test-export-envs", FindOpts{Selector: labels.Everything()})
@@ -86,7 +86,7 @@ func TestExportEnvironments(t *testing.T) {
 }`)
 
 	// Try to re-export
-	assert.EqualError(t, ExportEnvironments(envs, tempDir, opts), fmt.Sprintf("Output dir `%s` not empty. Pass --merge to ignore this", tempDir))
+	assert.EqualError(t, ExportEnvironments(envs, tempDir, opts), fmt.Sprintf("output dir `%s` not empty. Pass --merge to ignore this", tempDir))
 
 	// Try to re-export with the --merge flag. Will still fail because Tanka will not overwrite manifests silently
 	opts.Merge = true
@@ -125,10 +125,10 @@ func TestExportEnvironments(t *testing.T) {
 }
 
 func BenchmarkExportEnvironmentsWithDeletePrevious(b *testing.B) {
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	tempDir := b.TempDir()
 	require.NoError(b, os.Chdir("testdata"))
-	defer os.Chdir("..")
+	defer func() { require.NoError(b, os.Chdir("..")) }()
 
 	// Find envs
 	envs, err := FindEnvs("test-export-envs", FindOpts{Selector: labels.Everything()})
