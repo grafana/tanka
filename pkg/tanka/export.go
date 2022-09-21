@@ -50,10 +50,10 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 	// dir must be empty
 	empty, err := dirEmpty(to)
 	if err != nil {
-		return fmt.Errorf("Checking target dir: %s", err)
+		return fmt.Errorf("checking target dir: %s", err)
 	}
 	if !empty && !opts.Merge {
-		return fmt.Errorf("Output dir `%s` not empty. Pass --merge to ignore this", to)
+		return fmt.Errorf("output dir `%s` not empty. Pass --merge to ignore this", to)
 	}
 
 	// get all environments for paths
@@ -90,7 +90,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 		// create template
 		manifestTemplate, err := createTemplate(opts.Format, menv)
 		if err != nil {
-			return fmt.Errorf("Parsing format: %s", err)
+			return fmt.Errorf("parsing format: %s", err)
 		}
 
 		// write each to a file
@@ -111,7 +111,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 			if exists, err := fileExists(path); err != nil {
 				return err
 			} else if exists {
-				return fmt.Errorf("File '%s' already exists. Aborting", path)
+				return fmt.Errorf("file '%s' already exists. Aborting", path)
 			}
 
 			// Write manifest
@@ -213,9 +213,9 @@ func applyTemplate(template *template.Template, m manifest.Manifest) (path strin
 	}
 
 	// Replace all os.path separators in string in order to not accidentally create subfolders
-	path = strings.Replace(buf.String(), string(os.PathSeparator), "-", -1)
+	path = strings.ReplaceAll(buf.String(), string(os.PathSeparator), "-")
 	// Replace the BEL character inserted with a path separator again in order to create a subfolder
-	path = strings.Replace(path, BelRune, string(os.PathSeparator), -1)
+	path = strings.ReplaceAll(path, BelRune, string(os.PathSeparator))
 
 	return path, nil
 }

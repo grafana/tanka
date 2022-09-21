@@ -19,7 +19,7 @@ func main() {
 	rootCmd := &cli.Command{
 		Use:     "tk",
 		Short:   "tanka <3 jsonnet",
-		Version: tanka.CURRENT_VERSION,
+		Version: tanka.CurrentVersion,
 	}
 
 	// workflow commands

@@ -169,7 +169,7 @@ func (l LoadResult) Connect() (*kubernetes.Kubernetes, error) {
 		s += "  * spec.namespace: Default namespace missing"
 	}
 	if s != "" {
-		return nil, fmt.Errorf("Your Environment's spec.json seems incomplete:\n%s\n\nPlease see https://tanka.dev/config for reference", s)
+		return nil, fmt.Errorf("your Environment's spec.json seems incomplete:\n%s\n\nPlease see https://tanka.dev/config for reference", s)
 	}
 
 	// connect client

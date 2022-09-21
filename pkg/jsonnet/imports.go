@@ -66,14 +66,12 @@ func TransitiveImports(dir string) ([]string, error) {
 
 	paths := make([]string, 0, len(imports)+1)
 	for k := range imports {
-
 		// Try to resolve any symlinks; use the original path as a last resort
 		p, err := filepath.EvalSymlinks(k)
 		if err != nil {
 			return nil, errors.Wrap(err, "resolving symlinks")
 		}
 		paths = append(paths, p)
-
 	}
 	paths = append(paths, entrypoint)
 

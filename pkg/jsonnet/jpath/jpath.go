@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-const DEFAULT_ENTRYPOINT = "main.jsonnet"
+const defaultEntrypoint = "main.jsonnet"
 
 // Resolve the given path and resolves the jPath around it. This means it:
 // - figures out the project root (the one with .jsonnetfile, vendor/ and lib/)
@@ -49,11 +49,10 @@ func Filename(path string) (string, error) {
 	}
 
 	if fi.IsDir() {
-		return DEFAULT_ENTRYPOINT, nil
+		return defaultEntrypoint, nil
 	}
 
 	return filepath.Base(fi.Name()), nil
-
 }
 
 // Entrypoint returns the absolute path of the environments entrypoint file (the

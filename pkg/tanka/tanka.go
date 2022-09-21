@@ -26,33 +26,33 @@ type Opts struct {
 	Name string
 }
 
-// DEFAULT_DEV_VERSION is the placeholder version used when no actual semver is
+// defaultDevVersion is the placeholder version used when no actual semver is
 // provided using ldflags
-const DEFAULT_DEV_VERSION = "dev"
+const defaultDevVersion = "dev"
 
-// CURRENT_VERSION is the current version of the running Tanka code
-var CURRENT_VERSION = DEFAULT_DEV_VERSION
+// CurrentVersion is the current version of the running Tanka code
+var CurrentVersion = defaultDevVersion
 
 func checkVersion(constraint string) error {
 	if constraint == "" {
 		return nil
 	}
-	if CURRENT_VERSION == DEFAULT_DEV_VERSION {
+	if CurrentVersion == defaultDevVersion {
 		return nil
 	}
 
 	c, err := semver.NewConstraint(constraint)
 	if err != nil {
-		return fmt.Errorf("Parsing version constraint: '%w'. Please check 'spec.expectVersions.tanka'", err)
+		return fmt.Errorf("parsing version constraint: '%w'. Please check 'spec.expectVersions.tanka'", err)
 	}
 
-	v, err := semver.NewVersion(CURRENT_VERSION)
+	v, err := semver.NewVersion(CurrentVersion)
 	if err != nil {
-		return fmt.Errorf("'%s' is not a valid semantic version: '%w'.\nThis likely means your build of Tanka is broken, as this is a compile-time value. When in doubt, please raise an issue", CURRENT_VERSION, err)
+		return fmt.Errorf("'%s' is not a valid semantic version: '%w'.\nThis likely means your build of Tanka is broken, as this is a compile-time value. When in doubt, please raise an issue", CurrentVersion, err)
 	}
 
 	if !c.Check(v) {
-		return fmt.Errorf("Current version '%s' does not satisfy the version required by the environment: '%s'. You likely need to use another version of Tanka", CURRENT_VERSION, constraint)
+		return fmt.Errorf("current version '%s' does not satisfy the version required by the environment: '%s'. You likely need to use another version of Tanka", CurrentVersion, constraint)
 	}
 
 	return nil

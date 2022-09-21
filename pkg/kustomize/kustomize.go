@@ -18,7 +18,7 @@ type Kustomize interface {
 type ExecKustomize struct{}
 
 // cmd returns a prepared exec.Cmd to use the `kustomize` binary
-func (e ExecKustomize) cmd(action string, args ...string) *exec.Cmd {
+func (k ExecKustomize) cmd(action string, args ...string) *exec.Cmd {
 	argv := []string{action}
 	argv = append(argv, args...)
 

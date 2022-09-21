@@ -68,7 +68,6 @@ func TestKubectl_deleteCtl(t *testing.T) {
 			if gotSet.HasAny(tt.unExpectedArgs...) {
 				t.Errorf("Kubectl.applyCtl() = %v has (any) unExpectedArgs='%v'", got.Args, tt.unExpectedArgs)
 			}
-
 		})
 	}
 }

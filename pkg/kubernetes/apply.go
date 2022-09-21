@@ -27,7 +27,7 @@ func (k *Kubernetes) Orphaned(state manifest.List) (manifest.List, error) {
 	if !k.Env.Spec.InjectLabels {
 		return nil, fmt.Errorf(`spec.injectLabels is set to false in your spec.json. Tanka needs to add
 a label to your resources to reliably detect which were removed from Jsonnet.
-See https://tanka.dev/garbage-collection for more details.`)
+See https://tanka.dev/garbage-collection for more details`)
 	}
 
 	apiResources, err := k.ctl.Resources()
@@ -95,8 +95,8 @@ func (k *Kubernetes) isKubectlCreated(manifest manifest.Manifest) bool {
 	}
 	// Check if created by server-side apply
 	for _, manager := range manifest.Metadata().ManagedFields() {
-		manager_name := manager.(map[string]interface{})["manager"]
-		if manager_name == "tanka" || manager_name == "kubectl-client-side-apply" {
+		managerName := manager.(map[string]interface{})["manager"]
+		if managerName == "tanka" || managerName == "kubectl-client-side-apply" {
 			return true
 		}
 	}

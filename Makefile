@@ -9,8 +9,6 @@ $(GOLINTER):
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
 
 lint: $(GOLINTER)
-	test -z $$(gofmt -s -l cmd/ pkg/ | tee /dev/stderr)
-	go vet ./...
 	$(GOLINTER) run
 
 test:
@@ -20,7 +18,7 @@ test:
 dev:
 	go build -ldflags "-X main.Version=dev-${VERSION}" ./cmd/tk
 
-LDFLAGS := '-s -w -extldflags "-static" -X github.com/grafana/tanka/pkg/tanka.CURRENT_VERSION=${VERSION}'
+LDFLAGS := '-s -w -extldflags "-static" -X github.com/grafana/tanka/pkg/tanka.CurrentVersion=${VERSION}'
 static:
 	CGO_ENABLED=0 go build -ldflags=${LDFLAGS} ./cmd/tk
 

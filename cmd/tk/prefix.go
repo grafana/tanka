@@ -24,16 +24,16 @@ func prefixCommands(prefix string) (cmds []*cli.Command) {
 			Args:  cli.ArgsAny(),
 		}
 
-		ext_command := exec.Command(path)
+		extCommand := exec.Command(path)
 		if ex, err := os.Executable(); err == nil {
-			ext_command.Env = append(os.Environ(), fmt.Sprintf("EXECUTABLE=%s", ex))
+			extCommand.Env = append(os.Environ(), fmt.Sprintf("EXECUTABLE=%s", ex))
 		}
-		ext_command.Stdout = os.Stdout
-		ext_command.Stderr = os.Stderr
+		extCommand.Stdout = os.Stdout
+		extCommand.Stderr = os.Stderr
 
 		cmd.Run = func(cmd *cli.Command, args []string) error {
-			ext_command.Args = append(ext_command.Args, args...)
-			return ext_command.Run()
+			extCommand.Args = append(extCommand.Args, args...)
+			return extCommand.Run()
 		}
 		cmds = append(cmds, cmd)
 	}

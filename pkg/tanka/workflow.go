@@ -22,6 +22,9 @@ const (
 	AutoApproveAlways AutoApproveSetting = "always"
 	// AutoApproveNoChanges enables auto-approval if there were no changes found in the diff
 	AutoApproveNoChanges AutoApproveSetting = "if-no-changes"
+
+	ApplyStrategyServer = "server"
+	ApplyStrategyClient = "client"
 )
 
 type ApplyBaseOpts struct {
@@ -75,16 +78,16 @@ func Apply(baseDir string, opts ApplyOpts) error {
 		if l.Env.Spec.ApplyStrategy != "" {
 			opts.ApplyStrategy = l.Env.Spec.ApplyStrategy
 		} else {
-			opts.ApplyStrategy = "client"
+			opts.ApplyStrategy = ApplyStrategyClient
 		}
 	}
-	if opts.ApplyStrategy != "client" && opts.ApplyStrategy != "server" {
+	if opts.ApplyStrategy != ApplyStrategyClient && opts.ApplyStrategy != ApplyStrategyServer {
 		return ErrorApplyStrategyUnknown{Requested: opts.ApplyStrategy}
 	}
 
 	// Default to `server` diff in server apply mode
-	if opts.ApplyStrategy == "server" && opts.DiffStrategy == "" && l.Env.Spec.DiffStrategy == "" {
-		l.Env.Spec.DiffStrategy = "server"
+	if opts.ApplyStrategy == ApplyStrategyServer && opts.DiffStrategy == "" && l.Env.Spec.DiffStrategy == "" {
+		l.Env.Spec.DiffStrategy = ApplyStrategyServer
 	}
 
 	kube, err := l.Connect()

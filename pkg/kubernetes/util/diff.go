@@ -14,12 +14,12 @@ import (
 
 // DiffName computes the filename for use with `DiffStr`
 func DiffName(m manifest.Manifest) string {
-	return strings.Replace(fmt.Sprintf("%s.%s.%s.%s",
+	return strings.ReplaceAll(fmt.Sprintf("%s.%s.%s.%s",
 		m.APIVersion(),
 		m.Kind(),
 		m.Metadata().Namespace(),
 		m.Metadata().Name(),
-	), "/", "-", -1)
+	), "/", "-")
 }
 
 // DiffStr computes the differences between the strings `is` and `should` using the

@@ -199,7 +199,7 @@ func tryMSISlice(v *objx.Value, what string) ([]map[string]interface{}, error) {
 }
 
 // ErrorNoMatch occurs when no item matched had the expected value
-var ErrorNoMatch error = errors.New("no matches found")
+var ErrorNoMatch = errors.New("no matches found")
 
 // find attempts to find an object in list whose prop equals expected.
 // If found, the value is unmarshalled to ptr, otherwise errNotFound is returned.

@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"k8s.io/utils/strings/slices"
 	"os"
 	"path/filepath"
 	"sort"
 	"text/tabwriter"
+
+	"k8s.io/utils/strings/slices"
 
 	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
@@ -63,7 +64,7 @@ func envSetCmd() *cli.Command {
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		if *name != "" {
-			return fmt.Errorf("It looks like you attempted to rename the environment using `--name`. However, this is not possible with Tanka, because the environments name is inferred from the directories name. To rename the environment, rename its directory instead.")
+			return fmt.Errorf("it looks like you attempted to rename the environment using `--name`. However, this is not possible with Tanka, because the environments name is inferred from the directories name. To rename the environment, rename its directory instead")
 		}
 
 		path, err := filepath.Abs(args[0])
@@ -74,7 +75,7 @@ func envSetCmd() *cli.Command {
 		if cmd.Flags().Changed("server-from-context") {
 			server, err := client.IPFromContext(tmp.Spec.APIServer)
 			if err != nil {
-				return fmt.Errorf("Resolving IP from context: %s", err)
+				return fmt.Errorf("resolving IP from context: %s", err)
 			}
 			tmp.Spec.APIServer = server
 		}
@@ -134,7 +135,7 @@ func envAddCmd() *cli.Command {
 		if cmd.Flags().Changed("server-from-context") {
 			server, err := client.IPFromContext(cfg.Spec.APIServer)
 			if err != nil {
-				return fmt.Errorf("Resolving IP from context: %s", err)
+				return fmt.Errorf("resolving IP from context: %s", err)
 			}
 			cfg.Spec.APIServer = server
 		}
@@ -221,7 +222,7 @@ func envRemoveCmd() *cli.Command {
 					return err
 				}
 				if err := os.RemoveAll(path); err != nil {
-					return fmt.Errorf("Removing '%s': %s", path, err)
+					return fmt.Errorf("removing '%s': %s", path, err)
 				}
 				fmt.Println("Removed", path)
 			}
@@ -272,7 +273,7 @@ func envListCmd() *cli.Command {
 		if *useJSON {
 			j, err := json.Marshal(envs)
 			if err != nil {
-				return fmt.Errorf("Formatting as json: %s", err)
+				return fmt.Errorf("formatting as json: %s", err)
 			}
 			fmt.Println(string(j))
 			return nil

@@ -126,7 +126,7 @@ func chartsInitCmd() *cli.Command {
 
 		path := filepath.Join(wd, helm.Filename)
 		if _, err := os.Stat(path); err == nil {
-			return fmt.Errorf("Chartfile at '%s' already exists. Aborting", path)
+			return fmt.Errorf("chartfile at '%s' already exists. Aborting", path)
 		}
 
 		if _, err := helm.InitChartfile(path); err != nil {

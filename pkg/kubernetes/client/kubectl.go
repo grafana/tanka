@@ -53,7 +53,6 @@ func NewFromNames(names []string) (*Kubectl, error) {
 	}
 
 	return &k, nil
-
 }
 
 // Info returns known informational data about the client and its environment

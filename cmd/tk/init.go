@@ -32,22 +32,22 @@ func initCmd() *cli.Command {
 
 		files, err := os.ReadDir(".")
 		if err != nil {
-			return fmt.Errorf("Error listing files: %s", err)
+			return fmt.Errorf("error listing files: %s", err)
 		}
 		if len(files) > 0 && !*force {
-			return fmt.Errorf("Error: directory not empty. Use `-f` to force")
+			return fmt.Errorf("error: directory not empty. Use `-f` to force")
 		}
 
 		if err := writeNewFile("jsonnetfile.json", "{}"); err != nil {
-			return fmt.Errorf("Error creating `jsonnetfile.json`: %s", err)
+			return fmt.Errorf("error creating `jsonnetfile.json`: %s", err)
 		}
 
 		if err := os.Mkdir("vendor", os.ModePerm); err != nil {
-			return fmt.Errorf("Error creating `vendor/` folder: %s", err)
+			return fmt.Errorf("error creating `vendor/` folder: %s", err)
 		}
 
 		if err := os.Mkdir("lib", os.ModePerm); err != nil {
-			return fmt.Errorf("Error creating `lib/` folder: %s", err)
+			return fmt.Errorf("error creating `lib/` folder: %s", err)
 		}
 
 		cfg := v1alpha1.New()
@@ -79,7 +79,7 @@ func initCmd() *cli.Command {
 			fmt.Println("Directory structure set up! Remember to configure the API endpoint:\n`tk env set environments/default --server=https://127.0.0.1:6443`")
 		}
 		if failed {
-			log.Println("Errors occured while initializing the project. Check the above logs for details.")
+			log.Println("Errors occurred while initializing the project. Check the above logs for details.")
 		}
 
 		return nil
