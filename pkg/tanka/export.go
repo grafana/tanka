@@ -179,7 +179,7 @@ func deletePreviouslyExportedManifests(path string, envs []*v1alpha1.Environment
 
 	manifestFilePath := filepath.Join(path, manifestFile)
 	manifestContent, err := os.ReadFile(manifestFilePath)
-	if err != nil && errors.Is(err, fs.ErrNotExist) {
+	if errors.Is(err, fs.ErrNotExist) {
 		log.Printf("Warning: No manifest file found at %s, skipping deletion of previously exported manifests\n", manifestFilePath)
 		return nil
 	} else if err != nil {
@@ -215,12 +215,13 @@ func exportManifestFile(path string, newFileToEnvMap map[string]string, deletedK
 		return nil
 	}
 
-	manifestFilePath := filepath.Join(path, manifestFile)
-	manifestContent, err := os.ReadFile(manifestFilePath)
 	currentFileToEnvMap := make(map[string]string)
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+	manifestFilePath := filepath.Join(path, manifestFile)
+	if manifestContent, err := os.ReadFile(manifestFilePath); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("reading existing manifest file: %w", err)
 	} else if err == nil {
+		// Only read the manifest file if it exists.
+		// If it doesn't exist, currentFileToEnvMap will be empty, meaning that we're starting from a new export dir.
 		if err := json.Unmarshal(manifestContent, &currentFileToEnvMap); err != nil {
 			return fmt.Errorf("unmarshalling existing manifest file: %w", err)
 		}
