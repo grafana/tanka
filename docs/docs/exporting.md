@@ -105,7 +105,7 @@ When exporting a large amount of environments, jsonnet evaluation can become a b
 
 ### Partial export (in a GitOps context)
 
-Given multiple environments, one may want to only export the environments that were modified since the last export. This is enabled by passing both the `--merge` and `--delete-previous` flags.
+Given multiple environments, one may want to only export the environments that were modified since the last export. This is enabled by passing both the `--merge-strategy=replace-envs` flags.
 
 When these flags are passed, Tanka will:
 

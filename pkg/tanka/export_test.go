@@ -86,18 +86,18 @@ func TestExportEnvironments(t *testing.T) {
 }`)
 
 	// Try to re-export
-	assert.EqualError(t, ExportEnvironments(envs, tempDir, opts), fmt.Sprintf("output dir `%s` not empty. Pass --merge to ignore this", tempDir))
+	assert.EqualError(t, ExportEnvironments(envs, tempDir, opts), fmt.Sprintf("output dir `%s` not empty. Pass a different --merge-strategy to ignore this", tempDir))
 
-	// Try to re-export with the --merge flag. Will still fail because Tanka will not overwrite manifests silently
-	opts.Merge = true
+	// Try to re-export with the --merge-strategy=fail-on-conflicts flag. Will still fail because Tanka will not overwrite manifests silently
+	opts.MergeStrategy = ExportMergeStrategyFailConflicts
 	assert.ErrorContains(t, ExportEnvironments(envs, tempDir, opts), "already exists. Aborting")
 
-	// Re-export only one env with --delete-previous flag
+	// Re-export only one env with --merge-stategy=replace-envs flag
 	opts.Opts.ExtCode = jsonnet.InjectedCode{
 		"deploymentName": "'updated-deployment'",
 		"serviceName":    "'updated-service'",
 	}
-	opts.DeletePrevious = true
+	opts.MergeStrategy = ExportMergeStrategyReplaceEnvs
 	staticEnv, err := FindEnvs("test-export-envs", FindOpts{Selector: labels.SelectorFromSet(labels.Set{"type": "static"})})
 	require.NoError(t, err)
 	require.NoError(t, ExportEnvironments(staticEnv, tempDir, opts))
@@ -124,7 +124,7 @@ func TestExportEnvironments(t *testing.T) {
 }`)
 }
 
-func BenchmarkExportEnvironmentsWithDeletePrevious(b *testing.B) {
+func BenchmarkExportEnvironmentsWithReplaceEnvs(b *testing.B) {
 	log.SetOutput(io.Discard)
 	tempDir := b.TempDir()
 	require.NoError(b, os.Chdir("testdata"))
@@ -136,10 +136,9 @@ func BenchmarkExportEnvironmentsWithDeletePrevious(b *testing.B) {
 
 	// Export all envs
 	opts := &ExportEnvOpts{
-		Format:         "{{.metadata.namespace}}/{{.metadata.name}}",
-		Extension:      "yaml",
-		Merge:          true,
-		DeletePrevious: true,
+		Format:        "{{.metadata.namespace}}/{{.metadata.name}}",
+		Extension:     "yaml",
+		MergeStrategy: ExportMergeStrategyReplaceEnvs,
 	}
 	opts.Opts.ExtCode = jsonnet.InjectedCode{
 		"deploymentName": "'initial-deployment'",

@@ -34,12 +34,16 @@ func exportCmd() *cli.Command {
 	)
 
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
-	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
 	parallel := cmd.Flags().IntP("parallel", "p", 8, "Number of environments to process in parallel")
 	cachePath := cmd.Flags().StringP("cache-path", "c", "", "Local file path where cached evaluations should be stored")
 	cacheEnvs := cmd.Flags().StringArrayP("cache-envs", "e", nil, "Regexes which define which environment should be cached (if caching is enabled)")
 	ballastBytes := cmd.Flags().Int("mem-ballast-size-bytes", 0, "Size of memory ballast to allocate. This may improve performance for large environments.")
-	deletePrevious := cmd.Flags().Bool("delete-previous", false, "If set, before exporting, delete files previously exported by the targeted envs, leaving untargeted envs intact. To be used with --merge.")
+
+	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
+	if err := cmd.Flags().MarkDeprecated("merge", "use --merge-strategy=fail-on-conflicts instead"); err != nil {
+		panic(err)
+	}
+	mergeStrategy := cmd.Flags().String("merge-strategy", "", "What to do when exporting to an existing directory. Values: 'fail-on-conficts', 'replace-envs'")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -48,6 +52,13 @@ func exportCmd() *cli.Command {
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		// `--merge` is deprecated in favor of `--merge-strategy`. However, merge has to keep working for now.
+		if *merge && *mergeStrategy != "" {
+			panic("cannot use --merge and --merge-strategy at the same time")
+		} else if *merge {
+			*mergeStrategy = string(tanka.ExportMergeStrategyFailConflicts)
+		}
+
 		// Allocate a block of memory to alter GC behaviour. See https://github.com/golang/go/issues/23044
 		ballast := make([]byte, *ballastBytes)
 		defer runtime.KeepAlive(ballast)
@@ -58,10 +69,9 @@ func exportCmd() *cli.Command {
 		}
 
 		opts := tanka.ExportEnvOpts{
-			Format:         *format,
-			Extension:      *extension,
-			Merge:          *merge,
-			DeletePrevious: *deletePrevious,
+			Format:        *format,
+			Extension:     *extension,
+			MergeStrategy: tanka.ExportMergeStrategy(*mergeStrategy),
 			Opts: tanka.Opts{
 				JsonnetOpts: getJsonnetOpts(),
 				Filters:     filters,

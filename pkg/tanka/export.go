@@ -30,22 +30,32 @@ const BelRune = string(rune(7))
 // debugging purposes.
 const manifestFile = "manifest.json"
 
+type ExportMergeStrategy string
+
+const (
+	ExportMergeStrategyNone          ExportMergeStrategy = ""
+	ExportMergeStrategyFailConflicts ExportMergeStrategy = "fail-on-conflicts"
+	ExportMergeStrategyReplaceEnvs   ExportMergeStrategy = "replace-envs"
+)
+
 // ExportEnvOpts specify options on how to export environments
 type ExportEnvOpts struct {
 	// formatting the filename based on the exported Kubernetes manifest
 	Format string
 	// extension of the filename
 	Extension string
-	// merge export with existing directory
-	Merge bool
 	// optional: options to parse Jsonnet
 	Opts Opts
 	// optional: filter environments based on labels
 	Selector labels.Selector
 	// optional: number of environments to process in parallel
 	Parallelism int
-	// optional: If set, target an existing export directory, delete files previously exported by the targeted envs and re-export targeted envs.
-	DeletePrevious bool
+
+	// What to do when exporting to an existing directory
+	// - none: fail when directory is not empty
+	// - fail-on-conflicts: fail when an exported file already exists
+	// - replace-envs: delete files previously exported by the targeted envs and re-export them
+	MergeStrategy ExportMergeStrategy
 }
 
 func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
@@ -57,12 +67,12 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 	if err != nil {
 		return fmt.Errorf("checking target dir: %s", err)
 	}
-	if !empty && !opts.Merge {
-		return fmt.Errorf("output dir `%s` not empty. Pass --merge to ignore this", to)
+	if !empty && opts.MergeStrategy == ExportMergeStrategyNone {
+		return fmt.Errorf("output dir `%s` not empty. Pass a different --merge-strategy to ignore this", to)
 	}
 
 	// delete files previously exported by the targeted envs.
-	if opts.DeletePrevious {
+	if opts.MergeStrategy == ExportMergeStrategyReplaceEnvs {
 		if err := deletePreviouslyExportedManifests(to, envs); err != nil {
 			return fmt.Errorf("deleting previously exported manifests: %w", err)
 		}
