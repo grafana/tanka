@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"runtime"
@@ -34,11 +35,16 @@ func exportCmd() *cli.Command {
 	)
 
 	extension := cmd.Flags().String("extension", "yaml", "File extension")
-	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
 	parallel := cmd.Flags().IntP("parallel", "p", 8, "Number of environments to process in parallel")
 	cachePath := cmd.Flags().StringP("cache-path", "c", "", "Local file path where cached evaluations should be stored")
 	cacheEnvs := cmd.Flags().StringArrayP("cache-envs", "e", nil, "Regexes which define which environment should be cached (if caching is enabled)")
 	ballastBytes := cmd.Flags().Int("mem-ballast-size-bytes", 0, "Size of memory ballast to allocate. This may improve performance for large environments.")
+
+	merge := cmd.Flags().Bool("merge", false, "Allow merging with existing directory")
+	if err := cmd.Flags().MarkDeprecated("merge", "use --merge-strategy=fail-on-conflicts instead"); err != nil {
+		panic(err)
+	}
+	mergeStrategy := cmd.Flags().String("merge-strategy", "", "What to do when exporting to an existing directory. The default setting is to disallow exporting to an existing directory. Values: 'fail-on-conficts', 'replace-envs'")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -59,7 +65,6 @@ func exportCmd() *cli.Command {
 		opts := tanka.ExportEnvOpts{
 			Format:    *format,
 			Extension: *extension,
-			Merge:     *merge,
 			Opts: tanka.Opts{
 				JsonnetOpts: getJsonnetOpts(),
 				Filters:     filters,
@@ -68,6 +73,11 @@ func exportCmd() *cli.Command {
 			Selector:    getLabelSelector(),
 			Parallelism: *parallel,
 		}
+
+		if opts.MergeStrategy, err = determineMergeStrategy(*merge, *mergeStrategy); err != nil {
+			return err
+		}
+
 		opts.Opts.CachePath = *cachePath
 		for _, expr := range *cacheEnvs {
 			regex, err := regexp.Compile(expr)
@@ -115,4 +125,21 @@ func exportCmd() *cli.Command {
 		return tanka.ExportEnvironments(exportEnvs, args[0], &opts)
 	}
 	return cmd
+}
+
+// `--merge` is deprecated in favor of `--merge-strategy`. However, merge has to keep working for now.
+func determineMergeStrategy(deprecatedMergeFlag bool, mergeStrategy string) (tanka.ExportMergeStrategy, error) {
+	if deprecatedMergeFlag && mergeStrategy != "" {
+		return "", errors.New("cannot use --merge and --merge-strategy at the same time")
+	}
+	if deprecatedMergeFlag {
+		return tanka.ExportMergeStrategyFailConflicts, nil
+	}
+
+	switch strategy := tanka.ExportMergeStrategy(mergeStrategy); strategy {
+	case tanka.ExportMergeStrategyFailConflicts, tanka.ExportMergeStrategyReplaceEnvs, tanka.ExportMergeStrategyNone:
+		return strategy, nil
+	}
+
+	return "", fmt.Errorf("invalid merge strategy: %q", mergeStrategy)
 }
