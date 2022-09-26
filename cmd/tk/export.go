@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"runtime"
@@ -52,13 +53,6 @@ func exportCmd() *cli.Command {
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		// `--merge` is deprecated in favor of `--merge-strategy`. However, merge has to keep working for now.
-		if *merge && *mergeStrategy != "" {
-			panic("cannot use --merge and --merge-strategy at the same time")
-		} else if *merge {
-			*mergeStrategy = string(tanka.ExportMergeStrategyFailConflicts)
-		}
-
 		// Allocate a block of memory to alter GC behaviour. See https://github.com/golang/go/issues/23044
 		ballast := make([]byte, *ballastBytes)
 		defer runtime.KeepAlive(ballast)
@@ -69,9 +63,8 @@ func exportCmd() *cli.Command {
 		}
 
 		opts := tanka.ExportEnvOpts{
-			Format:        *format,
-			Extension:     *extension,
-			MergeStrategy: tanka.ExportMergeStrategy(*mergeStrategy),
+			Format:    *format,
+			Extension: *extension,
 			Opts: tanka.Opts{
 				JsonnetOpts: getJsonnetOpts(),
 				Filters:     filters,
@@ -80,6 +73,21 @@ func exportCmd() *cli.Command {
 			Selector:    getLabelSelector(),
 			Parallelism: *parallel,
 		}
+
+		// `--merge` is deprecated in favor of `--merge-strategy`. However, merge has to keep working for now.
+		if *merge && *mergeStrategy != "" {
+			return errors.New("cannot use --merge and --merge-strategy at the same time")
+		} else if *merge {
+			opts.MergeStrategy = tanka.ExportMergeStrategyFailConflicts
+		} else {
+			switch strat := tanka.ExportMergeStrategy(*mergeStrategy); strat {
+			case tanka.ExportMergeStrategyFailConflicts, tanka.ExportMergeStrategyReplaceEnvs, tanka.ExportMergeStrategyNone:
+				opts.MergeStrategy = tanka.ExportMergeStrategy(*mergeStrategy)
+			default:
+				return fmt.Errorf("invalid merge strategy %q", *mergeStrategy)
+			}
+		}
+
 		opts.Opts.CachePath = *cachePath
 		for _, expr := range *cacheEnvs {
 			regex, err := regexp.Compile(expr)
