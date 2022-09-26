@@ -74,18 +74,8 @@ func exportCmd() *cli.Command {
 			Parallelism: *parallel,
 		}
 
-		// `--merge` is deprecated in favor of `--merge-strategy`. However, merge has to keep working for now.
-		if *merge && *mergeStrategy != "" {
-			return errors.New("cannot use --merge and --merge-strategy at the same time")
-		} else if *merge {
-			opts.MergeStrategy = tanka.ExportMergeStrategyFailConflicts
-		} else {
-			switch strat := tanka.ExportMergeStrategy(*mergeStrategy); strat {
-			case tanka.ExportMergeStrategyFailConflicts, tanka.ExportMergeStrategyReplaceEnvs, tanka.ExportMergeStrategyNone:
-				opts.MergeStrategy = tanka.ExportMergeStrategy(*mergeStrategy)
-			default:
-				return fmt.Errorf("invalid merge strategy %q", *mergeStrategy)
-			}
+		if opts.MergeStrategy, err = determineMergeStrategy(*merge, *mergeStrategy); err != nil {
+			return err
 		}
 
 		opts.Opts.CachePath = *cachePath
@@ -135,4 +125,21 @@ func exportCmd() *cli.Command {
 		return tanka.ExportEnvironments(exportEnvs, args[0], &opts)
 	}
 	return cmd
+}
+
+// `--merge` is deprecated in favor of `--merge-strategy`. However, merge has to keep working for now.
+func determineMergeStrategy(deprecatedMergeFlag bool, mergeStrategy string) (tanka.ExportMergeStrategy, error) {
+	if deprecatedMergeFlag && mergeStrategy != "" {
+		return "", errors.New("cannot use --merge and --merge-strategy at the same time")
+	}
+	if deprecatedMergeFlag {
+		return tanka.ExportMergeStrategyFailConflicts, nil
+	}
+
+	switch strategy := tanka.ExportMergeStrategy(mergeStrategy); strategy {
+	case tanka.ExportMergeStrategyFailConflicts, tanka.ExportMergeStrategyReplaceEnvs, tanka.ExportMergeStrategyNone:
+		return strategy, nil
+	}
+
+	return "", fmt.Errorf("invalid merge strategy: %q", mergeStrategy)
 }
