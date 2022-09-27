@@ -69,7 +69,6 @@ func BenchmarkGetSnippetHash(b *testing.B) {
 			}
 		})
 	}
-
 }
 
 func generateTestProject(t testing.TB, dir string, depth int, importAllFromMain bool) []string {
