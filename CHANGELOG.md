@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.23.0 (2022-09-26)
+
+### Features
+
+- **cli/tanka**: Add new `--auto-approve=(always|never|if-no-changes)` option to the `apply` command
+  **[#754](https://github.com/grafana/tanka/pull/754)**
+- **cli/export**: Expand merging capabilities with new `--merge-strategy` flag
+  **[#760](https://github.com/grafana/tanka/pull/760)**
+
+### Bug Fixes/Enhancements
+
+- **cli/tanka**: Use exact match to find context from API server
+  **[#750](https://github.com/grafana/tanka/pull/750)**
+- **helm**: Handle dirs missing the `Chart.yaml` file
+  **[#752](https://github.com/grafana/tanka/pull/752)**
+- **export**: `getSnippetHash`: Use regexp instead of parsing whole AST for performance
+  **[#758](https://github.com/grafana/tanka/pull/758)**
+
 ## 0.22.1 (2022-06-15)
 
 ### Bug Fixes/Enhancements
