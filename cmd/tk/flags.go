@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/labels"
 
@@ -31,7 +31,7 @@ func addApplyFlags(fs *pflag.FlagSet, opts *tanka.ApplyBaseOpts, autoApproveDepr
 	// Parse the auto-approve flag (choice), still supporting the deprecated dangerous-auto-approve flag (boolean)
 	fs.BoolVar(autoApproveDeprecated, "dangerous-auto-approve", false, "skip interactive approval. Only for automation!")
 	if err := fs.MarkDeprecated("dangerous-auto-approve", "use --auto-approve instead"); err != nil {
-		log.Fatalf("failed to mark deprecated flag: %s", err)
+		log.Fatal().Msgf("failed to mark deprecated flag: %s", err)
 	}
 	fs.StringVar(autoApprove, "auto-approve", "", "skip interactive approval. Only for automation! Allowed values: 'always', 'never', 'if-no-changes'")
 }
@@ -43,7 +43,7 @@ func labelSelectorFlag(fs *pflag.FlagSet) func() labels.Selector {
 		if *labelSelector != "" {
 			selector, err := labels.Parse(*labelSelector)
 			if err != nil {
-				log.Fatalf("Could not parse selector (-l) %s", *labelSelector)
+				log.Fatal().Msgf("Could not parse selector (-l) %s", *labelSelector)
 			}
 			return selector
 		}
@@ -79,7 +79,7 @@ func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[stri
 			for _, s := range *code {
 				split := strings.SplitN(s, "=", 2)
 				if len(split) != 2 {
-					log.Fatalf(kind+"-code argument has wrong format: `%s`. Expected `key=<code>`", s)
+					log.Fatal().Msgf(kind+"-code argument has wrong format: `%s`. Expected `key=<code>`", s)
 				}
 				m[split[0]] = split[1]
 			}
@@ -87,7 +87,7 @@ func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[stri
 			for _, s := range *str {
 				split := strings.SplitN(s, "=", 2)
 				if len(split) != 2 {
-					log.Fatalf(kind+"-str argument has wrong format: `%s`. Expected `key=<value>`", s)
+					log.Fatal().Msgf(kind+"-str argument has wrong format: `%s`. Expected `key=<value>`", s)
 				}
 				m[split[0]] = fmt.Sprintf(`"%s"`, split[1])
 			}

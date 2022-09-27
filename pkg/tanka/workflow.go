@@ -2,10 +2,10 @@ package tanka
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/fatih/color"
+	"github.com/rs/zerolog/log"
 
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
@@ -103,7 +103,7 @@ func Apply(baseDir string, opts ApplyOpts) error {
 		switch {
 		case err != nil:
 			// This is not fatal, the diff is not strictly required
-			log.Println("Error diffing:", err)
+			log.Error().Err(err).Msg("error diffing")
 		case diff == nil:
 			noChanges = true
 			// If using KUBECTL_INTERACTIVE_DIFF, the stdout buffer is always empty

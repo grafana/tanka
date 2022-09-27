@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -133,7 +132,7 @@ func chartsInitCmd() *cli.Command {
 			return err
 		}
 
-		log.Printf("Success! New Chartfile created at '%s'", path)
+		fmt.Fprintf(os.Stderr, "Success! New Chartfile created at '%s'", path)
 		return nil
 	}
 

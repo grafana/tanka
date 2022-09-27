@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -180,7 +180,7 @@ func deletePreviouslyExportedManifests(path string, envs []*v1alpha1.Environment
 	manifestFilePath := filepath.Join(path, manifestFile)
 	manifestContent, err := os.ReadFile(manifestFilePath)
 	if errors.Is(err, fs.ErrNotExist) {
-		log.Printf("Warning: No manifest file found at %s, skipping deletion of previously exported manifests\n", manifestFilePath)
+		log.Warn().Msgf("No manifest file found at %s, skipping deletion of previously exported manifests\n", manifestFilePath)
 		return nil
 	} else if err != nil {
 		return err

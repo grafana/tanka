@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strconv"
@@ -68,7 +67,7 @@ func initCmd() *cli.Command {
 		if doInstall {
 			if err := installK8sLib(version); err != nil {
 				// This is not fatal, as most of Tanka will work anyways
-				log.Println("Installing k.libsonnet:", err)
+				fmt.Println("Installing k.libsonnet:", err)
 				failed = true
 			}
 		}
@@ -79,7 +78,7 @@ func initCmd() *cli.Command {
 			fmt.Println("Directory structure set up! Remember to configure the API endpoint:\n`tk env set environments/default --server=https://127.0.0.1:6443`")
 		}
 		if failed {
-			log.Println("Errors occurred while initializing the project. Check the above logs for details.")
+			fmt.Println("Errors occurred while initializing the project. Check the above logs for details.")
 		}
 
 		return nil

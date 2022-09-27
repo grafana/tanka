@@ -2,7 +2,7 @@ package tanka
 
 import (
 	"fmt"
-	"log"
+	"os"
 
 	"github.com/fatih/color"
 
@@ -36,7 +36,7 @@ func Prune(baseDir string, opts PruneOpts) error {
 	}
 
 	if len(orphaned) == 0 {
-		log.Println("Nothing found to prune.")
+		fmt.Fprintln(os.Stderr, "Nothing found to prune.")
 		return nil
 	}
 
@@ -60,9 +60,9 @@ func Prune(baseDir string, opts PruneOpts) error {
 		warning := color.New(color.FgHiYellow, color.Bold).FprintfFunc()
 		warning(color.Error, "WARNING: This will delete following namespaces and all resources in them:\n")
 		for _, ns := range namespaces {
-			log.Printf(" - %s\n", ns)
+			fmt.Fprintf(os.Stderr, " - %s\n", ns)
 		}
-		log.Println("")
+		fmt.Fprintln(os.Stderr, "")
 	}
 
 	// prompt for confirm
