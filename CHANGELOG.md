@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.23.1 (2022-09-28)
+
+### Bug Fixes/Enhancements
+
+- **export**: Fix `getSnippetHash` not considering all files
+  **[#765](https://github.com/grafana/tanka/pull/765)**
+
 ## 0.23.0 (2022-09-26)
 
 ### Features

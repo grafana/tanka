@@ -12,7 +12,7 @@ lint: $(GOLINTER)
 	$(GOLINTER) run
 
 test:
-	go test ./...
+	go test ./... -bench=. -benchmem
 
 # Compilation
 dev:

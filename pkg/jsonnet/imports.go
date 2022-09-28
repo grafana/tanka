@@ -204,7 +204,7 @@ func findImportRecursiveRegexp(list map[string]bool, vm *jsonnet.VM, filename, c
 		}
 
 		if list[abs] {
-			return nil
+			continue
 		}
 		list[abs] = true
 
