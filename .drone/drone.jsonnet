@@ -42,27 +42,33 @@ local pipeline(name) = {
   steps: [],
 };
 
-local docker(arch) = pipeline('docker-' + arch) {
-  platform: {
-    os: 'linux',
-    arch: arch,
-  },
-  steps: [
-    go('fetch-tags', ['git fetch origin --tags']),
-    make('static'),
-    {
-      name: 'container',
-      image: 'plugins/docker',
-      settings: {
-        repo: 'grafana/tanka',
-        auto_tag: true,
-        auto_tag_suffix: arch,
-        username: { from_secret: vault.dockerhub_username },
-        password: { from_secret: vault.dockerhub_password },
-      },
+local docker(name, arch, tags=null, depends_on=[]) =
+  pipeline(name) {
+    platform: {
+      os: 'linux',
+      arch: arch,
     },
-  ],
-};
+    steps: [
+      go('fetch-tags', ['git fetch origin --tags']),
+      make('static'),
+      {
+        name: 'container',
+        image: 'plugins/docker',
+        settings: {
+          repo: 'grafana/tanka',
+
+          username: { from_secret: vault.dockerhub_username },
+          password: { from_secret: vault.dockerhub_password },
+        } + if tags == null then {
+          auto_tag: true,
+          auto_tag_suffix: arch,
+        } else {
+          tags: tags,
+        },
+      },
+    ],
+    depends_on: depends_on,
+  };
 
 [
   pipeline('check') {
@@ -92,8 +98,9 @@ local docker(arch) = pipeline('docker-' + arch) {
     ],
   } + { depends_on: ['check'] } + constraints.tags,
 
-  docker('amd64') { depends_on: ['check'] } + constraints.tags + constraints.mainPush,
-  docker('arm64') { depends_on: ['check'] } + constraints.tags + constraints.mainPush,
+  docker('docker-main-commit', 'amd64', tags=['${DRONE_COMMIT}'], depends_on=['check']) + constraints.mainPush,
+  docker('docker-amd64', 'amd64', depends_on=['check']) + constraints.tags + constraints.mainPush,
+  docker('docker-arm64', 'arm64', depends_on=['check']) + constraints.tags + constraints.mainPush,
 
   pipeline('manifest') {
     steps: [{
