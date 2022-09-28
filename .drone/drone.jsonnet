@@ -42,8 +42,8 @@ local pipeline(name) = {
   steps: [],
 };
 
-local docker(name, arch, tags=null, depends_on=[]) =
-  pipeline(name) {
+local docker(arch, depends_on=[]) =
+  pipeline('docker-' + arch) {
     platform: {
       os: 'linux',
       arch: arch,
@@ -56,14 +56,10 @@ local docker(name, arch, tags=null, depends_on=[]) =
         image: 'plugins/docker',
         settings: {
           repo: 'grafana/tanka',
-
-          username: { from_secret: vault.dockerhub_username },
-          password: { from_secret: vault.dockerhub_password },
-        } + if tags == null then {
           auto_tag: true,
           auto_tag_suffix: arch,
-        } else {
-          tags: tags,
+          username: { from_secret: vault.dockerhub_username },
+          password: { from_secret: vault.dockerhub_password },
         },
       },
     ],
@@ -98,9 +94,32 @@ local docker(name, arch, tags=null, depends_on=[]) =
     ],
   } + { depends_on: ['check'] } + constraints.tags,
 
-  docker('docker-main-commit', 'amd64', tags=['${DRONE_COMMIT}'], depends_on=['check']) + constraints.mainPush,
-  docker('docker-amd64', 'amd64', depends_on=['check']) + constraints.tags + constraints.mainPush,
-  docker('docker-arm64', 'arm64', depends_on=['check']) + constraints.tags + constraints.mainPush,
+  docker('amd64', depends_on=['check']) + constraints.tags + constraints.mainPush,
+  docker('arm64', depends_on=['check']) + constraints.tags + constraints.mainPush,
+
+  pipeline('manifest-main') {
+    steps: [
+      go('fetch-tags', [
+        'git fetch origin --tags',
+        'echo "main-$(git describe --tags)" > .tags',
+      ]),
+      {
+        name: 'manifest',
+        image: 'plugins/manifest',
+        settings: {
+          ignore_missing: true,
+          spec: '.drone/docker-manifest.tmpl',
+          username: { from_secret: vault.dockerhub_username },
+          password: { from_secret: vault.dockerhub_password },
+        },
+      },
+    ],
+  } + {
+    depends_on: [
+      'docker-amd64',
+      'docker-arm64',
+    ],
+  } + constraints.mainPush,
 
   pipeline('manifest') {
     steps: [{

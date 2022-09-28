@@ -120,51 +120,6 @@ volumes:
 depends_on:
 - check
 kind: pipeline
-name: docker-main-commit
-platform:
-  arch: amd64
-  os: linux
-steps:
-- commands:
-  - git fetch origin --tags
-  image: golang:1.19
-  name: fetch-tags
-  volumes:
-  - name: gopath
-    path: /go
-- commands:
-  - if [ ! -f linux-amd64/helm ]; then
-  - '  wget -q https://get.helm.sh/helm-v3.9.0-linux-amd64.tar.gz'
-  - '  tar -zxvf helm-v3.9.0-linux-amd64.tar.gz'
-  - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
-  - fi
-  - cp linux-amd64/helm /usr/local/bin/helm
-  - make static
-  image: golang:1.19
-  name: static
-  volumes:
-  - name: gopath
-    path: /go
-- image: plugins/docker
-  name: container
-  settings:
-    password:
-      from_secret: dockerhub_password
-    repo: grafana/tanka
-    tags:
-    - ${DRONE_COMMIT}
-    username:
-      from_secret: dockerhub_username
-trigger:
-  ref:
-  - refs/heads/main
-volumes:
-- name: gopath
-  temp: {}
----
-depends_on:
-- check
-kind: pipeline
 name: docker-amd64
 platform:
   arch: amd64
@@ -258,6 +213,36 @@ depends_on:
 - docker-amd64
 - docker-arm64
 kind: pipeline
+name: manifest-main
+steps:
+- commands:
+  - git fetch origin --tags
+  - echo "main-$(git describe --tags)" > .tags
+  image: golang:1.19
+  name: fetch-tags
+  volumes:
+  - name: gopath
+    path: /go
+- image: plugins/manifest
+  name: manifest
+  settings:
+    ignore_missing: true
+    password:
+      from_secret: dockerhub_password
+    spec: .drone/docker-manifest.tmpl
+    username:
+      from_secret: dockerhub_username
+trigger:
+  ref:
+  - refs/heads/main
+volumes:
+- name: gopath
+  temp: {}
+---
+depends_on:
+- docker-amd64
+- docker-arm64
+kind: pipeline
 name: manifest
 steps:
 - image: plugins/manifest
@@ -297,6 +282,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: 66c122a0223777147c3a96a7315f684fbccfa40abab96982563a9fd6364276de
+hmac: adbd6c28d92efbf2968766102c5abe0bbad5a4af1c76e84ada59b2c5cf9c958d
 
 ...
