@@ -42,27 +42,29 @@ local pipeline(name) = {
   steps: [],
 };
 
-local docker(arch) = pipeline('docker-' + arch) {
-  platform: {
-    os: 'linux',
-    arch: arch,
-  },
-  steps: [
-    go('fetch-tags', ['git fetch origin --tags']),
-    make('static'),
-    {
-      name: 'container',
-      image: 'plugins/docker',
-      settings: {
-        repo: 'grafana/tanka',
-        auto_tag: true,
-        auto_tag_suffix: arch,
-        username: { from_secret: vault.dockerhub_username },
-        password: { from_secret: vault.dockerhub_password },
-      },
+local docker(arch, depends_on=[]) =
+  pipeline('docker-' + arch) {
+    platform: {
+      os: 'linux',
+      arch: arch,
     },
-  ],
-};
+    steps: [
+      go('fetch-tags', ['git fetch origin --tags']),
+      make('static'),
+      {
+        name: 'container',
+        image: 'plugins/docker',
+        settings: {
+          repo: 'grafana/tanka',
+          auto_tag: true,
+          auto_tag_suffix: arch,
+          username: { from_secret: vault.dockerhub_username },
+          password: { from_secret: vault.dockerhub_password },
+        },
+      },
+    ],
+    depends_on: depends_on,
+  };
 
 [
   pipeline('check') {
@@ -92,8 +94,32 @@ local docker(arch) = pipeline('docker-' + arch) {
     ],
   } + { depends_on: ['check'] } + constraints.tags,
 
-  docker('amd64') { depends_on: ['check'] } + constraints.tags + constraints.mainPush,
-  docker('arm64') { depends_on: ['check'] } + constraints.tags + constraints.mainPush,
+  docker('amd64', depends_on=['check']) + constraints.tags + constraints.mainPush,
+  docker('arm64', depends_on=['check']) + constraints.tags + constraints.mainPush,
+
+  pipeline('manifest-main') {
+    steps: [
+      go('fetch-tags', [
+        'git fetch origin --tags',
+        'echo "main-$(git describe --tags)" > .tags',
+      ]),
+      {
+        name: 'manifest',
+        image: 'plugins/manifest',
+        settings: {
+          ignore_missing: true,
+          spec: '.drone/docker-manifest.tmpl',
+          username: { from_secret: vault.dockerhub_username },
+          password: { from_secret: vault.dockerhub_password },
+        },
+      },
+    ],
+  } + {
+    depends_on: [
+      'docker-amd64',
+      'docker-arm64',
+    ],
+  } + constraints.mainPush,
 
   pipeline('manifest') {
     steps: [{

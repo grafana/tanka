@@ -213,6 +213,36 @@ depends_on:
 - docker-amd64
 - docker-arm64
 kind: pipeline
+name: manifest-main
+steps:
+- commands:
+  - git fetch origin --tags
+  - echo "main-$(git describe --tags)" > .tags
+  image: golang:1.19
+  name: fetch-tags
+  volumes:
+  - name: gopath
+    path: /go
+- image: plugins/manifest
+  name: manifest
+  settings:
+    ignore_missing: true
+    password:
+      from_secret: dockerhub_password
+    spec: .drone/docker-manifest.tmpl
+    username:
+      from_secret: dockerhub_username
+trigger:
+  ref:
+  - refs/heads/main
+volumes:
+- name: gopath
+  temp: {}
+---
+depends_on:
+- docker-amd64
+- docker-arm64
+kind: pipeline
 name: manifest
 steps:
 - image: plugins/manifest
@@ -252,6 +282,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: 9d1c433944d46ded93d8637f570568e8a9e9887d4a4b3c790a25e9c83cd58921
+hmac: adbd6c28d92efbf2968766102c5abe0bbad5a4af1c76e84ada59b2c5cf9c958d
 
 ...
