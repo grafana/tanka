@@ -47,7 +47,12 @@ func Prune(baseDir string, opts PruneOpts) error {
 		// here
 		return err
 	}
-	fmt.Print(term.Colordiff(*diff).String())
+	// in case of non-fatal error diff may be nil
+	if diff != nil {
+		fmt.Print(term.Colordiff(*diff).String())
+	} else {
+		fmt.Print("<no error but also no diff - this should not happen>\n")
+	}
 
 	// print namespace removal warning
 	namespaces := []string{}
