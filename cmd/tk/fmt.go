@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 
 	"github.com/go-clix/cli"
@@ -58,7 +57,7 @@ func fmtCmd() *cli.Command {
 		case *stdout:
 			outFn = func(name, content string) error {
 				fmt.Printf("// %s\n%s", name, content)
-				log.Println() // some spacing
+				fmt.Fprintln(os.Stderr) // some spacing
 				return nil
 			}
 		}
@@ -75,20 +74,20 @@ func fmtCmd() *cli.Command {
 		}
 
 		if *verbose {
-			log.Println()
+			fmt.Fprintln(os.Stderr)
 		}
 
 		switch {
 		case *test && len(changed) > 0:
-			log.Println("The following files are not properly formatted:")
+			fmt.Fprintln(os.Stderr, "The following files are not properly formatted:")
 			for _, s := range changed {
-				log.Println(s)
+				fmt.Fprintln(os.Stderr, s)
 			}
 			os.Exit(ExitStatusDiff)
 		case len(changed) == 0:
-			log.Println("All discovered files are already formatted. No changes were made")
+			fmt.Fprintln(os.Stderr, "All discovered files are already formatted. No changes were made")
 		case len(changed) > 0:
-			log.Printf("Formatted %v files", len(changed))
+			fmt.Fprintf(os.Stderr, "Formatted %v files", len(changed))
 		}
 
 		return nil

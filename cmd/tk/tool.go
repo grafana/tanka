@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -53,10 +52,10 @@ func jpathCmd() *cli.Command {
 
 		if *debug {
 			// log to debug info to stderr
-			log.Println("main:", entrypoint)
-			log.Println("rootDir:", root)
-			log.Println("baseDir:", base)
-			log.Println("jpath:", jsonnetpath)
+			fmt.Fprintln(os.Stderr, "main:", entrypoint)
+			fmt.Fprintln(os.Stderr, "rootDir:", root)
+			fmt.Fprintln(os.Stderr, "baseDir:", base)
+			fmt.Fprintln(os.Stderr, "jpath:", jsonnetpath)
 		}
 
 		// print export JSONNET_PATH to stdout

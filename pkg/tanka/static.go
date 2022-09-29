@@ -2,10 +2,10 @@ package tanka
 
 import (
 	"encoding/json"
-	"log"
 
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/rs/zerolog/log"
 )
 
 // StaticLoader loads an environment from a static file called `spec.json`.
@@ -88,7 +88,7 @@ func parseStaticSpec(path string) (*v1alpha1.Environment, error) {
 		switch err.(type) {
 		// the config includes deprecated fields
 		case spec.ErrDeprecated:
-			log.Println(err)
+			log.Warn().Err(err).Msg("encountered deprecated fields in spec.json")
 		// spec.json missing. we can still work with the default value
 		case spec.ErrNoSpec:
 			return env, nil

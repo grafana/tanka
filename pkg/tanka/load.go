@@ -2,7 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 // environmentExtCode is the extCode ID `tk.env` uses underneath
@@ -44,7 +44,7 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
-		log.Printf("Path %q does not exist, trying to use it as an environment name", path)
+		log.Info().Msgf("Path %q does not exist, trying to use it as an environment name", path)
 		opts.Name = path
 		path = "."
 	} else if err != nil {

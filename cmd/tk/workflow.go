@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/go-clix/cli"
@@ -203,7 +202,7 @@ func diffCmd() *cli.Command {
 		}
 
 		if changes == nil {
-			log.Println("No differences.")
+			fmt.Fprintln(os.Stderr, "No differences.")
 			os.Exit(ExitStatusClean)
 		}
 

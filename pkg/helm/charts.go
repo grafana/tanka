@@ -3,13 +3,13 @@ package helm
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/Masterminds/semver"
+	"github.com/rs/zerolog/log"
 	"sigs.k8s.io/yaml"
 )
 
@@ -105,7 +105,7 @@ func (c Charts) Vendor(prune bool) error {
 	expectedDirs := make(map[string]bool)
 
 	repositoriesUpdated := false
-	log.Println("Vendoring...")
+	log.Info().Msg("Vendoring...")
 	for _, r := range c.Manifest.Requires {
 		chartSubDir := parseReqName(r.Chart)
 		if r.Directory != "" {
@@ -138,30 +138,30 @@ func (c Charts) Vendor(prune bool) error {
 			}
 
 			if chartYAML.Version.String() == r.Version.String() {
-				log.Printf(" %s exists", r)
+				log.Info().Msgf(" %s exists", r)
 				continue
 			} else {
-				log.Printf("Removing %s", r)
+				log.Info().Msgf("Removing %s", r)
 				if err := os.RemoveAll(chartPath); err != nil {
 					return err
 				}
 			}
 		} else if chartDirExists {
 			// If the chart dir exists but the manifest doesn't, we'll clear it out and re-download the chart
-			log.Printf("Removing %s", r)
+			log.Info().Msgf("Removing %s", r)
 			if err := os.RemoveAll(chartPath); err != nil {
 				return err
 			}
 		}
 
 		if !repositoriesUpdated {
-			log.Println("Syncing Repositories ...")
+			log.Info().Msg("Syncing Repositories ...")
 			if err := c.Helm.RepoUpdate(Opts{Repositories: c.Manifest.Repositories}); err != nil {
 				return err
 			}
 			repositoriesUpdated = true
 		}
-		log.Println("Pulling Charts ...")
+		log.Info().Msg("Pulling Charts ...")
 		if repoName := parseReqRepo(r.Chart); !c.Manifest.Repositories.HasName(repoName) {
 			return fmt.Errorf("repository %q not found for chart %q", repoName, r.Chart)
 		}
@@ -174,7 +174,7 @@ func (c Charts) Vendor(prune bool) error {
 			return err
 		}
 
-		log.Printf(" %s@%s downloaded", r.Chart, r.Version.String())
+		log.Info().Msgf(" %s@%s downloaded", r.Chart, r.Version.String())
 	}
 
 	if prune {
@@ -188,7 +188,7 @@ func (c Charts) Vendor(prune bool) error {
 				if i.IsDir() {
 					itemType = "directory"
 				}
-				log.Printf("Pruning %s: %s", itemType, i.Name())
+				log.Info().Msgf("Pruning %s: %s", itemType, i.Name())
 				if err := os.RemoveAll(filepath.Join(dir, i.Name())); err != nil {
 					return err
 				}
@@ -219,7 +219,7 @@ func (c *Charts) Add(reqs []string) error {
 		}
 
 		requirements = append(requirements, *r)
-		log.Println(" OK:", s)
+		log.Info().Msgf(" OK: %s", s)
 	}
 
 	if err := requirements.Validate(); err != nil {
@@ -258,7 +258,7 @@ func (c *Charts) AddRepos(repos ...Repo) error {
 
 		c.Manifest.Repositories = append(c.Manifest.Repositories, r)
 		added++
-		log.Println(" OK:", r.Name)
+		log.Info().Msgf(" OK: %s", r.Name)
 	}
 
 	// write out

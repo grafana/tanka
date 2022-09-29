@@ -2,13 +2,12 @@ package tanka
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/labels"
@@ -125,7 +124,7 @@ func TestExportEnvironments(t *testing.T) {
 }
 
 func BenchmarkExportEnvironmentsWithReplaceEnvs(b *testing.B) {
-	log.SetOutput(io.Discard)
+	zerolog.SetGlobalLevel(zerolog.Disabled)
 	tempDir := b.TempDir()
 	require.NoError(b, os.Chdir("testdata"))
 	defer func() { require.NoError(b, os.Chdir("..")) }()

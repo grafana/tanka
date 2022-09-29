@@ -2,7 +2,6 @@ package tanka
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 const defaultParallelism = 8
@@ -89,7 +89,7 @@ type parallelOut struct {
 
 func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
 	for job := range jobsCh {
-		log.Printf("Loading %s from %s", job.opts.Name, job.path)
+		log.Debug().Str("name", job.opts.Name).Str("path", job.path).Msg("Loading environment")
 		startTime := time.Now()
 
 		env, err := LoadEnvironment(job.path, job.opts)
@@ -98,6 +98,6 @@ func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
 		}
 		outCh <- parallelOut{env: env, err: err}
 
-		log.Printf("Loaded %s from %s, time elapsed: %s", job.opts.Name, job.path, time.Since(startTime))
+		log.Debug().Str("name", job.opts.Name).Str("path", job.path).Dur("time", time.Since(startTime)).Msg("Finished loading environment")
 	}
 }
