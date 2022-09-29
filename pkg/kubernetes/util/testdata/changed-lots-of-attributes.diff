@@ -1,0 +1,88 @@
+diff -u -N /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4258784861/apps.v1.Deployment.bors-ng.bors-ng /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-2011481016/apps.v1.Deployment.bors-ng.bors-ng
+--- /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4258784861/apps.v1.Deployment.bors-ng.bors-ng	2022-09-29 11:30:26.173560807 -0400
++++ /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-2011481016/apps.v1.Deployment.bors-ng.bors-ng	2022-09-29 11:30:26.177099345 -0400
+@@ -216,7 +229,7 @@
+         - name: DATABASE_USE_SSL
+           value: "false"
+         - name: DATABASE_AUTO_MIGRATE
+-          value: "true"
++          value: tru
+         - name: COMMAND_TRIGGER
+           value: bors
+         - name: DASHBOARD_HEADER_HTML
+diff -u -N /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4258784861/networking.k8s.io.v1.Ingress.bors-ng.bors-ng /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-2011481016/networking.k8s.io.v1.Ingress.bors-ng.bors-ng
+--- /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4258784861/networking.k8s.io.v1.Ingress.bors-ng.bors-ng	2022-09-29 11:30:26.451654927 -0400
++++ /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-2011481016/networking.k8s.io.v1.Ingress.bors-ng.bors-ng	2022-09-29 11:30:26.452224214 -0400
+@@ -58,7 +65,7 @@
+             port:
+               number: 80
+         path: /
+-        pathType1: Prefix
++        pathType1: Exact
+-        pathType2: Prefix
++        pathType2: Exact
+-        pathType3: Prefix
++        pathType3: Exact
+-        pathType4: Prefix
++        pathType4: Exact
+-        pathType5: Prefix
++        pathType5: Exact
+-        pathType6: Prefix
++        pathType6: Exact
+-        pathType7: Prefix
++        pathType7: Exact
+-        pathType8: Prefix
++        pathType8: Exact
+-        pathType9: Prefix
++        pathType9: Exact
+-        pathType10: Prefix
++        pathType10: Exact
+-        pathType11: Prefix
++        pathType11: Exact
+-        pathType12: Prefix
++        pathType12: Exact
+-        pathType13: Prefix
++        pathType13: Exact
+-        pathType14: Prefix
++        pathType14: Exact
+-        pathType15: Prefix
++        pathType15: Exact
+-        pathType16: Prefix
++        pathType16: Exact
+-        pathType17: Prefix
++        pathType17: Exact
+-        pathType18: Prefix
++        pathType18: Exact
+-        pathType19: Prefix
++        pathType19: Exact
+-        pathType20: Prefix
++        pathType20: Exact
+-        pathType21: Prefix
++        pathType21: Exact
+-        pathType22: Prefix
++        pathType22: Exact
+-        pathType23: Prefix
++        pathType23: Exact
+-        pathType24: Prefix
++        pathType24: Exact
+-        pathType25: Prefix
++        pathType25: Exact
+-        pathType26: Prefix
++        pathType26: Exact
+-        pathType27: Prefix
++        pathType27: Exact
+-        pathType28: Prefix
++        pathType28: Exact
+-        pathType29: Prefix
++        pathType29: Exact
+-        pathType30: Prefix
++        pathType30: Exact
+-        pathType31: Prefix
++        pathType31: Exact
++        pathType32: Exact
++        pathType33: Exact
++        pathType34: Exact
++        pathType35: Exact
+   tls:
+   - hosts:
+     - bors-ng.test.net

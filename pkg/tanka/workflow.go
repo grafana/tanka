@@ -166,10 +166,9 @@ type DiffOpts struct {
 
 // Diff parses the environment at the given directory (a `baseDir`) and returns
 // the differences from the live cluster state in `diff(1)` format. If the
-// `WithDiffSummarize` modifier is used, a histogram created using `diffstat(1)`
-// is returned instead.
+// `WithDiffSummarize` modifier is used, a histogram is returned instead.
 // The cluster information is retrieved from the environments `spec.json`.
-// NOTE: This function requires on `diff(1)`, `kubectl(1)` and perhaps `diffstat(1)`
+// NOTE: This function requires on `diff(1)` and `kubectl(1)`
 func Diff(baseDir string, opts DiffOpts) (*string, error) {
 	l, err := Load(baseDir, opts.Opts)
 	if err != nil {

@@ -90,7 +90,8 @@ Please upgrade kubectl to at least version 1.18.1`)
 	}
 
 	if opts.Summarize {
-		return util.Diffstat(*d)
+		result, err := util.DiffStat(*d)
+		return &result, err
 	}
 
 	return d, nil

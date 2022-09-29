@@ -1,0 +1,109 @@
+diff -u -N /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4199451777/apps.v1.Deployment.bors-ng.bors-ng /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-1314023776/apps.v1.Deployment.bors-ng.bors-ng
+--- /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4199451777/apps.v1.Deployment.bors-ng.bors-ng	2022-09-29 11:48:13.345562149 -0400
++++ /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-1314023776/apps.v1.Deployment.bors-ng.bors-ng	2022-09-29 11:48:13.347038829 -0400
+@@ -216,7 +229,7 @@
+         - name: DATABASE_USE_SSL
+           value: "false"
+         - name: DATABASE_AUTO_MIGRATE
+-          value: "true"
++          value: tru
+         - name: COMMAND_TRIGGER
+           value: bors
+         - name: DASHBOARD_HEADER_HTML
+diff -u -N /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4199451777/apps.v1.Deployment.bors-ng.bors-ngtest /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-1314023776/apps.v1.Deployment.bors-ng.bors-ngtest
+--- /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4199451777/apps.v1.Deployment.bors-ng.bors-ngtest	2022-09-29 11:48:13.519024640 -0400
++++ /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-1314023776/apps.v1.Deployment.bors-ng.bors-ngtest	2022-09-29 11:48:13.520387827 -0400
+@@ -0,0 +1,270 @@
++apiVersion: apps/v1
++kind: Deployment
++metadata:
++  labels:
++    tanka.dev/environment: 108b68a3c424de9dd80f2cf125b9c7a498d65dd4c8cf55b7
++spec:
++  minReadySeconds: 10
++  progressDeadlineSeconds: 600
++  replicas: 1
++  revisionHistoryLimit: 5
++  selector:
++    matchLabels:
++      app: bors-ng
++  strategy:
++    rollingUpdate:
++      maxSurge: 25%
++      maxUnavailable: 25%
++    type: RollingUpdate
++  template:
++    metadata:
++      creationTimestamp: null
++      labels:
++        app: bors-ng
++        name: bors-ng
++    spec:
++      containers:
++      - env:
++        - name: PUBLIC_HOST
++          value: bors-ng.test.net
++        image: bors-image
++        imagePullPolicy: IfNotPresent
++        livenessProbe:
++          failureThreshold: 3
++          httpGet:
++            path: /health
++            port: http
++            scheme: HTTP
++          periodSeconds: 10
++          successThreshold: 1
++          timeoutSeconds: 3
++        name: bors-ng
++        ports:
++        - containerPort: 80
++          name: http
++          protocol: TCP
++        readinessProbe:
++          failureThreshold: 3
++          httpGet:
++            path: /health
++            port: http
++            scheme: HTTP
++          periodSeconds: 10
++          successThreshold: 1
++          timeoutSeconds: 3
++      dnsPolicy: ClusterFirst
++      restartPolicy: Always
+diff -u -N /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4199451777/networking.k8s.io.v1.Ingress.bors-ng.bors-ng /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-1314023776/networking.k8s.io.v1.Ingress.bors-ng.bors-ng
+--- /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4199451777/networking.k8s.io.v1.Ingress.bors-ng.bors-ng	2022-09-29 11:48:13.787324397 -0400
++++ /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-1314023776/networking.k8s.io.v1.Ingress.bors-ng.bors-ng	2022-09-29 11:48:13.787954356 -0400
+@@ -58,7 +65,7 @@
+             port:
+               number: 80
+         path: /
+-        pathType: Prefix
++        pathType: Exact
+   tls:
+   - hosts:
+     - bors-ng.test.net
+diff -u -N /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/diff3561117184/LIVE-v1.Service.bors-ng.bors-ng /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/diff3561117184/MERGED-v1.Service.bors-ng.bors-ng
+--- /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/diff3561117184/LIVE-v1.Service.bors-ng.bors-ng	2022-09-29 11:54:18.319484889 -0400
++++ /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/diff3561117184/MERGED-v1.Service.bors-ng.bors-ng	2022-09-29 11:54:18.319567564 -0400
+@@ -1,78 +0,0 @@
+-apiVersion: v1
+-kind: Service
+-metadata:
+-  creationTimestamp: "2021-08-17T16:51:55Z"
+-  labels:
+-    name: bors-ng
+-    tanka.dev/environment: 108b68a3c424de9dd80f2cf125b9c7a498d65dd4c8cf55b7
+-  name: bors-ng
+-  namespace: bors-ng
+-spec:
+-  ports:
+-  - name: bors-ng-http
+-    port: 80
+-    protocol: TCP
+-    targetPort: 80
+-  selector:
+-    app: bors-ng
+-    name: bors-ng
+-  sessionAffinity: None
+-  type: ClusterIP
+
