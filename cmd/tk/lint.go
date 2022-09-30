@@ -27,7 +27,12 @@ func lintCmd() *cli.Command {
 
 	exclude := cmd.Flags().StringSliceP("exclude", "e", []string{"**/.*", ".*", "**/vendor/**", "vendor/**"}, "globs to exclude")
 	parallelism := cmd.Flags().IntP("parallelism", "n", 4, "amount of workers")
-	verbose := cmd.Flags().BoolP("verbose", "v", false, "print each checked file")
+
+	// this is now always sent as debug logs
+	cmd.Flags().BoolP("verbose", "v", false, "print each checked file")
+	if err := cmd.Flags().MarkDeprecated("verbose", "logs are sent to debug now, this is unused"); err != nil {
+		panic(err)
+	}
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		globs := make([]glob.Glob, len(*exclude))
@@ -39,7 +44,7 @@ func lintCmd() *cli.Command {
 			globs[i] = g
 		}
 
-		return jsonnet.Lint(args, &jsonnet.LintOpts{Excludes: globs, PrintNames: *verbose, Parallelism: *parallelism})
+		return jsonnet.Lint(args, &jsonnet.LintOpts{Excludes: globs, Parallelism: *parallelism})
 	}
 
 	return cmd

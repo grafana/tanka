@@ -98,6 +98,6 @@ func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
 		}
 		outCh <- parallelOut{env: env, err: err}
 
-		log.Debug().Str("name", job.opts.Name).Str("path", job.path).Dur("time", time.Since(startTime)).Msg("Finished loading environment")
+		log.Debug().Str("name", job.opts.Name).Str("path", job.path).Dur("duration_ms", time.Since(startTime)).Msg("Finished loading environment")
 	}
 }

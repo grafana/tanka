@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/gobwas/glob"
 	"github.com/google/go-jsonnet/linter"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 // LintOpts modifies the behaviour of Lint
@@ -17,9 +19,6 @@ type LintOpts struct {
 	// Excludes are a list of globs to exclude files while searching for Jsonnet
 	// files
 	Excludes []glob.Glob
-
-	// PrintNames causes all filenames to be printed
-	PrintNames bool
 
 	// Parallelism determines the number of workers that will process files
 	Parallelism int
@@ -54,9 +53,8 @@ func Lint(fds []string, opts *LintOpts) error {
 				continue
 			}
 
-			if opts.PrintNames {
-				fmt.Printf("Linting %s...\n", file)
-			}
+			log.Debug().Str("file", file).Msg("linting file")
+			startTime := time.Now()
 
 			vm := MakeVM(Opts{})
 			jpaths, _, _, err := jpath.Resolve(file, true)
@@ -71,6 +69,7 @@ func Lint(fds []string, opts *LintOpts) error {
 			content, _ := os.ReadFile(file)
 			failed := linter.LintSnippet(vm, buf, []linter.Snippet{{FileName: file, Code: string(content)}})
 			resultCh <- result{failed: failed, output: buf.String()}
+			log.Debug().Str("file", file).Dur("duration_ms", time.Since(startTime)).Msg("linted file")
 		}
 	}
 
