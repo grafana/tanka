@@ -138,7 +138,7 @@ func (c Charts) Vendor(prune bool) error {
 			}
 
 			if chartYAML.Version.String() == r.Version.String() {
-				log.Info().Msgf(" %s exists", r)
+				log.Info().Msgf("%s exists", r)
 				continue
 			} else {
 				log.Info().Msgf("Removing %s", r)
@@ -174,7 +174,7 @@ func (c Charts) Vendor(prune bool) error {
 			return err
 		}
 
-		log.Info().Msgf(" %s@%s downloaded", r.Chart, r.Version.String())
+		log.Info().Msgf("%s@%s downloaded", r.Chart, r.Version.String())
 	}
 
 	if prune {
@@ -202,7 +202,7 @@ func (c Charts) Vendor(prune bool) error {
 // Add adds every Chart in reqs to the Manifest after validation, and runs
 // Vendor afterwards
 func (c *Charts) Add(reqs []string) error {
-	log.Printf("Adding %v Charts ...", len(reqs))
+	log.Info().Msgf("Adding %v Charts ...", len(reqs))
 
 	// parse new charts, append in memory
 	requirements := c.Manifest.Requires
@@ -219,7 +219,7 @@ func (c *Charts) Add(reqs []string) error {
 		}
 
 		requirements = append(requirements, *r)
-		log.Info().Msgf(" OK: %s", s)
+		log.Info().Msgf("OK: %s", s)
 	}
 
 	if err := requirements.Validate(); err != nil {
@@ -239,7 +239,7 @@ func (c *Charts) Add(reqs []string) error {
 	}
 
 	// worked fine? vendor it
-	log.Printf("Added %v Charts to helmfile.yaml. Vendoring ...", added)
+	log.Info().Msgf("Added %v Charts to helmfile.yaml. Vendoring ...", added)
 	return c.Vendor(false)
 }
 
@@ -258,7 +258,7 @@ func (c *Charts) AddRepos(repos ...Repo) error {
 
 		c.Manifest.Repositories = append(c.Manifest.Repositories, r)
 		added++
-		log.Info().Msgf(" OK: %s", r.Name)
+		log.Info().Msgf("OK: %s", r.Name)
 	}
 
 	// write out
@@ -346,5 +346,5 @@ func parseReqName(s string) string {
 }
 
 func skip(s string, err error) {
-	log.Printf(" Skipping %s: %s.", s, err)
+	log.Info().Msgf("Skipping %s: %s.", s, err)
 }

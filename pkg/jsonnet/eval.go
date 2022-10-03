@@ -3,9 +3,11 @@ package jsonnet
 import (
 	"os"
 	"regexp"
+	"time"
 
 	jsonnet "github.com/google/go-jsonnet"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/jsonnet/native"
@@ -141,14 +143,18 @@ func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, e
 
 	var hash string
 	if cache != nil {
+		startTime := time.Now()
 		if hash, err = getSnippetHash(vm, path, data); err != nil {
 			return "", err
 		}
+		cacheLog := log.Debug().Str("path", path).Str("hash", hash).Dur("duration_ms", time.Since(startTime))
 		if v, err := cache.Get(hash); err != nil {
 			return "", err
 		} else if v != "" {
+			cacheLog.Bool("cache_hit", true).Msg("computed snippet hash")
 			return v, nil
 		}
+		cacheLog.Bool("cache_hit", false).Msg("computed snippet hash")
 	}
 
 	content, err := evalFunc(vm)
