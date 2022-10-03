@@ -151,6 +151,8 @@ func min(a, b int) int {
 	return b
 }
 
+// findStringsCommonSuffix returns the common suffix of the two strings (removing leading `/` or `-`)
+// e.g. findStringsCommonSuffix("foo/bar/baz", "other/bar/baz") -> "bar/baz"
 func findStringsCommonSuffix(a, b string) string {
 	if a == b {
 		return a
