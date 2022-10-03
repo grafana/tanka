@@ -1,0 +1,5 @@
+apps.v1.Deployment.bors-ng.bors-ng           |    2 +-
+apps.v1.Deployment.bors-ng.bors-ngtest       |   52 ++++++++++++++++++++++++++++++++++++++++
+networking.k8s.io.v1.Ingress.bors-ng.bors-ng |    2 +-
+v1.Service.bors-ng.bors-ng                   |   16 -------------
+4 files changed, 54 insertions(+), 18 deletions(-)

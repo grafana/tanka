@@ -1,0 +1,24 @@
+diff -u -N /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4258784861/apps.v1.Deployment.bors-ng.bors-ng /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-2011481016/apps.v1.Deployment.bors-ng.bors-ng
+--- /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4258784861/apps.v1.Deployment.bors-ng.bors-ng	2022-09-29 11:30:26.173560807 -0400
++++ /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-2011481016/apps.v1.Deployment.bors-ng.bors-ng	2022-09-29 11:30:26.177099345 -0400
+@@ -216,7 +229,7 @@
+         - name: DATABASE_USE_SSL
+           value: "false"
+         - name: DATABASE_AUTO_MIGRATE
+-          value: "true"
++          value: tru
+         - name: COMMAND_TRIGGER
+           value: bors
+         - name: DASHBOARD_HEADER_HTML
+diff -u -N /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4258784861/networking.k8s.io.v1.Ingress.bors-ng.bors-ng /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-2011481016/networking.k8s.io.v1.Ingress.bors-ng.bors-ng
+--- /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/LIVE-4258784861/networking.k8s.io.v1.Ingress.bors-ng.bors-ng	2022-09-29 11:30:26.451654927 -0400
++++ /var/folders/ps/4g9m79b14j90ljcs37lpbw500000gn/T/MERGED-2011481016/networking.k8s.io.v1.Ingress.bors-ng.bors-ng	2022-09-29 11:30:26.452224214 -0400
+@@ -58,7 +65,7 @@
+             port:
+               number: 80
+         path: /
+-        pathType: Prefix
++        pathType: Exact
+   tls:
+   - hosts:
+     - bors-ng.test.net

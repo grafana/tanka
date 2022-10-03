@@ -3,12 +3,15 @@ package util
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
@@ -60,20 +63,58 @@ func DiffStr(name, is, should string) (string, error) {
 	return out, nil
 }
 
-// Diffstat uses `diffstat(1)` utility to summarize a `diff(1)` output
-func Diffstat(d string) (*string, error) {
-	cmd := exec.Command("diffstat", "-C")
-	buf := bytes.Buffer{}
-	cmd.Stdout = &buf
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = strings.NewReader(d)
-
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("invoking diffstat(1): %s", err.Error())
+// Diffstat creates a histogram of a diff
+func DiffStat(d string) (string, error) {
+	lines := strings.Split(d, "\n")
+	type diff struct {
+		added, removed int
 	}
 
-	out := buf.String()
-	return &out, nil
+	maxFilenameLength := 0
+	maxChanges := 0
+	var fileNames []string
+	diffMap := map[string]diff{}
+
+	currentFileName := ""
+	totalAdded, added, totalRemoved, removed := 0, 0, 0, 0
+	for i, line := range lines {
+		if strings.HasPrefix(line, "diff ") {
+			splitLine := strings.Split(line, " ")
+			currentFileName = findStringsCommonSuffix(splitLine[len(splitLine)-2], splitLine[len(splitLine)-1])
+			added, removed = 0, 0
+			continue
+		}
+
+		if strings.HasPrefix(line, "+ ") {
+			added++
+		} else if strings.HasPrefix(line, "- ") {
+			removed++
+		}
+
+		if currentFileName != "" && (i == len(lines)-1 || strings.HasPrefix(lines[i+1], "diff ")) {
+			totalAdded += added
+			totalRemoved += removed
+			if added+removed > maxChanges {
+				maxChanges = added + removed
+			}
+
+			fileNames = append(fileNames, currentFileName)
+			diffMap[currentFileName] = diff{added, removed}
+			if len(currentFileName) > maxFilenameLength {
+				maxFilenameLength = len(currentFileName)
+			}
+		}
+	}
+	sort.Strings(fileNames)
+
+	builder := strings.Builder{}
+	for _, fileName := range fileNames {
+		f := diffMap[fileName]
+		builder.WriteString(fmt.Sprintf("%-*s | %4d %s\n", maxFilenameLength, fileName, f.added+f.removed, printPlusAndMinuses(f.added, f.removed, maxChanges)))
+	}
+	builder.WriteString(fmt.Sprintf("%d files changed, %d insertions(+), %d deletions(-)", len(fileNames), totalAdded, totalRemoved))
+
+	return builder.String(), nil
 }
 
 // FilteredErr is a filtered Stderr. If one of the regular expressions match, the current input is discarded.
@@ -87,4 +128,45 @@ func (r FilteredErr) Write(p []byte) (n int, err error) {
 		}
 	}
 	return os.Stderr.Write(p)
+}
+
+// printPlusAndMinuses prints colored plus and minus signs for the given number of added and removed lines.
+// The number of characters is calculated based on the maximum number of changes in all files (maxChanges).
+// The number of characters is capped at 40.
+func printPlusAndMinuses(added, removed int, maxChanges int) string {
+	addedAndRemoved := float64(added + removed)
+	chars := math.Ceil(addedAndRemoved / float64(maxChanges) * 40)
+
+	added = min(added, int(float64(added)/addedAndRemoved*chars))
+	removed = min(removed, int(chars)-added)
+
+	return color.New(color.FgGreen).Sprint(strings.Repeat("+", added)) +
+		color.New(color.FgRed).Sprint(strings.Repeat("-", removed))
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// findStringsCommonSuffix returns the common suffix of the two strings (removing leading `/` or `-`)
+// e.g. findStringsCommonSuffix("foo/bar/baz", "other/bar/baz") -> "bar/baz"
+func findStringsCommonSuffix(a, b string) string {
+	if a == b {
+		return a
+	}
+
+	if len(a) > len(b) {
+		a, b = b, a
+	}
+
+	for i := 0; i < len(a); i++ {
+		if a[len(a)-i-1] != b[len(b)-i-1] {
+			return strings.TrimLeft(a[len(a)-i:], "/-")
+		}
+	}
+
+	return ""
 }
