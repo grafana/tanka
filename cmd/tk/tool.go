@@ -155,7 +155,7 @@ func importersCmd() *cli.Command {
 			}
 		}
 
-		envs, err := jsonnet.FindImporterForFiles(root, args, nil)
+		envs, err := jsonnet.FindImporterForFiles(root, args)
 		if err != nil {
 			return fmt.Errorf("resolving imports: %s", err)
 		}

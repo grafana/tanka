@@ -77,7 +77,7 @@ func TestFindImportersForFiles(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			importers, err := FindImporterForFiles("testdata/findImporters", c.files, nil)
+			importers, err := FindImporterForFiles("testdata/findImporters", c.files)
 
 			if c.expectedErr != nil {
 				require.EqualError(t, err, c.expectedErr.Error())
@@ -98,7 +98,7 @@ func BenchmarkFindImporters(b *testing.B) {
 	expectedImporters := []string{filepath.Join(tempDir, "main.jsonnet")}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		importers, err := FindImporterForFiles(tempDir, []string{filepath.Join(tempDir, "file10.libsonnet")}, nil)
+		importers, err := FindImporterForFiles(tempDir, []string{filepath.Join(tempDir, "file10.libsonnet")})
 
 		require.NoError(b, err)
 		require.Equal(b, expectedImporters, importers)

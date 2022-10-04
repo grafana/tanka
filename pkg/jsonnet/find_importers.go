@@ -9,70 +9,10 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 )
 
-// FindImporterForFiles finds the entrypoints (main.jsonnet files) that import the given files.
-// It looks through imports transitively, so if a file is imported through a chain, it will still be reported.
-// If the given file is a main.jsonnet file, it will be returned as well.
-func FindImporterForFiles(root string, files []string, chain map[string]struct{}) ([]string, error) {
-	if chain == nil {
-		chain = make(map[string]struct{})
-	}
-
-	var err error
-	root, err = filepath.Abs(root)
-	if err != nil {
-		return nil, err
-	}
-
-	importers := map[string]struct{}{}
-
-	if len(chain) == 0 {
-		for i := range files {
-			files[i], err = filepath.Abs(files[i])
-			if err != nil {
-				return nil, err
-			}
-
-			symlink, err := evalSymlinks(files[i])
-			if err != nil {
-				return nil, err
-			}
-			if symlink != files[i] {
-				files = append(files, symlink)
-			}
-
-			symlinks, err := findSymlinks(root, files[i])
-			if err != nil {
-				return nil, err
-			}
-			files = append(files, symlinks...)
-		}
-
-		files = uniqueStringSlice(files)
-	}
-
-	for _, file := range files {
-		if filepath.Base(file) == jpath.DefaultEntrypoint {
-			importers[file] = struct{}{}
-		}
-
-		newImporters, err := findImporters(root, file, chain)
-		if err != nil {
-			return nil, err
-		}
-		for _, importer := range newImporters {
-			importers[importer] = struct{}{}
-		}
-	}
-
-	var importersSlice []string
-	for importer := range importers {
-		importersSlice = append(importersSlice, importer)
-	}
-
-	sort.Strings(importersSlice)
-
-	return importersSlice, nil
-}
+var (
+	jsonnetFilesMap = make(map[string]map[string]*cachedJsonnetFile)
+	symlinkCache    = make(map[string]string)
+)
 
 type cachedJsonnetFile struct {
 	Base       string
@@ -81,9 +21,75 @@ type cachedJsonnetFile struct {
 	IsMainFile bool
 }
 
-var jsonnetFilesMap = make(map[string]map[string]*cachedJsonnetFile)
-var symlinkCache = make(map[string]string)
+// FindImporterForFiles finds the entrypoints (main.jsonnet files) that import the given files.
+// It looks through imports transitively, so if a file is imported through a chain, it will still be reported.
+// If the given file is a main.jsonnet file, it will be returned as well.
+func FindImporterForFiles(root string, files []string) ([]string, error) {
+	var err error
+	root, err = filepath.Abs(root)
+	if err != nil {
+		return nil, err
+	}
 
+	importers := map[string]struct{}{}
+
+	if files, err = expandSymlinksInFiles(root, files); err != nil {
+		return nil, err
+	}
+
+	// Loop through all given files and add their importers to the list
+	for _, file := range files {
+		if filepath.Base(file) == jpath.DefaultEntrypoint {
+			importers[file] = struct{}{}
+		}
+
+		newImporters, err := findImporters(root, file, map[string]struct{}{})
+		if err != nil {
+			return nil, err
+		}
+		for _, importer := range newImporters {
+			importers[importer] = struct{}{}
+		}
+	}
+
+	return mapToArray(importers), nil
+}
+
+// expandSymlinksInFiles takes an array of files and adds to it:
+// - all symlinks that point to the files
+// - all files that are pointed to by the symlinks
+func expandSymlinksInFiles(root string, files []string) ([]string, error) {
+	filesMap := map[string]struct{}{}
+
+	for _, file := range files {
+		file, err := filepath.Abs(file)
+		if err != nil {
+			return nil, err
+		}
+		filesMap[file] = struct{}{}
+
+		symlink, err := evalSymlinks(file)
+		if err != nil {
+			return nil, err
+		}
+		if symlink != file {
+			filesMap[symlink] = struct{}{}
+		}
+
+		symlinks, err := findSymlinks(root, file)
+		if err != nil {
+			return nil, err
+		}
+		for _, symlink := range symlinks {
+			filesMap[symlink] = struct{}{}
+		}
+	}
+
+	return mapToArray(filesMap), nil
+}
+
+// evalSymlinks returns the path after following all symlinks.
+// It caches the results to avoid unnecessary work.
 func evalSymlinks(path string) (string, error) {
 	var err error
 	eval, ok := symlinkCache[path]
@@ -97,6 +103,10 @@ func evalSymlinks(path string) (string, error) {
 	return eval, nil
 }
 
+// findSymlinks finds all symlinks that point to the given file.
+// It's restricted to the given root directory.
+// It's used in the case where a user wants to find which entrypoints import a given file.
+// In that case, we also want to find the entrypoints that import a symlink to the file.
 func findSymlinks(root, file string) ([]string, error) {
 	var symlinks []string
 
@@ -122,11 +132,15 @@ func findSymlinks(root, file string) ([]string, error) {
 }
 
 func findImporters(root string, searchForFile string, chain map[string]struct{}) ([]string, error) {
+	// If we've already looked through this file in the current execution, don't do it again
+	// Jsonnet supports cyclic imports (as long as the _attributes_ being used are not cyclic)
 	if _, ok := chain[searchForFile]; ok {
 		return nil, nil
 	}
 	chain[searchForFile] = struct{}{}
 
+	// If we've never fetched the map of all jsonnet files, do it now
+	// This is cached for performance
 	if _, ok := jsonnetFilesMap[root]; !ok {
 		jsonnetFilesMap[root] = make(map[string]*cachedJsonnetFile)
 
@@ -158,8 +172,10 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 
 	for jsonnetFilePath, jsonnetFileContent := range jsonnetFiles {
 		isImporter := false
+		// For all imports in all jsonnet files, check if they import the file we're looking for
 		for _, importPath := range jsonnetFileContent.Imports {
-			if filepath.Base(importPath) != filepath.Base(searchForFile) { // If the filename is not the same as the file we are looking for, skip
+			// If the filename is not the same as the file we are looking for, skip it
+			if filepath.Base(importPath) != filepath.Base(searchForFile) {
 				continue
 			}
 
@@ -196,6 +212,8 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 				isImporter = strings.HasPrefix(searchForFile, jsonnetFileContent.Base) && strings.HasSuffix(searchForFile, importPath)
 			}
 
+			// If the file we're looking in imports one of the files we're looking for, add it to the list
+			// It can either be an importer that we want to return (from a main file) or an intermediate importer
 			if isImporter {
 				if jsonnetFileContent.IsMainFile {
 					importers = append(importers, jsonnetFilePath)
@@ -207,12 +225,16 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 		}
 	}
 
+	// Process intermediate importers recursively
+	// This will go on until we hit a main file, which will be returned
 	if len(intermediateImporters) > 0 {
-		newImporters, err := FindImporterForFiles(root, intermediateImporters, chain)
-		if err != nil {
-			return nil, err
+		for _, intermediateImporter := range intermediateImporters {
+			newImporters, err := findImporters(root, intermediateImporter, chain)
+			if err != nil {
+				return nil, err
+			}
+			importers = append(importers, newImporters...)
 		}
-		importers = append(importers, newImporters...)
 	}
 
 	return importers, nil
@@ -236,4 +258,13 @@ func pathMatches(path1, path2 string) bool {
 	}
 
 	return evalPath1 == evalPath2
+}
+
+func mapToArray(m map[string]struct{}) []string {
+	var arr []string
+	for k := range m {
+		arr = append(arr, k)
+	}
+	sort.Strings(arr)
+	return arr
 }
