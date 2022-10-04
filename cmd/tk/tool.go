@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/go-clix/cli"
+	"github.com/posener/complete"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -23,6 +24,7 @@ func toolCmd() *cli.Command {
 	cmd.AddCommand(
 		jpathCmd(),
 		importsCmd(),
+		importersCmd(),
 		chartsCmd(),
 	)
 	return cmd
@@ -123,6 +125,42 @@ func importsCmd() *cli.Command {
 			return fmt.Errorf("formatting: %s", err)
 		}
 		fmt.Println(string(s))
+
+		return nil
+	}
+
+	return cmd
+}
+
+func importersCmd() *cli.Command {
+	cmd := &cli.Command{
+		Use:   "importers <file> <file...>",
+		Short: "list all environments that either directly or transitively import the given files",
+		Args: cli.Args{
+			Validator: cli.ArgsMin(1),
+			Predictor: complete.PredictFiles("*"),
+		},
+	}
+
+	root := cmd.Flags().String("root", ".", "root directory to search for environments")
+	cmd.Run = func(cmd *cli.Command, args []string) error {
+		root, err := filepath.Abs(*root)
+		if err != nil {
+			return fmt.Errorf("resolving root: %w", err)
+		}
+
+		for _, f := range args {
+			if _, err := os.Stat(f); os.IsNotExist(err) {
+				return fmt.Errorf("file %q does not exist", f)
+			}
+		}
+
+		envs, err := jsonnet.FindImporterForFiles(root, args)
+		if err != nil {
+			return fmt.Errorf("resolving imports: %s", err)
+		}
+
+		fmt.Println(strings.Join(envs, "\n"))
 
 		return nil
 	}
