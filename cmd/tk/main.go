@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/go-clix/cli"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/term"
 
 	"github.com/grafana/tanka/pkg/tanka"
@@ -71,6 +71,6 @@ func main() {
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
+		log.Fatal().Msgf("Error: %s", err)
 	}
 }
