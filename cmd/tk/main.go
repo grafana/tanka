@@ -12,13 +12,17 @@ import (
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
-var interactive = term.IsTerminal(int(os.Stdout.Fd()))
+var interactive = term.IsTerminal(int(os.Stderr.Fd()))
 
 func main() {
 	rootCmd := &cli.Command{
 		Use:     "tk",
 		Short:   "tanka <3 jsonnet",
 		Version: tanka.CurrentVersion,
+	}
+
+	if interactive {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	addCommandsWithLogLevel := func(cmds ...*cli.Command) {
