@@ -98,6 +98,9 @@ func BenchmarkFindImporters(b *testing.B) {
 	expectedImporters := []string{filepath.Join(tempDir, "main.jsonnet")}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		importersCache = make(map[string][]string)
+		jsonnetFilesCache = make(map[string]map[string]*cachedJsonnetFile)
+		symlinkCache = make(map[string]string)
 		importers, err := FindImporterForFiles(tempDir, []string{filepath.Join(tempDir, "file10.libsonnet")})
 
 		require.NoError(b, err)

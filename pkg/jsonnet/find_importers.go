@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	jsonnetFilesMap = make(map[string]map[string]*cachedJsonnetFile)
-	symlinkCache    = make(map[string]string)
+	importersCache    = make(map[string][]string)
+	jsonnetFilesCache = make(map[string]map[string]*cachedJsonnetFile)
+	symlinkCache      = make(map[string]string)
 )
 
 type cachedJsonnetFile struct {
@@ -132,40 +133,23 @@ func findSymlinks(root, file string) ([]string, error) {
 }
 
 func findImporters(root string, searchForFile string, chain map[string]struct{}) ([]string, error) {
-	// If we've already looked through this file in the current execution, don't do it again
+	// If we've already looked through this file in the current execution, don't do it again and return an empty list to end the recursion
 	// Jsonnet supports cyclic imports (as long as the _attributes_ being used are not cyclic)
 	if _, ok := chain[searchForFile]; ok {
 		return nil, nil
 	}
 	chain[searchForFile] = struct{}{}
 
-	// If we've never fetched the map of all jsonnet files, do it now
-	// This is cached for performance
-	if _, ok := jsonnetFilesMap[root]; !ok {
-		jsonnetFilesMap[root] = make(map[string]*cachedJsonnetFile)
-
-		files, err := FindFiles(root, nil)
-		if err != nil {
-			return nil, err
-		}
-		for _, file := range files {
-			content, err := os.ReadFile(file)
-			if err != nil {
-				return nil, err
-			}
-			matches := importsRegexp.FindAllStringSubmatch(string(content), -1)
-
-			cachedObj := &cachedJsonnetFile{
-				Content:    string(content),
-				IsMainFile: strings.HasSuffix(file, jpath.DefaultEntrypoint),
-			}
-			for _, match := range matches {
-				cachedObj.Imports = append(cachedObj.Imports, match[2])
-			}
-			jsonnetFilesMap[root][file] = cachedObj
-		}
+	// If we've already computed the importers for a file, return the cached result
+	key := root + ":" + searchForFile
+	if importers, ok := importersCache[key]; ok {
+		return importers, nil
 	}
-	jsonnetFiles := jsonnetFilesMap[root]
+
+	jsonnetFiles, err := createJsonnetFileCache(root)
+	if err != nil {
+		return nil, err
+	}
 
 	var importers []string
 	var intermediateImporters []string
@@ -237,7 +221,38 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 		}
 	}
 
+	importersCache[key] = importers
 	return importers, nil
+}
+
+func createJsonnetFileCache(root string) (map[string]*cachedJsonnetFile, error) {
+	if val, ok := jsonnetFilesCache[root]; ok {
+		return val, nil
+	}
+	jsonnetFilesCache[root] = make(map[string]*cachedJsonnetFile)
+
+	files, err := FindFiles(root, nil)
+	if err != nil {
+		return nil, err
+	}
+	for _, file := range files {
+		content, err := os.ReadFile(file)
+		if err != nil {
+			return nil, err
+		}
+		matches := importsRegexp.FindAllStringSubmatch(string(content), -1)
+
+		cachedObj := &cachedJsonnetFile{
+			Content:    string(content),
+			IsMainFile: strings.HasSuffix(file, jpath.DefaultEntrypoint),
+		}
+		for _, match := range matches {
+			cachedObj.Imports = append(cachedObj.Imports, match[2])
+		}
+		jsonnetFilesCache[root][file] = cachedObj
+	}
+
+	return jsonnetFilesCache[root], nil
 }
 
 func pathMatches(path1, path2 string) bool {
