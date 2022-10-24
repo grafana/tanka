@@ -44,7 +44,7 @@ func exportCmd() *cli.Command {
 	if err := cmd.Flags().MarkDeprecated("merge", "use --merge-strategy=fail-on-conflicts instead"); err != nil {
 		panic(err)
 	}
-	mergeStrategy := cmd.Flags().String("merge-strategy", "", "What to do when exporting to an existing directory. The default setting is to disallow exporting to an existing directory. Values: 'fail-on-conficts', 'replace-envs'")
+	mergeStrategy := cmd.Flags().String("merge-strategy", "", "What to do when exporting to an existing directory. The default setting is to disallow exporting to an existing directory. Values: 'fail-on-conflicts', 'replace-envs'")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
