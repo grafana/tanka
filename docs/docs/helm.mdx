@@ -180,11 +180,39 @@ repositories:
 +   url: https://grafana.github.io/helm-charts
 ```
 
+**Installing multiple versions of the same chart:** 
+If you wish to install multiple versions of the same chart, you can write them to a specific directory.  
+You can do so with a `:<directory>` suffix in the `add` command, or by modifying the chartfile manually.
+
+```bash
+tk tool charts add stable/mysql@1.6.7:1.6.7
+tk tool charts add stable/mysql@1.6.8:1.6.8
+```
+
+The resulting chartfile will look like this:
+
+```yaml
+version: 1
+directory: charts
+repositories:
+- name: stable
+  url: https://charts.helm.sh/stable
+requires:
+- chart: stable/mysql
+  directory: 1.6.7
+  version: 1.6.7
+- chart: stable/mysql
+  directory: 1.6.8
+  version: 1.6.8
+```
+
 **Install charts from chartfile:** To install charts from an existing chartfile, use the following:
 
 ```bash
 $ tk tool charts vendor
 ```
+
+Optionally, you can also pass the `--prune` flag to remove vendored charts that are no longer in the chartfile.
 
 ## Troubleshooting
 
