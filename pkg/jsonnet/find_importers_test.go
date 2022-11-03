@@ -9,6 +9,17 @@ import (
 )
 
 func TestFindImportersForFiles(t *testing.T) {
+	// Make sure the main files all eval correctly
+	// We want to make sure that the importers command works correctly,
+	// but there's no point in testing on invalid jsonnet files
+	files, err := FindFiles("testdata", nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, files)
+	for _, file := range files {
+		_, err := EvaluateFile(file, Opts{})
+		require.NoError(t, err, "failed to eval %s", file)
+	}
+
 	cases := []struct {
 		name              string
 		files             []string
@@ -87,6 +98,20 @@ func TestFindImportersForFiles(t *testing.T) {
 			expectedImporters: []string{
 				absPath(t, "testdata/findImporters/environments/relative-import/main.jsonnet"),
 				absPath(t, "testdata/findImporters/environments/relative-imported2/main.jsonnet"), // itself, it's a main file
+			},
+		},
+		{
+			name:  "relative imported text file",
+			files: []string{"testdata/findImporters/other-files/test.txt"},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/relative-import/main.jsonnet"),
+			},
+		},
+		{
+			name:  "relative imported text file with doubled '..'",
+			files: []string{"testdata/findImporters/other-files/test2.txt"},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/relative-import/main.jsonnet"),
 			},
 		},
 	}
