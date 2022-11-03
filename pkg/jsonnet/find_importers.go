@@ -165,6 +165,8 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 
 			// Match on relative imports with ..
 			// Jsonnet also matches all intermediary paths for some reason, so we look at them too
+			// Example: Given two envs (env1 and env2), the two following imports in `env1/main.jsonnet will work`: `../env2/main.jsonnet` and `../../env2/main.jsonnet`
+			// This can lead to false positives, but ruling them out would require much more complex logic
 			doubleDotCount := strings.Count(importPath, "..")
 			if doubleDotCount > 0 {
 				importPath = strings.ReplaceAll(importPath, "../", "")
@@ -175,6 +177,9 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 					}
 					testImportPath := filepath.Join(dir, importPath)
 					isImporter = pathMatches(searchForFile, testImportPath)
+					if isImporter {
+						break // Once we've found a match, we can stop looking
+					}
 				}
 			}
 
