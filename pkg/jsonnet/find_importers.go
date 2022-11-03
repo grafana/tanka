@@ -163,29 +163,23 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 				continue
 			}
 
+			// Remove any `./` or `../` that can be removed just by looking at the given path
+			// ex: `./foo/bar.jsonnet` -> `foo/bar.jsonnet` or `/foo/../bar.jsonnet` -> `/bar.jsonnet`
+			importPath = filepath.Clean(importPath)
+
 			// Match on relative imports with ..
-			// Jsonnet also matches all intermediary paths for some reason, so we look at them too
+			// Jsonnet also matches relative imports that are one level deeper than they should be
 			// Example: Given two envs (env1 and env2), the two following imports in `env1/main.jsonnet will work`: `../env2/main.jsonnet` and `../../env2/main.jsonnet`
 			// This can lead to false positives, but ruling them out would require much more complex logic
-			doubleDotCount := strings.Count(importPath, "..")
-			if doubleDotCount > 0 {
-				importPath = strings.ReplaceAll(importPath, "../", "")
-				for i := 0; i <= doubleDotCount; i++ {
-					dir := filepath.Dir(jsonnetFilePath)
-					for j := 0; j < i; j++ {
-						dir = filepath.Dir(dir)
-					}
-					testImportPath := filepath.Join(dir, importPath)
-					isImporter = pathMatches(searchForFile, testImportPath)
-					if isImporter {
-						break // Once we've found a match, we can stop looking
-					}
-				}
+			if strings.HasPrefix(importPath, "..") {
+				shallowImport := filepath.Clean(filepath.Join(filepath.Dir(jsonnetFilePath), strings.Replace(importPath, "../", "", 1)))
+				importPath = filepath.Clean(filepath.Join(filepath.Dir(jsonnetFilePath), importPath))
+
+				isImporter = pathMatches(searchForFile, importPath) || pathMatches(searchForFile, shallowImport)
 			}
 
 			// Match on imports to lib/ or vendor/
 			if !isImporter {
-				importPath = strings.ReplaceAll(importPath, "./", "")
 				isImporter = pathMatches(searchForFile, filepath.Join(root, "vendor", importPath)) || pathMatches(searchForFile, filepath.Join(root, "lib", importPath))
 			}
 

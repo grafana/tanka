@@ -73,6 +73,22 @@ func TestFindImportersForFiles(t *testing.T) {
 				absPath(t, "testdata/findImporters/environments/imports-symlinked-vendor/main.jsonnet"),
 			},
 		},
+		{
+			name:  "relative imported environment",
+			files: []string{"testdata/findImporters/environments/relative-imported/main.jsonnet"},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/relative-import/main.jsonnet"),
+				absPath(t, "testdata/findImporters/environments/relative-imported/main.jsonnet"), // itself, it's a main file
+			},
+		},
+		{
+			name:  "relative imported environment with doubled '..'",
+			files: []string{"testdata/findImporters/environments/relative-imported2/main.jsonnet"},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/relative-import/main.jsonnet"),
+				absPath(t, "testdata/findImporters/environments/relative-imported2/main.jsonnet"), // itself, it's a main file
+			},
+		},
 	}
 
 	for _, c := range cases {
