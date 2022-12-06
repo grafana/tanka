@@ -1,0 +1,45 @@
+# .github/workflows/preview.yml
+name: Deploy Github Pages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+
+concurrency: ci-${{ github.ref }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install and Build
+        working-directory: docs
+        env:
+          # Main: https://tanka.dev/
+          # PRs: https://grafana.github.io/tanka/pr-preview/pr-{number}/
+          PATH_PREFIX: "${{ github.event_name == 'pull_request' && format('/tanka/pr-preview/pr-{0}', github.event.number) || '' }}"
+        run: |
+          yarn install
+          yarn build
+
+      - name: Deploy main
+        if: github.event_name != 'pull_request'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with: 
+          clean-exclude: pr-preview/
+          folder: ./docs/public/
+
+      - name: Deploy preview
+        if: github.event_name == 'pull_request'
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: ./docs/public/

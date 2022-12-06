@@ -1,6 +1,7 @@
 const path = require("path")
 
 module.exports = {
+  pathPrefix: process.env.PATH_PREFIX || "",
   siteMetadata: {
     title: `Grafana Tanka`,
     description: `Flexible, reusable and concise configuration for Kubernetes`,
