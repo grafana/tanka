@@ -25,8 +25,8 @@ jobs:
         working-directory: docs
         env:
           # Main: https://tanka.dev/
-          # PRs: https://grafana.github.io/tanka/pr-preview/pr-{number}/
-          PATH_PREFIX: "${{ github.event_name == 'pull_request' && format('/tanka/pr-preview/pr-{0}', github.event.number) || '' }}"
+          # PRs: https://tanka.dev/pr-preview/pr-{number}/
+          PATH_PREFIX: "${{ github.event_name == 'pull_request' && format('/pr-preview/pr-{0}', github.event.number) || '' }}"
         run: |
           yarn install
           yarn build
