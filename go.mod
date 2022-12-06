@@ -10,7 +10,7 @@ require (
 	github.com/go-clix/cli v0.2.0
 	github.com/gobwas/glob v0.2.3
 	github.com/google/go-cmp v0.5.8
-	github.com/google/go-jsonnet v0.18.0
+	github.com/google/go-jsonnet v0.19.1
 	github.com/karrick/godirwalk v1.16.1
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete v1.2.3
@@ -46,6 +46,6 @@ require (
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	k8s.io/klog/v2 v2.40.1 // indirect
 )

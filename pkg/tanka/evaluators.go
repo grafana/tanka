@@ -125,7 +125,7 @@ local singleEnv(object) =
        && std.objectHas(object, 'kind')
     then
       if object.kind == 'Environment'
-      && std.member(object.metadata.name, '%s')
+      && std.length(std.findSubstr('%s', object.metadata.name)) > 0
       then object
       else {}
     else
