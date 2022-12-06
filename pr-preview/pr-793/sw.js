@@ -27,13 +27,13 @@ workbox.core.clientsClaim();
  */
 self.__precacheManifest = [
   {
-    "url": "webpack-runtime-b27d6426b76b1bebf481.js"
+    "url": "webpack-runtime-d3396f2c941c4612529a.js"
   },
   {
     "url": "framework-3d5d6f3c5ba6d5f455c5.js"
   },
   {
-    "url": "styles.a10fcd4127e26c3bbb29.css"
+    "url": "styles.238009496cbecad9dfc4.css"
   },
   {
     "url": "styles-95d00f891faf7b06d026.js"
@@ -42,14 +42,26 @@ self.__precacheManifest = [
     "url": "f0e45107-de48ac461cc5ac1214b6.js"
   },
   {
-    "url": "app-26ccb5fe1589a5df1607.js"
+    "url": "app-e38fbfa1b8ca51d9b0c7.js"
   },
   {
     "url": "offline-plugin-app-shell-fallback/index.html",
-    "revision": "d2f8125275cb65c0652b507eeda29fc1"
+    "revision": "3c8af4b58331ffc58f1071e161e2a88e"
   },
   {
     "url": "component---cache-caches-gatsby-plugin-offline-app-shell-js-099d9276a41f4ba01a3c.js"
+  },
+  {
+    "url": "page-data/offline-plugin-app-shell-fallback/page-data.json",
+    "revision": "7b70c9311b1f9e78c50c5991a4513806"
+  },
+  {
+    "url": "page-data/sq/d/1635659820.json",
+    "revision": "13b4dfef8a44f8b60e30d9fe782292de"
+  },
+  {
+    "url": "page-data/app-data.json",
+    "revision": "dedbbf91335e82a8eb54dc6db9326c0f"
   },
   {
     "url": "polyfill-8d34c62e07e660a83f29.js"
@@ -62,22 +74,14 @@ self.__precacheManifest = [
     "revision": "ae1c67dd0d8b8a6bfb1addee109d1e31"
   },
   {
-    "url": "page-data/sq/d/1635659820.json",
-    "revision": "13b4dfef8a44f8b60e30d9fe782292de"
-  },
-  {
-    "url": "page-data/app-data.json",
-    "revision": "6720497880815ad2868370de71b214b1"
-  },
-  {
-    "url": "component---docs-installation-mdx-44b9a7a94980b54ae26c.js"
+    "url": "component---docs-installation-mdx-3b952c0e72858238300c.js"
   },
   {
     "url": "page-data/install/page-data.json",
     "revision": "5de2f6c35bd5eab44b36f293d9e1acd0"
   },
   {
-    "url": "component---docs-tutorial-overview-mdx-cd7095e341e9866fb7ca.js"
+    "url": "component---docs-tutorial-overview-mdx-b0d930c26a581c46e26c.js"
   },
   {
     "url": "page-data/tutorial/overview/page-data.json",
@@ -85,7 +89,7 @@ self.__precacheManifest = [
   },
   {
     "url": "manifest.webmanifest",
-    "revision": "45ac8817fd6b87019cdf20c980508c6c"
+    "revision": "90bdb73e7e0c34203738374026d319a2"
   }
 ].concat(self.__precacheManifest || []);
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {});
@@ -172,12 +176,12 @@ const navigationRoute = new NavigationRoute(async ({ event }) => {
   lastNavigationRequest = event.request.url
 
   let { pathname } = new URL(event.request.url)
-  pathname = pathname.replace(new RegExp(`^`), ``)
+  pathname = pathname.replace(new RegExp(`^/tanka/pr-preview/pr-793`), ``)
 
   // Check for resources + the app bundle
   // The latter may not exist if the SW is updating to a new version
   const resources = await idbKeyval.get(`resources:${pathname}`)
-  if (!resources || !(await caches.match(`/app-26ccb5fe1589a5df1607.js`))) {
+  if (!resources || !(await caches.match(`/tanka/pr-preview/pr-793/app-e38fbfa1b8ca51d9b0c7.js`))) {
     return await fetch(event.request)
   }
 
@@ -190,7 +194,7 @@ const navigationRoute = new NavigationRoute(async ({ event }) => {
     }
   }
 
-  const offlineShell = `/offline-plugin-app-shell-fallback/index.html`
+  const offlineShell = `/tanka/pr-preview/pr-793/offline-plugin-app-shell-fallback/index.html`
   const offlineShellWithKey = workbox.precaching.getCacheKeyForURL(offlineShell)
   return await caches.match(offlineShellWithKey)
 })
