@@ -36,6 +36,7 @@ type Resource struct {
 	Namespaced bool   `json:"NAMESPACED,string"`
 	Shortnames string `json:"SHORTNAMES"`
 	Verbs      string `json:"VERBS"`
+	Categories string `json:"CATEGORIES"`
 }
 
 func (r Resource) FQN() string {
@@ -134,8 +135,13 @@ func splitRow(s string, header []string) (elems []string) {
 		}
 
 		lim := len(h)
-		elems = append(elems, s[pos:pos+lim])
-		pos += lim
+		endPos := pos + lim
+		if endPos >= len(s) {
+			endPos = len(s)
+		}
+
+		elems = append(elems, s[pos:endPos])
+		pos = endPos
 	}
 	return elems
 }
