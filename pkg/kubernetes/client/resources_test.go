@@ -35,7 +35,24 @@ func TestUnmarshalTable(t *testing.T) {
 	}{
 		{
 			name: "normal",
-			tbl:  strings.TrimSpace(tblNormal),
+			tbl:  strings.TrimSpace(tblv126),
+			want: &Resources{
+				{APIVersion: "v1", Kind: "Binding", Name: "bindings", Shortnames: "", Namespaced: true, Verbs: "create"},
+				{APIVersion: "v1", Kind: "ComponentStatus", Name: "componentstatuses", Shortnames: "cs", Namespaced: false, Verbs: "get,list"},
+				{APIVersion: "v1", Kind: "ConfigMap", Name: "configmaps", Shortnames: "cm", Namespaced: true, Verbs: "create,delete,deletecollection,get,list,patch,update,watch"},
+				{APIVersion: "v1", Kind: "Pod", Name: "pods", Shortnames: "po", Namespaced: true, Verbs: "create,delete,deletecollection,get,list,patch,update,watch", Categories: "all"},
+			},
+			wantFQNs: []string{
+				"bindings",
+				"componentstatuses",
+				"configmaps",
+				"pods",
+			},
+			dest: &Resources{},
+		},
+		{
+			name: "normal-v1.18-to-v.1.25",
+			tbl:  strings.TrimSpace(tblv121),
 			want: &Resources{
 				{APIVersion: "v1", Kind: "Namespace", Name: "namespaces", Shortnames: "ns", Namespaced: false},
 				{APIVersion: "apps/v1", Kind: "DaemonSet", Name: "daemonsets", Shortnames: "ds", Namespaced: true},
@@ -52,7 +69,7 @@ func TestUnmarshalTable(t *testing.T) {
 		},
 		{
 			name: "normal-v1.18-and-older",
-			tbl:  strings.TrimSpace(tblNormal1Dot18AndOlder),
+			tbl:  strings.TrimSpace(tblv118),
 			want: &Resources{
 				{APIGroup: "", Kind: "Namespace", Name: "namespaces", Shortnames: "ns", Namespaced: false},
 				{APIGroup: "apps", Kind: "DaemonSet", Name: "daemonsets", Shortnames: "ds", Namespaced: true},
@@ -97,9 +114,19 @@ func TestUnmarshalTable(t *testing.T) {
 	}
 }
 
+// This is a snippet that was pulled from output generated with kubectl v1.26.0
+// $ kubectl api-resources --cached --output=wide
+var tblv126 = `
+NAME                              SHORTNAMES   APIVERSION                        NAMESPACED   KIND                             VERBS                                                        CATEGORIES
+bindings                                       v1                                true         Binding                          create
+componentstatuses                 cs           v1                                false        ComponentStatus                  get,list
+configmaps                        cm           v1                                true         ConfigMap                        create,delete,deletecollection,get,list,patch,update,watch
+pods                              po           v1                                true         Pod                              create,delete,deletecollection,get,list,patch,update,watch   all
+`
+
 // this output was generated with kubectl v1.21.1
 // $ kubectl api-resources | grep -e "Deployment\|DaemonSet\|Namespace\|networking.k8s.io.*Ingress$\|KIND"
-var tblNormal = `
+var tblv121 = `
 NAME                                SHORTNAMES                             APIVERSION                             NAMESPACED   KIND
 namespaces                          ns                                     v1                                     false        Namespace
 daemonsets                          ds                                     apps/v1                                true         DaemonSet
@@ -109,7 +136,7 @@ ingresses                           ing                                    netwo
 
 // this output was generated with kubectl v1.18.10
 // $ kubectl api-resources | grep -e "Deployment\|DaemonSet\|Namespace\|networking.k8s.io.*Ingress$\|KIND"
-var tblNormal1Dot18AndOlder = `
+var tblv118 = `
 NAME                                SHORTNAMES                             APIGROUP                       NAMESPACED   KIND
 namespaces                          ns                                                                    false        Namespace
 daemonsets                          ds                                     apps                           true         DaemonSet
