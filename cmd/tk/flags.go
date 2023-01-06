@@ -24,6 +24,10 @@ func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	return &v
 }
 
+func addDiffFlags(fs *pflag.FlagSet, opts *tanka.DiffBaseOpts) {
+	fs.StringVar(&opts.Color, "color", "auto", `controls color in diff output, must be "auto", "always", or "never"`)
+}
+
 func addApplyFlags(fs *pflag.FlagSet, opts *tanka.ApplyBaseOpts, autoApproveDeprecated *bool, autoApprove *string) {
 	fs.StringVar(&opts.DryRun, "dry-run", "", `--dry-run parameter to pass down to kubectl, must be "none", "server", or "client"`)
 	fs.BoolVar(&opts.Force, "force", false, "force applying (kubectl apply --force)")

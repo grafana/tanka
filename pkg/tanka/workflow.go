@@ -29,6 +29,7 @@ const (
 
 type ApplyBaseOpts struct {
 	Opts
+	DiffBaseOpts
 
 	// AutoApprove skips the interactive approval
 	AutoApprove AutoApproveSetting
@@ -36,6 +37,13 @@ type ApplyBaseOpts struct {
 	DryRun string
 	// Force ignores any warnings kubectl might have
 	Force bool
+}
+
+type DiffBaseOpts struct {
+	// ForceColor enables color output even if stdout is not a terminal
+	ForceColor bool
+	// Color controls color output
+	Color string
 }
 
 // ApplyOpts specify additional properties for the Apply action
@@ -152,6 +160,7 @@ func confirmPrompt(action, namespace string, info client.Info) error {
 
 // DiffOpts specify additional properties for the Diff action
 type DiffOpts struct {
+	DiffBaseOpts
 	Opts
 
 	// Strategy must be one of "native", "validate", "subset" or "server"
