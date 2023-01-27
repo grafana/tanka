@@ -40,8 +40,6 @@ type ApplyBaseOpts struct {
 }
 
 type DiffBaseOpts struct {
-	// ForceColor enables color output even if stdout is not a terminal
-	ForceColor bool
 	// Color controls color output
 	Color string
 }
