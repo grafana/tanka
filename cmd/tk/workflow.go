@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/go-clix/cli"
 	"github.com/posener/complete"
 
@@ -19,6 +20,24 @@ const (
 	// differences between the local config and the cluster
 	ExitStatusDiff = 16
 )
+
+var (
+	colorValues = cli.PredictSet("auto", "always", "never")
+)
+
+func setForceColor(opts *tanka.DiffBaseOpts) error {
+	switch opts.Color {
+	case "":
+	case "auto":
+	case "always":
+		color.NoColor = false
+	case "never":
+		color.NoColor = true
+	default:
+		return fmt.Errorf(`--color must be either: "auto", "always", or "never"`)
+	}
+	return nil
+}
 
 func validateDryRun(dryRunStr string) error {
 	switch dryRunStr {
@@ -56,6 +75,7 @@ func applyCmd() *cli.Command {
 		Short: "apply the configuration to the cluster",
 		Args:  workflowArgs,
 		Predictors: complete.Flags{
+			"color":          colorValues,
 			"diff-strategy":  cli.PredictSet("native", "subset", "validate", "server", "none"),
 			"apply-strategy": cli.PredictSet("client", "server"),
 		},
@@ -71,6 +91,7 @@ func applyCmd() *cli.Command {
 		autoApproveString     string
 	)
 	addApplyFlags(cmd.Flags(), &opts.ApplyBaseOpts, &autoApproveDeprecated, &autoApproveString)
+	addDiffFlags(cmd.Flags(), &opts.DiffBaseOpts)
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
@@ -80,6 +101,9 @@ func applyCmd() *cli.Command {
 			return err
 		}
 		if opts.AutoApprove, err = validateAutoApprove(autoApproveDeprecated, autoApproveString); err != nil {
+			return err
+		}
+		if err := setForceColor(&opts.DiffBaseOpts); err != nil {
 			return err
 		}
 
@@ -101,6 +125,9 @@ func pruneCmd() *cli.Command {
 		Use:   "prune <path>",
 		Short: "delete resources removed from Jsonnet",
 		Args:  workflowArgs,
+		Predictors: complete.Flags{
+			"color": colorValues,
+		},
 	}
 
 	var opts tanka.PruneOpts
@@ -110,6 +137,7 @@ func pruneCmd() *cli.Command {
 		autoApproveString     string
 	)
 	addApplyFlags(cmd.Flags(), &opts.ApplyBaseOpts, &autoApproveDeprecated, &autoApproveString)
+	addDiffFlags(cmd.Flags(), &opts.DiffBaseOpts)
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
@@ -118,6 +146,9 @@ func pruneCmd() *cli.Command {
 			return err
 		}
 		if opts.AutoApprove, err = validateAutoApprove(autoApproveDeprecated, autoApproveString); err != nil {
+			return err
+		}
+		if err := setForceColor(&opts.DiffBaseOpts); err != nil {
 			return err
 		}
 
@@ -134,6 +165,9 @@ func deleteCmd() *cli.Command {
 		Use:   "delete <path>",
 		Short: "delete the environment from cluster",
 		Args:  workflowArgs,
+		Predictors: complete.Flags{
+			"color": colorValues,
+		},
 	}
 
 	var opts tanka.DeleteOpts
@@ -143,6 +177,7 @@ func deleteCmd() *cli.Command {
 		autoApproveString     string
 	)
 	addApplyFlags(cmd.Flags(), &opts.ApplyBaseOpts, &autoApproveDeprecated, &autoApproveString)
+	addDiffFlags(cmd.Flags(), &opts.DiffBaseOpts)
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
@@ -152,6 +187,9 @@ func deleteCmd() *cli.Command {
 			return err
 		}
 		if opts.AutoApprove, err = validateAutoApprove(autoApproveDeprecated, autoApproveString); err != nil {
+			return err
+		}
+		if err := setForceColor(&opts.DiffBaseOpts); err != nil {
 			return err
 		}
 
@@ -174,11 +212,13 @@ func diffCmd() *cli.Command {
 		Short: "differences between the configuration and the cluster",
 		Args:  workflowArgs,
 		Predictors: complete.Flags{
+			"color":         colorValues,
 			"diff-strategy": cli.PredictSet("native", "subset", "validate", "server"),
 		},
 	}
 
 	var opts tanka.DiffOpts
+	addDiffFlags(cmd.Flags(), &opts.DiffBaseOpts)
 	cmd.Flags().StringVar(&opts.Strategy, "diff-strategy", "", "force the diff-strategy to use. Automatically chosen if not set.")
 	cmd.Flags().BoolVarP(&opts.Summarize, "summarize", "s", false, "print summary of the differences, not the actual contents")
 	cmd.Flags().BoolVarP(&opts.WithPrune, "with-prune", "p", false, "include objects deleted from the configuration in the differences")
@@ -188,6 +228,9 @@ func diffCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		if err := setForceColor(&opts.DiffBaseOpts); err != nil {
+			return err
+		}
 		filters, err := process.StrExps(vars.targets...)
 		if err != nil {
 			return err
