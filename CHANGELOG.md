@@ -1,5 +1,7 @@
 # Changelog
 
+For releases from v0.24.0 forward, you can find the changelog in Github releases: https://github.com/grafana/tanka/releases
+
 ## 0.23.1 (2022-09-28)
 
 ### Bug Fixes/Enhancements
