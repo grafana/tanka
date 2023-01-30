@@ -25,6 +25,7 @@ func envCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "env [action]",
 		Short: "manipulate environments",
+		Args:  cli.ArgsMin(2),
 	}
 
 	cmd.AddCommand(

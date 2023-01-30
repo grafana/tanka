@@ -20,7 +20,9 @@ func toolCmd() *cli.Command {
 	cmd := &cli.Command{
 		Short: "handy utilities for working with jsonnet",
 		Use:   "tool [command]",
+		Args:  cli.ArgsMin(2),
 	}
+
 	cmd.AddCommand(
 		jpathCmd(),
 		importsCmd(),
