@@ -35,7 +35,7 @@ local greeting = "hello world!";
   // object
   dict: {
     nested: greeting, // using the local
-  }
+  },
   hidden:: "incognito!" // an unexported field
 }
 ```
