@@ -78,7 +78,7 @@ In your environments folder (e.g. `/environments/default`):
 $ jb init
 
 # install the updated dependency
-$ jb init github.com/foo/bar@v2
+$ jb install github.com/foo/bar@v2
 ```
 
 > **Tip**: You don't need to install everything into the new `vendor/`, as
