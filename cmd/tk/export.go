@@ -15,12 +15,7 @@ import (
 
 func exportCmd() *cli.Command {
 	args := workflowArgs
-	args.Validator = cli.ValidateFunc(func(args []string) error {
-		if len(args) < 2 {
-			return fmt.Errorf("expects at least 2 args, received %v", len(args))
-		}
-		return nil
-	})
+	args.Validator = cli.ArgsMin(2)
 
 	cmd := &cli.Command{
 		Use:   "export <outputDir> <path> [<path>...]",
