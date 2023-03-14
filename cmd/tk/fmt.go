@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -21,12 +20,7 @@ func fmtCmd() *cli.Command {
 		Use:   "fmt <FILES|DIRECTORIES>",
 		Short: "format Jsonnet code",
 		Args: cli.Args{
-			Validator: cli.ValidateFunc(func(args []string) error {
-				if len(args) == 0 {
-					return errors.New("at least one file or directory is required")
-				}
-				return nil
-			}),
+			Validator: cli.ArgsMin(1),
 			Predictor: complete.PredictFiles("*.*sonnet"),
 		},
 	}

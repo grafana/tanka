@@ -47,7 +47,7 @@ var kubectlContexts = cli.PredictFunc(
 
 func envSetCmd() *cli.Command {
 	cmd := &cli.Command{
-		Use:   "set",
+		Use:   "set <path>",
 		Short: "update properties of an environment",
 		Args:  workflowArgs,
 		Predictors: complete.Flags{
@@ -234,12 +234,7 @@ func envRemoveCmd() *cli.Command {
 
 func envListCmd() *cli.Command {
 	args := workflowArgs
-	args.Validator = cli.ValidateFunc(func(args []string) error {
-		if len(args) > 1 {
-			return fmt.Errorf("expects at most 1 arg, received %v", len(args))
-		}
-		return nil
-	})
+	args.Validator = cli.ArgsRange(0, 1)
 
 	cmd := &cli.Command{
 		Use:     "list [<path>]",

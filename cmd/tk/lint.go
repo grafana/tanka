@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-
 	"github.com/go-clix/cli"
 	"github.com/gobwas/glob"
 	"github.com/posener/complete"
@@ -15,12 +13,7 @@ func lintCmd() *cli.Command {
 		Use:   "lint <FILES|DIRECTORIES>",
 		Short: "lint Jsonnet code",
 		Args: cli.Args{
-			Validator: cli.ValidateFunc(func(args []string) error {
-				if len(args) == 0 {
-					return errors.New("at least one file or directory is required")
-				}
-				return nil
-			}),
+			Validator: cli.ArgsMin(1),
 			Predictor: complete.PredictFiles("*.*sonnet"),
 		},
 	}
