@@ -135,12 +135,12 @@ func (e ErrorPrimitiveReached) Error() string {
 	container, _ := yaml.Marshal(e.containingObj)
 
 	return fmt.Sprintf(`recursion ended on key %q of type %T which does not belong to a valid Kubernetes object
-instead, it an attribute of the following object:
+instead, it an attribute of the following object (at path %s):
 
 %s
 
 this object is not a valid Kubernetes object because: %s
-`, e.key, e.primitive, container, e.containingObjErr)
+`, e.key, e.primitive, e.path, container, e.containingObjErr)
 }
 
 // isKubernetesManifest attempts to infer whether the given object is a valid
