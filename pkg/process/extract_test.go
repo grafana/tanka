@@ -8,9 +8,9 @@ import (
 )
 
 var extractTestCases = []struct {
-	name string
-	data testData
-	err  error
+	name       string
+	data       testData
+	errMessage string
 }{
 	{
 		name: "regular",
@@ -23,7 +23,57 @@ var extractTestCases = []struct {
 	{
 		name: "primitive",
 		data: testDataPrimitive(),
-		err:  ErrorPrimitiveReached{path: ".service", key: "note", primitive: "invalid because apiVersion and kind are missing"},
+		errMessage: `recursion ended on key "note" of type string which does not belong to a valid Kubernetes object
+instead, it an attribute of the following object:
+
+note: invalid because apiVersion and kind are missing
+
+
+this object is not a valid Kubernetes object because: missing attribute "apiVersion"
+`,
+	},
+	{
+		name: "missing kind",
+		data: testMissingAttribute(),
+		errMessage: `recursion ended on key "apiVersion" of type string which does not belong to a valid Kubernetes object
+instead, it an attribute of the following object:
+
+apiVersion: v1
+spec:
+    ports:
+        - port: 80
+          protocol: TCP
+          targetPort: 8080
+    selector:
+        app: deep
+
+
+this object is not a valid Kubernetes object because: missing attribute "kind"
+`,
+	},
+	{
+		name: "bad kind",
+		data: testBadKindType(),
+		errMessage: `recursion ended on key "apiVersion" of type string which does not belong to a valid Kubernetes object
+instead, it an attribute of the following object:
+
+apiVersion: apps/v1
+kind: 3000
+metadata:
+    name: grafana
+spec:
+    replicas: 1
+    template:
+        containers:
+            - image: grafana/grafana
+              name: grafana
+        metadata:
+            labels:
+                app: grafana
+
+
+this object is not a valid Kubernetes object because: attribute "kind" is not a string, it is a float64
+`,
 	},
 	{
 		name: "deep",
@@ -40,7 +90,7 @@ var extractTestCases = []struct {
 			d.Deep.(map[string]interface{})["disabledObject"] = nil
 			return d
 		}(),
-		err: nil, // we expect no error, just the result of testDataRegular
+		errMessage: "", // we expect no error, just the result of testDataRegular
 	},
 }
 
@@ -49,15 +99,21 @@ func TestExtract(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			extracted, err := Extract(c.data.Deep)
 
-			require.Equal(t, c.err, err)
-			assert.EqualValues(t, c.data.Flat, extracted)
+			if c.errMessage != "" {
+				require.Error(t, err)
+				assert.Equal(t, c.errMessage, err.Error())
+				return
+			} else {
+				require.NoError(t, err)
+				assert.EqualValues(t, c.data.Flat, extracted)
+			}
 		})
 	}
 }
 
 func BenchmarkExtract(b *testing.B) {
 	for _, c := range extractTestCases {
-		if c.err != nil {
+		if c.errMessage != "" {
 			continue
 		}
 		b.Run(c.name, func(b *testing.B) {

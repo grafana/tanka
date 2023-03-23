@@ -52,6 +52,16 @@ func testDataPrimitive() testData {
 	return loadFixture("tdInvalidPrimitive.jsonnet")
 }
 
+// testBadKindType is an invalid manifest, because it has an invalid `kind` value
+func testBadKindType() testData {
+	return loadFixture("tdBadKindType.jsonnet")
+}
+
+// testMissingAttribute is an invalid manifest, because it is missing the `kind`
+func testMissingAttribute() testData {
+	return loadFixture("tdMissingAttribute.jsonnet")
+}
+
 // testDataDeep is super deeply nested on multiple levels
 func testDataDeep() testData {
 	return loadFixture("tdDeep.jsonnet")

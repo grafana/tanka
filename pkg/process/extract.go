@@ -3,10 +3,12 @@ package process
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
 	"github.com/stretchr/objx"
+	"gopkg.in/yaml.v3"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
@@ -59,7 +61,8 @@ func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) e
 	obj = obj.Exclude([]string{"__ksonnet"}) // remove our private ksonnet field
 
 	// This looks like a kubernetes manifest, so make one and return it
-	if isKubernetesManifest(obj) {
+	ok, manifestErr := isKubernetesManifest(obj)
+	if ok {
 		m, err := manifest.NewFromObj(obj)
 		var e *manifest.SchemaError
 		if errors.As(err, &e) {
@@ -84,7 +87,7 @@ func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) e
 		}
 		err := walkJSON(obj[key], extracted, path)
 		if err != nil {
-			return err
+			return err.(ErrorPrimitiveReached).WithContainingObj(obj, manifestErr)
 		}
 	}
 
@@ -114,25 +117,57 @@ func (t trace) Name() string {
 
 // ErrorPrimitiveReached occurs when walkJSON reaches the end of nested dicts without finding a valid Kubernetes manifest
 type ErrorPrimitiveReached struct {
-	path, key string
-	primitive interface{}
+	path, key        string
+	primitive        interface{}
+	containingObj    objx.Map
+	containingObjErr error
+}
+
+func (e ErrorPrimitiveReached) WithContainingObj(obj objx.Map, err error) ErrorPrimitiveReached {
+	if e.containingObj == nil {
+		e.containingObj = obj
+		e.containingObjErr = err
+	}
+	return e
 }
 
 func (e ErrorPrimitiveReached) Error() string {
-	return fmt.Sprintf("recursion did not resolve in a valid Kubernetes object. "+
-		" In path `%s` found key `%s` of type `%T` instead.",
-		e.path, e.key, e.primitive)
+	container, _ := yaml.Marshal(e.containingObj)
+
+	return fmt.Sprintf(`recursion ended on key %q of type %T which does not belong to a valid Kubernetes object
+instead, it an attribute of the following object:
+
+%s
+
+this object is not a valid Kubernetes object because: %s
+`, e.key, e.primitive, container, e.containingObjErr)
 }
 
 // isKubernetesManifest attempts to infer whether the given object is a valid
 // kubernetes resource by verifying the presence of apiVersion and kind. These
 // two fields are required for kubernetes to accept any resource.
-func isKubernetesManifest(obj objx.Map) bool {
-	if apiVersion := obj.Get("apiVersion"); !apiVersion.IsStr() || apiVersion.Str() == "" {
-		return false
+// The error return value indicates the reason why the object is not a valid
+func isKubernetesManifest(obj objx.Map) (ok bool, err error) {
+	checkAttribute := func(key string) error {
+		v := obj.Get(key)
+		if v.IsNil() {
+			return fmt.Errorf("missing attribute %q", key)
+		}
+		if !v.IsStr() {
+			return fmt.Errorf("attribute %q is not a string, it is a %s", key, reflect.TypeOf(v.Data()))
+		}
+		if v.Str() == "" {
+			return fmt.Errorf("attribute %q is empty", key)
+		}
+		return nil
 	}
-	if kind := obj.Get("kind"); !kind.IsStr() || kind.Str() == "" {
-		return false
+
+	if err := checkAttribute("apiVersion"); err != nil {
+		return false, err
 	}
-	return true
+	if err := checkAttribute("kind"); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
