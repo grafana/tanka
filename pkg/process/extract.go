@@ -128,7 +128,11 @@ func (e ErrorPrimitiveReached) Error() string {
 // kubernetes resource by verifying the presence of apiVersion and kind. These
 // two fields are required for kubernetes to accept any resource.
 func isKubernetesManifest(obj objx.Map) bool {
-	return true &&
-		obj.Get("apiVersion").IsStr() && obj.Get("apiVersion").Str() != "" &&
-		obj.Get("kind").IsStr() && obj.Get("kind").Str() != ""
+	if apiVersion := obj.Get("apiVersion"); !apiVersion.IsStr() || apiVersion.Str() == "" {
+		return false
+	}
+	if kind := obj.Get("kind"); !kind.IsStr() || kind.Str() == "" {
+		return false
+	}
+	return true
 }
