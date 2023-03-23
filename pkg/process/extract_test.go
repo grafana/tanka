@@ -103,10 +103,10 @@ func TestExtract(t *testing.T) {
 				require.Error(t, err)
 				assert.Equal(t, c.errMessage, err.Error())
 				return
-			} else {
-				require.NoError(t, err)
-				assert.EqualValues(t, c.data.Flat, extracted)
 			}
+
+			require.NoError(t, err)
+			assert.EqualValues(t, c.data.Flat, extracted)
 		})
 	}
 }
