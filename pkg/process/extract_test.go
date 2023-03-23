@@ -62,6 +62,7 @@ func BenchmarkExtract(b *testing.B) {
 		}
 		b.Run(c.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
+				// nolint:errcheck
 				Extract(c.data.Deep)
 			}
 		})
