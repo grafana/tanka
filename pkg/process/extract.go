@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/objx"
 	"gopkg.in/yaml.v3"
 
@@ -40,6 +41,7 @@ func walkJSON(ptr interface{}, extracted map[string]manifest.Manifest, path trac
 		return walkList(v, extracted, path)
 	}
 
+	log.Debug().Msgf("recursion ended on key %q of type %T which does not belong to a valid Kubernetes object", path.Name(), ptr)
 	return ErrorPrimitiveReached{
 		path:      path.Base(),
 		key:       path.Name(),
@@ -132,15 +134,16 @@ func (e ErrorPrimitiveReached) WithContainingObj(obj objx.Map, err error) ErrorP
 }
 
 func (e ErrorPrimitiveReached) Error() string {
-	container, _ := yaml.Marshal(e.containingObj)
+	errMessage := fmt.Sprintf(`found invalid Kubernetes object (at %s): %s`, e.path, e.containingObjErr)
 
-	return fmt.Sprintf(`recursion ended on key %q of type %T which does not belong to a valid Kubernetes object
-instead, it an attribute of the following object (at path %s):
+	container, err := yaml.Marshal(e.containingObj)
+	if err != nil {
+		log.Error().Msgf("failed to marshal invalid Kubernetes object: %s", err)
+	} else {
+		errMessage += "\n\n" + string(container)
+	}
 
-%s
-
-this object is not a valid Kubernetes object because: %s
-`, e.key, e.primitive, e.path, container, e.containingObjErr)
+	return errMessage
 }
 
 // isKubernetesManifest attempts to infer whether the given object is a valid

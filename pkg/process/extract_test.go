@@ -23,20 +23,15 @@ var extractTestCases = []struct {
 	{
 		name: "primitive",
 		data: testDataPrimitive(),
-		errMessage: `recursion ended on key "note" of type string which does not belong to a valid Kubernetes object
-instead, it an attribute of the following object (at path .service):
+		errMessage: `found invalid Kubernetes object (at .service): missing attribute "apiVersion"
 
 note: invalid because apiVersion and kind are missing
-
-
-this object is not a valid Kubernetes object because: missing attribute "apiVersion"
 `,
 	},
 	{
 		name: "missing kind",
 		data: testMissingAttribute(),
-		errMessage: `recursion ended on key "apiVersion" of type string which does not belong to a valid Kubernetes object
-instead, it an attribute of the following object (at path .service):
+		errMessage: `found invalid Kubernetes object (at .service): missing attribute "kind"
 
 apiVersion: v1
 spec:
@@ -46,16 +41,12 @@ spec:
           targetPort: 8080
     selector:
         app: deep
-
-
-this object is not a valid Kubernetes object because: missing attribute "kind"
 `,
 	},
 	{
 		name: "bad kind",
 		data: testBadKindType(),
-		errMessage: `recursion ended on key "apiVersion" of type string which does not belong to a valid Kubernetes object
-instead, it an attribute of the following object (at path .deployment):
+		errMessage: `found invalid Kubernetes object (at .deployment): attribute "kind" is not a string, it is a float64
 
 apiVersion: apps/v1
 kind: 3000
@@ -70,9 +61,6 @@ spec:
         metadata:
             labels:
                 app: grafana
-
-
-this object is not a valid Kubernetes object because: attribute "kind" is not a string, it is a float64
 `,
 	},
 	{
