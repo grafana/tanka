@@ -27,7 +27,7 @@ func fPageln(r io.Reader) error {
 		pager = "less --RAW-CONTROL-CHARS --quit-if-one-screen --no-init"
 	}
 
-	if interactive && pager != "" {
+	if stdoutIsTTY && pager != "" {
 		cmd := exec.Command("sh", "-c", pager)
 		cmd.Stdin = r
 		cmd.Stdout = os.Stdout
