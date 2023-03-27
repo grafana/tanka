@@ -21,27 +21,9 @@ func main() {
 		Version: tanka.CurrentVersion,
 	}
 
-	addCommandsWithLogLevel := func(cmds ...*cli.Command) {
-		for _, cmd := range cmds {
-			levels := []string{zerolog.Disabled.String(), zerolog.FatalLevel.String(), zerolog.ErrorLevel.String(), zerolog.WarnLevel.String(), zerolog.InfoLevel.String(), zerolog.DebugLevel.String(), zerolog.TraceLevel.String()}
-			cmd.Flags().String("log-level", zerolog.InfoLevel.String(), "possible values: "+strings.Join(levels, ", "))
-
-			cmdRun := cmd.Run
-			cmd.Run = func(cmd *cli.Command, args []string) error {
-				level, err := zerolog.ParseLevel(cmd.Flags().Lookup("log-level").Value.String())
-				if err != nil {
-					return err
-				}
-				zerolog.SetGlobalLevel(level)
-
-				return cmdRun(cmd, args)
-			}
-			rootCmd.AddCommand(cmd)
-		}
-	}
-
 	// workflow commands
-	addCommandsWithLogLevel(
+	addCommandsWithLogLevelOption(
+		rootCmd,
 		applyCmd(),
 		showCmd(),
 		diffCmd(),
@@ -49,14 +31,16 @@ func main() {
 		deleteCmd(),
 	)
 
-	addCommandsWithLogLevel(
+	addCommandsWithLogLevelOption(
+		rootCmd,
 		envCmd(),
 		statusCmd(),
 		exportCmd(),
 	)
 
 	// jsonnet commands
-	addCommandsWithLogLevel(
+	addCommandsWithLogLevelOption(
+		rootCmd,
 		fmtCmd(),
 		lintCmd(),
 		evalCmd(),
@@ -65,7 +49,8 @@ func main() {
 	)
 
 	// external commands prefixed with "tk-"
-	addCommandsWithLogLevel(
+	addCommandsWithLogLevelOption(
+		rootCmd,
 		prefixCommands("tk-")...,
 	)
 
@@ -73,5 +58,24 @@ func main() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
+	}
+}
+
+func addCommandsWithLogLevelOption(rootCmd *cli.Command, cmds ...*cli.Command) {
+	for _, cmd := range cmds {
+		levels := []string{zerolog.Disabled.String(), zerolog.FatalLevel.String(), zerolog.ErrorLevel.String(), zerolog.WarnLevel.String(), zerolog.InfoLevel.String(), zerolog.DebugLevel.String(), zerolog.TraceLevel.String()}
+		cmd.Flags().String("log-level", zerolog.InfoLevel.String(), "possible values: "+strings.Join(levels, ", "))
+
+		cmdRun := cmd.Run
+		cmd.Run = func(cmd *cli.Command, args []string) error {
+			level, err := zerolog.ParseLevel(cmd.Flags().Lookup("log-level").Value.String())
+			if err != nil {
+				return err
+			}
+			zerolog.SetGlobalLevel(level)
+
+			return cmdRun(cmd, args)
+		}
+		rootCmd.AddCommand(cmd)
 	}
 }

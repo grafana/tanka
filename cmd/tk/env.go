@@ -25,10 +25,11 @@ func envCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "env [action]",
 		Short: "manipulate environments",
-		Args:  cli.ArgsMin(2),
+		Args:  cli.ArgsMin(1), // Make sure we print out the help if no subcommand is given, `tk env` is not valid
 	}
 
-	cmd.AddCommand(
+	addCommandsWithLogLevelOption(
+		cmd,
 		envAddCmd(),
 		envSetCmd(),
 		envListCmd(),

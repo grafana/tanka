@@ -14,9 +14,11 @@ func chartsCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "charts",
 		Short: "Declarative vendoring of Helm Charts",
+		Args:  cli.ArgsMin(1), // Make sure we print out the help if no subcommand is given, `tk tool charts` is not valid
 	}
 
-	cmd.AddCommand(
+	addCommandsWithLogLevelOption(
+		cmd,
 		chartsInitCmd(),
 		chartsAddCmd(),
 		chartsAddRepoCmd(),

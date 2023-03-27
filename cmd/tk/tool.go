@@ -20,10 +20,11 @@ func toolCmd() *cli.Command {
 	cmd := &cli.Command{
 		Short: "handy utilities for working with jsonnet",
 		Use:   "tool [command]",
-		Args:  cli.ArgsMin(2),
+		Args:  cli.ArgsMin(1), // Make sure we print out the help if no subcommand is given, `tk tool` is not valid
 	}
 
-	cmd.AddCommand(
+	addCommandsWithLogLevelOption(
+		cmd,
 		jpathCmd(),
 		importsCmd(),
 		importersCmd(),
@@ -35,7 +36,7 @@ func toolCmd() *cli.Command {
 func jpathCmd() *cli.Command {
 	cmd := &cli.Command{
 		Short: "export JSONNET_PATH for use with other jsonnet tools",
-		Use:   "jpath [<file/dir>]",
+		Use:   "jpath <file/dir>",
 		Args:  workflowArgs,
 	}
 
