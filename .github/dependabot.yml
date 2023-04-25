@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - directory: /
+    open-pull-requests-limit: 5
+    package-ecosystem: gomod
+    schedule:
+      interval: weekly
+
+  - directory: /docs
+    open-pull-requests-limit: 5
+    package-ecosystem: npm
+    schedule:
+      interval: weekly
+
+  - directory: /
+    open-pull-requests-limit: 5
+    package-ecosystem: docker
+    schedule:
+      interval: weekly
+    
+  - directory: /
+    open-pull-requests-limit: 5
+    package-ecosystem: github-actions
+    schedule:
+      interval: weekly
