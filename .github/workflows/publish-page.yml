@@ -12,6 +12,10 @@ on:
       - synchronize
       - closed
 
+permissions:
+  contents: write
+  pull-requests: write
+
 concurrency: ci-${{ github.ref }}
 
 jobs:
