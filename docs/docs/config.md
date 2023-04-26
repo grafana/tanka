@@ -10,6 +10,8 @@ Tanka's behavior can be customized per Environment using a file called `spec.jso
 
 ## File format
 
+FRORFOFO
+
 ```json
 {
   // Config format revision. Currently only "v1alpha1"
