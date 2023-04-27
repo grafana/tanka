@@ -79,8 +79,6 @@ The following options control how the command is invoked:
     values: {
       persistence: { enabled: true }
     },
-    // Equivalent to: --include-crds; only relevant for Helm v3+.
-    includeCrds: true,
     // Equivalent to: --api-versions v1 --api-versions apps/v1
     apiVersions: ['v1', 'apps/v1']
     // Equivalent to: --kube-version v1.20.0
@@ -90,6 +88,17 @@ The following options control how the command is invoked:
 }
 ```
 
+Tanka will install Custom Resource Definitions (CRDs) automatically, if the
+Helm Chart requires them and ships them in `crds/`. This is equivalent to `helm
+template --include-crds`. This can be disabled using `includeCrds: false`:
+
+```jsonnet
+{
+  grafana: helm.template("grafana", "./charts/grafana", {
+    includeCrds: false
+  })
+}
+```
 
 ## Vendoring Helm Charts
 
