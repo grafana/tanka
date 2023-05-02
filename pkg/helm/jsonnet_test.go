@@ -43,42 +43,40 @@ func (m *MockHelm) ChartExists(chart string, opts *JsonnetOpts) (string, error) 
 	return args.String(0), args.Error(1)
 }
 
-func callNativeFunction(t *testing.T, templateOpts TemplateOpts, parameters []interface{}) []string {
+func callNativeFunction(t *testing.T, expectedHelmTemplateOptions TemplateOpts, inputOptionsFromJsonnet map[string]interface{}) []string {
 	t.Helper()
 
 	helmMock := &MockHelm{}
 
 	helmMock.On(
 		"ChartExists",
-		"chart",
+		"exampleChartPath",
 		mock.AnythingOfType("*helm.JsonnetOpts")).
 		Return("/full/chart/path", nil).
 		Once()
 
 	// this verifies that the helmMock.Template() method is called with the
 	// correct arguments, i.e. includeCrds: true is set by default
-	helmMock.On("Template", "name", "/full/chart/path", templateOpts).
+	helmMock.On("Template", "exampleChartName", "/full/chart/path", expectedHelmTemplateOptions).
 		Return(manifest.List{}, nil).
 		Once()
 
 	nf := NativeFunc(helmMock)
 	require.NotNil(t, nf)
 
+	// the mandatory parameters to helm.template() in Jsonnet
 	params := []string{
-		"name",
-		"chart",
+		"exampleChartName",
+		"exampleChartPath",
 	}
 
-	opts := make(map[string]interface{})
-	opts["calledFrom"] = calledFrom
-
-	// params + opts
+	// mandatory parameters + the k-v pairs from the Jsonnet input
 	paramsInterface := make([]interface{}, 3)
 	paramsInterface[0] = params[0]
 	paramsInterface[1] = params[1]
-	paramsInterface[2] = opts
+	paramsInterface[2] = inputOptionsFromJsonnet
 
-	_, err := nf.Func(parameters)
+	_, err := nf.Func(paramsInterface)
 
 	require.NoError(t, err)
 
@@ -96,28 +94,19 @@ func TestDefaultCommandineFlagsIncludeCrds(t *testing.T) {
 	// i.e. that includeCrds got set to true. This is not us passing an input,
 	// we are asserting here that the template function is called with these
 	// options.
-	templateOpts := TemplateOpts{
+	expectedHelmTemplateOptions := TemplateOpts{
 		KubeVersion: kubeVersion,
 		IncludeCRDs: true,
 	}
 
-	params := []string{
-		"name",
-		"chart",
-	}
+	// the options to helm.template(), which are a Jsonnet object, turned into a
+	// go map[string]interface{}. we do not set includeCrds here, so it should
+	// be true by default
+	inputOptionsFromJsonnet := make(map[string]interface{})
+	inputOptionsFromJsonnet["calledFrom"] = calledFrom
+	inputOptionsFromJsonnet["kubeVersion"] = kubeVersion
 
-	// we do not set includeCrds here, so it should be true by default
-	opts := make(map[string]interface{})
-	opts["calledFrom"] = calledFrom
-	opts["kubeVersion"] = kubeVersion
-
-	// params + opts
-	paramsInterface := make([]interface{}, 3)
-	paramsInterface[0] = params[0]
-	paramsInterface[1] = params[1]
-	paramsInterface[2] = opts
-
-	args := callNativeFunction(t, templateOpts, paramsInterface)
+	args := callNativeFunction(t, expectedHelmTemplateOptions, inputOptionsFromJsonnet)
 
 	// finally check that the actual command line arguments we will pass to
 	// `helm template` contain the --include-crds flag
@@ -133,29 +122,19 @@ func TestIncludeCrdsFalse(t *testing.T) {
 	// i.e. that includeCrds got set to false. This is not us passing an input,
 	// we are asserting here that the template function is called with these
 	// options.
-	templateOpts := TemplateOpts{
+	expectedHelmTemplateOptions := TemplateOpts{
 		KubeVersion: kubeVersion,
 		IncludeCRDs: false,
 	}
 
-	params := []string{
-		"name",
-		"chart",
-	}
+	// the options to helm.template(), which are a Jsonnet object, turned into a
+	// go map[string]interface{}. we explicitly set includeCrds to false here
+	inputOptionsFromJsonnet := make(map[string]interface{})
+	inputOptionsFromJsonnet["calledFrom"] = calledFrom
+	inputOptionsFromJsonnet["kubeVersion"] = kubeVersion
+	inputOptionsFromJsonnet["includeCrds"] = false
 
-	// we explicitly set includeCrds to false here
-	opts := make(map[string]interface{})
-	opts["calledFrom"] = calledFrom
-	opts["kubeVersion"] = kubeVersion
-	opts["includeCrds"] = false
-
-	// params + opts
-	paramsInterface := make([]interface{}, 3)
-	paramsInterface[0] = params[0]
-	paramsInterface[1] = params[1]
-	paramsInterface[2] = opts
-
-	args := callNativeFunction(t, templateOpts, paramsInterface)
+	args := callNativeFunction(t, expectedHelmTemplateOptions, inputOptionsFromJsonnet)
 
 	// finally check that the actual command line arguments we will pass to
 	// `helm template` don't contain the --include-crds flag
