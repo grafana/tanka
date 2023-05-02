@@ -147,7 +147,7 @@ func TestIncludeCrdsFalse(t *testing.T) {
 	opts := make(map[string]interface{})
 	opts["calledFrom"] = calledFrom
 	opts["kubeVersion"] = kubeVersion
-	opts["includeCRDs"] = false
+	opts["includeCrds"] = false
 
 	// params + opts
 	paramsInterface := make([]interface{}, 3)
