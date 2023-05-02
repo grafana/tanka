@@ -43,7 +43,7 @@ func (m *MockHelm) ChartExists(chart string, opts *JsonnetOpts) (string, error) 
 	return args.String(0), args.Error(1)
 }
 
-func callNativeFucntion(t *testing.T, templateOpts TemplateOpts, parameters []interface{}) []string {
+func callNativeFunction(t *testing.T, templateOpts TemplateOpts, parameters []interface{}) []string {
 	t.Helper()
 
 	helmMock := &MockHelm{}
@@ -117,7 +117,7 @@ func TestDefaultCommandineFlagsIncludeCrds(t *testing.T) {
 	paramsInterface[1] = params[1]
 	paramsInterface[2] = opts
 
-	args := callNativeFucntion(t, templateOpts, paramsInterface)
+	args := callNativeFunction(t, templateOpts, paramsInterface)
 
 	// finally check that the actual command line arguments we will pass to
 	// `helm template` contain the --include-crds flag
@@ -155,7 +155,7 @@ func TestIncludeCrdsFalse(t *testing.T) {
 	paramsInterface[1] = params[1]
 	paramsInterface[2] = opts
 
-	args := callNativeFucntion(t, templateOpts, paramsInterface)
+	args := callNativeFunction(t, templateOpts, paramsInterface)
 
 	// finally check that the actual command line arguments we will pass to
 	// `helm template` don't contain the --include-crds flag
