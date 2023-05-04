@@ -21,6 +21,9 @@ type Helm interface {
 
 	// Template returns the individual resources of a Helm Chart
 	Template(name, chart string, opts TemplateOpts) (manifest.List, error)
+
+	// ChartExists checks if a chart exists in the provided calledFromPath
+	ChartExists(chart string, opts *JsonnetOpts) (string, error)
 }
 
 // PullOpts are additional, non-required options for Helm.Pull
@@ -101,6 +104,17 @@ func (e ExecHelm) RepoUpdate(opts Opts) error {
 	}
 
 	return nil
+}
+
+func (e ExecHelm) ChartExists(chart string, opts *JsonnetOpts) (string, error) {
+	// resolve the Chart relative to the caller
+	callerDir := filepath.Dir(opts.CalledFrom)
+	chart = filepath.Join(callerDir, chart)
+	if _, err := os.Stat(chart); err != nil {
+		return "", fmt.Errorf("helmTemplate: Failed to find a chart at '%s': %s. See https://tanka.dev/helm#failed-to-find-chart", chart, err)
+	}
+
+	return chart, nil
 }
 
 // cmd returns a prepared exec.Cmd to use the `helm` binary

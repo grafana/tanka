@@ -10,13 +10,18 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-// Template expands a Helm Chart into a regular manifest.List using the `helm
-// template` command
-func (e ExecHelm) Template(name, chart string, opts TemplateOpts) (manifest.List, error) {
+func (e ExecHelm) templateCommandArgs(name, chart string, opts TemplateOpts) []string {
 	args := []string{name, chart,
 		"--values", "-", // values from stdin
 	}
 	args = append(args, opts.Flags()...)
+	return args
+}
+
+// Template expands a Helm Chart into a regular manifest.List using the `helm
+// template` command
+func (e ExecHelm) Template(name, chart string, opts TemplateOpts) (manifest.List, error) {
+	args := e.templateCommandArgs(name, chart, opts)
 
 	cmd := e.cmd("template", args...)
 	var buf bytes.Buffer

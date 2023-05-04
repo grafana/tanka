@@ -3,8 +3,6 @@ package helm
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
@@ -54,10 +52,8 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 				return "", err
 			}
 
-			// resolve the Chart relative to the caller
-			callerDir := filepath.Dir(opts.CalledFrom)
-			chart := filepath.Join(callerDir, chartpath)
-			if _, err := os.Stat(chart); err != nil {
+			chart, err := h.ChartExists(chartpath, opts)
+			if err != nil {
 				return nil, fmt.Errorf("helmTemplate: Failed to find a chart at '%s': %s. See https://tanka.dev/helm#failed-to-find-chart", chart, err)
 			}
 
@@ -83,7 +79,16 @@ func parseOpts(data interface{}) (*JsonnetOpts, error) {
 	if err != nil {
 		return nil, err
 	}
-	var opts JsonnetOpts
+
+	// default IncludeCRDs to true, as this is the default in the `helm install`
+	// command. Needs to be specified here because the zero value of bool is
+	// false.
+	opts := JsonnetOpts{
+		TemplateOpts: TemplateOpts{
+			IncludeCRDs: true,
+		},
+	}
+
 	if err := json.Unmarshal(c, &opts); err != nil {
 		return nil, err
 	}
