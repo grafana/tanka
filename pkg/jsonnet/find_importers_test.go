@@ -8,24 +8,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFindImportersForFiles(t *testing.T) {
-	// Make sure the main files all eval correctly
-	// We want to make sure that the importers command works correctly,
-	// but there's no point in testing on invalid jsonnet files
-	files, err := FindFiles("testdata", nil)
-	require.NoError(t, err)
-	require.NotEmpty(t, files)
-	for _, file := range files {
-		_, err := EvaluateFile(file, Opts{})
-		require.NoError(t, err, "failed to eval %s", file)
-	}
+type findImportersTestCase struct {
+	name              string
+	files             []string
+	expectedImporters []string
+	expectedErr       error
+}
 
-	cases := []struct {
-		name              string
-		files             []string
-		expectedImporters []string
-		expectedErr       error
-	}{
+func (tc findImportersTestCase) run(t testing.TB) {
+	importers, err := FindImporterForFiles("testdata/findImporters", tc.files)
+
+	if tc.expectedErr != nil {
+		require.EqualError(t, err, tc.expectedErr.Error())
+	} else {
+		require.NoError(t, err)
+		require.Equal(t, tc.expectedImporters, importers)
+	}
+}
+
+func findImportersTestCases(t testing.TB) []findImportersTestCase {
+	t.Helper()
+
+	return []findImportersTestCase{
 		{
 			name:  "no files",
 			files: []string{},
@@ -115,17 +119,23 @@ func TestFindImportersForFiles(t *testing.T) {
 			},
 		},
 	}
+}
 
-	for _, c := range cases {
+func TestFindImportersForFiles(t *testing.T) {
+	// Make sure the main files all eval correctly
+	// We want to make sure that the importers command works correctly,
+	// but there's no point in testing on invalid jsonnet files
+	files, err := FindFiles("testdata", nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, files)
+	for _, file := range files {
+		_, err := EvaluateFile(file, Opts{})
+		require.NoError(t, err, "failed to eval %s", file)
+	}
+
+	for _, c := range findImportersTestCases(t) {
 		t.Run(c.name, func(t *testing.T) {
-			importers, err := FindImporterForFiles("testdata/findImporters", c.files)
-
-			if c.expectedErr != nil {
-				require.EqualError(t, err, c.expectedErr.Error())
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, c.expectedImporters, importers)
-			}
+			c.run(t)
 		})
 	}
 }
@@ -149,7 +159,17 @@ func BenchmarkFindImporters(b *testing.B) {
 	}
 }
 
-func absPath(t *testing.T, path string) string {
+func BenchmarkFindImporters_StaticCases(b *testing.B) {
+	for _, c := range findImportersTestCases(b) {
+		b.Run(c.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				c.run(b)
+			}
+		})
+	}
+}
+
+func absPath(t testing.TB, path string) string {
 	t.Helper()
 
 	abs, err := filepath.Abs(path)
