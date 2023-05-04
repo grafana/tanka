@@ -60,10 +60,11 @@ kind: pipeline
 name: benchmark against main
 steps:
 - commands:
-  - go test -bench=. -benchmem -count=10 -run=^$ ./... | tee bench-pr.txt
+  - go test -bench=. -benchmem -count=5 -run=^$ ./... | tee bench-pr.txt
   - git fetch origin main
   - git checkout main
-  - go test -bench=. -benchmem -count=10 -run=^$ ./... | tee bench-main.txt
+  - go test -bench=. -benchmem -count=5 -run=^$ ./... | tee bench-main.txt
+  - go install golang.org/x/perf/cmd/...@latest
   - benchstat bench-main.txt bench-pr.txt
   image: golang:1.19
   name: benchmark
@@ -303,6 +304,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: eac2a50fa2ba151d92a5b3fbfcf22338f236464004b57f9140ee52901a0e83ce
+hmac: 3967256e091e6552f854b4d250b85a29d523a8df71b132ccc88bcd11be7b497e
 
 ...
