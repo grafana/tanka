@@ -1,0 +1,3 @@
+{
+  test: 'env-vendor',
+}
