@@ -76,6 +76,18 @@ local docker(arch, depends_on=[]) =
     ],
   } + constraints.pullRequest + constraints.mainPush,
 
+  pipeline('benchmark against main') {
+    steps: [
+      go('benchmark', [
+        'go test -bench=. -benchmem -count=10 -run=^$ ./... > bench-pr.txt',
+        'git fetch origin main',
+        'git checkout main',
+        'go test -bench=. -benchmem -count=10 -run=^$ ./... > bench-main.txt',
+        'benchstat bench-main.txt bench-pr.txt',
+      ]),
+    ],
+  } + constraints.pullRequest,
+
   pipeline('release') {
     steps: [
       go('fetch-tags', ['git fetch origin --tags']),
