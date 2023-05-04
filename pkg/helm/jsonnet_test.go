@@ -87,7 +87,7 @@ func callNativeFunction(t *testing.T, expectedHelmTemplateOptions TemplateOpts, 
 
 // TestDefaultCommandineFlagsIncludeCrds tests that the includeCrds flag is set
 // to true by default
-func TestDefaultCommandineFlagsIncludeCrds(t *testing.T) {
+func TestDefaultCommandLineFlagsIncludeCrds(t *testing.T) {
 	kubeVersion := "1.18.0"
 
 	// we will check that the template function is called with these options,
