@@ -136,6 +136,13 @@ func findImportersTestCases(t testing.TB) []findImportersTestCase {
 			},
 			expectedImporters: nil,
 		},
+		{
+			name:  "imported file in lib relative to env",
+			files: []string{"testdata/findImporters/environments/lib-import-relative-to-env/file-to-import.libsonnet"},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/lib-import-relative-to-env/folder1/folder2/main.jsonnet"),
+			},
+		},
 	}
 }
 
@@ -164,7 +171,8 @@ func TestFindImportersForFiles(t *testing.T) {
 
 func BenchmarkFindImporters(b *testing.B) {
 	// Create a very large and complex project
-	tempDir := b.TempDir()
+	tempDir, err := filepath.EvalSymlinks(b.TempDir())
+	require.NoError(b, err)
 	generateTestProject(b, tempDir, 100, false)
 
 	// Run the benchmark
