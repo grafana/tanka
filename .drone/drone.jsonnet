@@ -79,10 +79,10 @@ local docker(arch, depends_on=[]) =
   pipeline('benchmark against main') {
     steps: [
       go('benchmark', [
-        'go test -bench=. -benchmem -count=10 -run=^$ ./... > bench-pr.txt',
+        'go test -bench=. -benchmem -count=10 -run=^$ ./... | tee bench-pr.txt',
         'git fetch origin main',
         'git checkout main',
-        'go test -bench=. -benchmem -count=10 -run=^$ ./... > bench-main.txt',
+        'go test -bench=. -benchmem -count=10 -run=^$ ./... | tee bench-main.txt',
         'benchstat bench-main.txt bench-pr.txt',
       ]),
     ],
