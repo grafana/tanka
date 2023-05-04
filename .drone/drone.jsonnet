@@ -77,6 +77,10 @@ local docker(arch, depends_on=[]) =
   } + constraints.pullRequest + constraints.mainPush,
 
   pipeline('benchmark against main') {
+    node: {
+      // To ensure that benchmarks are accurate, run this build on a node that doesn't do parallel builds.
+      type: 'no-parallel',
+    },
     steps: [
       go('benchmark', [
         'go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-pr.txt',

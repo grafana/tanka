@@ -58,6 +58,8 @@ volumes:
 ---
 kind: pipeline
 name: benchmark against main
+node:
+  type: no-parallel
 steps:
 - commands:
   - go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-pr.txt
@@ -304,6 +306,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: 7dcc52e2ce91c8610f793bd4398b82d03fc4af4299a4c5ff05c7b76db126e7cf
+hmac: 2cd20dcbb7e3f252b5379266c5dab621d1c379ae0ceac878be66974b3cae3b79
 
 ...
