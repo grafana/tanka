@@ -9,6 +9,7 @@ import (
 
 	"github.com/gobwas/glob"
 	"github.com/google/go-jsonnet/linter"
+	"github.com/grafana/tanka/pkg/jsonnet/implementation/goimpl"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -56,15 +57,13 @@ func Lint(fds []string, opts *LintOpts) error {
 			log.Debug().Str("file", file).Msg("linting file")
 			startTime := time.Now()
 
-			vm := MakeVM(Opts{})
 			jpaths, _, _, err := jpath.Resolve(file, true)
 			if err != nil {
 				fmt.Fprintf(buf, "got an error getting JPATH for %s: %v\n\n", file, err)
 				resultCh <- result{failed: true, output: buf.String()}
 				continue
 			}
-
-			vm.Importer(NewExtendedImporter(jpaths))
+			vm := goimpl.MakeRawVM(jpaths, nil, nil, 0)
 
 			content, _ := os.ReadFile(file)
 			failed := linter.LintSnippet(vm, buf, []linter.Snippet{{FileName: file, Code: string(content)}})
