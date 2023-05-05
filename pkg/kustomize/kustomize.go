@@ -10,7 +10,7 @@ import (
 // Kustomize provides high level access to some Kustomize operations
 type Kustomize interface {
 	// Build returns the individual resources of a Kustomize
-	Build(path string) (manifest.List, error)
+	Build(path string, opts BuildOpts) (manifest.List, error)
 }
 
 // ExecKustomize is a Kustomize implementation powered by the `kustomize`

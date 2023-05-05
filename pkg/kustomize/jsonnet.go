@@ -14,6 +14,8 @@ import (
 // JsonnetOpts are additional properties the consumer of the native func might
 // pass.
 type JsonnetOpts struct {
+	BuildOpts
+
 	// CalledFrom is the file that calls kustomizeBuild. This is used to find the
 	// vendored Kustomize relative to this file
 	CalledFrom string `json:"calledFrom"`
