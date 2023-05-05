@@ -15,8 +15,8 @@ import (
 	"github.com/google/go-jsonnet/toolutils"
 	"github.com/pkg/errors"
 
+	"github.com/grafana/tanka/pkg/jsonnet/implementation/goimpl"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
-	"github.com/grafana/tanka/pkg/jsonnet/native"
 )
 
 var importsRegexp = regexp.MustCompile(`import(str)?\s+['"]([^'"%()]+)['"]`)
@@ -48,12 +48,7 @@ func TransitiveImports(dir string) ([]string, error) {
 		return nil, errors.Wrap(err, "resolving JPATH")
 	}
 
-	vm := jsonnet.MakeVM()
-	vm.Importer(NewExtendedImporter(jpath))
-	for _, nf := range native.Funcs() {
-		vm.NativeFunction(nf)
-	}
-
+	vm := goimpl.MakeRawVM(jpath, nil, nil, 0)
 	node, err := jsonnet.SnippetToAST(filepath.Base(entrypoint), string(sonnet))
 	if err != nil {
 		return nil, errors.Wrap(err, "creating Jsonnet AST")

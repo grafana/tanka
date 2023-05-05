@@ -1,4 +1,4 @@
-package jsonnet
+package goimpl
 
 import jsonnet "github.com/google/go-jsonnet"
 

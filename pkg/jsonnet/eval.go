@@ -9,8 +9,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 
+	"github.com/grafana/tanka/pkg/jsonnet/implementation"
+	"github.com/grafana/tanka/pkg/jsonnet/implementation/goimpl"
+	"github.com/grafana/tanka/pkg/jsonnet/implementation/types"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
-	"github.com/grafana/tanka/pkg/jsonnet/native"
 )
 
 // Modifier allows to set optional parameters on the Jsonnet VM.
@@ -31,12 +33,13 @@ func (i *InjectedCode) Set(key, value string) {
 
 // Opts are additional properties for the Jsonnet VM
 type Opts struct {
-	MaxStack    int
-	ExtCode     InjectedCode
-	TLACode     InjectedCode
-	ImportPaths []string
-	EvalScript  string
-	CachePath   string
+	JsonnetImplementation string
+	MaxStack              int
+	ExtCode               InjectedCode
+	TLACode               InjectedCode
+	ImportPaths           []string
+	EvalScript            string
+	CachePath             string
 
 	CachePathRegexes []*regexp.Regexp
 }
@@ -75,37 +78,11 @@ func (o Opts) Clone() Opts {
 	}
 }
 
-// MakeVM returns a Jsonnet VM with some extensions of Tanka, including:
-// - extended importer
-// - extCode and tlaCode applied
-// - native functions registered
-func MakeVM(opts Opts) *jsonnet.VM {
-	vm := jsonnet.MakeVM()
-	vm.Importer(NewExtendedImporter(opts.ImportPaths))
-
-	for k, v := range opts.ExtCode {
-		vm.ExtCode(k, v)
-	}
-	for k, v := range opts.TLACode {
-		vm.TLACode(k, v)
-	}
-
-	for _, nf := range native.Funcs() {
-		vm.NativeFunction(nf)
-	}
-
-	if opts.MaxStack > 0 {
-		vm.MaxStack = opts.MaxStack
-	}
-
-	return vm
-}
-
 // EvaluateFile evaluates the Jsonnet code in the given file and returns the
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
 func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
-	evalFunc := func(vm *jsonnet.VM) (string, error) {
+	evalFunc := func(vm types.JsonnetVM) (string, error) {
 		return vm.EvaluateFile(jsonnetFile)
 	}
 	data, err := os.ReadFile(jsonnetFile)
@@ -119,13 +96,13 @@ func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
 // If cache options are given, a hash from the data will be computed and
 // the resulting string will be cached for future retrieval
 func Evaluate(path, data string, opts Opts) (string, error) {
-	evalFunc := func(vm *jsonnet.VM) (string, error) {
+	evalFunc := func(vm types.JsonnetVM) (string, error) {
 		return vm.EvaluateAnonymousSnippet(path, data)
 	}
 	return evaluateSnippet(evalFunc, path, data, opts)
 }
 
-type evalFunc func(vm *jsonnet.VM) (string, error)
+type evalFunc func(vm types.JsonnetVM) (string, error)
 
 func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, error) {
 	var cache *FileEvalCache
@@ -134,17 +111,22 @@ func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, e
 	}
 
 	// Create VM
+	jsonnetImpl, err := implementation.Get(opts.JsonnetImplementation)
+	if err != nil {
+		return "", err
+	}
 	jpath, _, _, err := jpath.Resolve(path, false)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving import paths")
 	}
 	opts.ImportPaths = jpath
-	vm := MakeVM(opts)
+	vm := jsonnetImpl.MakeVM(opts.ImportPaths, opts.ExtCode, opts.TLACode, opts.MaxStack)
+	importVM := goimpl.MakeRawVM(opts.ImportPaths, opts.ExtCode, opts.TLACode, opts.MaxStack) // TODO: use interface
 
 	var hash string
 	if cache != nil {
 		startTime := time.Now()
-		if hash, err = getSnippetHash(vm, path, data); err != nil {
+		if hash, err = getSnippetHash(importVM, path, data); err != nil {
 			return "", err
 		}
 		cacheLog := log.Debug().Str("path", path).Str("hash", hash).Dur("duration_ms", time.Since(startTime))

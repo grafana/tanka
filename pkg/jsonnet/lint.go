@@ -10,6 +10,7 @@ import (
 
 	"github.com/gobwas/glob"
 	"github.com/google/go-jsonnet/linter"
+	"github.com/grafana/tanka/pkg/jsonnet/implementation/goimpl"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -106,14 +107,13 @@ func lintWithRecover(file string) (buf bytes.Buffer, success bool) {
 		return
 	}
 
-	vm := MakeVM(Opts{})
 	jpaths, _, _, err := jpath.Resolve(file, true)
 	if err != nil {
 		fmt.Fprintf(&buf, "got an error getting jpath for %s: %v\n\n", file, err)
 		return
 	}
+	vm := goimpl.MakeRawVM(jpaths, nil, nil, 0)
 
-	vm.Importer(NewExtendedImporter(jpaths))
 	failed := linter.LintSnippet(vm, &buf, []linter.Snippet{{FileName: file, Code: string(content)}})
 	return buf, !failed
 }
