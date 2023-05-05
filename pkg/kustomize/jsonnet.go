@@ -53,7 +53,7 @@ func NativeFunc(k Kustomize) *jsonnet.NativeFunction {
 			}
 
 			// render resources
-			list, err := k.Build(actualPath)
+			list, err := k.Build(actualPath, opts.BuildOpts)
 			if err != nil {
 				return nil, err
 			}
