@@ -56,6 +56,30 @@ volumes:
 - name: gopath
   temp: {}
 ---
+kind: pipeline
+name: benchmark against main
+node:
+  type: no-parallel
+steps:
+- commands:
+  - go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-pr.txt
+  - git fetch origin main
+  - git checkout main
+  - go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-main.txt
+  - go install golang.org/x/perf/cmd/...@latest
+  - benchstat bench-main.txt bench-pr.txt
+  image: golang:1.19
+  name: benchmark
+  volumes:
+  - name: gopath
+    path: /go
+trigger:
+  ref:
+  - refs/pull/*/head
+volumes:
+- name: gopath
+  temp: {}
+---
 depends_on:
 - check
 kind: pipeline
@@ -282,6 +306,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: adbd6c28d92efbf2968766102c5abe0bbad5a4af1c76e84ada59b2c5cf9c958d
+hmac: 2cd20dcbb7e3f252b5379266c5dab621d1c379ae0ceac878be66974b3cae3b79
 
 ...
