@@ -127,10 +127,10 @@ func Apply(baseDir string, opts ApplyOpts) error {
 	}
 
 	// prompt for confirmation
-	if opts.AutoApprove == AutoApproveAlways || (noChanges && opts.AutoApprove == AutoApproveNoChanges) || opts.DryRun != "" {
-		// Skip approval
-	} else if err := confirmPrompt("Applying to", l.Env.Spec.Namespace, kube.Info()); err != nil {
-		return err
+	if opts.AutoApprove != AutoApproveAlways && !(noChanges && opts.AutoApprove == AutoApproveNoChanges) && opts.DryRun == "" {
+		if err := confirmPrompt("Applying to", l.Env.Spec.Namespace, kube.Info()); err != nil {
+			return err
+		}
 	}
 
 	return kube.Apply(l.Resources, kubernetes.ApplyOpts{
@@ -230,10 +230,10 @@ func Delete(baseDir string, opts DeleteOpts) error {
 	}
 
 	// prompt for confirmation
-	if opts.AutoApprove == AutoApproveAlways || opts.DryRun != "" {
-		// Skip approval
-	} else if err := confirmPrompt("Deleting from", l.Env.Spec.Namespace, kube.Info()); err != nil {
-		return err
+	if opts.AutoApprove != AutoApproveAlways && opts.DryRun == "" {
+		if err := confirmPrompt("Deleting from", l.Env.Spec.Namespace, kube.Info()); err != nil {
+			return err
+		}
 	}
 
 	return kube.Delete(l.Resources, kubernetes.DeleteOpts{

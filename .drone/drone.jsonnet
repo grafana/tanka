@@ -1,6 +1,6 @@
 local vault = import 'vault.libsonnet';
 
-local golang = 'golang:1.19';
+local golang = 'golang:1.20';
 
 local volumes = [{ name: 'gopath', temp: {} }];
 local mounts = [{ name: 'gopath', path: '/go' }];
@@ -122,7 +122,7 @@ local docker(arch, depends_on=[]) =
       ]),
       {
         name: 'manifest',
-        image: 'plugins/manifest',
+        image: 'plugins/manifest:1.4.0',
         settings: {
           ignore_missing: true,
           spec: '.drone/docker-manifest.tmpl',
@@ -141,7 +141,7 @@ local docker(arch, depends_on=[]) =
   pipeline('manifest') {
     steps: [{
       name: 'manifest',
-      image: 'plugins/manifest',
+      image: 'plugins/manifest:1.4.0',
       settings: {
         auto_tag: true,
         ignore_missing: true,

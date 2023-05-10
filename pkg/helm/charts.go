@@ -140,11 +140,11 @@ func (c Charts) Vendor(prune bool) error {
 			if chartYAML.Version.String() == r.Version.String() {
 				log.Info().Msgf("%s exists", r)
 				continue
-			} else {
-				log.Info().Msgf("Removing %s", r)
-				if err := os.RemoveAll(chartPath); err != nil {
-					return err
-				}
+			}
+
+			log.Info().Msgf("Removing %s", r)
+			if err := os.RemoveAll(chartPath); err != nil {
+				return err
 			}
 		} else if chartDirExists {
 			// If the chart dir exists but the manifest doesn't, we'll clear it out and re-download the chart

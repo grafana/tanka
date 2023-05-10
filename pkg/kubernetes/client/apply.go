@@ -12,7 +12,7 @@ import (
 )
 
 // Test-ability: isolate applyCtl to build and return exec.Cmd from ApplyOpts
-func (k Kubectl) applyCtl(data manifest.List, opts ApplyOpts) *exec.Cmd {
+func (k Kubectl) applyCtl(_ manifest.List, opts ApplyOpts) *exec.Cmd {
 	argv := []string{"-f", "-"}
 	serverSide := (opts.ApplyStrategy == "server")
 	if serverSide {

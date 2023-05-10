@@ -33,9 +33,7 @@ func fPageln(r io.Reader) error {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
-		if err := cmd.Run(); err != nil {
-			// Fallthrough on failure so that the contents of the reader are copied to stdout.
-		} else {
+		if err := cmd.Run(); err == nil {
 			return nil
 		}
 	}

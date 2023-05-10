@@ -4,7 +4,7 @@ name: check
 steps:
 - commands:
   - go mod download
-  image: golang:1.19
+  image: golang:1.20
   name: download
   volumes:
   - name: gopath
@@ -17,7 +17,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make lint
-  image: golang:1.19
+  image: golang:1.20
   name: lint
   volumes:
   - name: gopath
@@ -30,7 +30,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make test
-  image: golang:1.19
+  image: golang:1.20
   name: test
   volumes:
   - name: gopath
@@ -43,7 +43,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make cross
-  image: golang:1.19
+  image: golang:1.20
   name: build
   volumes:
   - name: gopath
@@ -68,7 +68,7 @@ steps:
   - go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-main.txt
   - go install golang.org/x/perf/cmd/...@latest
   - benchstat bench-main.txt bench-pr.txt
-  image: golang:1.19
+  image: golang:1.20
   name: benchmark
   volumes:
   - name: gopath
@@ -87,7 +87,7 @@ name: release
 steps:
 - commands:
   - git fetch origin --tags
-  image: golang:1.19
+  image: golang:1.20
   name: fetch-tags
   volumes:
   - name: gopath
@@ -100,7 +100,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make cross
-  image: golang:1.19
+  image: golang:1.20
   name: cross
   volumes:
   - name: gopath
@@ -151,7 +151,7 @@ platform:
 steps:
 - commands:
   - git fetch origin --tags
-  image: golang:1.19
+  image: golang:1.20
   name: fetch-tags
   volumes:
   - name: gopath
@@ -164,7 +164,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make static
-  image: golang:1.19
+  image: golang:1.20
   name: static
   volumes:
   - name: gopath
@@ -197,7 +197,7 @@ platform:
 steps:
 - commands:
   - git fetch origin --tags
-  image: golang:1.19
+  image: golang:1.20
   name: fetch-tags
   volumes:
   - name: gopath
@@ -210,7 +210,7 @@ steps:
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
   - make static
-  image: golang:1.19
+  image: golang:1.20
   name: static
   volumes:
   - name: gopath
@@ -242,12 +242,12 @@ steps:
 - commands:
   - git fetch origin --tags
   - echo "main-$(git describe --tags)" > .tags
-  image: golang:1.19
+  image: golang:1.20
   name: fetch-tags
   volumes:
   - name: gopath
     path: /go
-- image: plugins/manifest
+- image: plugins/manifest:1.4.0
   name: manifest
   settings:
     ignore_missing: true
@@ -269,7 +269,7 @@ depends_on:
 kind: pipeline
 name: manifest
 steps:
-- image: plugins/manifest
+- image: plugins/manifest:1.4.0
   name: manifest
   settings:
     auto_tag: true
@@ -306,6 +306,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: 2cd20dcbb7e3f252b5379266c5dab621d1c379ae0ceac878be66974b3cae3b79
+hmac: 060bcec4c9fbea042e7b70478a9ea0255de0f1e245f3dd031b02d7ca83ef5067
 
 ...

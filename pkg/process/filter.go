@@ -116,7 +116,7 @@ type NegMatcher struct {
 	exp Matcher
 }
 
-func (n NegMatcher) MatchString(s string) bool {
+func (n NegMatcher) MatchString(_ string) bool {
 	return true
 }
 

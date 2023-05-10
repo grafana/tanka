@@ -66,10 +66,10 @@ func Prune(baseDir string, opts PruneOpts) error {
 	}
 
 	// prompt for confirm
-	if opts.AutoApprove == AutoApproveAlways {
-		// Skip approval
-	} else if err := confirmPrompt("Pruning from", p.Env.Spec.Namespace, kube.Info()); err != nil {
-		return err
+	if opts.AutoApprove != AutoApproveAlways {
+		if err := confirmPrompt("Pruning from", p.Env.Spec.Namespace, kube.Info()); err != nil {
+			return err
+		}
 	}
 
 	// delete resources
