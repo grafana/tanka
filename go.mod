@@ -9,7 +9,7 @@ require (
 	github.com/fatih/structs v1.1.0
 	github.com/go-clix/cli v0.2.0
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-cmp v0.5.8
+	github.com/google/go-cmp v0.5.9
 	github.com/google/go-jsonnet v0.20.0
 	github.com/karrick/godirwalk v1.16.1
 	github.com/pkg/errors v0.9.1
