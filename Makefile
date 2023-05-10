@@ -6,7 +6,7 @@ GOX := $(BIN_DIR)/gox
 GOLINTER := $(GOPATH)/bin/golangci-lint
 
 $(GOLINTER):
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 
 lint: $(GOLINTER)
 	$(GOLINTER) run
