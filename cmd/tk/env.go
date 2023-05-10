@@ -114,11 +114,7 @@ func envSetCmd() *cli.Command {
 			return err
 		}
 
-		if err := writeJSON(cfg, filepath.Join(path, "spec.json")); err != nil {
-			return err
-		}
-
-		return nil
+		return writeJSON(cfg, filepath.Join(path, "spec.json"))
 	}
 	return cmd
 }
@@ -149,11 +145,7 @@ func envAddCmd() *cli.Command {
 			}
 		}
 
-		if err := addEnv(args[0], cfg, *inline); err != nil {
-			return err
-		}
-
-		return nil
+		return addEnv(args[0], cfg, *inline)
 	}
 	return cmd
 }

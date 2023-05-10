@@ -27,7 +27,7 @@ func (s StaticLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment,
 	return config, nil
 }
 
-func (s StaticLoader) Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+func (s StaticLoader) Peek(path string, _ LoaderOpts) (*v1alpha1.Environment, error) {
 	config, err := parseStaticSpec(path)
 	if err != nil {
 		return nil, err

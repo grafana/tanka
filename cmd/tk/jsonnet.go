@@ -38,11 +38,7 @@ func evalCmd() *cli.Command {
 			return err
 		}
 
-		if err := pageln(string(out)); err != nil {
-			return err
-		}
-
-		return nil
+		return pageln(string(out))
 	}
 
 	return cmd

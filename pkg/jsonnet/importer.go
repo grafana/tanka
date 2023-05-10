@@ -68,7 +68,7 @@ func (i *ExtendedImporter) Import(importedFrom, importedPath string) (contents j
 }
 
 // tkLoader provides `tk.libsonnet` from memory (builtin)
-func tkLoader(importedFrom, importedPath string) (contents *jsonnet.Contents, foundAt string, err error) {
+func tkLoader(_, importedPath string) (contents *jsonnet.Contents, foundAt string, err error) {
 	if importedPath != "tk" {
 		return nil, "", nil
 	}

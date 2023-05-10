@@ -37,12 +37,12 @@ func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment
 		names := make([]string, 0, len(envs))
 		for _, e := range envs {
 			// If there's a full match on the given name, use this environment
-			if name := e.Metadata().Name(); name == opts.Name {
+			name := e.Metadata().Name()
+			if name == opts.Name {
 				envs = manifest.List{e}
 				break
-			} else {
-				names = append(names, name)
 			}
+			names = append(names, name)
 		}
 		if len(envs) > 1 {
 			sort.Strings(names)
