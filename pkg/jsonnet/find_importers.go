@@ -226,9 +226,12 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 	rootVendor := filepath.Join(root, "vendor")
 	if strings.HasPrefix(searchForFile, rootVendor) {
 		for _, importer := range importers {
-			relativePath := strings.TrimPrefix(searchForFile, rootVendor)
-			relativePath = strings.TrimPrefix(relativePath, "/")
-			if _, ok := jsonnetFilesCache[root][filepath.Join(filepath.Dir(importer), "vendor", relativePath)]; !ok {
+			relativePath, err := filepath.Rel(rootVendor, searchForFile)
+			if err != nil {
+				return nil, err
+			}
+			vendoredFileInEnvironment := filepath.Join(filepath.Dir(importer), "vendor", relativePath)
+			if _, ok := jsonnetFilesCache[root][vendoredFileInEnvironment]; !ok {
 				filteredImporters = append(filteredImporters, importer)
 			}
 		}
