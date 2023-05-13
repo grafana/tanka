@@ -1,0 +1,3 @@
+{
+  test: 'global-vendor',
+}

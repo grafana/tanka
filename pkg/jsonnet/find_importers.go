@@ -220,8 +220,27 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 		}
 	}
 
-	importersCache[key] = importers
-	return importers, nil
+	// If we've found a vendored file, check that it's not overridden by a vendored file in the environment root
+	// In that case, we only want to keep the environment vendored file
+	var filteredImporters []string
+	rootVendor := filepath.Join(root, "vendor")
+	if strings.HasPrefix(searchForFile, rootVendor) {
+		for _, importer := range importers {
+			relativePath, err := filepath.Rel(rootVendor, searchForFile)
+			if err != nil {
+				return nil, err
+			}
+			vendoredFileInEnvironment := filepath.Join(filepath.Dir(importer), "vendor", relativePath)
+			if _, ok := jsonnetFilesCache[root][vendoredFileInEnvironment]; !ok {
+				filteredImporters = append(filteredImporters, importer)
+			}
+		}
+	} else {
+		filteredImporters = importers
+	}
+
+	importersCache[key] = filteredImporters
+	return filteredImporters, nil
 }
 
 func createJsonnetFileCache(root string) (map[string]*cachedJsonnetFile, error) {
