@@ -7,8 +7,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/rs/zerolog/log"
 )
 
 // Helm provides high level access to some Helm operations
@@ -60,7 +62,18 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 	}
 	defer os.RemoveAll(tempDir)
 
-	cmd := e.cmd("pull", chart,
+	chartPullPath := chart
+	chartRepoName, chartName := parseReqRepo(chart), parseReqName(chart)
+	for _, configuredRepo := range opts.Repositories {
+		if configuredRepo.Name == chartRepoName {
+			// OCI images are pulled with their full path
+			if strings.HasPrefix(configuredRepo.URL, "oci://") {
+				chartPullPath = fmt.Sprintf("%s/%s", configuredRepo.URL, chartName)
+			}
+		}
+	}
+
+	cmd := e.cmd("pull", chartPullPath,
 		"--version", version,
 		"--repository-config", repoFile,
 		"--destination", tempDir,
@@ -70,8 +83,6 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 	if err = cmd.Run(); err != nil {
 		return err
 	}
-
-	chartName := parseReqName(chart)
 
 	if opts.ExtractDirectory == "" {
 		opts.ExtractDirectory = chartName
@@ -121,6 +132,7 @@ func (e ExecHelm) ChartExists(chart string, opts *JsonnetOpts) (string, error) {
 func (e ExecHelm) cmd(action string, args ...string) *exec.Cmd {
 	argv := []string{action}
 	argv = append(argv, args...)
+	log.Debug().Strs("argv", argv).Msg("running helm")
 
 	cmd := helmCmd(argv...)
 	cmd.Stderr = os.Stderr

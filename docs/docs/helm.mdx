@@ -223,6 +223,26 @@ $ tk tool charts vendor
 
 Optionally, you can also pass the `--prune` flag to remove vendored charts that are no longer in the chartfile.
 
+#### OCI Registry Support
+
+Tanka supports pulling charts from OCI registries. To use one, the chart name must be split into two parts: the registry and the chart name. 
+
+As example, if you wanted to pull the `oci://public.ecr.aws/karpenter/karpenter:v0.27.3` image, your chartfile would look like this:
+
+```yaml
+version: 1
+directory: charts
+repositories:
+- name: karpenter
+  url: oci://public.ecr.aws/karpenter
+requires:
+- chart: karpenter/karpenter
+  directory: v0.27.3
+  version: v0.27.3
+```
+
+_Registry login is not supported yet._
+
 ## Troubleshooting
 
 ### Helm executable missing
