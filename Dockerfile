@@ -40,7 +40,7 @@ RUN export TAG=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kus
     tar -xvf kustomize.tgz
 
 # assemble final container
-FROM alpine:3.17
+FROM alpine:3.18
 RUN apk add --no-cache coreutils diffutils less git openssh-client
 COPY tk /usr/local/bin/tk
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
