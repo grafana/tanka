@@ -12,6 +12,10 @@ on:
       - synchronize
       - closed
 
+permissions:
+  contents: write
+  pull-requests: write
+
 concurrency: ci-${{ github.ref }}
 
 jobs:
@@ -46,4 +50,5 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: rossjrw/pr-preview-action@v1
         with:
+          deploy-repository: ${{ github.event.pull_request.head.repo.full_name }}
           source-dir: ./docs/public/
