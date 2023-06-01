@@ -263,7 +263,6 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 	// If we've found a vendored file, check that it's not overridden by a vendored file in the environment root
 	// In that case, we only want to keep the environment vendored file
 	var filteredImporters []string
-	rootVendor := filepath.Join(root, "vendor")
 	if strings.HasPrefix(searchForFile, rootVendor) {
 		for _, importer := range importers {
 			relativePath, err := filepath.Rel(rootVendor, searchForFile)
