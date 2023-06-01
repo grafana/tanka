@@ -3,6 +3,7 @@ package jsonnet
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -143,6 +144,59 @@ func findImportersTestCases(t testing.TB) []findImportersTestCase {
 				absPath(t, "testdata/findImporters/environments/lib-import-relative-to-env/folder1/folder2/main.jsonnet"),
 			},
 		},
+		{
+			name: "unused deleted file",
+			files: []string{
+				"deleted:testdata/findImporters/vendor/deleted-vendor/main.libsonnet",
+			},
+			expectedImporters: nil,
+		},
+		{
+			name: "deleted local path that is still potentially imported",
+			files: []string{
+				"deleted:testdata/findImporters/environments/using-deleted-stuff/my-import-dir/main.libsonnet",
+			},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/using-deleted-stuff/main.jsonnet"),
+			},
+		},
+		{
+			name: "deleted lib that is still potentially imported",
+			files: []string{
+				"deleted:testdata/findImporters/lib/my-import-dir/main.libsonnet",
+			},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/using-deleted-stuff/main.jsonnet"),
+			},
+		},
+		{
+			name: "deleted vendor that is still potentially imported",
+			files: []string{
+				"deleted:testdata/findImporters/vendor/my-import-dir/main.libsonnet",
+			},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/using-deleted-stuff/main.jsonnet"),
+			},
+		},
+		{
+			name: "deleted lib that is still potentially imported, relative path from root",
+			files: []string{
+				"deleted:lib/my-import-dir/main.libsonnet",
+			},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/using-deleted-stuff/main.jsonnet"),
+			},
+		},
+		{
+			// All files in an environment are considered to be imported by the main file, so the same should apply for deleted files
+			name: "deleted dir in environment",
+			files: []string{
+				"deleted:testdata/findImporters/environments/no-imports/deleted-dir/deleted-file.libsonnet",
+			},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/no-imports/main.jsonnet"),
+			},
+		},
 	}
 }
 
@@ -154,6 +208,11 @@ func TestFindImportersForFiles(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, files)
 	for _, file := range files {
+		// This project is known to be invalid (as the name suggests)
+		if strings.Contains(file, "using-deleted-stuff") {
+			continue
+		}
+
 		// Skip non-main files
 		if filepath.Base(file) != jpath.DefaultEntrypoint {
 			continue
