@@ -113,6 +113,31 @@ When these flags are passed, Tanka will:
 2. Generate the manifests for the targeted environments into the output directory.
 3. Add in the new manifests entries into the `manifest.json` file and re-export it.
 
+#### Finding out which environments to export
+
+Tanka provides the `tk tool importers` command to figure out which `main.jsonnet` need to be re-exported based on what files were modified in a workspace.
+
+If, for example, the `lib/my-lib/main.libsonnet` file was modified, you could run the command like this to find which files to export:
+
+```console
+# Find out which envs to re-export
+$ tk tool importers lib/my-lib/main.libsonnet
+my-repo-path/jsonnet/environments/my-env/main.jsonnet
+
+# Re-export the envs
+$ tk export myoutputdir my-repo-path/jsonnet/environments/my-env/main.jsonnet --merge-strategy=replace-envs
+```
+
+Note that deleted environments need special consideration when doing this.
+The `tk tool importers` utility only works with existing files so deleting an environment will result in stale `manifest.json` entries and moving an environment will result in manifest conflicts.
+In order to correctly handle deleted environments, they need to be passed to the export command:
+
+```console
+$ tk export myoutputdir my-repo-path/jsonnet/environments/my-new-env-path/main.jsonnet --merge-strategy=replace-envs \
+  --merge-deleted-envs my-repo-path/jsonnet/environments/my-old-env-path/main.jsonnet \
+  --merge-deleted-envs my-repo-path/jsonnet/environments/other-deleted-env-path/main.jsonnet
+```
+
 ### Using a memory ballast
 
 _Read [this blog post](https://blog.twitch.tv/en/2019/04/10/go-memory-ballast-how-i-learnt-to-stop-worrying-and-love-the-heap/) for more information about memory ballasts._

@@ -121,6 +121,25 @@ func TestExportEnvironments(t *testing.T) {
     "static/updated-deployment.yaml": "test-export-envs/static-env/main.jsonnet",
     "static/updated-service.yaml": "test-export-envs/static-env/main.jsonnet"
 }`)
+
+	// Re-export and delete the files of one env
+	opts.Opts.ExtCode = jsonnet.InjectedCode{
+		"deploymentName": "'updated-again-deployment'",
+		"serviceName":    "'updated-again-service'",
+	}
+	opts.MergeDeletedEnvs = []string{"test-export-envs/inline-envs/main.jsonnet"}
+	require.NoError(t, ExportEnvironments(staticEnv, tempDir, opts))
+	checkFiles(t, tempDir, []string{
+		filepath.Join(tempDir, "static", "updated-again-deployment.yaml"),
+		filepath.Join(tempDir, "static", "updated-again-service.yaml"),
+		filepath.Join(tempDir, "manifest.json"),
+	})
+	manifestContent, err = os.ReadFile(filepath.Join(tempDir, "manifest.json"))
+	require.NoError(t, err)
+	assert.Equal(t, string(manifestContent), `{
+    "static/updated-again-deployment.yaml": "test-export-envs/static-env/main.jsonnet",
+    "static/updated-again-service.yaml": "test-export-envs/static-env/main.jsonnet"
+}`)
 }
 
 func BenchmarkExportEnvironmentsWithReplaceEnvs(b *testing.B) {
