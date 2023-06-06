@@ -61,10 +61,5 @@ module.exports = {
         precachePages: [`/`, `/install`, `/tutorial/overview`],
       },
     },
-
-    {
-      resolve: `gatsby-plugin-algolia-docsearch`,
-      options: require("./algolia.json"),
-    },
   ],
 }
