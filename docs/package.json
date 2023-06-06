@@ -12,7 +12,6 @@
     "gatsby-plugin-algolia-docsearch": "^1.0.5",
     "gatsby-plugin-catch-links": "^2.1.21",
     "gatsby-plugin-manifest": "^2.2.34",
-    "gatsby-plugin-netlify-cache": "^1.2.0",
     "gatsby-plugin-offline": "^3.0.30",
     "gatsby-plugin-sharp": "^2.3.10",
     "gatsby-remark-images": "^3.1.39",
