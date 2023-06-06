@@ -27,7 +27,7 @@ workbox.core.clientsClaim();
  */
 self.__precacheManifest = [
   {
-    "url": "webpack-runtime-6399d8e8e64c7b68a9e1.js"
+    "url": "webpack-runtime-1770f7ce9a49eec99284.js"
   },
   {
     "url": "framework-3d5d6f3c5ba6d5f455c5.js"
@@ -46,7 +46,7 @@ self.__precacheManifest = [
   },
   {
     "url": "offline-plugin-app-shell-fallback/index.html",
-    "revision": "544ac8ea62bdc019d4b20e834b041dbc"
+    "revision": "a579b4490ef73c0e57d2914906a8f828"
   },
   {
     "url": "component---cache-caches-gatsby-plugin-offline-app-shell-js-099d9276a41f4ba01a3c.js"
@@ -57,11 +57,11 @@ self.__precacheManifest = [
   },
   {
     "url": "page-data/sq/d/1635659820.json",
-    "revision": "faac50d5c99860a7642458d76665843d"
+    "revision": "721f4f082687d5ea60fe94299d30ae8f"
   },
   {
     "url": "page-data/app-data.json",
-    "revision": "ac635d58107e2a9ff53be93a4b1af960"
+    "revision": "3611a8142183c07bd6e5221c470087dc"
   },
   {
     "url": "polyfill-8d34c62e07e660a83f29.js"
@@ -74,11 +74,11 @@ self.__precacheManifest = [
     "revision": "ae1c67dd0d8b8a6bfb1addee109d1e31"
   },
   {
-    "url": "component---docs-installation-mdx-470fee8f790055436702.js"
+    "url": "component---docs-installation-mdx-d396878a684593700b0b.js"
   },
   {
     "url": "page-data/install/page-data.json",
-    "revision": "5de2f6c35bd5eab44b36f293d9e1acd0"
+    "revision": "70e59f6d7f4c06980a518910dbeba161"
   },
   {
     "url": "component---docs-tutorial-overview-mdx-9cae584c0d3a29711940.js"
