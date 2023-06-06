@@ -1,14 +1,12 @@
 package helm
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/Masterminds/semver"
 	"github.com/rs/zerolog/log"
 	"sigs.k8s.io/yaml"
 )
@@ -75,8 +73,8 @@ type Charts struct {
 
 // chartManifest represents a Helm chart's Chart.yaml
 type chartManifest struct {
-	Name    string         `yaml:"name"`
-	Version semver.Version `yaml:"version"`
+	Name    string `yaml:"name"`
+	Version string `yaml:"version"`
 }
 
 // ChartDir returns the directory pulled charts are saved in
@@ -137,7 +135,7 @@ func (c Charts) Vendor(prune bool) error {
 				return fmt.Errorf("unmarshalling chart manifest: %w", err)
 			}
 
-			if chartYAML.Version.String() == r.Version.String() {
+			if chartYAML.Version == r.Version {
 				log.Info().Msgf("%s exists", r)
 				continue
 			}
@@ -165,7 +163,7 @@ func (c Charts) Vendor(prune bool) error {
 		if repoName := parseReqRepo(r.Chart); !c.Manifest.Repositories.HasName(repoName) {
 			return fmt.Errorf("repository %q not found for chart %q", repoName, r.Chart)
 		}
-		err := c.Helm.Pull(r.Chart, r.Version.String(), PullOpts{
+		err := c.Helm.Pull(r.Chart, r.Version, PullOpts{
 			Destination:      dir,
 			ExtractDirectory: r.Directory,
 			Opts:             Opts{Repositories: c.Manifest.Repositories},
@@ -174,7 +172,7 @@ func (c Charts) Vendor(prune bool) error {
 			return err
 		}
 
-		log.Info().Msgf("%s@%s downloaded", r.Chart, r.Version.String())
+		log.Info().Msgf("%s@%s downloaded", r.Chart, r.Version)
 	}
 
 	if prune {
@@ -307,14 +305,7 @@ func parseReq(s string) (*Requirement, error) {
 		return nil, fmt.Errorf("not of form 'repo/chart@version(:path)' where repo contains no special characters")
 	}
 
-	chart := matches[1]
-
-	ver, err := semver.NewVersion(matches[2])
-	if errors.Is(err, semver.ErrInvalidSemVer) {
-		return nil, fmt.Errorf("version is invalid: %s", matches[2])
-	} else if err != nil {
-		return nil, fmt.Errorf("error parsing semver: %s", err)
-	}
+	chart, ver := matches[1], matches[2]
 
 	directory := ""
 	if len(matches) == 4 {
@@ -323,7 +314,7 @@ func parseReq(s string) (*Requirement, error) {
 
 	return &Requirement{
 		Chart:     chart,
-		Version:   *ver,
+		Version:   ver,
 		Directory: directory,
 	}, nil
 }

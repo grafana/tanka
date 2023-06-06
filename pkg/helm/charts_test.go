@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Masterminds/semver"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,21 +23,16 @@ func TestParseReq(t *testing.T) {
 			input: "stable/package@1.0.0",
 			expected: &Requirement{
 				Chart:     "stable/package",
-				Version:   *semver.MustParse("1.0.0"),
+				Version:   "1.0.0",
 				Directory: "",
 			},
-		},
-		{
-			name:  "invalid-semver",
-			input: "stable/package@not-semver",
-			err:   fmt.Errorf("version is invalid: not-semver"),
 		},
 		{
 			name:  "with-path",
 			input: "stable/package-name@1.0.0:my-path",
 			expected: &Requirement{
 				Chart:     "stable/package-name",
-				Version:   *semver.MustParse("1.0.0"),
+				Version:   "1.0.0",
 				Directory: "my-path",
 			},
 		},
@@ -47,7 +41,7 @@ func TestParseReq(t *testing.T) {
 			input: "stable/package@v1.24.0:my weird-path_test",
 			expected: &Requirement{
 				Chart:     "stable/package",
-				Version:   *semver.MustParse("v1.24.0"),
+				Version:   "v1.24.0",
 				Directory: "my weird-path_test",
 			},
 		},
@@ -126,6 +120,24 @@ func TestAdd(t *testing.T) {
 	assert.Contains(t, string(chartContent), `version: 11.12.0`)
 }
 
+func TestAddOCI(t *testing.T) {
+	tempDir := t.TempDir()
+	c, err := InitChartfile(filepath.Join(tempDir, Filename))
+	require.NoError(t, err)
+
+	err = c.AddRepos(Repo{Name: "karpenter", URL: "oci://public.ecr.aws/karpenter"})
+	assert.NoError(t, err)
+
+	err = c.Add([]string{"karpenter/karpenter@v0.27.1"})
+	assert.NoError(t, err)
+
+	// Check file contents
+	listResult, err := os.ReadDir(filepath.Join(tempDir, "charts"))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(listResult))
+	assert.Equal(t, "karpenter", listResult[0].Name())
+}
+
 func TestRevendorDeletedFiles(t *testing.T) {
 	tempDir := t.TempDir()
 	c, err := InitChartfile(filepath.Join(tempDir, Filename))
@@ -202,7 +214,7 @@ func TestInvalidChartName(t *testing.T) {
 
 	c.Manifest.Requires = append(c.Manifest.Requires, Requirement{
 		Chart:   "noslash",
-		Version: *semver.MustParse("1.0.0"),
+		Version: "1.0.0",
 	})
 
 	err = c.Vendor(false)

@@ -3,8 +3,6 @@ package helm
 import (
 	"fmt"
 	"strings"
-
-	"github.com/Masterminds/semver"
 )
 
 const (
@@ -73,9 +71,9 @@ func (r Repos) HasName(repoName string) bool {
 // Requirement describes a single required Helm Chart.
 // Both, Chart and Version are required
 type Requirement struct {
-	Chart     string         `json:"chart"`
-	Version   semver.Version `json:"version"`
-	Directory string         `json:"directory,omitempty"`
+	Chart     string `json:"chart"`
+	Version   string `json:"version"`
+	Directory string `json:"directory,omitempty"`
 }
 
 func (r Requirement) String() string {
@@ -83,7 +81,7 @@ func (r Requirement) String() string {
 	if dir == "" {
 		dir = parseReqName(r.Chart)
 	}
-	return fmt.Sprintf("%s@%s (dir: %s)", r.Chart, r.Version.String(), dir)
+	return fmt.Sprintf("%s@%s (dir: %s)", r.Chart, r.Version, dir)
 }
 
 // Requirements is an aggregate of all required Charts
@@ -115,7 +113,7 @@ func (r Requirements) Validate() error {
 			dir = parseReqName(req.Chart)
 		}
 		if previous, ok := outputDirs[dir]; ok {
-			errs = append(errs, fmt.Sprintf(`output directory %q is used twice, by charts "%s@%s" and "%s@%s"`, dir, previous.Chart, previous.Version.String(), req.Chart, req.Version.String()))
+			errs = append(errs, fmt.Sprintf(`output directory %q is used twice, by charts "%s@%s" and "%s@%s"`, dir, previous.Chart, previous.Version, req.Chart, req.Version))
 		}
 		outputDirs[dir] = req
 	}
