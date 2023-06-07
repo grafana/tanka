@@ -165,13 +165,18 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 	// - if no base is found, all main files in child dirs will be considered importers
 	rootVendor := filepath.Join(root, "vendor")
 	rootLib := filepath.Join(root, "lib")
-	searchedFileIsLibOrVendored := strings.HasPrefix(searchForFile, rootVendor) || strings.HasPrefix(searchForFile, rootLib)
+	isFileLibOrVendored := func(file string) bool {
+		return strings.HasPrefix(file, rootVendor) || strings.HasPrefix(file, rootLib)
+	}
+	searchedFileIsLibOrVendored := isFileLibOrVendored(searchForFile)
 	if !searchedFileIsLibOrVendored {
 		searchedDir := filepath.Dir(searchForFile)
 		searchedFileEntrypoint, err := jpath.Entrypoint(searchedDir)
 		if err == nil && searchedFileEntrypoint != "" {
+			// Found the main file for the searched file, add it as an importer
 			importers = append(importers, searchedFileEntrypoint)
 		} else {
+			// No main file found, add all main files in child dirs as importers
 			files, err := FindFiles(searchedDir, nil)
 			if err != nil {
 				return nil, err
@@ -189,7 +194,7 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 			continue
 		}
 
-		if !searchedFileIsLibOrVendored && (strings.HasPrefix(jsonnetFilePath, rootVendor) || strings.HasPrefix(jsonnetFilePath, rootLib)) {
+		if !searchedFileIsLibOrVendored && isFileLibOrVendored(jsonnetFilePath) {
 			// Skip the file if it's a vendored or lib file and the searched file is an environment file
 			// Libs and vendored files cannot import environment files
 			continue
