@@ -64,7 +64,7 @@ steps:
 - commands:
   - go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-pr.txt
   - git fetch origin main
-  - git checkout main
+  - git reset --hard origin/main
   - go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-main.txt
   - go install golang.org/x/perf/cmd/...@latest
   - benchstat bench-main.txt bench-pr.txt
@@ -306,6 +306,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: 060bcec4c9fbea042e7b70478a9ea0255de0f1e245f3dd031b02d7ca83ef5067
+hmac: f0dfa2a5202af05dbfca14e09d1c66222bf6d670d77b5f41b66d696985e89fb7
 
 ...

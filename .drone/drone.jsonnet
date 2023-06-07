@@ -85,7 +85,7 @@ local docker(arch, depends_on=[]) =
       go('benchmark', [
         'go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-pr.txt',
         'git fetch origin main',
-        'git checkout main',
+        'git reset --hard origin/main',
         'go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-main.txt',
         'go install golang.org/x/perf/cmd/...@latest',
         'benchstat bench-main.txt bench-pr.txt',
