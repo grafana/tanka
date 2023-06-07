@@ -23,8 +23,8 @@ require (
 	golang.org/x/text v0.9.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.23.6
-	k8s.io/utils v0.0.0-20211116205334-6203023598ed
+	k8s.io/apimachinery v0.27.2
+	k8s.io/utils v0.0.0-20230209194617-a36077c30491
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -32,7 +32,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-logr/logr v1.2.2 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -47,5 +47,5 @@ require (
 	github.com/spf13/cast v1.4.1 // indirect
 	golang.org/x/crypto v0.3.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
-	k8s.io/klog/v2 v2.40.1 // indirect
+	k8s.io/klog/v2 v2.90.1 // indirect
 )
