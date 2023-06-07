@@ -139,6 +139,15 @@ func importersCmd() *cli.Command {
 	cmd := &cli.Command{
 		Use:   "importers <file> <file...>",
 		Short: "list all environments that either directly or transitively import the given files",
+		Long: `list all environments that either directly or transitively import the given files
+
+As optimization,
+if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (located at <tk-root>/lib/), we assume:
+- it is used in a Tanka environment
+- it will not be imported by any lib or vendor files
+- the environment base (closest main file in parent dirs) will be considered an importer
+- if no base is found, all main files in child dirs will be considered importers
+`,
 		Args: cli.Args{
 			Validator: cli.ArgsMin(1),
 			Predictor: complete.PredictFiles("*"),

@@ -49,6 +49,10 @@ func FindImporterForFiles(root string, files []string) ([]string, error) {
 			return nil, err
 		}
 		for _, importer := range newImporters {
+			importer, err = evalSymlinks(importer)
+			if err != nil {
+				return nil, err
+			}
 			importers[importer] = struct{}{}
 		}
 	}
@@ -154,7 +158,48 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 	var importers []string
 	var intermediateImporters []string
 
+	// If the file is not a vendored or a lib file, we assume:
+	// - it is used in a Tanka environment
+	// - it will not be imported by any lib or vendor files
+	// - the environment base (closest main file in parent dirs) will be considered an importer
+	// - if no base is found, all main files in child dirs will be considered importers
+	rootVendor := filepath.Join(root, "vendor")
+	rootLib := filepath.Join(root, "lib")
+	isFileLibOrVendored := func(file string) bool {
+		return strings.HasPrefix(file, rootVendor) || strings.HasPrefix(file, rootLib)
+	}
+	searchedFileIsLibOrVendored := isFileLibOrVendored(searchForFile)
+	if !searchedFileIsLibOrVendored {
+		searchedDir := filepath.Dir(searchForFile)
+		searchedFileEntrypoint, err := jpath.Entrypoint(searchedDir)
+		if err == nil && searchedFileEntrypoint != "" {
+			// Found the main file for the searched file, add it as an importer
+			importers = append(importers, searchedFileEntrypoint)
+		} else {
+			// No main file found, add all main files in child dirs as importers
+			files, err := FindFiles(searchedDir, nil)
+			if err != nil {
+				return nil, err
+			}
+			for _, file := range files {
+				if filepath.Base(file) == jpath.DefaultEntrypoint {
+					importers = append(importers, file)
+				}
+			}
+		}
+	}
+
 	for jsonnetFilePath, jsonnetFileContent := range jsonnetFiles {
+		if len(jsonnetFileContent.Imports) == 0 {
+			continue
+		}
+
+		if !searchedFileIsLibOrVendored && isFileLibOrVendored(jsonnetFilePath) {
+			// Skip the file if it's a vendored or lib file and the searched file is an environment file
+			// Libs and vendored files cannot import environment files
+			continue
+		}
+
 		isImporter := false
 		// For all imports in all jsonnet files, check if they import the file we're looking for
 		for _, importPath := range jsonnetFileContent.Imports {
@@ -223,7 +268,6 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 	// If we've found a vendored file, check that it's not overridden by a vendored file in the environment root
 	// In that case, we only want to keep the environment vendored file
 	var filteredImporters []string
-	rootVendor := filepath.Join(root, "vendor")
 	if strings.HasPrefix(searchForFile, rootVendor) {
 		for _, importer := range importers {
 			relativePath, err := filepath.Rel(rootVendor, searchForFile)
