@@ -40,6 +40,7 @@ func exportCmd() *cli.Command {
 		panic(err)
 	}
 	mergeStrategy := cmd.Flags().String("merge-strategy", "", "What to do when exporting to an existing directory. The default setting is to disallow exporting to an existing directory. Values: 'fail-on-conflicts', 'replace-envs'")
+	mergeDeletedEnvs := cmd.Flags().StringArray("merge-deleted-envs", nil, "Tanka main files that have been deleted. This is used when using a merge strategy to also delete the files of these deleted environments.")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -65,8 +66,9 @@ func exportCmd() *cli.Command {
 				Filters:     filters,
 				Name:        vars.name,
 			},
-			Selector:    getLabelSelector(),
-			Parallelism: *parallel,
+			Selector:         getLabelSelector(),
+			Parallelism:      *parallel,
+			MergeDeletedEnvs: *mergeDeletedEnvs,
 		}
 
 		if opts.MergeStrategy, err = determineMergeStrategy(*merge, *mergeStrategy); err != nil {

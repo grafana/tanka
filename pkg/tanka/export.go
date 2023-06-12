@@ -56,6 +56,9 @@ type ExportEnvOpts struct {
 	// - fail-on-conflicts: fail when an exported file already exists
 	// - replace-envs: delete files previously exported by the targeted envs and re-export them
 	MergeStrategy ExportMergeStrategy
+	// Environments (main.jsonnet files) that have been deleted since the last export.
+	// This is used when using a merge strategy to delete the files of these deleted environments.
+	MergeDeletedEnvs []string
 }
 
 func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
@@ -73,9 +76,14 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 
 	// delete files previously exported by the targeted envs.
 	if opts.MergeStrategy == ExportMergeStrategyReplaceEnvs {
-		if err := deletePreviouslyExportedManifests(to, envs); err != nil {
+		if err := deletePreviouslyExportedManifestsFromTankaEnvs(to, envs); err != nil {
 			return fmt.Errorf("deleting previously exported manifests: %w", err)
 		}
+	}
+
+	// delete files that were exported by environments that have been deleted since the last export.
+	if err := deletePreviouslyExportedManifests(to, opts.MergeDeletedEnvs); err != nil {
+		return fmt.Errorf("deleting previously exported manifests from deleted environments: %w", err)
 	}
 
 	// get all environments for paths
@@ -174,7 +182,24 @@ func dirEmpty(dir string) (bool, error) {
 	return false, err
 }
 
-func deletePreviouslyExportedManifests(path string, envs []*v1alpha1.Environment) error {
+func deletePreviouslyExportedManifestsFromTankaEnvs(path string, envs []*v1alpha1.Environment) error {
+	envNames := []string{}
+	for _, env := range envs {
+		envNames = append(envNames, env.Metadata.Namespace)
+	}
+	return deletePreviouslyExportedManifests(path, envNames)
+}
+
+func deletePreviouslyExportedManifests(path string, tankaEnvNames []string) error {
+	if len(tankaEnvNames) == 0 {
+		return nil
+	}
+
+	envNamesMap := make(map[string]struct{})
+	for _, envName := range tankaEnvNames {
+		envNamesMap[envName] = struct{}{}
+	}
+
 	fileToEnvMap := make(map[string]string)
 
 	manifestFilePath := filepath.Join(path, manifestFile)
@@ -190,14 +215,9 @@ func deletePreviouslyExportedManifests(path string, envs []*v1alpha1.Environment
 		return err
 	}
 
-	envNames := make(map[string]struct{})
-	for _, env := range envs {
-		envNames[env.Metadata.Namespace] = struct{}{}
-	}
-
 	var deletedManifestKeys []string
 	for exportedManifest, manifestEnv := range fileToEnvMap {
-		if _, ok := envNames[manifestEnv]; ok {
+		if _, ok := envNamesMap[manifestEnv]; ok {
 			deletedManifestKeys = append(deletedManifestKeys, exportedManifest)
 			if err := os.Remove(filepath.Join(path, exportedManifest)); err != nil {
 				return err
