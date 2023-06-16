@@ -2,7 +2,9 @@ package native
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"io"
 	"regexp"
 	"strings"
@@ -32,6 +34,9 @@ func Funcs() []*jsonnet.NativeFunction {
 		regexMatch(),
 		regexSubst(),
 
+		// Hash functions
+		hashSha256(),
+
 		helm.NativeFunc(helm.ExecHelm{}),
 		kustomize.NativeFunc(kustomize.ExecKustomize{}),
 	}
@@ -46,6 +51,18 @@ func parseJSON() *jsonnet.NativeFunction {
 			data := []byte(dataString[0].(string))
 			err = json.Unmarshal(data, &res)
 			return
+		},
+	}
+}
+
+func hashSha256() *jsonnet.NativeFunction {
+	return &jsonnet.NativeFunction{
+		Name:   "sha256",
+		Params: ast.Identifiers{"str"},
+		Func: func(dataString []interface{}) (interface{}, error) {
+			h := sha256.New()
+			h.Write([]byte(dataString[0].(string)))
+			return fmt.Sprintf("%x", h.Sum(nil)), nil
 		},
 	}
 }

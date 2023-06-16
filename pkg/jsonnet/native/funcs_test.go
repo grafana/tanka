@@ -21,6 +21,14 @@ func callNative(name string, data []interface{}) (res interface{}, err error, ca
 	return nil, nil, fmt.Errorf("could not find native function %s", name)
 }
 
+func TestSha256(t *testing.T) {
+	ret, err, callerr := callNative("sha256", []interface{}{"foo"})
+
+	assert.Empty(t, callerr)
+	assert.Equal(t, "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae", ret)
+	assert.Empty(t, err)
+}
+
 func TestParseJSONEmptyDict(t *testing.T) {
 	ret, err, callerr := callNative("parseJson", []interface{}{"{}"})
 
