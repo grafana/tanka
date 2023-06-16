@@ -18,6 +18,32 @@ To use them in your code, you need to access them using `std.native` from the st
 
 `std.native` takes the native function's name as a `string` argument and returns a `function`, which is called using the second set of parentheses.
 
+## sha256
+
+### Signature
+
+```ts
+sha256(string str) string
+```
+
+`sha256` computes the SHA256 sum of the given string.
+
+### Examples
+
+```jsonnet
+{
+  sum: std.native('sha256')('Hello, World!'),
+}
+```
+
+Evaluating with Tanka results in the JSON:
+
+```json
+{
+  "sum": "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
+}
+```
+
 ## parseJson
 
 ### Signature
