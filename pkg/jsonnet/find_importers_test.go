@@ -201,6 +201,7 @@ func findImportersTestCases(t testing.TB) []findImportersTestCase {
 }
 
 func TestFindImportersForFiles(t *testing.T) {
+	// Sanity check
 	// Make sure the main files all eval correctly
 	// We want to make sure that the importers command works correctly,
 	// but there's no point in testing on invalid jsonnet files

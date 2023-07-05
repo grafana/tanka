@@ -39,15 +39,15 @@ func FindImporterForFiles(root string, files []string) ([]string, error) {
 	var filesToCheck, existingFiles []string
 	for _, file := range files {
 		if strings.HasPrefix(file, "deleted:") {
-			file = strings.TrimPrefix(file, "deleted:")
+			deletedFile := strings.TrimPrefix(file, "deleted:")
 			// Try with both the absolute path and the path relative to the root
-			if !filepath.IsAbs(file) {
-				absFilePath, err := filepath.Abs(file)
+			if !filepath.IsAbs(deletedFile) {
+				absFilePath, err := filepath.Abs(deletedFile)
 				if err != nil {
 					return nil, err
 				}
 				filesToCheck = append(filesToCheck, absFilePath)
-				filesToCheck = append(filesToCheck, filepath.Clean(filepath.Join(root, file)))
+				filesToCheck = append(filesToCheck, filepath.Clean(filepath.Join(root, deletedFile)))
 			}
 			continue
 		}
