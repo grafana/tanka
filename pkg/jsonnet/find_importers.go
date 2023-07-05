@@ -1,6 +1,7 @@
 package jsonnet
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -34,12 +35,33 @@ func FindImporterForFiles(root string, files []string) ([]string, error) {
 
 	importers := map[string]struct{}{}
 
-	if files, err = expandSymlinksInFiles(root, files); err != nil {
-		return nil, err
+	// Handle files prefixed with `deleted:`. They need to be made absolute and we shouldn't try to find symlinks for them
+	var filesToCheck, existingFiles []string
+	for _, file := range files {
+		if strings.HasPrefix(file, "deleted:") {
+			deletedFile := strings.TrimPrefix(file, "deleted:")
+			// Try with both the absolute path and the path relative to the root
+			if !filepath.IsAbs(deletedFile) {
+				absFilePath, err := filepath.Abs(deletedFile)
+				if err != nil {
+					return nil, err
+				}
+				filesToCheck = append(filesToCheck, absFilePath)
+				filesToCheck = append(filesToCheck, filepath.Clean(filepath.Join(root, deletedFile)))
+			}
+			continue
+		}
+
+		existingFiles = append(existingFiles, file)
 	}
 
+	if existingFiles, err = expandSymlinksInFiles(root, existingFiles); err != nil {
+		return nil, err
+	}
+	filesToCheck = append(filesToCheck, existingFiles...)
+
 	// Loop through all given files and add their importers to the list
-	for _, file := range files {
+	for _, file := range filesToCheck {
 		if filepath.Base(file) == jpath.DefaultEntrypoint {
 			importers[file] = struct{}{}
 		}
@@ -171,15 +193,14 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 	searchedFileIsLibOrVendored := isFileLibOrVendored(searchForFile)
 	if !searchedFileIsLibOrVendored {
 		searchedDir := filepath.Dir(searchForFile)
-		searchedFileEntrypoint, err := jpath.Entrypoint(searchedDir)
-		if err == nil && searchedFileEntrypoint != "" {
+		if entrypoint := findEntrypoint(searchedDir); entrypoint != "" {
 			// Found the main file for the searched file, add it as an importer
-			importers = append(importers, searchedFileEntrypoint)
-		} else {
+			importers = append(importers, entrypoint)
+		} else if _, err := os.Stat(searchedDir); err == nil {
 			// No main file found, add all main files in child dirs as importers
 			files, err := FindFiles(searchedDir, nil)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("failed to find files in %s: %w", searchedDir, err)
 			}
 			for _, file := range files {
 				if filepath.Base(file) == jpath.DefaultEntrypoint {
@@ -315,6 +336,21 @@ func createJsonnetFileCache(root string) (map[string]*cachedJsonnetFile, error) 
 	}
 
 	return jsonnetFilesCache[root], nil
+}
+
+// findEntrypoint finds the nearest main.jsonnet file in the given file's directory or parent directories
+func findEntrypoint(searchedDir string) string {
+	for {
+		if _, err := os.Stat(searchedDir); err == nil {
+			break
+		}
+		searchedDir = filepath.Dir(searchedDir)
+	}
+	searchedFileEntrypoint, err := jpath.Entrypoint(searchedDir)
+	if err != nil {
+		return ""
+	}
+	return searchedFileEntrypoint
 }
 
 func pathMatches(path1, path2 string) bool {

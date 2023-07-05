@@ -137,9 +137,10 @@ func importsCmd() *cli.Command {
 
 func importersCmd() *cli.Command {
 	cmd := &cli.Command{
-		Use:   "importers <file> <file...>",
+		Use:   "importers <file> <file...> <deleted:file...>",
 		Short: "list all environments that either directly or transitively import the given files",
 		Long: `list all environments that either directly or transitively import the given files
+If the file being looked up was deleted, it should be prefixed with "deleted:".
 
 As optimization,
 if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (located at <tk-root>/lib/), we assume:
@@ -162,6 +163,9 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 		}
 
 		for _, f := range args {
+			if strings.HasPrefix(f, "deleted:") {
+				continue
+			}
 			if _, err := os.Stat(f); os.IsNotExist(err) {
 				return fmt.Errorf("file %q does not exist", f)
 			}
