@@ -197,6 +197,16 @@ func findImportersTestCases(t testing.TB) []findImportersTestCase {
 				absPath(t, "testdata/findImporters/environments/no-imports/main.jsonnet"),
 			},
 		},
+		{
+			name: "imports through a main file are followed",
+			files: []string{
+				"testdata/findImporters/environments/import-other-main-file/env2/file.libsonnet",
+			},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/import-other-main-file/env1/main.jsonnet"),
+				absPath(t, "testdata/findImporters/environments/import-other-main-file/env2/main.jsonnet"),
+			},
+		},
 	}
 }
 

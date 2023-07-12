@@ -266,9 +266,8 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 			if isImporter {
 				if jsonnetFileContent.IsMainFile {
 					importers = append(importers, jsonnetFilePath)
-				} else {
-					intermediateImporters = append(intermediateImporters, jsonnetFilePath)
 				}
+				intermediateImporters = append(intermediateImporters, jsonnetFilePath)
 				break
 			}
 		}

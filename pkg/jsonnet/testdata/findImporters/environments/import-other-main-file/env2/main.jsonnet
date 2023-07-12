@@ -1,0 +1,3 @@
+{
+  myfile: import 'file.libsonnet',
+}
