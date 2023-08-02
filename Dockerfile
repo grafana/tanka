@@ -39,10 +39,17 @@ RUN export TAG=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kus
     curl -SL "https://github.com/kubernetes-sigs/kustomize/releases/download/${TAG}/kustomize_${VERSION_TAG}_${OS}_${ARCH}.tar.gz" > kustomize.tgz && \
     tar -xvf kustomize.tgz
 
+FROM golang:1.20.4 as builder
+WORKDIR /app
+COPY . .
+RUN cp ./libjsonnet.so /usr/lib/
+RUN go build ./cmd/tk/
+
 # assemble final container
-FROM alpine:3.18
-RUN apk add --no-cache coreutils diffutils less git openssh-client
-COPY tk /usr/local/bin/tk
+FROM debian:bullseye-slim
+RUN apt update && apt install coreutils diffutils less git openssh-client -y
+COPY --from=builder /app/tk /usr/local/bin/tk
+COPY --from=builder /usr/lib/libjsonnet.so /usr/lib/libjsonnet.so
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=jb /usr/local/bin/jb /usr/local/bin/jb
 COPY --from=helm /tmp/helm/helm /usr/local/bin/helm

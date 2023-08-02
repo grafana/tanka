@@ -3,6 +3,7 @@ package jsonnet
 import (
 	"os"
 	"regexp"
+	"runtime"
 	"time"
 
 	jsonnet "github.com/google/go-jsonnet"
@@ -68,10 +69,11 @@ func (o Opts) Clone() Opts {
 	}
 
 	return Opts{
-		TLACode:     tlaCode,
-		ExtCode:     extCode,
-		ImportPaths: append([]string{}, o.ImportPaths...),
-		EvalScript:  o.EvalScript,
+		JsonnetImplementation: o.JsonnetImplementation,
+		TLACode:               tlaCode,
+		ExtCode:               extCode,
+		ImportPaths:           append([]string{}, o.ImportPaths...),
+		EvalScript:            o.EvalScript,
 
 		CachePath:        o.CachePath,
 		CachePathRegexes: o.CachePathRegexes,
@@ -105,13 +107,18 @@ func Evaluate(path, data string, opts Opts) (string, error) {
 type evalFunc func(vm types.JsonnetVM) (string, error)
 
 func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, error) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	var cache *FileEvalCache
 	if opts.CachePath != "" && opts.PathIsCached(path) {
 		cache = NewFileEvalCache(opts.CachePath)
 	}
 
 	// Create VM
-	jsonnetImpl := implementation.Get(opts.JsonnetImplementation)
+	jsonnetImpl, err := implementation.Get(opts.JsonnetImplementation)
+	if err != nil {
+		return "", err
+	}
 	jpath, _, _, err := jpath.Resolve(path, false)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving import paths")

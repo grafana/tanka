@@ -36,7 +36,7 @@ cross: $(GOX)
 	CGO_ENABLED=0 $(BIN_DIR)/gox -output="dist/{{.Dir}}-{{.OS}}-{{.Arch}}" -ldflags=${LDFLAGS} -arch="amd64 arm64 arm" -os="linux" -osarch="darwin/amd64" -osarch="darwin/arm64" -osarch="windows/amd64" ./cmd/tk
 
 # Docker container
-container: static
+container: 
 	docker build -t grafana/tanka .
 
 # CI
