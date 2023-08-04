@@ -3,6 +3,7 @@ package jsonnet
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -22,11 +23,17 @@ type LintOpts struct {
 
 	// Parallelism determines the number of workers that will process files
 	Parallelism int
+
+	Out io.Writer
 }
 
 // Lint takes a list of files and directories, processes them and prints
 // out to stderr if there are linting warnings
 func Lint(fds []string, opts *LintOpts) error {
+	if opts.Out == nil {
+		opts.Out = os.Stdout
+	}
+
 	var paths []string
 	for _, f := range fds {
 		fs, err := FindFiles(f, opts.Excludes)
@@ -37,42 +44,21 @@ func Lint(fds []string, opts *LintOpts) error {
 	}
 
 	type result struct {
-		failed bool
-		output string
+		success bool
+		output  string
 	}
 	fileCh := make(chan string, len(paths))
 	resultCh := make(chan result, len(paths))
 	lintWorker := func(fileCh <-chan string, resultCh chan result) {
 		for file := range fileCh {
-			buf := &bytes.Buffer{}
-			var err error
-			file, err = filepath.Abs(file)
-			if err != nil {
-				fmt.Fprintf(buf, "got an error getting the absolute path for %s: %v\n\n", file, err)
-				resultCh <- result{failed: true, output: buf.String()}
-				continue
-			}
-
-			log.Debug().Str("file", file).Msg("linting file")
-			startTime := time.Now()
-
-			vm := MakeVM(Opts{})
-			jpaths, _, _, err := jpath.Resolve(file, true)
-			if err != nil {
-				fmt.Fprintf(buf, "got an error getting JPATH for %s: %v\n\n", file, err)
-				resultCh <- result{failed: true, output: buf.String()}
-				continue
-			}
-
-			vm.Importer(NewExtendedImporter(jpaths))
-
-			content, _ := os.ReadFile(file)
-			failed := linter.LintSnippet(vm, buf, []linter.Snippet{{FileName: file, Code: string(content)}})
-			resultCh <- result{failed: failed, output: buf.String()}
-			log.Debug().Str("file", file).Dur("duration_ms", time.Since(startTime)).Msg("linted file")
+			buf, success := lintWithRecover(file)
+			resultCh <- result{success: success, output: buf.String()}
 		}
 	}
 
+	if opts.Parallelism <= 0 {
+		opts.Parallelism = 4
+	}
 	for i := 0; i < opts.Parallelism; i++ {
 		go lintWorker(fileCh, resultCh)
 	}
@@ -85,9 +71,9 @@ func Lint(fds []string, opts *LintOpts) error {
 	lintingFailed := false
 	for i := 0; i < len(paths); i++ {
 		result := <-resultCh
-		lintingFailed = lintingFailed || result.failed
+		lintingFailed = lintingFailed || !result.success
 		if result.output != "" {
-			fmt.Print(result.output)
+			fmt.Fprint(opts.Out, result.output)
 		}
 	}
 
@@ -95,4 +81,38 @@ func Lint(fds []string, opts *LintOpts) error {
 		return errors.New("Linting has failed for at least one file")
 	}
 	return nil
+}
+
+func lintWithRecover(file string) (buf bytes.Buffer, success bool) {
+	file, err := filepath.Abs(file)
+	if err != nil {
+		fmt.Fprintf(&buf, "got an error getting the absolute path for %s: %v\n\n", file, err)
+		return
+	}
+
+	log.Debug().Str("file", file).Msg("linting file")
+	startTime := time.Now()
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Fprintf(&buf, "caught a panic while linting %s: %v\n\n", file, err)
+		}
+		log.Debug().Str("file", file).Dur("duration_ms", time.Since(startTime)).Msg("linted file")
+	}()
+
+	content, err := os.ReadFile(file)
+	if err != nil {
+		fmt.Fprintf(&buf, "got an error reading file %s: %v\n\n", file, err)
+		return
+	}
+
+	vm := MakeVM(Opts{})
+	jpaths, _, _, err := jpath.Resolve(file, true)
+	if err != nil {
+		fmt.Fprintf(&buf, "got an error getting jpath for %s: %v\n\n", file, err)
+		return
+	}
+
+	vm.Importer(NewExtendedImporter(jpaths))
+	failed := linter.LintSnippet(vm, &buf, []linter.Snippet{{FileName: file, Code: string(content)}})
+	return buf, !failed
 }
