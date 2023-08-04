@@ -106,14 +106,15 @@ func lintWithRecover(file string) (buf bytes.Buffer, success bool) {
 		return
 	}
 
-	vm := MakeVM(Opts{})
 	jpaths, _, _, err := jpath.Resolve(file, true)
 	if err != nil {
 		fmt.Fprintf(&buf, "got an error getting jpath for %s: %v\n\n", file, err)
 		return
 	}
+	opts := Opts{ImportPaths: jpaths}
+	vm := VMPool.Get(opts)
+	defer VMPool.Release(vm, opts)
 
-	vm.Importer(NewExtendedImporter(jpaths))
 	failed := linter.LintSnippet(vm, &buf, []linter.Snippet{{FileName: file, Code: string(content)}})
 	return buf, !failed
 }

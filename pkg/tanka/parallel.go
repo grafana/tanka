@@ -2,6 +2,7 @@ package tanka
 
 import (
 	"fmt"
+	"math/rand"
 	"path/filepath"
 	"time"
 
@@ -34,8 +35,11 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 		go parallelWorker(jobsCh, outCh)
 	}
 
-	for _, env := range envs {
+	// shuffle the environments to increase the likelihood of reusing VMs
+	randInts := rand.Perm(len(envs))
+	for i := range envs {
 		o := opts.Opts
+		env := envs[randInts[i]]
 
 		// TODO: This is required because the map[string]string in here is not
 		// concurrency-safe. Instead of putting this burden on the caller, find
@@ -89,7 +93,7 @@ type parallelOut struct {
 
 func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
 	for job := range jobsCh {
-		log.Debug().Str("name", job.opts.Name).Str("path", job.path).Msg("Loading environment")
+		log.Trace().Str("name", job.opts.Name).Str("path", job.path).Msg("Loading environment")
 		startTime := time.Now()
 
 		env, err := LoadEnvironment(job.path, job.opts)

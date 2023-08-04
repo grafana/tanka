@@ -18,7 +18,7 @@ type testData struct {
 func loadFixture(name string) testData {
 	filename := filepath.Join("./testdata", name)
 
-	vm := jsonnet.MakeVM(jsonnet.Opts{
+	vm := jsonnet.VMPool.Get(jsonnet.Opts{
 		ImportPaths: []string{"./testdata"},
 	})
 

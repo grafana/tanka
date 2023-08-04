@@ -1,8 +1,12 @@
 package jsonnet
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
 	"os"
 	"regexp"
+	"sync"
 	"time"
 
 	jsonnet "github.com/google/go-jsonnet"
@@ -75,30 +79,66 @@ func (o Opts) Clone() Opts {
 	}
 }
 
-// MakeVM returns a Jsonnet VM with some extensions of Tanka, including:
+type vmPool struct {
+	mutex     sync.Mutex
+	available map[string][]*jsonnet.VM
+}
+
+var VMPool = vmPool{
+	available: map[string][]*jsonnet.VM{},
+}
+
+func optsHash(opts Opts) string {
+	hash := md5.New()
+	hash.Write([]byte(fmt.Sprintf("%s", opts.ExtCode)))
+	hash.Write([]byte(fmt.Sprintf("%s", opts.ImportPaths)))
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+// Get returns a Jsonnet VM with some extensions of Tanka, including:
 // - extended importer
 // - extCode and tlaCode applied
 // - native functions registered
-func MakeVM(opts Opts) *jsonnet.VM {
-	vm := jsonnet.MakeVM()
-	vm.Importer(NewExtendedImporter(opts.ImportPaths))
+// If a VM is available in the pool, it will be reused. Otherwise a new one will be created.
+func (p *vmPool) Get(opts Opts) *jsonnet.VM {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 
-	for k, v := range opts.ExtCode {
-		vm.ExtCode(k, v)
+	lastImport := opts.ImportPaths[len(opts.ImportPaths)-1]
+	var vm *jsonnet.VM
+	hash := optsHash(opts)
+	if cached := p.available[hash]; len(cached) > 0 {
+		log.Trace().Str("path", lastImport).Msg("reusing Jsonnet VM")
+		vm = cached[0]
+		p.available[hash] = cached[1:]
+	} else {
+		log.Trace().Str("path", lastImport).Msg("creating new Jsonnet VM")
+		vm = jsonnet.MakeVM()
+		if opts.MaxStack > 0 {
+			vm.MaxStack = opts.MaxStack
+		}
+		for _, nf := range native.Funcs() {
+			vm.NativeFunction(nf)
+		}
+		vm.Importer(NewExtendedImporter(opts.ImportPaths))
+
+		for k, v := range opts.ExtCode {
+			vm.ExtCode(k, v)
+		}
 	}
+
 	for k, v := range opts.TLACode {
 		vm.TLACode(k, v)
 	}
 
-	for _, nf := range native.Funcs() {
-		vm.NativeFunction(nf)
-	}
-
-	if opts.MaxStack > 0 {
-		vm.MaxStack = opts.MaxStack
-	}
-
 	return vm
+}
+
+// Release returns a Jsonnet VM to the pool
+func (p *vmPool) Release(vm *jsonnet.VM, opts Opts) {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	p.available[optsHash(opts)] = append(p.available[optsHash(opts)], vm)
 }
 
 // EvaluateFile evaluates the Jsonnet code in the given file and returns the
@@ -139,7 +179,8 @@ func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, e
 		return "", errors.Wrap(err, "resolving import paths")
 	}
 	opts.ImportPaths = jpath
-	vm := MakeVM(opts)
+	vm := VMPool.Get(opts)
+	defer VMPool.Release(vm, opts)
 
 	var hash string
 	if cache != nil {
