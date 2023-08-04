@@ -31,3 +31,21 @@ func TestEvalJsonnet(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, `"foovalue"`, strings.TrimSpace(json))
 }
+
+func TestEvalJsonnetWithExpression(t *testing.T) {
+	exprs := []string{`["testCase"]`, "testCase"}
+
+	for _, expr := range exprs {
+		t.Run(expr, func(t *testing.T) {
+			opts := jsonnet.Opts{
+				EvalScript: PatternEvalScript(expr),
+			}
+
+			// This will fail intermittently if TLAs are passed as positional
+			// parameters.
+			json, err := evalJsonnet("testdata/cases/object", opts)
+			assert.NoError(t, err)
+			assert.Equal(t, `"object"`, strings.TrimSpace(json))
+		})
+	}
+}

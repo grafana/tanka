@@ -51,7 +51,12 @@ function(%s)
 	return raw, nil
 }
 
-const PatternEvalScript = "main.%s"
+func PatternEvalScript(expr string) string {
+	if strings.HasPrefix(expr, "[") {
+		return fmt.Sprintf("main%s", expr)
+	}
+	return fmt.Sprintf("main.%s", expr)
+}
 
 // MetadataEvalScript finds the Environment object (without its .data object)
 const MetadataEvalScript = `
