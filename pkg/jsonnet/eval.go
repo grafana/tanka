@@ -88,13 +88,6 @@ var VMPool = vmPool{
 	available: map[string][]*jsonnet.VM{},
 }
 
-func optsHash(opts Opts) string {
-	hash := md5.New()
-	hash.Write([]byte(fmt.Sprintf("%s", opts.ExtCode)))
-	hash.Write([]byte(fmt.Sprintf("%s", opts.ImportPaths)))
-	return hex.EncodeToString(hash.Sum(nil))
-}
-
 // Get returns a Jsonnet VM with some extensions of Tanka, including:
 // - extended importer
 // - extCode and tlaCode applied
@@ -104,29 +97,21 @@ func (p *vmPool) Get(opts Opts) *jsonnet.VM {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
+	// Get the last import to use as a log context. It represents the eval path
 	lastImport := opts.ImportPaths[len(opts.ImportPaths)-1]
 	var vm *jsonnet.VM
-	hash := optsHash(opts)
+	hash := hashOptions(opts)
 	if cached := p.available[hash]; len(cached) > 0 {
 		log.Trace().Str("path", lastImport).Msg("reusing Jsonnet VM")
 		vm = cached[0]
 		p.available[hash] = cached[1:]
 	} else {
 		log.Trace().Str("path", lastImport).Msg("creating new Jsonnet VM")
-		vm = jsonnet.MakeVM()
-		if opts.MaxStack > 0 {
-			vm.MaxStack = opts.MaxStack
-		}
-		for _, nf := range native.Funcs() {
-			vm.NativeFunction(nf)
-		}
-		vm.Importer(NewExtendedImporter(opts.ImportPaths))
-
-		for k, v := range opts.ExtCode {
-			vm.ExtCode(k, v)
-		}
+		vm = makeNewVM(opts)
 	}
 
+	// TLA can be reset every time because it does not flush the cache
+	vm.TLAReset()
 	for k, v := range opts.TLACode {
 		vm.TLACode(k, v)
 	}
@@ -138,7 +123,30 @@ func (p *vmPool) Get(opts Opts) *jsonnet.VM {
 func (p *vmPool) Release(vm *jsonnet.VM, opts Opts) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
-	p.available[optsHash(opts)] = append(p.available[optsHash(opts)], vm)
+	p.available[hashOptions(opts)] = append(p.available[hashOptions(opts)], vm)
+}
+
+func hashOptions(opts Opts) string {
+	hash := md5.New()
+	hash.Write([]byte(fmt.Sprintf("%s", opts.ExtCode)))
+	hash.Write([]byte(fmt.Sprintf("%s", opts.ImportPaths)))
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func makeNewVM(opts Opts) *jsonnet.VM {
+	vm := jsonnet.MakeVM()
+	if opts.MaxStack > 0 {
+		vm.MaxStack = opts.MaxStack
+	}
+	for _, nf := range native.Funcs() {
+		vm.NativeFunction(nf)
+	}
+	vm.Importer(NewExtendedImporter(opts.ImportPaths))
+
+	for k, v := range opts.ExtCode {
+		vm.ExtCode(k, v)
+	}
+	return vm
 }
 
 // EvaluateFile evaluates the Jsonnet code in the given file and returns the
