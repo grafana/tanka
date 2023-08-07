@@ -30,6 +30,10 @@ type LintOpts struct {
 // Lint takes a list of files and directories, processes them and prints
 // out to stderr if there are linting warnings
 func Lint(fds []string, opts *LintOpts) error {
+	if opts.Parallelism <= 0 {
+		return errors.New("parallelism must be greater than 0")
+	}
+
 	if opts.Out == nil {
 		opts.Out = os.Stdout
 	}
@@ -56,9 +60,6 @@ func Lint(fds []string, opts *LintOpts) error {
 		}
 	}
 
-	if opts.Parallelism <= 0 {
-		opts.Parallelism = 4
-	}
 	for i := 0; i < opts.Parallelism; i++ {
 		go lintWorker(fileCh, resultCh)
 	}
