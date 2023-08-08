@@ -11,6 +11,7 @@ import (
 	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/rs/zerolog/log"
 )
 
 // InlineLoader loads an environment that is specified inline from within
@@ -19,65 +20,15 @@ import (
 type InlineLoader struct{}
 
 func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
-	if opts.Name != "" {
-		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
-	}
-
-	data, err := i.Eval(path, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	envs, err := extractEnvs(data)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(envs) > 1 {
-		names := make([]string, 0, len(envs))
-		for _, e := range envs {
-			// If there's a full match on the given name, use this environment
-			name := e.Metadata().Name()
-			if name == opts.Name {
-				envs = manifest.List{e}
-				break
-			}
-			names = append(names, name)
-		}
-		if len(envs) > 1 {
-			sort.Strings(names)
-			return nil, ErrMultipleEnvs{path, opts.Name, names}
-		}
-	}
-
-	if len(envs) == 0 {
-		return nil, fmt.Errorf("found no matching environments; run 'tk env list %s' to view available options", path)
-	}
-
-	// TODO: Re-serializing the entire env here. This is horribly inefficient
-	envData, err := json.Marshal(envs[0])
-	if err != nil {
-		return nil, err
-	}
-
-	env, err := inlineParse(path, envData)
-	if err != nil {
-		return nil, err
-	}
-
-	return env, nil
+	return i.loadEnvironment(path, "", opts)
 }
 
 func (i *InlineLoader) Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
-	opts.JsonnetOpts.EvalScript = MetadataEvalScript
-	if opts.Name != "" {
-		opts.JsonnetOpts.EvalScript = fmt.Sprintf(MetadataSingleEnvEvalScript, opts.Name)
-	}
-	return i.Load(path, opts)
+	return i.loadEnvironment(path, "{data::{}}", opts)
 }
 
 func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
-	opts.JsonnetOpts.EvalScript = MetadataEvalScript
+	opts.JsonnetOpts.EvalScript = fmt.Sprintf(MetadataEvalScript, opts.Name)
 	data, err := i.Eval(path, opts)
 	if err != nil {
 		return nil, err
@@ -90,12 +41,7 @@ func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environme
 
 	envs := make([]*v1alpha1.Environment, 0, len(list))
 	for _, raw := range list {
-		data, err := json.Marshal(raw)
-		if err != nil {
-			return nil, err
-		}
-
-		env, err := inlineParse(path, data)
+		env, err := inlineParse(path, raw)
 		if err != nil {
 			return nil, err
 		}
@@ -115,7 +61,7 @@ func (i *InlineLoader) Eval(path string, opts LoaderOpts) (interface{}, error) {
 		return nil, err
 	}
 
-	var data interface{}
+	var data map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &data); err != nil {
 		return nil, err
 	}
@@ -123,7 +69,54 @@ func (i *InlineLoader) Eval(path string, opts LoaderOpts) (interface{}, error) {
 	return data, nil
 }
 
-func inlineParse(path string, data []byte) (*v1alpha1.Environment, error) {
+func (i *InlineLoader) loadEnvironment(path, mixin string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+	// If the environment jsonnet eval path isn't already found, list the envs
+	if opts.EvalExpression == "" {
+		log.Debug().Str("name", opts.Name).Str("path", path).Str("mixin", mixin).Msg("No eval expression given when loading an environment, listing")
+		envs, err := i.List(path, opts)
+		if err != nil {
+			return nil, err
+		}
+		if len(envs) > 1 {
+			names := make([]string, 0, len(envs))
+			for _, e := range envs {
+				// If there's a full match on the given name, use this environment
+				name := e.Metadata.Name
+				if name == opts.Name {
+					envs = []*v1alpha1.Environment{e}
+					break
+				}
+				names = append(names, name)
+			}
+			if len(envs) > 1 {
+				sort.Strings(names)
+				return nil, ErrMultipleEnvs{path, opts.Name, names}
+			}
+		}
+
+		if len(envs) == 0 {
+			return nil, fmt.Errorf("found no matching environments; run 'tk env list %s' to view available options", path)
+		}
+
+		opts.EvalExpression = envs[0].Status.JsonnetExpression
+	}
+
+	opts.JsonnetOpts.EvalScript = PatternEvalScript(opts.EvalExpression + mixin)
+
+	data, err := i.Eval(path, opts)
+	if err != nil {
+		return nil, fmt.Errorf("evaluating %s: %w", opts.JsonnetOpts.EvalScript, err)
+	}
+
+	env, err := inlineParse(path, data.(map[string]interface{}))
+	if err != nil {
+		return nil, err
+	}
+
+	return env, nil
+}
+
+func inlineParse(path string, data map[string]interface{}) (*v1alpha1.Environment, error) {
 	root, err := jpath.FindRoot(path)
 	if err != nil {
 		return nil, err
@@ -139,7 +132,12 @@ func inlineParse(path string, data []byte) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	env, err := spec.Parse(data, namespace)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	env, err := spec.Parse(raw, namespace)
 	if err != nil {
 		return nil, err
 	}

@@ -29,6 +29,7 @@ type Environment struct {
 	Metadata   Metadata    `json:"metadata"`
 	Spec       Spec        `json:"spec"`
 	Data       interface{} `json:"data,omitempty"`
+	Status     Status      `json:"status,omitempty"`
 }
 
 // Metadata is meant for humans and not parsed
@@ -77,4 +78,9 @@ type ExpectVersions struct {
 type ResourceDefaults struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
+}
+
+// Status defines properties that are set by Tanka
+type Status struct {
+	JsonnetExpression string `json:"jsonnetExpression,omitempty"`
 }

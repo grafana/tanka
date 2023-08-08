@@ -51,8 +51,9 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 			return nil, errors.Wrap(err, "finding root")
 		}
 		jobsCh <- parallelJob{
-			path: filepath.Join(rootDir, path),
-			opts: o,
+			path:        filepath.Join(rootDir, path),
+			jsonnetExpr: env.Status.JsonnetExpression,
+			opts:        o,
 		}
 	}
 	close(jobsCh)
@@ -78,8 +79,9 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 }
 
 type parallelJob struct {
-	path string
-	opts Opts
+	path        string
+	jsonnetExpr string
+	opts        Opts
 }
 
 type parallelOut struct {
@@ -89,10 +91,10 @@ type parallelOut struct {
 
 func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
 	for job := range jobsCh {
-		log.Debug().Str("name", job.opts.Name).Str("path", job.path).Msg("Loading environment")
+		log.Debug().Str("name", job.opts.Name).Str("path", job.path).Str("expr", job.jsonnetExpr).Msg("Loading environment")
 		startTime := time.Now()
 
-		env, err := LoadEnvironment(job.path, job.opts)
+		env, err := LoadEnvironment(job.path, job.jsonnetExpr, job.opts)
 		if err != nil {
 			err = fmt.Errorf("%s:\n %w", job.path, err)
 		}

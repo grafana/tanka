@@ -22,7 +22,7 @@ const environmentExtCode = spec.APIGroup + "/environment"
 // Load loads the Environment at `path`. It automatically detects whether to
 // load inline or statically
 func Load(path string, opts Opts) (*LoadResult, error) {
-	env, err := LoadEnvironment(path, opts)
+	env, err := LoadEnvironment(path, "", opts)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 	return result, nil
 }
 
-func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
+func LoadEnvironment(path string, jsonnetExpr string, opts Opts) (*v1alpha1.Environment, error) {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		log.Info().Msgf("Path %q does not exist, trying to use it as an environment name", path)
@@ -56,7 +56,7 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	env, err := loader.Load(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	env, err := loader.Load(path, LoaderOpts{opts.JsonnetOpts, opts.Name, jsonnetExpr})
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func Peek(path string, opts Opts) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	return loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name, ""})
 }
 
 // List finds metadata of all environments at path that could possibly be
@@ -97,7 +97,7 @@ func List(path string, opts Opts) ([]*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	return loader.List(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.List(path, LoaderOpts{opts.JsonnetOpts, opts.Name, ""})
 }
 
 // Eval returns the raw evaluated Jsonnet
@@ -107,7 +107,7 @@ func Eval(path string, opts Opts) (interface{}, error) {
 		return nil, err
 	}
 
-	return loader.Eval(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.Eval(path, LoaderOpts{opts.JsonnetOpts, opts.Name, ""})
 }
 
 // DetectLoader detects whether the environment is inline or static and picks
@@ -147,7 +147,8 @@ type Loader interface {
 
 type LoaderOpts struct {
 	JsonnetOpts
-	Name string
+	Name           string
+	EvalExpression string
 }
 
 type LoadResult struct {

@@ -60,7 +60,7 @@ func PatternEvalScript(expr string) string {
 
 // MetadataEvalScript finds the Environment object (without its .data object)
 const MetadataEvalScript = `
-local noDataEnv(object) =
+local noDataEnv(object, expr) =
   std.prune(
     if std.isObject(object)
     then
@@ -68,85 +68,24 @@ local noDataEnv(object) =
          && std.objectHas(object, 'kind')
       then
         if object.kind == 'Environment'
-        then object { data+:: {} }
+           && ('%[1]s' == '' || std.member(object.metadata.name, '%[1]s'))
+        then object { data+:: {}, status: {jsonnetExpression: expr} }
         else {}
       else
         std.mapWithKey(
           function(key, obj)
-            noDataEnv(obj),
+            noDataEnv(obj, expr+'["' + key + '"]'),
           object
         )
     else if std.isArray(object)
     then
-      std.map(
-        function(obj)
-          noDataEnv(obj),
+      std.mapWithIndex(
+        function(i, obj)
+          noDataEnv(obj, expr+'[' + std.toString(i) + ']'),
         object
       )
     else {}
   );
 
-noDataEnv(main)
-`
-
-// MetadataSingleEnvEvalScript returns a Single Environment object
-const MetadataSingleEnvEvalScript = `
-local singleEnv(object) =
-  std.prune(
-    if std.isObject(object)
-    then
-      if std.objectHas(object, 'apiVersion')
-         && std.objectHas(object, 'kind')
-      then
-        if object.kind == 'Environment'
-        && object.metadata.name == '%s'
-        then object { data:: super.data }
-        else {}
-      else
-        std.mapWithKey(
-          function(key, obj)
-            singleEnv(obj),
-          object
-        )
-    else if std.isArray(object)
-    then
-      std.map(
-        function(obj)
-          singleEnv(obj),
-        object
-      )
-    else {}
-  );
-
-singleEnv(main)
-`
-
-// SingleEnvEvalScript returns a Single Environment object
-const SingleEnvEvalScript = `
-local singleEnv(object) =
-  if std.isObject(object)
-  then
-    if std.objectHas(object, 'apiVersion')
-       && std.objectHas(object, 'kind')
-    then
-      if object.kind == 'Environment'
-      && std.member(object.metadata.name, '%s')
-      then object
-      else {}
-    else
-      std.mapWithKey(
-        function(key, obj)
-          singleEnv(obj),
-        object
-      )
-  else if std.isArray(object)
-  then
-    std.map(
-      function(obj)
-        singleEnv(obj),
-      object
-    )
-  else {};
-
-singleEnv(main)
+noDataEnv(main, '')
 `
