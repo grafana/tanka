@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -189,4 +190,60 @@ func checkFiles(t testing.TB, dir string, files []string) {
 	require.NoError(t, err)
 
 	assert.ElementsMatch(t, files, existingFiles)
+}
+
+func TestSortEnvironmentsForExport(t *testing.T) {
+	envs := []*v1alpha1.Environment{
+		{
+			Metadata: v1alpha1.Metadata{
+				Name:      "b",
+				Namespace: "b",
+			},
+		},
+		{
+			Metadata: v1alpha1.Metadata{
+				Name:      "a",
+				Namespace: "a",
+			},
+		},
+		{
+			Metadata: v1alpha1.Metadata{
+				Name:      "c",
+				Namespace: "c",
+			},
+			Spec: v1alpha1.Spec{
+				ExportPriority: 1,
+			},
+		},
+		{
+			Metadata: v1alpha1.Metadata{
+				Name:      "d",
+				Namespace: "d",
+			},
+			Spec: v1alpha1.Spec{
+				ExportPriority: 2,
+			},
+		},
+		{
+			Metadata: v1alpha1.Metadata{
+				Name:      "e",
+				Namespace: "e",
+			},
+			Spec: v1alpha1.Spec{
+				ExportPriority: 1,
+			},
+		},
+	}
+
+	getNames := func(envs []*v1alpha1.Environment) []string {
+		var names []string
+		for _, env := range envs {
+			names = append(names, env.Metadata.Name)
+		}
+		return names
+	}
+
+	newEnvs := sortEnvironmentsForExport(envs)
+	assert.Equal(t, []string{"d", "c", "e", "a", "b"}, getNames(newEnvs), "new slice is not sorted")
+	assert.Equal(t, []string{"b", "a", "c", "d", "e"}, getNames(envs), "original slice was modified")
 }

@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -86,6 +87,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 		return fmt.Errorf("deleting previously exported manifests from deleted environments: %w", err)
 	}
 
+	envs = sortEnvironmentsForExport(envs)
 	// get all environments for paths
 	loadedEnvs, err := parallelLoadEnvironments(envs, parallelOpts{
 		Opts:        opts.Opts,
@@ -317,4 +319,16 @@ func applyTemplate(template *template.Template, m manifest.Manifest) (path strin
 	path = strings.ReplaceAll(path, BelRune, string(os.PathSeparator))
 
 	return path, nil
+}
+
+func sortEnvironmentsForExport(envs []*v1alpha1.Environment) []*v1alpha1.Environment {
+	envs = append([]*v1alpha1.Environment(nil), envs...)
+	sort.SliceStable(envs, func(i, j int) bool {
+		env1, env2 := envs[i], envs[j]
+		if env1.Spec.ExportPriority == env2.Spec.ExportPriority {
+			return env1.Metadata.Name < env2.Metadata.Name
+		}
+		return env1.Spec.ExportPriority > env2.Spec.ExportPriority
+	})
+	return envs
 }

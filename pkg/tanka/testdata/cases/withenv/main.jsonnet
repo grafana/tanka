@@ -7,6 +7,7 @@
   spec: {
     apiServer: 'https://localhost',
     namespace: 'withenv',
+    exportPriority: 3,
   },
   data: {
     apiVersion: 'v1',

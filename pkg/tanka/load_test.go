@@ -98,8 +98,9 @@ func TestLoad(t *testing.T) {
 					Labels:    v1alpha1.New().Metadata.Labels,
 				},
 				Spec: v1alpha1.Spec{
-					APIServer: "https://localhost",
-					Namespace: "withenv",
+					APIServer:      "https://localhost",
+					Namespace:      "withenv",
+					ExportPriority: 3,
 				},
 				Data: map[string]interface{}{
 					"apiVersion": "v1",
@@ -128,8 +129,9 @@ func TestLoad(t *testing.T) {
 					Labels:    v1alpha1.New().Metadata.Labels,
 				},
 				Spec: v1alpha1.Spec{
-					APIServer: "https://localhost",
-					Namespace: "withenv",
+					APIServer:      "https://localhost",
+					Namespace:      "withenv",
+					ExportPriority: 3,
 				},
 				Data: map[string]interface{}{
 					"apiVersion": "v1",
