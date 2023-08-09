@@ -30,6 +30,11 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 		opts.Parallelism = defaultParallelism
 	}
 
+	if opts.Parallelism > len(envs) {
+		log.Info().Int("parallelism", opts.Parallelism).Int("envs", len(envs)).Msg("Reducing parallelism to match number of environments")
+		opts.Parallelism = len(envs)
+	}
+
 	for i := 0; i < opts.Parallelism; i++ {
 		go parallelWorker(jobsCh, outCh)
 	}
