@@ -31,7 +31,7 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 	}
 
 	if opts.Parallelism > len(envs) {
-		log.Info().Int("parallelism", opts.Parallelism).Int("envs", len(envs)).Msg("Reducing parallelism to number of environments")
+		log.Info().Int("parallelism", opts.Parallelism).Int("envs", len(envs)).Msg("Reducing parallelism to match number of environments")
 		opts.Parallelism = len(envs)
 	}
 
