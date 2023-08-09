@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime/pprof"
 	"strings"
 
 	"github.com/go-clix/cli"
@@ -54,10 +55,37 @@ func main() {
 		prefixCommands("tk-")...,
 	)
 
+	outputPprofFile := os.Getenv("TK_PPROF_FILE")
+
+	// So that the other defers can run
+	exitCode := 0
+	defer func() {
+		os.Exit(exitCode)
+	}()
+
+	if outputPprofFile != "" {
+		pprofFile, err := os.Create(outputPprofFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating pprof file: %s\n", err)
+			exitCode = 1
+			return
+		}
+		defer pprofFile.Close()
+
+		err = pprof.StartCPUProfile(pprofFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error starting pprof: %s\n", err)
+			exitCode = 1
+			return
+		}
+		defer pprof.StopCPUProfile()
+	}
+
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
+		exitCode = 1
+		return
 	}
 }
 
