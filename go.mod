@@ -2,6 +2,8 @@ module github.com/grafana/tanka
 
 go 1.20
 
+replace github.com/google/go-jsonnet => github.com/julienduchesne/go-jsonnet v0.17.1-0.20230810171849-9f85a9f5d3e5
+
 require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig/v3 v3.2.3
@@ -45,7 +47,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
-	golang.org/x/crypto v0.3.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
+	golang.org/x/crypto v0.9.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 )
