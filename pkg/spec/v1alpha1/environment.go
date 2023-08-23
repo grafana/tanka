@@ -65,6 +65,7 @@ type Spec struct {
 	InjectLabels     bool             `json:"injectLabels,omitempty"`
 	ResourceDefaults ResourceDefaults `json:"resourceDefaults"`
 	ExpectVersions   ExpectVersions   `json:"expectVersions"`
+	ExportStrategy   string           `json:"exportStrategy,omitempty"`
 }
 
 // ExpectVersions holds semantic version constraints
