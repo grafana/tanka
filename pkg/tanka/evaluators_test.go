@@ -5,8 +5,11 @@ import (
 	"testing"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/stretchr/testify/assert"
 )
+
+var jsonnetImpl = &goimpl.JsonnetGoImplementation{}
 
 func TestEvalJsonnet(t *testing.T) {
 	var tlaCode jsonnet.InjectedCode
@@ -27,7 +30,7 @@ func TestEvalJsonnet(t *testing.T) {
 
 	// This will fail intermittently if TLAs are passed as positional
 	// parameters.
-	json, err := evalJsonnet("testdata/cases/withtlas", opts)
+	json, err := evalJsonnet("testdata/cases/withtlas", jsonnetImpl, opts)
 	assert.NoError(t, err)
 	assert.Equal(t, `"foovalue"`, strings.TrimSpace(json))
 }
@@ -43,7 +46,7 @@ func TestEvalJsonnetWithExpression(t *testing.T) {
 
 			// This will fail intermittently if TLAs are passed as positional
 			// parameters.
-			json, err := evalJsonnet("testdata/cases/object", opts)
+			json, err := evalJsonnet("testdata/cases/object", jsonnetImpl, opts)
 			assert.NoError(t, err)
 			assert.Equal(t, `"object"`, strings.TrimSpace(json))
 		})

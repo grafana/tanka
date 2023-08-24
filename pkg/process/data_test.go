@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
@@ -18,9 +18,7 @@ type testData struct {
 func loadFixture(name string) testData {
 	filename := filepath.Join("./testdata", name)
 
-	vm := jsonnet.MakeVM(jsonnet.Opts{
-		ImportPaths: []string{"./testdata"},
-	})
+	vm := goimpl.MakeRawVM([]string{"./testdata"}, nil, nil, 0)
 
 	data, err := vm.EvaluateFile(filename)
 	if err != nil {

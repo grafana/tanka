@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/process"
@@ -16,7 +17,9 @@ import (
 // InlineLoader loads an environment that is specified inline from within
 // Jsonnet. The Jsonnet output is expected to hold a tanka.dev/Environment type,
 // Kubernetes resources are expected at the `data` key of this very type
-type InlineLoader struct{}
+type InlineLoader struct {
+	jsonnetImpl types.JsonnetImplementation
+}
 
 func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
 	if opts.Name != "" {
@@ -110,7 +113,7 @@ func (i *InlineLoader) Eval(path string, opts LoaderOpts) (interface{}, error) {
 	// Can't provide env as extVar, as we need to evaluate Jsonnet first to know it
 	opts.ExtCode.Set(environmentExtCode, `error "Using tk.env and std.extVar('tanka.dev/environment') is only supported for static environments. Directly access this data using standard Jsonnet instead."`)
 
-	raw, err := evalJsonnet(path, opts.JsonnetOpts)
+	raw, err := evalJsonnet(path, i.jsonnetImpl, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}

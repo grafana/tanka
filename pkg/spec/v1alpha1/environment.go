@@ -57,14 +57,15 @@ func (m Metadata) NameLabel() string {
 
 // Spec defines Kubernetes properties
 type Spec struct {
-	APIServer        string           `json:"apiServer,omitempty"`
-	ContextNames     []string         `json:"contextNames,omitempty"`
-	Namespace        string           `json:"namespace"`
-	DiffStrategy     string           `json:"diffStrategy,omitempty"`
-	ApplyStrategy    string           `json:"applyStrategy,omitempty"`
-	InjectLabels     bool             `json:"injectLabels,omitempty"`
-	ResourceDefaults ResourceDefaults `json:"resourceDefaults"`
-	ExpectVersions   ExpectVersions   `json:"expectVersions"`
+	APIServer                   string           `json:"apiServer,omitempty"`
+	ContextNames                []string         `json:"contextNames,omitempty"`
+	Namespace                   string           `json:"namespace"`
+	DiffStrategy                string           `json:"diffStrategy,omitempty"`
+	ApplyStrategy               string           `json:"applyStrategy,omitempty"`
+	InjectLabels                bool             `json:"injectLabels,omitempty"`
+	ResourceDefaults            ResourceDefaults `json:"resourceDefaults"`
+	ExpectVersions              ExpectVersions   `json:"expectVersions"`
+	ExportJsonnetImplementation string           `json:"exportJsonnetImplementation,omitempty"`
 }
 
 // ExpectVersions holds semantic version constraints

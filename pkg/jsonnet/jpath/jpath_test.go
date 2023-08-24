@@ -8,10 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 )
 
+var jsonnetImpl = &goimpl.JsonnetGoImplementation{}
+
 func TestResolvePrecedence(t *testing.T) {
-	s, err := jsonnet.EvaluateFile("./testdata/precedence/environments/default/main.jsonnet", jsonnet.Opts{})
+	s, err := jsonnet.EvaluateFile(jsonnetImpl, "./testdata/precedence/environments/default/main.jsonnet", jsonnet.Opts{})
 	require.NoError(t, err)
 
 	want := map[string]string{

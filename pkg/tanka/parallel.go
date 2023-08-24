@@ -49,6 +49,10 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 		// to Tanka workflow thus being able to handle such cases
 		o.JsonnetOpts = o.JsonnetOpts.Clone()
 
+		if o.JsonnetOpts.JsonnetImplementation == "" {
+			o.JsonnetOpts.JsonnetImplementation = env.Spec.ExportJsonnetImplementation
+		}
+
 		o.Name = env.Metadata.Name
 		path := env.Metadata.Namespace
 		rootDir, err := jpath.FindRoot(path)

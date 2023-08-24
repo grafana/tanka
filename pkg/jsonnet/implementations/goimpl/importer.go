@@ -1,4 +1,4 @@
-package jsonnet
+package goimpl
 
 import (
 	"path/filepath"
@@ -8,10 +8,10 @@ import (
 
 const locationInternal = "<internal>"
 
-// ExtendedImporter wraps jsonnet.FileImporter to add additional functionality:
+// extendedImporter wraps jsonnet.FileImporter to add additional functionality:
 // - `import "file.yaml"`
 // - `import "tk"`
-type ExtendedImporter struct {
+type extendedImporter struct {
 	loaders    []importLoader    // for loading jsonnet from somewhere. First one that returns non-nil is used
 	processors []importProcessor // for post-processing (e.g. yaml -> json)
 }
@@ -24,10 +24,10 @@ type importLoader func(importedFrom, importedPath string) (c *jsonnet.Contents, 
 // further
 type importProcessor func(contents, foundAt string) (c *jsonnet.Contents, err error)
 
-// NewExtendedImporter returns a new instance of ExtendedImporter with the
+// newExtendedImporter returns a new instance of ExtendedImporter with the
 // correct jpaths set up
-func NewExtendedImporter(jpath []string) *ExtendedImporter {
-	return &ExtendedImporter{
+func newExtendedImporter(jpath []string) *extendedImporter {
+	return &extendedImporter{
 		loaders: []importLoader{
 			tkLoader,
 			newFileLoader(&jsonnet.FileImporter{
@@ -38,7 +38,7 @@ func NewExtendedImporter(jpath []string) *ExtendedImporter {
 }
 
 // Import implements the functionality offered by the ExtendedImporter
-func (i *ExtendedImporter) Import(importedFrom, importedPath string) (contents jsonnet.Contents, foundAt string, err error) {
+func (i *extendedImporter) Import(importedFrom, importedPath string) (contents jsonnet.Contents, foundAt string, err error) {
 	// load using loader
 	for _, loader := range i.loaders {
 		c, f, err := loader(importedFrom, importedPath)
