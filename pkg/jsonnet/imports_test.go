@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/grafana/tanka/pkg/jsonnet/implementation/goimpl"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

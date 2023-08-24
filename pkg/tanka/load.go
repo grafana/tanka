@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -51,7 +53,7 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	loader, err := DetectLoader(path)
+	loader, err := DetectLoader(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +82,7 @@ func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadRe
 // Peek loads the metadata of the environment at path. To get resources as well,
 // use Load
 func Peek(path string, opts Opts) (*v1alpha1.Environment, error) {
-	loader, err := DetectLoader(path)
+	loader, err := DetectLoader(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +94,7 @@ func Peek(path string, opts Opts) (*v1alpha1.Environment, error) {
 // loaded. List can be used to deal with multiple inline environments, by first
 // listing them, choosing the right one and then only loading that one
 func List(path string, opts Opts) ([]*v1alpha1.Environment, error) {
-	loader, err := DetectLoader(path)
+	loader, err := DetectLoader(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -100,9 +102,20 @@ func List(path string, opts Opts) ([]*v1alpha1.Environment, error) {
 	return loader.List(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
+func getJsonnetImplementation(path string, opts Opts) (types.JsonnetImplementation, error) {
+	switch opts.JsonnetOpts.JsonnetImplementation {
+	case "go", "":
+		return &goimpl.JsonnetGoImplementation{
+			Path: path,
+		}, nil
+	default:
+		return nil, fmt.Errorf("unknown jsonnet implementation: %s", opts.JsonnetOpts.JsonnetImplementation)
+	}
+}
+
 // Eval returns the raw evaluated Jsonnet
 func Eval(path string, opts Opts) (interface{}, error) {
-	loader, err := DetectLoader(path)
+	loader, err := DetectLoader(path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -112,8 +125,13 @@ func Eval(path string, opts Opts) (interface{}, error) {
 
 // DetectLoader detects whether the environment is inline or static and picks
 // the approriate loader
-func DetectLoader(path string) (Loader, error) {
+func DetectLoader(path string, opts Opts) (Loader, error) {
 	_, base, err := jpath.Dirs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonnetImpl, err := getJsonnetImplementation(base, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -121,12 +139,16 @@ func DetectLoader(path string) (Loader, error) {
 	// check if spec.json exists
 	_, err = os.Stat(filepath.Join(base, spec.Specfile))
 	if os.IsNotExist(err) {
-		return &InlineLoader{}, nil
+		return &InlineLoader{
+			jsonnetImpl: jsonnetImpl,
+		}, nil
 	} else if err != nil {
 		return nil, err
 	}
 
-	return &StaticLoader{}, nil
+	return &StaticLoader{
+		jsonnetImpl: jsonnetImpl,
+	}, nil
 }
 
 // Loader is an abstraction over the process of loading Environments

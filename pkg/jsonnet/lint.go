@@ -10,7 +10,7 @@ import (
 
 	"github.com/gobwas/glob"
 	"github.com/google/go-jsonnet/linter"
-	"github.com/grafana/tanka/pkg/jsonnet/implementation/goimpl"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"

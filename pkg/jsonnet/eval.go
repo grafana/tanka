@@ -9,9 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 
-	"github.com/grafana/tanka/pkg/jsonnet/implementation"
-	"github.com/grafana/tanka/pkg/jsonnet/implementation/goimpl"
-	"github.com/grafana/tanka/pkg/jsonnet/implementation/types"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 )
 
@@ -81,7 +80,7 @@ func (o Opts) Clone() Opts {
 // EvaluateFile evaluates the Jsonnet code in the given file and returns the
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
-func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
+func EvaluateFile(impl types.JsonnetImplementation, jsonnetFile string, opts Opts) (string, error) {
 	evalFunc := func(evaluator types.JsonnetEvaluator) (string, error) {
 		return evaluator.EvaluateFile(jsonnetFile)
 	}
@@ -89,32 +88,27 @@ func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return evaluateSnippet(evalFunc, jsonnetFile, string(data), opts)
+	return evaluateSnippet(impl, evalFunc, jsonnetFile, string(data), opts)
 }
 
 // Evaluate renders the given jsonnet into a string
 // If cache options are given, a hash from the data will be computed and
 // the resulting string will be cached for future retrieval
-func Evaluate(path, data string, opts Opts) (string, error) {
+func Evaluate(path string, impl types.JsonnetImplementation, data string, opts Opts) (string, error) {
 	evalFunc := func(evaluator types.JsonnetEvaluator) (string, error) {
-		return evaluator.EvaluateAnonymousSnippet(path, data)
+		return evaluator.EvaluateAnonymousSnippet(data)
 	}
-	return evaluateSnippet(evalFunc, path, data, opts)
+	return evaluateSnippet(impl, evalFunc, path, data, opts)
 }
 
 type evalFunc func(evaluator types.JsonnetEvaluator) (string, error)
 
-func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, error) {
+func evaluateSnippet(jsonnetImpl types.JsonnetImplementation, evalFunc evalFunc, path, data string, opts Opts) (string, error) {
 	var cache *FileEvalCache
 	if opts.CachePath != "" && opts.PathIsCached(path) {
 		cache = NewFileEvalCache(opts.CachePath)
 	}
 
-	// Create VM
-	jsonnetImpl, err := implementation.GetByName(opts.JsonnetImplementation)
-	if err != nil {
-		return "", err
-	}
 	jpath, _, _, err := jpath.Resolve(path, false)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving import paths")

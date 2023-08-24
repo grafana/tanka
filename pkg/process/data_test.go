@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/grafana/tanka/pkg/jsonnet/implementation/goimpl"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
