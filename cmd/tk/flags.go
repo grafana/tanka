@@ -13,14 +13,16 @@ import (
 )
 
 type workflowFlagVars struct {
-	name    string
-	targets []string
+	name                  string
+	targets               []string
+	jsonnetImplementation string
 }
 
 func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
 	fs.StringVar(&v.name, "name", "", "string that only a single inline environment contains in its name")
 	fs.StringSliceVarP(&v.targets, "target", "t", nil, "Regex filter on '<kind>/<name>'. See https://tanka.dev/output-filtering")
+	fs.StringVar(&v.jsonnetImplementation, "jsonnet-implementation", "go", "Use `go` to use native go-jsonnet implementation and `binary:<path>` to delegate evaluation to a binary (with the same API as the regular `jsonnet` binary)")
 	return &v
 }
 
@@ -58,14 +60,12 @@ func labelSelectorFlag(fs *pflag.FlagSet) func() labels.Selector {
 func jsonnetFlags(fs *pflag.FlagSet) func() tanka.JsonnetOpts {
 	getExtCode, getTLACode := cliCodeParser(fs)
 	maxStack := fs.Int("max-stack", 0, "Jsonnet VM max stack. The default value is the value set in the go-jsonnet library. Increase this if you get: max stack frames exceeded")
-	jsonnetImplementation := fs.String("jsonnet-implementation", "go", "Only go is supported for now.")
 
 	return func() tanka.JsonnetOpts {
 		return tanka.JsonnetOpts{
-			MaxStack:              *maxStack,
-			ExtCode:               getExtCode(),
-			TLACode:               getTLACode(),
-			JsonnetImplementation: *jsonnetImplementation,
+			MaxStack: *maxStack,
+			ExtCode:  getExtCode(),
+			TLACode:  getTLACode(),
 		}
 	}
 }

@@ -103,13 +103,13 @@ func List(path string, opts Opts) ([]*v1alpha1.Environment, error) {
 }
 
 func getJsonnetImplementation(path string, opts Opts) (types.JsonnetImplementation, error) {
-	switch opts.JsonnetOpts.JsonnetImplementation {
+	switch opts.JsonnetImplementation {
 	case "go", "":
 		return &goimpl.JsonnetGoImplementation{
 			Path: path,
 		}, nil
 	default:
-		return nil, fmt.Errorf("unknown jsonnet implementation: %s", opts.JsonnetOpts.JsonnetImplementation)
+		return nil, fmt.Errorf("unknown jsonnet implementation: %s", opts.JsonnetImplementation)
 	}
 }
 

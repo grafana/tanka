@@ -18,6 +18,7 @@ type JsonnetOpts = jsonnet.Opts
 // Opts specify general, optional properties that apply to all actions
 type Opts struct {
 	JsonnetOpts
+	JsonnetImplementation string
 
 	// Filters are used to optionally select a subset of the resources
 	Filters process.Matchers
