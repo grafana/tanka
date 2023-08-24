@@ -19,7 +19,7 @@ func (vm *JsonnetGoVM) EvaluateFile(filename string) (string, error) {
 
 type JsonnetGoImplementation struct{}
 
-func (i *JsonnetGoImplementation) MakeVM(importPaths []string, extCode map[string]string, tlaCode map[string]string, maxStack int) types.JsonnetVM {
+func (i *JsonnetGoImplementation) MakeEvaluator(importPaths []string, extCode map[string]string, tlaCode map[string]string, maxStack int) types.JsonnetEvaluator {
 	return &JsonnetGoVM{
 		vm: MakeRawVM(importPaths, extCode, tlaCode, maxStack),
 	}

@@ -82,8 +82,8 @@ func (o Opts) Clone() Opts {
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
 func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
-	evalFunc := func(vm types.JsonnetVM) (string, error) {
-		return vm.EvaluateFile(jsonnetFile)
+	evalFunc := func(evaluator types.JsonnetEvaluator) (string, error) {
+		return evaluator.EvaluateFile(jsonnetFile)
 	}
 	data, err := os.ReadFile(jsonnetFile)
 	if err != nil {
@@ -96,13 +96,13 @@ func EvaluateFile(jsonnetFile string, opts Opts) (string, error) {
 // If cache options are given, a hash from the data will be computed and
 // the resulting string will be cached for future retrieval
 func Evaluate(path, data string, opts Opts) (string, error) {
-	evalFunc := func(vm types.JsonnetVM) (string, error) {
-		return vm.EvaluateAnonymousSnippet(path, data)
+	evalFunc := func(evaluator types.JsonnetEvaluator) (string, error) {
+		return evaluator.EvaluateAnonymousSnippet(path, data)
 	}
 	return evaluateSnippet(evalFunc, path, data, opts)
 }
 
-type evalFunc func(vm types.JsonnetVM) (string, error)
+type evalFunc func(evaluator types.JsonnetEvaluator) (string, error)
 
 func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, error) {
 	var cache *FileEvalCache
@@ -111,7 +111,7 @@ func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, e
 	}
 
 	// Create VM
-	jsonnetImpl, err := implementation.Get(opts.JsonnetImplementation)
+	jsonnetImpl, err := implementation.GetByName(opts.JsonnetImplementation)
 	if err != nil {
 		return "", err
 	}
@@ -120,8 +120,9 @@ func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, e
 		return "", errors.Wrap(err, "resolving import paths")
 	}
 	opts.ImportPaths = jpath
-	vm := jsonnetImpl.MakeVM(opts.ImportPaths, opts.ExtCode, opts.TLACode, opts.MaxStack)
-	importVM := goimpl.MakeRawVM(opts.ImportPaths, opts.ExtCode, opts.TLACode, opts.MaxStack) // TODO: use interface
+	evaluator := jsonnetImpl.MakeEvaluator(opts.ImportPaths, opts.ExtCode, opts.TLACode, opts.MaxStack)
+	// We're using the go implementation to deal with imports because we're not evaluating, we're reading the AST
+	importVM := goimpl.MakeRawVM(opts.ImportPaths, opts.ExtCode, opts.TLACode, opts.MaxStack)
 
 	var hash string
 	if cache != nil {
@@ -139,7 +140,7 @@ func evaluateSnippet(evalFunc evalFunc, path, data string, opts Opts) (string, e
 		cacheLog.Bool("cache_hit", false).Msg("computed snippet hash")
 	}
 
-	content, err := evalFunc(vm)
+	content, err := evalFunc(evaluator)
 	if err != nil {
 		return "", err
 	}

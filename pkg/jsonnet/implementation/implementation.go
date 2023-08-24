@@ -7,7 +7,9 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/implementation/types"
 )
 
-func Get(name string) (types.JsonnetImplementation, error) {
+// GetByName returns a jsonnet implementation by name. If name is empty, the
+// default implementation is returned.
+func GetByName(name string) (types.JsonnetImplementation, error) {
 	if name == "go" || name == "" {
 		return &goimpl.JsonnetGoImplementation{}, nil
 	}
