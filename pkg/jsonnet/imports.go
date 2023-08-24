@@ -15,7 +15,7 @@ import (
 	"github.com/google/go-jsonnet/toolutils"
 	"github.com/pkg/errors"
 
-	"github.com/grafana/tanka/pkg/jsonnet/implementation/goimpl"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 )
 

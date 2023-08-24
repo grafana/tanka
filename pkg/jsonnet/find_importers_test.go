@@ -228,7 +228,7 @@ func TestFindImportersForFiles(t *testing.T) {
 		if filepath.Base(file) != jpath.DefaultEntrypoint {
 			continue
 		}
-		_, err := EvaluateFile(file, Opts{})
+		_, err := EvaluateFile(jsonnetImpl, file, Opts{})
 		require.NoError(t, err, "failed to eval %s", file)
 	}
 

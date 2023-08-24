@@ -3,6 +3,7 @@ package tanka
 import (
 	"encoding/json"
 
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/rs/zerolog/log"
@@ -10,7 +11,9 @@ import (
 
 // StaticLoader loads an environment from a static file called `spec.json`.
 // Jsonnet is evaluated as normal
-type StaticLoader struct{}
+type StaticLoader struct {
+	jsonnetImpl types.JsonnetImplementation
+}
 
 func (s StaticLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
 	config, err := s.Peek(path, opts)
@@ -57,7 +60,7 @@ func (s *StaticLoader) Eval(path string, opts LoaderOpts) (interface{}, error) {
 	}
 	opts.ExtCode.Set(environmentExtCode, envCode)
 
-	raw, err := evalJsonnet(path, opts.JsonnetOpts)
+	raw, err := evalJsonnet(path, s.jsonnetImpl, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}

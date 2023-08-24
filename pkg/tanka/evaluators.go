@@ -7,11 +7,12 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 )
 
 // EvalJsonnet evaluates the jsonnet environment at the given file system path
-func evalJsonnet(path string, opts jsonnet.Opts) (raw string, err error) {
+func evalJsonnet(path string, impl types.JsonnetImplementation, opts jsonnet.Opts) (raw string, err error) {
 	entrypoint, err := jpath.Entrypoint(path)
 	if err != nil {
 		return "", err
@@ -37,14 +38,14 @@ function(%s)
 `, tlaJoin, entrypoint, tlaJoin, opts.EvalScript)
 		}
 
-		raw, err = jsonnet.Evaluate(path, evalScript, opts)
+		raw, err = jsonnet.Evaluate(path, impl, evalScript, opts)
 		if err != nil {
-			return "", errors.Wrap(err, "evaluating jsonnet")
+			return "", fmt.Errorf("evaluating jsonnet in path '%s': %w", path, err)
 		}
 		return raw, nil
 	}
 
-	raw, err = jsonnet.EvaluateFile(entrypoint, opts)
+	raw, err = jsonnet.EvaluateFile(impl, entrypoint, opts)
 	if err != nil {
 		return "", errors.Wrap(err, "evaluating jsonnet")
 	}
