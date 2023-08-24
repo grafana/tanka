@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/binary"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -103,6 +105,23 @@ func List(path string, opts Opts) ([]*v1alpha1.Environment, error) {
 }
 
 func getJsonnetImplementation(path string, opts Opts) (types.JsonnetImplementation, error) {
+	if strings.HasPrefix(opts.JsonnetImplementation, "binary:") {
+		binPath := strings.TrimPrefix(opts.JsonnetImplementation, "binary:")
+
+		// check if binary exists and is executable
+		stat, err := os.Stat(binPath)
+		if err != nil {
+			return nil, fmt.Errorf("binary %q does not exist", binPath)
+		}
+		if stat.Mode()&0111 == 0 {
+			return nil, fmt.Errorf("binary %q is not executable", binPath)
+		}
+
+		return &binary.JsonnetBinaryImplementation{
+			BinPath: binPath,
+		}, nil
+	}
+
 	switch opts.JsonnetImplementation {
 	case "go", "":
 		return &goimpl.JsonnetGoImplementation{
