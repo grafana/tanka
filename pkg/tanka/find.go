@@ -34,25 +34,44 @@ func FindEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, 
 	return findEnvsFromPaths(paths, opts)
 }
 
-type findJsonnetFilesOut struct {
-	jsonnetFiles []string
-	err          error
-}
-
-type findEnvsOut struct {
-	envs []*v1alpha1.Environment
-	err  error
-}
-
 func findEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
-	if opts.Parallelism >= 0 {
+	if opts.Parallelism <= 0 {
 		opts.Parallelism = runtime.NumCPU()
 	}
 
 	log.Debug().Int("parallelism", opts.Parallelism).Int("paths", len(paths)).Msg("Finding Tanka environments")
 	startTime := time.Now()
 
-	// find all jsonnet files within given paths
+	jsonnetFiles, err := findJsonnetFilesFromPaths(paths, opts)
+	if err != nil {
+		return nil, fmt.Errorf("finding jsonnet files: %w", err)
+	}
+
+	findJsonnetFilesEndTime := time.Now()
+
+	envs, err := findEnvsFromJsonnetFiles(jsonnetFiles, opts)
+	if err != nil {
+		return nil, fmt.Errorf("finding environments: %w", err)
+	}
+
+	findEnvsEndTime := time.Now()
+
+	log.Info().
+		Int("environments", len(envs)).
+		Dur("ms_to_find_jsonnet_files", findJsonnetFilesEndTime.Sub(startTime)).
+		Dur("ms_to_find_environments", findEnvsEndTime.Sub(findJsonnetFilesEndTime)).
+		Msg("Found Tanka environments")
+
+	return envs, nil
+}
+
+// find all jsonnet files within given paths
+func findJsonnetFilesFromPaths(paths []string, opts FindOpts) ([]string, error) {
+	type findJsonnetFilesOut struct {
+		jsonnetFiles []string
+		err          error
+	}
+
 	pathChan := make(chan string, len(paths))
 	findJsonnetFilesChan := make(chan findJsonnetFilesOut)
 	for i := 0; i < opts.Parallelism; i++ {
@@ -71,30 +90,38 @@ func findEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, 
 	}
 
 	// push paths to channel
-	var pathMap = map[string]bool{} // prevent duplicates
 	for _, path := range paths {
-		if _, ok := pathMap[path]; ok {
-			continue
-		}
-		pathMap[path] = true
 		pathChan <- path
 	}
+	close(pathChan)
 
 	// collect jsonnet files
 	var jsonnetFiles []string
+	var errs []error
 	for i := 0; i < len(paths); i++ {
 		res := <-findJsonnetFilesChan
 		if res.err != nil {
-			return nil, res.err
+			errs = append(errs, res.err)
+			continue
 		}
 		jsonnetFiles = append(jsonnetFiles, res.jsonnetFiles...)
 	}
-	close(pathChan)
 	close(findJsonnetFilesChan)
 
-	findJsonnetFilesEndTime := time.Now()
+	if len(errs) != 0 {
+		return jsonnetFiles, ErrParallel{errors: errs}
+	}
 
-	// find all environments within jsonnet files
+	return jsonnetFiles, nil
+}
+
+// find all environments within jsonnet files
+func findEnvsFromJsonnetFiles(jsonnetFiles []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+	type findEnvsOut struct {
+		envs []*v1alpha1.Environment
+		err  error
+	}
+
 	jsonnetFilesChan := make(chan string, len(jsonnetFiles))
 	findEnvsChan := make(chan findEnvsOut)
 
@@ -128,14 +155,10 @@ func findEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, 
 	}
 
 	// push jsonnet files to channel
-	var jsonnetFileMap = map[string]bool{} // prevent duplicates
 	for _, jsonnetFile := range jsonnetFiles {
-		if _, ok := jsonnetFileMap[jsonnetFile]; ok {
-			continue
-		}
-		jsonnetFileMap[jsonnetFile] = true
 		jsonnetFilesChan <- jsonnetFile
 	}
+	close(jsonnetFilesChan)
 
 	// collect environments
 	var envs []*v1alpha1.Environment
@@ -144,23 +167,15 @@ func findEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, 
 		res := <-findEnvsChan
 		if res.err != nil {
 			errs = append(errs, res.err)
+			continue
 		}
 		envs = append(envs, res.envs...)
 	}
-	close(jsonnetFilesChan)
 	close(findEnvsChan)
 
 	if len(errs) != 0 {
 		return envs, ErrParallel{errors: errs}
 	}
-
-	findEnvsEndTime := time.Now()
-
-	log.Info().
-		Int("environments", len(envs)).
-		Dur("ms_to_find_jsonnet_files", findJsonnetFilesEndTime.Sub(startTime)).
-		Dur("ms_to_find_environments", findEnvsEndTime.Sub(findJsonnetFilesEndTime)).
-		Msg("Found Tanka environments")
 
 	return envs, nil
 }
