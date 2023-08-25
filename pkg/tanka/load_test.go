@@ -2,10 +2,15 @@ package tanka
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/binary"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -210,4 +215,69 @@ func TestLoadSelectEnvironmentFullMatchHasPriority(t *testing.T) {
 func TestLoadFailsWhenBothSpecAndInline(t *testing.T) {
 	_, err := Load("./testdata/cases/static-and-inline", Opts{Name: "inline"})
 	assert.EqualError(t, err, "found a tanka Environment resource. Check that you aren't using a spec.json and inline environments simultaneously")
+}
+
+func TestGetJsonnetImplementation(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Write file that is not executable
+	notExecutablePath := filepath.Join(tempDir, "not-executable")
+	require.NoError(t, os.WriteFile(notExecutablePath, []byte("not executable"), 0644))
+
+	// Write file that is executable
+	executablePath := filepath.Join(tempDir, "executable")
+	require.NoError(t, os.WriteFile(executablePath, []byte("executable"), 0755))
+
+	cases := []struct {
+		implementationName string
+		path               string
+		expected           types.JsonnetImplementation
+		expectedErr        error
+	}{
+		{
+			implementationName: "",
+			path:               "my-dir",
+			expected: &goimpl.JsonnetGoImplementation{
+				Path: "my-dir",
+			},
+		},
+		{
+			implementationName: "go",
+			path:               "my-dir",
+			expected: &goimpl.JsonnetGoImplementation{
+				Path: "my-dir",
+			},
+		},
+		{
+			implementationName: "binary:does-not-exist",
+			expectedErr:        errors.New(`binary "does-not-exist" does not exist`),
+		},
+		{
+			implementationName: "binary:" + notExecutablePath,
+			expectedErr:        errors.New(`binary "` + notExecutablePath + `" is not executable`),
+		},
+		{
+			implementationName: "binary:" + executablePath,
+			expected: &binary.JsonnetBinaryImplementation{
+				BinPath: executablePath,
+			},
+		},
+		{
+			implementationName: "invalid",
+			expectedErr:        errors.New("unknown jsonnet implementation: invalid"),
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.implementationName, func(t *testing.T) {
+			implementation, err := getJsonnetImplementation(tt.path, Opts{JsonnetImplementation: tt.implementationName})
+
+			if tt.expectedErr != nil {
+				assert.EqualError(t, err, tt.expectedErr.Error())
+				return
+			}
+
+			assert.Equal(t, tt.expected, implementation)
+		})
+	}
 }

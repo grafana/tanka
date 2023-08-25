@@ -16,6 +16,7 @@ steps:
   - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
+  - go install github.com/google/go-jsonnet/cmd/jsonnet@v0.20.0
   - make lint
   image: golang:1.20
   name: lint
@@ -29,6 +30,7 @@ steps:
   - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
+  - go install github.com/google/go-jsonnet/cmd/jsonnet@v0.20.0
   - make test
   image: golang:1.20
   name: test
@@ -42,6 +44,7 @@ steps:
   - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
+  - go install github.com/google/go-jsonnet/cmd/jsonnet@v0.20.0
   - make cross
   image: golang:1.20
   name: build
@@ -62,6 +65,7 @@ node:
   type: no-parallel
 steps:
 - commands:
+  - go install github.com/google/go-jsonnet/cmd/jsonnet@v0.20.0
   - go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-pr.txt
   - git fetch origin main
   - git reset --hard origin/main
@@ -99,6 +103,7 @@ steps:
   - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
+  - go install github.com/google/go-jsonnet/cmd/jsonnet@v0.20.0
   - make cross
   image: golang:1.20
   name: cross
@@ -163,6 +168,7 @@ steps:
   - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
+  - go install github.com/google/go-jsonnet/cmd/jsonnet@v0.20.0
   - make static
   image: golang:1.20
   name: static
@@ -209,6 +215,7 @@ steps:
   - '  rm -f helm-v3.9.0-linux-amd64.tar.gz'
   - fi
   - cp linux-amd64/helm /usr/local/bin/helm
+  - go install github.com/google/go-jsonnet/cmd/jsonnet@v0.20.0
   - make static
   image: golang:1.20
   name: static
@@ -306,6 +313,6 @@ kind: secret
 name: dockerhub_password
 ---
 kind: signature
-hmac: f0dfa2a5202af05dbfca14e09d1c66222bf6d670d77b5f41b66d696985e89fb7
+hmac: d6e20fdf35f6a2177b563a0db363b55872b276a880165349685c1f6aa1641495
 
 ...

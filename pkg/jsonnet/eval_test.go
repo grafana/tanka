@@ -2,9 +2,11 @@ package jsonnet
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
+	"github.com/grafana/tanka/pkg/jsonnet/implementations/binary"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -55,6 +57,21 @@ const thisFileResult = `{
 // when evaluating a file, `std.thisFile` should point to the given path
 func TestEvaluateFile(t *testing.T) {
 	result, err := EvaluateFile(jsonnetImpl, "testdata/thisFile/main.jsonnet", Opts{})
+	assert.NoError(t, err)
+	assert.Equal(t, thisFileResult, result)
+}
+
+func TestEvaluateFileWithInvalidBinary(t *testing.T) {
+	binaryImpl := &binary.JsonnetBinaryImplementation{BinPath: "this-file-doesnt-exist"}
+	result, err := EvaluateFile(binaryImpl, "testdata/thisFile/main.jsonnet", Opts{})
+	assert.Equal(t, result, "")
+	assert.ErrorIs(t, err, exec.ErrNotFound)
+}
+
+// This test requires jsonnet to be installed and available in the PATH
+func TestEvaluateFileWithJsonnetBinary(t *testing.T) {
+	binaryImpl := &binary.JsonnetBinaryImplementation{BinPath: "jsonnet"}
+	result, err := EvaluateFile(binaryImpl, "testdata/thisFile/main.jsonnet", Opts{})
 	assert.NoError(t, err)
 	assert.Equal(t, thisFileResult, result)
 }

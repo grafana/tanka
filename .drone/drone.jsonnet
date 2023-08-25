@@ -32,6 +32,7 @@ local make(target) = go(target, [
   '  rm -f helm-v3.9.0-linux-amd64.tar.gz',
   'fi',
   'cp linux-amd64/helm /usr/local/bin/helm',
+  'go install github.com/google/go-jsonnet/cmd/jsonnet@v0.20.0',
   'make ' + target,
 ]);
 
@@ -83,6 +84,7 @@ local docker(arch, depends_on=[]) =
     },
     steps: [
       go('benchmark', [
+        'go install github.com/google/go-jsonnet/cmd/jsonnet@v0.20.0',
         'go test -bench=. -benchmem -count=6 -run=^$ ./... | tee bench-pr.txt',
         'git fetch origin main',
         'git reset --hard origin/main',
