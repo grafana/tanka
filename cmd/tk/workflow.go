@@ -114,6 +114,7 @@ func applyCmd() *cli.Command {
 		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
+		opts.JsonnetImplementation = vars.jsonnetImplementation
 
 		return tanka.Apply(args[0], opts)
 	}
@@ -200,6 +201,7 @@ func deleteCmd() *cli.Command {
 		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
+		opts.JsonnetImplementation = vars.jsonnetImplementation
 
 		return tanka.Delete(args[0], opts)
 	}
@@ -238,6 +240,7 @@ func diffCmd() *cli.Command {
 		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
+		opts.JsonnetImplementation = vars.jsonnetImplementation
 
 		changes, err := tanka.Diff(args[0], opts)
 		if err != nil {
@@ -291,9 +294,10 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 		}
 
 		pretty, err := tanka.Show(args[0], tanka.Opts{
-			JsonnetOpts: getJsonnetOpts(),
-			Filters:     filters,
-			Name:        vars.name,
+			JsonnetOpts:           getJsonnetOpts(),
+			Filters:               filters,
+			Name:                  vars.name,
+			JsonnetImplementation: vars.jsonnetImplementation,
 		})
 
 		if err != nil {

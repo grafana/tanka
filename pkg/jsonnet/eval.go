@@ -32,13 +32,12 @@ func (i *InjectedCode) Set(key, value string) {
 
 // Opts are additional properties for the Jsonnet VM
 type Opts struct {
-	JsonnetImplementation string
-	MaxStack              int
-	ExtCode               InjectedCode
-	TLACode               InjectedCode
-	ImportPaths           []string
-	EvalScript            string
-	CachePath             string
+	MaxStack    int
+	ExtCode     InjectedCode
+	TLACode     InjectedCode
+	ImportPaths []string
+	EvalScript  string
+	CachePath   string
 
 	CachePathRegexes []*regexp.Regexp
 }

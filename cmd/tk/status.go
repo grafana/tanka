@@ -25,8 +25,9 @@ func statusCmd() *cli.Command {
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		status, err := tanka.Status(args[0], tanka.Opts{
-			JsonnetOpts: getJsonnetOpts(),
-			Name:        vars.name,
+			JsonnetImplementation: vars.jsonnetImplementation,
+			JsonnetOpts:           getJsonnetOpts(),
+			Name:                  vars.name,
 		})
 		if err != nil {
 			return err

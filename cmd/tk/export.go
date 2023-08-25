@@ -62,9 +62,10 @@ func exportCmd() *cli.Command {
 			Format:    *format,
 			Extension: *extension,
 			Opts: tanka.Opts{
-				JsonnetOpts: getJsonnetOpts(),
-				Filters:     filters,
-				Name:        vars.name,
+				JsonnetImplementation: vars.jsonnetImplementation,
+				JsonnetOpts:           getJsonnetOpts(),
+				Filters:               filters,
+				Name:                  vars.name,
 			},
 			Selector:         getLabelSelector(),
 			Parallelism:      *parallel,
