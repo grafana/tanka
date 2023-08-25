@@ -16261,10 +16261,10 @@ typeface-fira-mono@^0.0.72:
   resolved "https://registry.yarnpkg.com/typeface-fira-mono/-/typeface-fira-mono-0.0.72.tgz#b396d2a08814bb3a32d94ef71c74d37883c3475b"
   integrity sha512-bouzjtniGMrakhazipUl6mskswe7UvH3qynU5Wsl0O7NMuL178VtZ0pOqUGsjBJ42l64GZo9nUMI1eSK4kvJbQ==
 
-typeface-source-sans-pro@^0.0.75:
-  version "0.0.75"
-  resolved "https://registry.yarnpkg.com/typeface-source-sans-pro/-/typeface-source-sans-pro-0.0.75.tgz#33e60ea079738c2dbdb2d0aa28f899f565e1646e"
-  integrity sha512-8aI6ywe+5py1MoMQjdnuQKepOATSLpFoyatVMweF6JNUD8cu+sWaVEfZBN08CRxPrSC4KYTArf6prrQzcqpyQA==
+typeface-source-sans-pro@^1.1.13:
+  version "1.1.13"
+  resolved "https://registry.yarnpkg.com/typeface-source-sans-pro/-/typeface-source-sans-pro-1.1.13.tgz#a7757542b8c301c26322acb0c8b97cc1a12cf91e"
+  integrity sha512-eCczLh0FYByjVoMxZVDfSSTI8A6qJOBJftgWBVJL63AuemQTTvMU8DEk6ud/TQhkbIwWZ3A7ll/NfS9yI0lIrQ==
 
 typescript@^4.9.5:
   version "4.9.5"
