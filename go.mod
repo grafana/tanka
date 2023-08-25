@@ -16,7 +16,7 @@ require (
 	github.com/posener/complete v1.2.3
 	github.com/rs/zerolog v1.30.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/objx v0.5.0
+	github.com/stretchr/objx v0.5.1
 	github.com/stretchr/testify v1.8.4
 	github.com/thoas/go-funk v0.9.3
 	golang.org/x/term v0.11.0
