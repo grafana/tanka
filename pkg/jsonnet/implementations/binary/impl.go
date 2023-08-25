@@ -36,6 +36,14 @@ func (r *JsonnetBinaryRunner) EvaluateFile(filename string) (string, error) {
 }
 
 // JsonnetBinaryImplementation runs Jsonnet in a subprocess. It doesn't support native functions.
+// The interface of the binary has to compatible with the official Jsonnet CLI.
+// It has to support the following flags:
+// -J <path> for specifying import paths
+// --ext-code <name>=<value> for specifying external variables
+// --tla-code <name>=<value> for specifying top-level arguments
+// --max-stack <value> for specifying the maximum stack size
+// -e <code> for evaluating code snippets
+// <filename> positional arg for evaluating files
 type JsonnetBinaryImplementation struct {
 	BinPath string
 }

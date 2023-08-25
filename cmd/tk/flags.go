@@ -22,7 +22,7 @@ func workflowFlags(fs *pflag.FlagSet) *workflowFlagVars {
 	v := workflowFlagVars{}
 	fs.StringVar(&v.name, "name", "", "string that only a single inline environment contains in its name")
 	fs.StringSliceVarP(&v.targets, "target", "t", nil, "Regex filter on '<kind>/<name>'. See https://tanka.dev/output-filtering")
-	fs.StringVar(&v.jsonnetImplementation, "jsonnet-implementation", "go", "Use `go` to use native go-jsonnet implementation and `binary:<path>` to delegate evaluation to a binary (with the same API as the regular `jsonnet` binary)")
+	fs.StringVar(&v.jsonnetImplementation, "jsonnet-implementation", "go", "Use `go` to use native go-jsonnet implementation and `binary:<path>` to delegate evaluation to a binary (with the same API as the regular `jsonnet` binary, see the BinaryImplementation docstrings for more details)")
 	return &v
 }
 
