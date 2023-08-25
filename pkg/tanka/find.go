@@ -22,26 +22,34 @@ type FindOpts struct {
 // static or inline. If a directory is a valid environment, its subdirectories
 // are not checked.
 func FindEnvs(path string, opts FindOpts) ([]*v1alpha1.Environment, error) {
-	// find all environments at dir
-	envs, errs := find(path, Opts{JsonnetOpts: opts.JsonnetOpts})
-	if errs != nil {
-		return envs, ErrParallel{errors: errs}
-	}
+	return FindEnvsFromPaths([]string{path}, opts)
+}
 
-	// optionally filter
-	if opts.Selector == nil || opts.Selector.Empty() {
-		return envs, nil
-	}
+// FindEnvsFromPaths does the same as FindEnvs but takes a list of paths instead
+func FindEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+	var allEnvs []*v1alpha1.Environment
 
-	filtered := make([]*v1alpha1.Environment, 0, len(envs))
-	for _, e := range envs {
-		if !opts.Selector.Matches(e.Metadata) {
-			continue
+	for _, path := range paths {
+		// find all environments at dir
+		envs, errs := find(path, Opts{JsonnetOpts: opts.JsonnetOpts})
+		if errs != nil {
+			return envs, ErrParallel{errors: errs}
 		}
-		filtered = append(filtered, e)
+
+		// optionally filter
+		if opts.Selector != nil && !opts.Selector.Empty() {
+			for _, e := range envs {
+				if !opts.Selector.Matches(e.Metadata) {
+					continue
+				}
+				allEnvs = append(allEnvs, e)
+			}
+		} else {
+			allEnvs = append(allEnvs, envs...)
+		}
 	}
 
-	return filtered, nil
+	return allEnvs, nil
 }
 
 func findErr(path string, err error) []error {
