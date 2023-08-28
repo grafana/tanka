@@ -16,6 +16,37 @@ import (
 var interactive = term.IsTerminal(int(os.Stdout.Fd()))
 
 func main() {
+	outputPprofFile := os.Getenv("TANKA_PPROF_FILE")
+
+	// So that the other defers can run
+	exitCode, exitMessage := 0, ""
+	defer func() {
+		if exitMessage != "" {
+			fmt.Fprintln(os.Stderr, exitMessage)
+		}
+		os.Exit(exitCode)
+	}()
+	exitF := func(code int, messageF string, args ...interface{}) {
+		exitCode = code
+		exitMessage = fmt.Sprintf(messageF, args...)
+	}
+
+	if outputPprofFile != "" {
+		pprofFile, err := os.Create(outputPprofFile)
+		if err != nil {
+			exitF(2, "Error creating pprof file: %s\n", err)
+			return
+		}
+		defer pprofFile.Close()
+
+		err = pprof.StartCPUProfile(pprofFile)
+		if err != nil {
+			exitF(2, "Error starting pprof: %s\n", err)
+			return
+		}
+		defer pprof.StopCPUProfile()
+	}
+
 	rootCmd := &cli.Command{
 		Use:     "tk",
 		Short:   "tanka <3 jsonnet",
@@ -54,37 +85,6 @@ func main() {
 		rootCmd,
 		prefixCommands("tk-")...,
 	)
-
-	outputPprofFile := os.Getenv("TANKA_PPROF_FILE")
-
-	// So that the other defers can run
-	exitCode, exitMessage := 0, ""
-	defer func() {
-		if exitMessage != "" {
-			fmt.Fprintln(os.Stderr, exitMessage)
-		}
-		os.Exit(exitCode)
-	}()
-	exitF := func(code int, messageF string, args ...interface{}) {
-		exitCode = code
-		exitMessage = fmt.Sprintf(messageF, args...)
-	}
-
-	if outputPprofFile != "" {
-		pprofFile, err := os.Create(outputPprofFile)
-		if err != nil {
-			exitF(2, "Error creating pprof file: %s\n", err)
-			return
-		}
-		defer pprofFile.Close()
-
-		err = pprof.StartCPUProfile(pprofFile)
-		if err != nil {
-			exitF(2, "Error starting pprof: %s\n", err)
-			return
-		}
-		defer pprof.StopCPUProfile()
-	}
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
