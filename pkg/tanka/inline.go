@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/grafana/tanka/pkg/tracing"
 )
 
 // InlineLoader loads an environment that is specified inline from within
@@ -21,12 +23,15 @@ type InlineLoader struct {
 	jsonnetImpl types.JsonnetImplementation
 }
 
-func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+func (i *InlineLoader) Load(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+	ctx, span := tracing.Start(ctx, "InlineLoader.Load")
+	defer span.End()
+
 	if opts.Name != "" {
 		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
 	}
 
-	data, err := i.Eval(path, opts)
+	data, err := i.Eval(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -71,17 +76,23 @@ func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment
 	return env, nil
 }
 
-func (i *InlineLoader) Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+func (i *InlineLoader) Peek(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+	ctx, span := tracing.Start(ctx, "InlineLoader.Peek")
+	defer span.End()
+
 	opts.JsonnetOpts.EvalScript = MetadataEvalScript
 	if opts.Name != "" {
 		opts.JsonnetOpts.EvalScript = fmt.Sprintf(MetadataSingleEnvEvalScript, opts.Name)
 	}
-	return i.Load(path, opts)
+	return i.Load(ctx, path, opts)
 }
 
-func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
+func (i *InlineLoader) List(ctx context.Context, path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
+	ctx, span := tracing.Start(ctx, "InlineLoader.List")
+	defer span.End()
+
 	opts.JsonnetOpts.EvalScript = MetadataEvalScript
-	data, err := i.Eval(path, opts)
+	data, err := i.Eval(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -109,11 +120,14 @@ func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environme
 	return envs, nil
 }
 
-func (i *InlineLoader) Eval(path string, opts LoaderOpts) (interface{}, error) {
+func (i *InlineLoader) Eval(ctx context.Context, path string, opts LoaderOpts) (interface{}, error) {
+	ctx, span := tracing.Start(ctx, "InlineLoader.Eval")
+	defer span.End()
+
 	// Can't provide env as extVar, as we need to evaluate Jsonnet first to know it
 	opts.ExtCode.Set(environmentExtCode, `error "Using tk.env and std.extVar('tanka.dev/environment') is only supported for static environments. Directly access this data using standard Jsonnet instead."`)
 
-	raw, err := evalJsonnet(path, i.jsonnetImpl, opts.JsonnetOpts)
+	raw, err := evalJsonnet(ctx, path, i.jsonnetImpl, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}

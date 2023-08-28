@@ -69,7 +69,7 @@ func LoadEnvironment(ctx context.Context, path string, opts Opts) (*v1alpha1.Env
 		return nil, err
 	}
 
-	env, err := loader.Load(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	env, err := loader.Load(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func Peek(ctx context.Context, path string, opts Opts) (*v1alpha1.Environment, e
 		return nil, err
 	}
 
-	return loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.Peek(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
 // List finds metadata of all environments at path that could possibly be
@@ -119,7 +119,7 @@ func List(ctx context.Context, path string, opts Opts) ([]*v1alpha1.Environment,
 		return nil, err
 	}
 
-	return loader.List(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.List(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
 func getJsonnetImplementation(path string, opts Opts) (types.JsonnetImplementation, error) {
@@ -160,7 +160,7 @@ func Eval(ctx context.Context, path string, opts Opts) (interface{}, error) {
 		return nil, err
 	}
 
-	return loader.Eval(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.Eval(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
 // DetectLoader detects whether the environment is inline or static and picks
@@ -197,17 +197,17 @@ func DetectLoader(ctx context.Context, path string, opts Opts) (Loader, error) {
 // Loader is an abstraction over the process of loading Environments
 type Loader interface {
 	// Load a single environment at path
-	Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error)
+	Load(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error)
 
 	// Peek only loads metadata and omits the actual resources
-	Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error)
+	Peek(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error)
 
 	// List returns metadata of all possible environments at path that can be
 	// loaded
-	List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error)
+	List(ctx context.Context, path string, opts LoaderOpts) ([]*v1alpha1.Environment, error)
 
 	// Eval returns the raw evaluated Jsonnet
-	Eval(path string, opts LoaderOpts) (interface{}, error)
+	Eval(ctx context.Context, path string, opts LoaderOpts) (interface{}, error)
 }
 
 type LoaderOpts struct {
