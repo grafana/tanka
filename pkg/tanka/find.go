@@ -98,7 +98,7 @@ func findJsonnetFilesFromPaths(paths []string, opts FindOpts) ([]string, error) 
 	// collect jsonnet files
 	var jsonnetFiles []string
 	var errs []error
-	for i := 0; i < len(paths); i++ {
+	for range paths {
 		res := <-findJsonnetFilesChan
 		if res.err != nil {
 			errs = append(errs, res.err)
