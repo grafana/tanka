@@ -31,6 +31,10 @@ menu: "References"
 **Description**: Path to the `kustomize` executable  
 **Default**: `$PATH/kustomize`
 
+### TANKA_PPROF_FILE
+
+**Description**: Path where a profiling file will be saved
+
 ### PAGER
 
 **Description**: Pager to use when displaying output. Set to an empty string to disable paging.

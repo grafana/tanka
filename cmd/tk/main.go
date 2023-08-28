@@ -55,27 +55,32 @@ func main() {
 		prefixCommands("tk-")...,
 	)
 
-	outputPprofFile := os.Getenv("TK_PPROF_FILE")
+	outputPprofFile := os.Getenv("TANKA_PPROF_FILE")
 
 	// So that the other defers can run
-	exitCode := 0
+	exitCode, exitMessage := 0, ""
 	defer func() {
+		if exitMessage != "" {
+			fmt.Fprintln(os.Stderr, exitMessage)
+		}
 		os.Exit(exitCode)
 	}()
+	exitF := func(code int, messageF string, args ...interface{}) {
+		exitCode = code
+		exitMessage = fmt.Sprintf(messageF, args...)
+	}
 
 	if outputPprofFile != "" {
 		pprofFile, err := os.Create(outputPprofFile)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating pprof file: %s\n", err)
-			exitCode = 1
+			exitF(2, "Error creating pprof file: %s\n", err)
 			return
 		}
 		defer pprofFile.Close()
 
 		err = pprof.StartCPUProfile(pprofFile)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error starting pprof: %s\n", err)
-			exitCode = 1
+			exitF(2, "Error starting pprof: %s\n", err)
 			return
 		}
 		defer pprof.StopCPUProfile()
@@ -83,8 +88,7 @@ func main() {
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
-		exitCode = 1
+		exitF(1, "Error: %s\n", err)
 		return
 	}
 }
