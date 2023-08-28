@@ -11,6 +11,7 @@ import (
 	"github.com/go-clix/cli"
 
 	"github.com/grafana/tanka/pkg/tanka"
+	"github.com/grafana/tanka/pkg/tracing"
 )
 
 func statusCmd() *cli.Command {
@@ -24,7 +25,10 @@ func statusCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
-		status, err := tanka.Status(args[0], tanka.Opts{
+		ctx, span := tracing.Start(mainTracingCtx, "statusCmd")
+		defer span.End()
+
+		status, err := tanka.Status(ctx, args[0], tanka.Opts{
 			JsonnetImplementation: vars.jsonnetImplementation,
 			JsonnetOpts:           getJsonnetOpts(),
 			Name:                  vars.name,

@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -73,8 +74,8 @@ func (e ErrorApplyStrategyUnknown) Error() string {
 // Apply parses the environment at the given directory (a `baseDir`) and applies
 // the evaluated jsonnet to the Kubernetes cluster defined in the environments
 // `spec.json`.
-func Apply(baseDir string, opts ApplyOpts) error {
-	l, err := Load(baseDir, opts.Opts)
+func Apply(ctx context.Context, baseDir string, opts ApplyOpts) error {
+	l, err := Load(ctx, baseDir, opts.Opts)
 	if err != nil {
 		return err
 	}
@@ -176,8 +177,8 @@ type DiffOpts struct {
 // `WithDiffSummarize` modifier is used, a histogram is returned instead.
 // The cluster information is retrieved from the environments `spec.json`.
 // NOTE: This function requires on `diff(1)` and `kubectl(1)`
-func Diff(baseDir string, opts DiffOpts) (*string, error) {
-	l, err := Load(baseDir, opts.Opts)
+func Diff(ctx context.Context, baseDir string, opts DiffOpts) (*string, error) {
+	l, err := Load(ctx, baseDir, opts.Opts)
 	if err != nil {
 		return nil, err
 	}
@@ -202,8 +203,8 @@ type DeleteOpts struct {
 // Delete parses the environment at the given directory (a `baseDir`) and deletes
 // the generated objects from the Kubernetes cluster defined in the environment's
 // `spec.json`.
-func Delete(baseDir string, opts DeleteOpts) error {
-	l, err := Load(baseDir, opts.Opts)
+func Delete(ctx context.Context, baseDir string, opts DeleteOpts) error {
+	l, err := Load(ctx, baseDir, opts.Opts)
 	if err != nil {
 		return err
 	}
@@ -245,8 +246,8 @@ func Delete(baseDir string, opts DeleteOpts) error {
 // Show parses the environment at the given directory (a `baseDir`) and returns
 // the list of Kubernetes objects.
 // Tip: use the `String()` function on the returned list to get the familiar yaml stream
-func Show(baseDir string, opts Opts) (manifest.List, error) {
-	l, err := Load(baseDir, opts)
+func Show(ctx context.Context, baseDir string, opts Opts) (manifest.List, error) {
+	l, err := Load(ctx, baseDir, opts)
 	if err != nil {
 		return nil, err
 	}

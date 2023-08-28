@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,8 +16,10 @@ import (
 	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/grafana/tanka/pkg/tracing"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // environmentExtCode is the extCode ID `tk.env` uses underneath
@@ -25,13 +28,16 @@ const environmentExtCode = spec.APIGroup + "/environment"
 
 // Load loads the Environment at `path`. It automatically detects whether to
 // load inline or statically
-func Load(path string, opts Opts) (*LoadResult, error) {
-	env, err := LoadEnvironment(path, opts)
+func Load(ctx context.Context, path string, opts Opts) (*LoadResult, error) {
+	ctx, span := tracing.Start(ctx, "Load")
+	defer span.End()
+
+	env, err := LoadEnvironment(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := LoadManifests(env, opts.Filters)
+	result, err := LoadManifests(ctx, env, opts.Filters)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +51,10 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 	return result, nil
 }
 
-func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
+func LoadEnvironment(ctx context.Context, path string, opts Opts) (*v1alpha1.Environment, error) {
+	ctx, span := tracing.Start(ctx, "LoadEnvironment", attribute.String("path", path), attribute.String("name", opts.Name))
+	defer span.End()
+
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		log.Info().Msgf("Path %q does not exist, trying to use it as an environment name", path)
@@ -55,7 +64,7 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	loader, err := DetectLoader(path, opts)
+	loader, err := DetectLoader(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +77,10 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 	return env, nil
 }
 
-func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
+func LoadManifests(ctx context.Context, env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
+	_, span := tracing.Start(ctx, "LoadManifests", attribute.String("name", env.Metadata.Name))
+	defer span.End()
+
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}
@@ -83,8 +95,11 @@ func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadRe
 
 // Peek loads the metadata of the environment at path. To get resources as well,
 // use Load
-func Peek(path string, opts Opts) (*v1alpha1.Environment, error) {
-	loader, err := DetectLoader(path, opts)
+func Peek(ctx context.Context, path string, opts Opts) (*v1alpha1.Environment, error) {
+	ctx, span := tracing.Start(ctx, "Peek", attribute.String("path", path), attribute.String("name", opts.Name))
+	defer span.End()
+
+	loader, err := DetectLoader(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +110,11 @@ func Peek(path string, opts Opts) (*v1alpha1.Environment, error) {
 // List finds metadata of all environments at path that could possibly be
 // loaded. List can be used to deal with multiple inline environments, by first
 // listing them, choosing the right one and then only loading that one
-func List(path string, opts Opts) ([]*v1alpha1.Environment, error) {
-	loader, err := DetectLoader(path, opts)
+func List(ctx context.Context, path string, opts Opts) ([]*v1alpha1.Environment, error) {
+	ctx, span := tracing.Start(ctx, "List", attribute.String("path", path), attribute.String("name", opts.Name))
+	defer span.End()
+
+	loader, err := DetectLoader(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -133,8 +151,11 @@ func getJsonnetImplementation(path string, opts Opts) (types.JsonnetImplementati
 }
 
 // Eval returns the raw evaluated Jsonnet
-func Eval(path string, opts Opts) (interface{}, error) {
-	loader, err := DetectLoader(path, opts)
+func Eval(ctx context.Context, path string, opts Opts) (interface{}, error) {
+	ctx, span := tracing.Start(ctx, "Eval", attribute.String("path", path), attribute.String("name", opts.Name))
+	defer span.End()
+
+	loader, err := DetectLoader(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +165,10 @@ func Eval(path string, opts Opts) (interface{}, error) {
 
 // DetectLoader detects whether the environment is inline or static and picks
 // the approriate loader
-func DetectLoader(path string, opts Opts) (Loader, error) {
+func DetectLoader(ctx context.Context, path string, opts Opts) (Loader, error) {
+	ctx, span := tracing.Start(ctx, "DetectLoader", attribute.String("path", path))
+	defer span.End()
+
 	_, base, err := jpath.Dirs(path)
 	if err != nil {
 		return nil, err

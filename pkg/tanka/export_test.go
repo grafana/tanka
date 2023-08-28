@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -49,7 +50,7 @@ func TestExportEnvironments(t *testing.T) {
 	defer func() { require.NoError(t, os.Chdir("..")) }()
 
 	// Find envs
-	envs, err := FindEnvs("test-export-envs", FindOpts{Selector: labels.Everything()})
+	envs, err := FindEnvs(context.Background(), "test-export-envs", FindOpts{Selector: labels.Everything()})
 	require.NoError(t, err)
 
 	// Export all envs
@@ -97,7 +98,7 @@ func TestExportEnvironments(t *testing.T) {
 		"serviceName":    "'updated-service'",
 	}
 	opts.MergeStrategy = ExportMergeStrategyReplaceEnvs
-	staticEnv, err := FindEnvs("test-export-envs", FindOpts{Selector: labels.SelectorFromSet(labels.Set{"type": "static"})})
+	staticEnv, err := FindEnvs(context.Background(), "test-export-envs", FindOpts{Selector: labels.SelectorFromSet(labels.Set{"type": "static"})})
 	require.NoError(t, err)
 	require.NoError(t, ExportEnvironments(staticEnv, tempDir, opts))
 	checkFiles(t, tempDir, []string{
@@ -149,7 +150,7 @@ func BenchmarkExportEnvironmentsWithReplaceEnvs(b *testing.B) {
 	defer func() { require.NoError(b, os.Chdir("..")) }()
 
 	// Find envs
-	envs, err := FindEnvs("test-export-envs", FindOpts{Selector: labels.Everything()})
+	envs, err := FindEnvs(context.Background(), "test-export-envs", FindOpts{Selector: labels.Everything()})
 	require.NoError(b, err)
 
 	// Export all envs

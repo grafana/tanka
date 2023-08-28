@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/grafana/tanka/pkg/tracing"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -22,7 +24,10 @@ type parallelOpts struct {
 }
 
 // parallelLoadEnvironments evaluates multiple environments in parallel
-func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) ([]*v1alpha1.Environment, error) {
+func parallelLoadEnvironments(ctx context.Context, envs []*v1alpha1.Environment, opts parallelOpts) ([]*v1alpha1.Environment, error) {
+	ctx, span := tracing.Start(ctx, "parallelLoadEnvironments")
+	defer span.End()
+
 	jobsCh := make(chan parallelJob)
 	outCh := make(chan parallelOut, len(envs))
 
@@ -36,7 +41,7 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 	}
 
 	for i := 0; i < opts.Parallelism; i++ {
-		go parallelWorker(jobsCh, outCh)
+		go parallelWorker(ctx, jobsCh, outCh)
 	}
 
 	for _, env := range envs {
@@ -96,12 +101,15 @@ type parallelOut struct {
 	err error
 }
 
-func parallelWorker(jobsCh <-chan parallelJob, outCh chan parallelOut) {
+func parallelWorker(ctx context.Context, jobsCh <-chan parallelJob, outCh chan parallelOut) {
+	ctx, span := tracing.Start(ctx, "parallelWorker")
+	defer span.End()
+
 	for job := range jobsCh {
 		log.Debug().Str("name", job.opts.Name).Str("path", job.path).Msg("Loading environment")
 		startTime := time.Now()
 
-		env, err := LoadEnvironment(job.path, job.opts)
+		env, err := LoadEnvironment(ctx, job.path, job.opts)
 		if err != nil {
 			err = fmt.Errorf("%s:\n %w", job.path, err)
 		}

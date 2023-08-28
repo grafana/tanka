@@ -2,6 +2,7 @@ package tanka
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/grafana/tanka/pkg/tracing"
 )
 
 // BelRune is a string of the Ascii character BEL which made computers ring in ancient times
@@ -61,7 +63,10 @@ type ExportEnvOpts struct {
 	MergeDeletedEnvs []string
 }
 
-func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
+func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
+	ctx, span := tracing.Start(ctx, "ExportEnvironments")
+	defer span.End()
+
 	// Keep track of which file maps to which environment
 	fileToEnv := map[string]string{}
 
@@ -76,18 +81,18 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 
 	// delete files previously exported by the targeted envs.
 	if opts.MergeStrategy == ExportMergeStrategyReplaceEnvs {
-		if err := deletePreviouslyExportedManifestsFromTankaEnvs(to, envs); err != nil {
+		if err := deletePreviouslyExportedManifestsFromTankaEnvs(ctx, to, envs); err != nil {
 			return fmt.Errorf("deleting previously exported manifests: %w", err)
 		}
 	}
 
 	// delete files that were exported by environments that have been deleted since the last export.
-	if err := deletePreviouslyExportedManifests(to, opts.MergeDeletedEnvs); err != nil {
+	if err := deletePreviouslyExportedManifests(ctx, to, opts.MergeDeletedEnvs); err != nil {
 		return fmt.Errorf("deleting previously exported manifests from deleted environments: %w", err)
 	}
 
 	// get all environments for paths
-	loadedEnvs, err := parallelLoadEnvironments(envs, parallelOpts{
+	loadedEnvs, err := parallelLoadEnvironments(ctx, envs, parallelOpts{
 		Opts:        opts.Opts,
 		Selector:    opts.Selector,
 		Parallelism: opts.Parallelism,
@@ -96,9 +101,10 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 		return err
 	}
 
+	manifestsCtx, manifestsSpan := tracing.Start(ctx, "jsonnet to manifests")
 	for _, env := range loadedEnvs {
 		// get the manifests
-		loaded, err := LoadManifests(env, opts.Opts.Filters)
+		loaded, err := LoadManifests(manifestsCtx, env, opts.Opts.Filters)
 		if err != nil {
 			return err
 		}
@@ -118,7 +124,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 		}
 
 		// create template
-		manifestTemplate, err := createTemplate(opts.Format, menv)
+		manifestTemplate, err := createTemplate(manifestsCtx, opts.Format, menv)
 		if err != nil {
 			return fmt.Errorf("parsing format: %s", err)
 		}
@@ -126,7 +132,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 		// write each to a file
 		for _, m := range res {
 			// apply template
-			name, err := applyTemplate(manifestTemplate, m)
+			name, err := applyTemplate(manifestsCtx, manifestTemplate, m)
 			if err != nil {
 				return fmt.Errorf("executing name template: %w", err)
 			}
@@ -146,13 +152,14 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 
 			// Write manifest
 			data := m.String()
-			if err := writeExportFile(path, []byte(data)); err != nil {
+			if err := writeExportFile(manifestsCtx, path, []byte(data)); err != nil {
 				return err
 			}
 		}
+		manifestsSpan.End()
 	}
 
-	return exportManifestFile(to, fileToEnv, nil)
+	return exportManifestFile(ctx, to, fileToEnv, nil)
 }
 
 func fileExists(name string) (bool, error) {
@@ -182,15 +189,21 @@ func dirEmpty(dir string) (bool, error) {
 	return false, err
 }
 
-func deletePreviouslyExportedManifestsFromTankaEnvs(path string, envs []*v1alpha1.Environment) error {
+func deletePreviouslyExportedManifestsFromTankaEnvs(ctx context.Context, path string, envs []*v1alpha1.Environment) error {
+	ctx, span := tracing.Start(ctx, "deletePreviouslyExportedManifestsFromTankaEnvs")
+	defer span.End()
+
 	envNames := []string{}
 	for _, env := range envs {
 		envNames = append(envNames, env.Metadata.Namespace)
 	}
-	return deletePreviouslyExportedManifests(path, envNames)
+	return deletePreviouslyExportedManifests(ctx, path, envNames)
 }
 
-func deletePreviouslyExportedManifests(path string, tankaEnvNames []string) error {
+func deletePreviouslyExportedManifests(ctx context.Context, path string, tankaEnvNames []string) error {
+	ctx, span := tracing.Start(ctx, "deletePreviouslyExportedManifests")
+	defer span.End()
+
 	if len(tankaEnvNames) == 0 {
 		return nil
 	}
@@ -225,12 +238,15 @@ func deletePreviouslyExportedManifests(path string, tankaEnvNames []string) erro
 		}
 	}
 
-	return exportManifestFile(path, nil, deletedManifestKeys)
+	return exportManifestFile(ctx, path, nil, deletedManifestKeys)
 }
 
 // exportManifestFile writes a manifest file that maps the exported files to their environment.
 // If the file already exists, the new entries will be merged with the existing ones.
-func exportManifestFile(path string, newFileToEnvMap map[string]string, deletedKeys []string) error {
+func exportManifestFile(ctx context.Context, path string, newFileToEnvMap map[string]string, deletedKeys []string) error {
+	ctx, span := tracing.Start(ctx, "exportManifestFile")
+	defer span.End()
+
 	if len(newFileToEnvMap) == 0 && len(deletedKeys) == 0 {
 		return nil
 	}
@@ -260,10 +276,13 @@ func exportManifestFile(path string, newFileToEnvMap map[string]string, deletedK
 		return fmt.Errorf("marshalling manifest file: %w", err)
 	}
 
-	return writeExportFile(manifestFilePath, data)
+	return writeExportFile(ctx, manifestFilePath, data)
 }
 
-func writeExportFile(path string, data []byte) error {
+func writeExportFile(ctx context.Context, path string, data []byte) error {
+	_, span := tracing.Start(ctx, "writeExportFile")
+	defer span.End()
+
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return fmt.Errorf("creating filepath '%s': %s", filepath.Dir(path), err)
 	}
@@ -271,7 +290,10 @@ func writeExportFile(path string, data []byte) error {
 	return os.WriteFile(path, data, 0644)
 }
 
-func createTemplate(format string, env manifest.Manifest) (*template.Template, error) {
+func createTemplate(ctx context.Context, format string, env manifest.Manifest) (*template.Template, error) {
+	_, span := tracing.Start(ctx, "createTemplate")
+	defer span.End()
+
 	// Replace all os.path separators in string with BelRune for creating subfolders
 	replaceFormat := replaceTmplText(format, string(os.PathSeparator), BelRune)
 
@@ -305,7 +327,10 @@ func replaceTmplText(s, old, new string) string {
 	return strings.Join(parts, "")
 }
 
-func applyTemplate(template *template.Template, m manifest.Manifest) (path string, err error) {
+func applyTemplate(ctx context.Context, template *template.Template, m manifest.Manifest) (path string, err error) {
+	ctx, span := tracing.Start(ctx, "applyTemplate")
+	defer span.End()
+
 	buf := bytes.Buffer{}
 	if err := template.Execute(&buf, m); err != nil {
 		return "", err

@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,7 +16,7 @@ func BenchmarkFindEnvsFromSinglePath(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		envs, err := FindEnvs(tempDir, FindOpts{})
+		envs, err := FindEnvs(context.Background(), tempDir, FindOpts{})
 		require.Len(b, envs, 200)
 		require.NoError(b, err)
 	}
@@ -27,7 +28,7 @@ func BenchmarkFindEnvsFromPaths(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		envs, err := FindEnvsFromPaths(envPaths, FindOpts{})
+		envs, err := FindEnvsFromPaths(context.Background(), envPaths, FindOpts{})
 		require.Len(b, envs, 200)
 		require.NoError(b, err)
 	}

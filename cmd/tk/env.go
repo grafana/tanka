@@ -19,6 +19,7 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
+	"github.com/grafana/tanka/pkg/tracing"
 )
 
 func envCmd() *cli.Command {
@@ -65,6 +66,9 @@ func envSetCmd() *cli.Command {
 	_ = cmd.Flags().MarkHidden("name")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		ctx, span := tracing.Start(mainTracingCtx, "setCmd")
+		defer span.End()
+
 		if *name != "" {
 			return fmt.Errorf("it looks like you attempted to rename the environment using `--name`. However, this is not possible with Tanka, because the environments name is inferred from the directories name. To rename the environment, rename its directory instead")
 		}
@@ -82,7 +86,7 @@ func envSetCmd() *cli.Command {
 			tmp.Spec.APIServer = server
 		}
 
-		cfg, err := tanka.Peek(path, tanka.Opts{})
+		cfg, err := tanka.Peek(ctx, path, tanka.Opts{})
 		if err != nil {
 			return err
 		}
@@ -242,6 +246,9 @@ func envListCmd() *cli.Command {
 	useNames := cmd.Flags().Bool("names", false, "plain names output")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		ctx, span := tracing.Start(mainTracingCtx, "listCmd")
+		defer span.End()
+
 		var path string
 		var err error
 		if len(args) == 1 {
@@ -253,7 +260,7 @@ func envListCmd() *cli.Command {
 			}
 		}
 
-		envs, err := tanka.FindEnvs(path, tanka.FindOpts{Selector: getLabelSelector()})
+		envs, err := tanka.FindEnvs(ctx, path, tanka.FindOpts{Selector: getLabelSelector()})
 		if err != nil {
 			return err
 		}

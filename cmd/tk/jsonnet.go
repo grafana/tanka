@@ -6,6 +6,7 @@ import (
 	"github.com/go-clix/cli"
 
 	"github.com/grafana/tanka/pkg/tanka"
+	"github.com/grafana/tanka/pkg/tracing"
 )
 
 func evalCmd() *cli.Command {
@@ -20,13 +21,16 @@ func evalCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		ctx, span := tracing.Start(mainTracingCtx, "evalCmd")
+		defer span.End()
+
 		jsonnetOpts := tanka.Opts{
 			JsonnetOpts: getJsonnetOpts(),
 		}
 		if *evalPattern != "" {
 			jsonnetOpts.EvalScript = tanka.PatternEvalScript(*evalPattern)
 		}
-		raw, err := tanka.Eval(args[0], jsonnetOpts)
+		raw, err := tanka.Eval(ctx, args[0], jsonnetOpts)
 
 		if raw == nil && err != nil {
 			return err

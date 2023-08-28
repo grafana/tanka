@@ -10,11 +10,15 @@ import (
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/tanka"
+	"github.com/grafana/tanka/pkg/tracing"
 )
 
 var workflowArgs = cli.Args{
 	Validator: cli.ValidateExact(1),
 	Predictor: cli.PredictFunc(func(args complete.Args) []string {
+		ctx, span := tracing.Start(mainTracingCtx, "predict")
+		defer span.End()
+
 		pwd, err := os.Getwd()
 		if err != nil {
 			return nil
@@ -25,7 +29,7 @@ var workflowArgs = cli.Args{
 			return nil
 		}
 
-		envs, err := tanka.FindEnvs(pwd, tanka.FindOpts{})
+		envs, err := tanka.FindEnvs(ctx, pwd, tanka.FindOpts{})
 		if err != nil && !errors.As(err, &tanka.ErrParallel{}) {
 			return nil
 		}

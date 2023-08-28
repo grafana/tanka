@@ -11,6 +11,7 @@ import (
 	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/tanka"
 	"github.com/grafana/tanka/pkg/term"
+	"github.com/grafana/tanka/pkg/tracing"
 )
 
 // special exit codes for tk diff
@@ -96,6 +97,9 @@ func applyCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		ctx, span := tracing.Start(mainTracingCtx, "applyCmd")
+		defer span.End()
+
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
 			return err
@@ -116,7 +120,7 @@ func applyCmd() *cli.Command {
 		opts.Name = vars.name
 		opts.JsonnetImplementation = vars.jsonnetImplementation
 
-		return tanka.Apply(args[0], opts)
+		return tanka.Apply(ctx, args[0], opts)
 	}
 	return cmd
 }
@@ -142,6 +146,9 @@ func pruneCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		ctx, span := tracing.Start(mainTracingCtx, "pruneCmd")
+		defer span.End()
+
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
 			return err
@@ -155,7 +162,7 @@ func pruneCmd() *cli.Command {
 
 		opts.JsonnetOpts = getJsonnetOpts()
 
-		return tanka.Prune(args[0], opts)
+		return tanka.Prune(ctx, args[0], opts)
 	}
 
 	return cmd
@@ -183,6 +190,9 @@ func deleteCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		ctx, span := tracing.Start(mainTracingCtx, "deleteCmd")
+		defer span.End()
+
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
 			return err
@@ -203,7 +213,7 @@ func deleteCmd() *cli.Command {
 		opts.Name = vars.name
 		opts.JsonnetImplementation = vars.jsonnetImplementation
 
-		return tanka.Delete(args[0], opts)
+		return tanka.Delete(ctx, args[0], opts)
 	}
 	return cmd
 }
@@ -230,6 +240,9 @@ func diffCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		ctx, span := tracing.Start(mainTracingCtx, "diffCmd")
+		defer span.End()
+
 		if err := setForceColor(&opts.DiffBaseOpts); err != nil {
 			return err
 		}
@@ -242,7 +255,7 @@ func diffCmd() *cli.Command {
 		opts.Name = vars.name
 		opts.JsonnetImplementation = vars.jsonnetImplementation
 
-		changes, err := tanka.Diff(args[0], opts)
+		changes, err := tanka.Diff(ctx, args[0], opts)
 		if err != nil {
 			return err
 		}
@@ -281,6 +294,9 @@ func showCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		ctx, span := tracing.Start(mainTracingCtx, "showCmd")
+		defer span.End()
+
 		if !interactive && !*allowRedirect {
 			fmt.Fprintln(os.Stderr, `Redirection of the output of tk show is discouraged and disabled by default.
 If you want to export .yaml files for use with other tools, try 'tk export'.
@@ -293,7 +309,7 @@ Otherwise run tk show --dangerous-allow-redirect to bypass this check.`)
 			return err
 		}
 
-		pretty, err := tanka.Show(args[0], tanka.Opts{
+		pretty, err := tanka.Show(ctx, args[0], tanka.Opts{
 			JsonnetOpts:           getJsonnetOpts(),
 			Filters:               filters,
 			Name:                  vars.name,

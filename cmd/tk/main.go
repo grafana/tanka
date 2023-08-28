@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -10,11 +11,28 @@ import (
 	"golang.org/x/term"
 
 	"github.com/grafana/tanka/pkg/tanka"
+	"github.com/grafana/tanka/pkg/tracing"
 )
 
-var interactive = term.IsTerminal(int(os.Stdout.Fd()))
+var (
+	interactive    = term.IsTerminal(int(os.Stdout.Fd()))
+	mainTracingCtx context.Context
+)
 
 func main() {
+	ctx, span := tracing.Start(context.Background(), "main")
+	defer span.End()
+	mainTracingCtx = ctx
+
+	// OTEL
+	shutdown, err := tracing.InstallExportPipeline(ctx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(1)
+	}
+
+	defer shutdown(ctx)
+
 	rootCmd := &cli.Command{
 		Use:     "tk",
 		Short:   "tanka <3 jsonnet",
@@ -57,7 +75,7 @@ func main() {
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
+		defer os.Exit(1)
 	}
 }
 

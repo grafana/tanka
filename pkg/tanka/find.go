@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -9,6 +10,7 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
+	"github.com/grafana/tanka/pkg/tracing"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/labels"
@@ -25,16 +27,19 @@ type FindOpts struct {
 // Each directory is tested and included if it is a valid environment, either
 // static or inline. If a directory is a valid environment, its subdirectories
 // are not checked.
-func FindEnvs(path string, opts FindOpts) ([]*v1alpha1.Environment, error) {
-	return findEnvsFromPaths([]string{path}, opts)
+func FindEnvs(ctx context.Context, path string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+	return findEnvsFromPaths(ctx, []string{path}, opts)
 }
 
 // FindEnvsFromPaths does the same as FindEnvs but takes a list of paths instead
-func FindEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
-	return findEnvsFromPaths(paths, opts)
+func FindEnvsFromPaths(ctx context.Context, paths []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+	return findEnvsFromPaths(ctx, paths, opts)
 }
 
-func findEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+func findEnvsFromPaths(ctx context.Context, paths []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+	ctx, span := tracing.Start(ctx, "findEnvsFromPaths")
+	defer span.End()
+
 	if opts.Parallelism <= 0 {
 		opts.Parallelism = runtime.NumCPU()
 	}
@@ -49,7 +54,7 @@ func findEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, 
 
 	findJsonnetFilesEndTime := time.Now()
 
-	envs, err := findEnvsFromJsonnetFiles(jsonnetFiles, opts)
+	envs, err := findEnvsFromJsonnetFiles(ctx, jsonnetFiles, opts)
 	if err != nil {
 		return nil, fmt.Errorf("finding environments: %w", err)
 	}
@@ -116,7 +121,10 @@ func findJsonnetFilesFromPaths(paths []string, opts FindOpts) ([]string, error) 
 }
 
 // find all environments within jsonnet files
-func findEnvsFromJsonnetFiles(jsonnetFiles []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+func findEnvsFromJsonnetFiles(ctx context.Context, jsonnetFiles []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+	ctx, span := tracing.Start(ctx, "findEnvsFromJsonnetFiles")
+	defer span.End()
+
 	type findEnvsOut struct {
 		envs []*v1alpha1.Environment
 		err  error
@@ -129,7 +137,7 @@ func findEnvsFromJsonnetFiles(jsonnetFiles []string, opts FindOpts) ([]*v1alpha1
 		go func() {
 			for jsonnetFile := range jsonnetFilesChan {
 				// try if this has envs
-				list, err := List(jsonnetFile, Opts{JsonnetOpts: opts.JsonnetOpts})
+				list, err := List(ctx, jsonnetFile, Opts{JsonnetOpts: opts.JsonnetOpts})
 				if err != nil &&
 					// expected when looking for environments
 					!errors.As(err, &jpath.ErrorNoBase{}) &&
