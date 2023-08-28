@@ -86,26 +86,27 @@ func exportCmd() *cli.Command {
 		}
 
 		var exportEnvs []*v1alpha1.Environment
-		for _, path := range args[1:] {
-			// find possible environments
-			if *recursive {
-				// get absolute path to Environment
-				envs, err := tanka.FindEnvs(path, tanka.FindOpts{Selector: opts.Selector})
-				if err != nil {
-					return err
-				}
+		// find possible environments
+		if *recursive {
+			// get absolute path to Environment
+			envs, err := tanka.FindEnvsFromPaths(args[1:], tanka.FindOpts{Selector: opts.Selector, Parallelism: opts.Parallelism})
+			if err != nil {
+				return err
+			}
 
-				for _, env := range envs {
-					if opts.Opts.Name != "" && opts.Opts.Name != env.Metadata.Name {
-						continue
-					}
-					exportEnvs = append(exportEnvs, env)
+			for _, env := range envs {
+				if opts.Opts.Name != "" && opts.Opts.Name != env.Metadata.Name {
+					continue
 				}
-				continue
+				exportEnvs = append(exportEnvs, env)
+			}
+		} else {
+			if len(args[1:]) > 1 {
+				return fmt.Errorf("recursive flag is required when exporting multiple environments")
 			}
 
 			// validate environment
-			env, err := tanka.Peek(path, opts.Opts)
+			env, err := tanka.Peek(args[1], opts.Opts)
 			if err != nil {
 				switch err.(type) {
 				case tanka.ErrMultipleEnvs:

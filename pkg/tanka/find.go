@@ -2,19 +2,23 @@ package tanka
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
+	"runtime"
+	"time"
 
+	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/labels"
 )
 
 // FindOpts are optional arguments for FindEnvs
 type FindOpts struct {
 	JsonnetOpts
-	Selector labels.Selector
+	Selector    labels.Selector
+	Parallelism int
 }
 
 // FindEnvs returns metadata of all environments recursively found in 'path'.
@@ -22,103 +26,156 @@ type FindOpts struct {
 // static or inline. If a directory is a valid environment, its subdirectories
 // are not checked.
 func FindEnvs(path string, opts FindOpts) ([]*v1alpha1.Environment, error) {
-	// find all environments at dir
-	envs, errs := find(path, Opts{JsonnetOpts: opts.JsonnetOpts})
-	if errs != nil {
-		return envs, ErrParallel{errors: errs}
-	}
-
-	// optionally filter
-	if opts.Selector == nil || opts.Selector.Empty() {
-		return envs, nil
-	}
-
-	filtered := make([]*v1alpha1.Environment, 0, len(envs))
-	for _, e := range envs {
-		if !opts.Selector.Matches(e.Metadata) {
-			continue
-		}
-		filtered = append(filtered, e)
-	}
-
-	return filtered, nil
+	return findEnvsFromPaths([]string{path}, opts)
 }
 
-func findErr(path string, err error) []error {
-	return []error{fmt.Errorf("%s:\n %w", path, err)}
+// FindEnvsFromPaths does the same as FindEnvs but takes a list of paths instead
+func FindEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+	return findEnvsFromPaths(paths, opts)
 }
 
-// find implements the actual functionality described at 'FindEnvs'
-func find(path string, opts Opts) ([]*v1alpha1.Environment, []error) {
-	// try if this has envs
-	list, err := List(path, opts)
-	if err != nil &&
-		// expected when looking for environments
-		!errors.As(err, &jpath.ErrorNoBase{}) &&
-		!errors.As(err, &jpath.ErrorFileNotFound{}) {
-		return nil, findErr(path, err)
-	}
-	if len(list) != 0 {
-		// it has. don't search deeper
-		return list, nil
+func findEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+	if opts.Parallelism <= 0 {
+		opts.Parallelism = runtime.NumCPU()
 	}
 
-	stat, err := os.Stat(path)
+	log.Debug().Int("parallelism", opts.Parallelism).Int("paths", len(paths)).Msg("Finding Tanka environments")
+	startTime := time.Now()
+
+	jsonnetFiles, err := findJsonnetFilesFromPaths(paths, opts)
 	if err != nil {
-		return nil, findErr(path, err)
+		return nil, fmt.Errorf("finding jsonnet files: %w", err)
 	}
 
-	// if path is a file, don't search deeper
-	if !stat.IsDir() {
-		return nil, nil
-	}
+	findJsonnetFilesEndTime := time.Now()
 
-	// list directory
-	files, err := os.ReadDir(path)
+	envs, err := findEnvsFromJsonnetFiles(jsonnetFiles, opts)
 	if err != nil {
-		return nil, findErr(path, err)
+		return nil, fmt.Errorf("finding environments: %w", err)
 	}
 
-	// it's not one. Maybe subdirectories are?
-	ch := make(chan findOut)
-	routines := 0
+	findEnvsEndTime := time.Now()
 
-	// recursively find in parallel
-	for _, fi := range files {
-		if !fi.IsDir() {
-			continue
-		}
-
-		routines++
-		go findShim(filepath.Join(path, fi.Name()), opts, ch)
-	}
-
-	// collect parallel results
-	var errs []error
-	var envs []*v1alpha1.Environment
-
-	for i := 0; i < routines; i++ {
-		out := <-ch
-		if out.errs != nil {
-			errs = append(errs, out.errs...)
-		}
-
-		envs = append(envs, out.envs...)
-	}
-
-	if len(errs) != 0 {
-		return envs, errs
-	}
+	log.Info().
+		Int("environments", len(envs)).
+		Dur("ms_to_find_jsonnet_files", findJsonnetFilesEndTime.Sub(startTime)).
+		Dur("ms_to_find_environments", findEnvsEndTime.Sub(findJsonnetFilesEndTime)).
+		Msg("Found Tanka environments")
 
 	return envs, nil
 }
 
-type findOut struct {
-	envs []*v1alpha1.Environment
-	errs []error
+// find all jsonnet files within given paths
+func findJsonnetFilesFromPaths(paths []string, opts FindOpts) ([]string, error) {
+	type findJsonnetFilesOut struct {
+		jsonnetFiles []string
+		err          error
+	}
+
+	pathChan := make(chan string, len(paths))
+	findJsonnetFilesChan := make(chan findJsonnetFilesOut)
+	for i := 0; i < opts.Parallelism; i++ {
+		go func() {
+			for path := range pathChan {
+				jsonnetFiles, err := jsonnet.FindFiles(path, nil)
+				var mainFiles []string
+				for _, file := range jsonnetFiles {
+					if filepath.Base(file) == jpath.DefaultEntrypoint {
+						mainFiles = append(mainFiles, file)
+					}
+				}
+				findJsonnetFilesChan <- findJsonnetFilesOut{jsonnetFiles: mainFiles, err: err}
+			}
+		}()
+	}
+
+	// push paths to channel
+	for _, path := range paths {
+		pathChan <- path
+	}
+	close(pathChan)
+
+	// collect jsonnet files
+	var jsonnetFiles []string
+	var errs []error
+	for range paths {
+		res := <-findJsonnetFilesChan
+		if res.err != nil {
+			errs = append(errs, res.err)
+			continue
+		}
+		jsonnetFiles = append(jsonnetFiles, res.jsonnetFiles...)
+	}
+	close(findJsonnetFilesChan)
+
+	if len(errs) != 0 {
+		return jsonnetFiles, ErrParallel{errors: errs}
+	}
+
+	return jsonnetFiles, nil
 }
 
-func findShim(dir string, opts Opts, ch chan findOut) {
-	envs, errs := find(dir, opts)
-	ch <- findOut{envs: envs, errs: errs}
+// find all environments within jsonnet files
+func findEnvsFromJsonnetFiles(jsonnetFiles []string, opts FindOpts) ([]*v1alpha1.Environment, error) {
+	type findEnvsOut struct {
+		envs []*v1alpha1.Environment
+		err  error
+	}
+
+	jsonnetFilesChan := make(chan string, len(jsonnetFiles))
+	findEnvsChan := make(chan findEnvsOut)
+
+	for i := 0; i < opts.Parallelism; i++ {
+		go func() {
+			for jsonnetFile := range jsonnetFilesChan {
+				// try if this has envs
+				list, err := List(jsonnetFile, Opts{JsonnetOpts: opts.JsonnetOpts})
+				if err != nil &&
+					// expected when looking for environments
+					!errors.As(err, &jpath.ErrorNoBase{}) &&
+					!errors.As(err, &jpath.ErrorFileNotFound{}) {
+					findEnvsChan <- findEnvsOut{err: fmt.Errorf("%s:\n %w", jsonnetFile, err)}
+					continue
+				}
+				filtered := []*v1alpha1.Environment{}
+				// optionally filter
+				if opts.Selector != nil && !opts.Selector.Empty() {
+					for _, e := range list {
+						if !opts.Selector.Matches(e.Metadata) {
+							continue
+						}
+						filtered = append(filtered, e)
+					}
+				} else {
+					filtered = append(filtered, list...)
+				}
+				findEnvsChan <- findEnvsOut{envs: filtered, err: nil}
+			}
+		}()
+	}
+
+	// push jsonnet files to channel
+	for _, jsonnetFile := range jsonnetFiles {
+		jsonnetFilesChan <- jsonnetFile
+	}
+	close(jsonnetFilesChan)
+
+	// collect environments
+	var envs []*v1alpha1.Environment
+	var errs []error
+	for i := 0; i < len(jsonnetFiles); i++ {
+		res := <-findEnvsChan
+		if res.err != nil {
+			errs = append(errs, res.err)
+			continue
+		}
+		envs = append(envs, res.envs...)
+	}
+	close(findEnvsChan)
+
+	if len(errs) != 0 {
+		return envs, ErrParallel{errors: errs}
+	}
+
+	return envs, nil
 }
