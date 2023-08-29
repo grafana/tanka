@@ -42,7 +42,11 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 	for _, env := range envs {
 		o := opts.Opts
 
-		if o.JsonnetImplementation == "" {
+		if env.Spec.ExportJsonnetImplementation != "" {
+			log.Trace().
+				Str("name", env.Metadata.Name).
+				Str("implementation", env.Spec.ExportJsonnetImplementation).
+				Msg("Using custom Jsonnet implementation")
 			o.JsonnetImplementation = env.Spec.ExportJsonnetImplementation
 		}
 
