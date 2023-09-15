@@ -23,20 +23,20 @@ import (
 func Funcs() []*jsonnet.NativeFunction {
 	return []*jsonnet.NativeFunction{
 		// Parse serialized data into dicts
-		parseJSON(),
-		parseYAML(),
+		parseJSON,
+		parseYAML,
 
 		// Convert serializations
-		manifestJSONFromJSON(),
-		manifestYAMLFromJSON(),
+		manifestJSONFromJSON,
+		manifestYAMLFromJSON,
 
 		// Regular expressions
-		escapeStringRegex(),
-		regexMatch(),
-		regexSubst(),
+		escapeStringRegex,
+		regexMatch,
+		regexSubst,
 
 		// Hash functions
-		hashSha256(),
+		hashSha256,
 
 		helm.NativeFunc(helm.ExecHelm{}),
 		kustomize.NativeFunc(kustomize.ExecKustomize{}),
@@ -102,131 +102,115 @@ func wrapNativeFunc(name, paramNamesStr string, impl interface{}) *jsonnet.Nativ
 }
 
 // parseJSON wraps `json.Unmarshal` to convert a json string into a dict
-func parseJSON() *jsonnet.NativeFunction {
-	return wrapNativeFunc(
-		"parseJson",
-		"json",
-		func(data []byte) (res interface{}, err error) {
-			err = json.Unmarshal(data, &res)
-			return
-		},
-	)
-}
+var parseJSON = wrapNativeFunc(
+	"parseJson",
+	"json",
+	func(data []byte) (res interface{}, err error) {
+		err = json.Unmarshal(data, &res)
+		return
+	},
+)
 
-func hashSha256() *jsonnet.NativeFunction {
-	return wrapNativeFunc(
-		"sha256",
-		"str",
-		func(data []byte) (interface{}, error) {
-			h := sha256.New()
-			h.Write(data)
-			return fmt.Sprintf("%x", h.Sum(nil)), nil
-		},
-	)
-}
+var hashSha256 = wrapNativeFunc(
+	"sha256",
+	"str",
+	func(data []byte) (interface{}, error) {
+		h := sha256.New()
+		h.Write(data)
+		return fmt.Sprintf("%x", h.Sum(nil)), nil
+	},
+)
 
 // parseYAML wraps `yaml.Unmarshal` to convert a string of yaml document(s) into a (set of) dicts
-func parseYAML() *jsonnet.NativeFunction {
-	return wrapNativeFunc(
-		"parseYaml",
-		"yaml",
-		func(data []byte) (interface{}, error) {
-			ret := []interface{}{}
+var parseYAML = wrapNativeFunc(
+	"parseYaml",
+	"yaml",
+	func(data []byte) (interface{}, error) {
+		ret := []interface{}{}
 
-			d := yaml.NewDecoder(bytes.NewReader(data))
-			for {
-				var doc, jsonDoc interface{}
-				if err := d.Decode(&doc); err != nil {
-					if err == io.EOF {
-						break
-					}
-					return nil, errors.Wrap(err, "parsing yaml")
+		d := yaml.NewDecoder(bytes.NewReader(data))
+		for {
+			var doc, jsonDoc interface{}
+			if err := d.Decode(&doc); err != nil {
+				if err == io.EOF {
+					break
 				}
-
-				jsonRaw, err := json.Marshal(doc)
-				if err != nil {
-					return nil, errors.Wrap(err, "converting yaml to json")
-				}
-
-				if err := json.Unmarshal(jsonRaw, &jsonDoc); err != nil {
-					return nil, errors.Wrap(err, "converting yaml to json")
-				}
-
-				ret = append(ret, jsonDoc)
+				return nil, errors.Wrap(err, "parsing yaml")
 			}
 
-			return ret, nil
-		},
-	)
-}
+			jsonRaw, err := json.Marshal(doc)
+			if err != nil {
+				return nil, errors.Wrap(err, "converting yaml to json")
+			}
+
+			if err := json.Unmarshal(jsonRaw, &jsonDoc); err != nil {
+				return nil, errors.Wrap(err, "converting yaml to json")
+			}
+
+			ret = append(ret, jsonDoc)
+		}
+
+		return ret, nil
+	},
+)
 
 // manifestJSONFromJSON reserializes JSON which allows to change the indentation.
-func manifestJSONFromJSON() *jsonnet.NativeFunction {
-	return wrapNativeFunc(
-		"manifestJsonFromJson",
-		"json,indent",
-		func(data []byte, indent int) (interface{}, error) {
-			data = bytes.TrimSpace(data)
-			buf := bytes.Buffer{}
-			if err := json.Indent(&buf, data, "", strings.Repeat(" ", indent)); err != nil {
-				return "", err
-			}
-			buf.WriteString("\n")
-			return buf.String(), nil
-		},
-	)
-}
+var manifestJSONFromJSON = wrapNativeFunc(
+	"manifestJsonFromJson",
+	"json,indent",
+	func(data []byte, indent int) (interface{}, error) {
+		data = bytes.TrimSpace(data)
+		buf := bytes.Buffer{}
+		if err := json.Indent(&buf, data, "", strings.Repeat(" ", indent)); err != nil {
+			return "", err
+		}
+		buf.WriteString("\n")
+		return buf.String(), nil
+	},
+)
 
 // manifestYamlFromJSON serializes a JSON string as a YAML document
-func manifestYAMLFromJSON() *jsonnet.NativeFunction {
-	return wrapNativeFunc(
-		"manifestYamlFromJson",
-		"json",
-		func(data []byte) (interface{}, error) {
-			var input interface{}
-			if err := json.Unmarshal(data, &input); err != nil {
-				return "", err
-			}
-			output, err := yaml.Marshal(input)
-			return string(output), err
-		},
-	)
-}
+var manifestYAMLFromJSON = wrapNativeFunc(
+	"manifestYamlFromJson",
+	"json",
+	func(data []byte) (interface{}, error) {
+		var input interface{}
+		if err := json.Unmarshal(data, &input); err != nil {
+			return "", err
+		}
+		output, err := yaml.Marshal(input)
+		return string(output), err
+	},
+)
 
 // escapeStringRegex escapes all regular expression metacharacters
 // and returns a regular expression that matches the literal text.
-func escapeStringRegex() *jsonnet.NativeFunction {
-	return wrapNativeFunc(
-		"escapeStringRegex",
-		"str",
-		func(s string) (interface{}, error) {
-			return regexp.QuoteMeta(s), nil
-		},
-	)
-}
+var escapeStringRegex = wrapNativeFunc(
+	"escapeStringRegex",
+	"str",
+	func(s string) (interface{}, error) {
+		return regexp.QuoteMeta(s), nil
+	},
+)
 
 // regexMatch returns whether the given string is matched by the given re2 regular expression.
-func regexMatch() *jsonnet.NativeFunction {
-	return wrapNativeFunc(
-		"regexMatch",
-		"regex,string",
-		func(regex, s string) (interface{}, error) {
-			return regexp.MatchString(regex, s)
-		},
-	)
-}
+var regexMatch = wrapNativeFunc(
+	"regexMatch",
+	"regex,string",
+	func(regex, s string) (interface{}, error) {
+		return regexp.MatchString(regex, s)
+	},
+)
 
 // regexSubst replaces all matches of the re2 regular expression with another string.
-func regexSubst() *jsonnet.NativeFunction {
-	return wrapNativeFunc(
-		"regexSubst",
-		"regex,src,repl",
-		func(regex, src, repl string) (interface{}, error) {
-			r, err := regexp.Compile(regex)
-			if err != nil {
-				return "", err
-			}
-			return r.ReplaceAllString(src, repl), nil
-		},
-	)
-}
+var regexSubst = wrapNativeFunc(
+	"regexSubst",
+	"regex,src,repl",
+	func(regex, src, repl string) (interface{}, error) {
+		r, err := regexp.Compile(regex)
+		if err != nil {
+			return "", err
+		}
+		return r.ReplaceAllString(src, repl), nil
+	},
+)
