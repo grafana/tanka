@@ -39,10 +39,15 @@ RUN export TAG=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kus
     curl -SL "https://github.com/kubernetes-sigs/kustomize/releases/download/${TAG}/kustomize_${VERSION_TAG}_${OS}_${ARCH}.tar.gz" > kustomize.tgz && \
     tar -xvf kustomize.tgz
 
+FROM golang:1.21.1 as build
+WORKDIR /app
+COPY . .
+RUN make static
+
 # assemble final container
 FROM alpine:3.18
 RUN apk add --no-cache coreutils diffutils less git openssh-client
-COPY tk /usr/local/bin/tk
+COPY --from=build /app/tk /usr/local/bin/tk
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=jb /usr/local/bin/jb /usr/local/bin/jb
 COPY --from=helm /tmp/helm/helm /usr/local/bin/helm
