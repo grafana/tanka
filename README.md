@@ -7,9 +7,6 @@
 </p>
 
 <p align="center">
-  <a href="https://cloud.drone.io/grafana/tanka">
-    <img src="https://img.shields.io/drone/build/grafana/tanka?style=flat-square&server=https%3A%2F%2Fdrone.grafana.net">
-  </a>
   <a href="https://github.com/grafana/tanka/releases">
     <img src="https://img.shields.io/github/release/grafana/tanka?style=flat-square" />
   </a>
