@@ -8,14 +8,8 @@ RUN export VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/r
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
-FROM golang:1.21.1-alpine as jb
-WORKDIR /tmp
-RUN apk add --no-cache git make bash &&\
-    git clone https://github.com/jsonnet-bundler/jsonnet-bundler &&\
-    ls /bin &&\
-    cd jsonnet-bundler &&\
-    make static &&\
-    mv _output/jb /usr/local/bin/jb
+FROM golang:1.21.1 as jb
+RUN go install github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@master
 
 FROM golang:1.21.1-alpine as helm
 WORKDIR /tmp/helm
@@ -49,7 +43,7 @@ FROM alpine:3.18
 RUN apk add --no-cache coreutils diffutils less git openssh-client
 COPY --from=build /app/tk /usr/local/bin/tk
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
-COPY --from=jb /usr/local/bin/jb /usr/local/bin/jb
+COPY --from=jb /go/bin/jb /usr/local/bin/jb
 COPY --from=helm /tmp/helm/helm /usr/local/bin/helm
 COPY --from=kustomize /tmp/kustomize/kustomize /usr/local/bin/kustomize
 WORKDIR /app
