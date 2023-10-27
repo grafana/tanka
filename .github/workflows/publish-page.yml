@@ -5,12 +5,16 @@ on:
   push:
     branches:
       - main
+    paths:
+      - docs/**
   pull_request:
     types:
       - opened
       - reopened
       - synchronize
       - closed
+    paths:
+      - docs/**
 
 permissions:
   contents: write
