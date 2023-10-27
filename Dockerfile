@@ -1,6 +1,5 @@
 # download kubectl
-FROM golang:1.21.1-alpine as kubectl
-RUN apk add --no-cache curl
+FROM golang:1.21.1 as kubectl
 RUN export VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt) &&\
     export OS=$(go env GOOS) && \
     export ARCH=$(go env GOARCH) &&\
@@ -8,14 +7,12 @@ RUN export VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/r
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
-FROM golang:1.21.1-alpine as jb
-WORKDIR /tmp
-RUN apk add --no-cache git make bash &&\
-    git clone https://github.com/jsonnet-bundler/jsonnet-bundler &&\
-    ls /bin &&\
-    cd jsonnet-bundler &&\
-    make static &&\
-    mv _output/jb /usr/local/bin/jb
+FROM golang:1.21.1 as jb
+RUN export OS=$(go env GOOS) &&\
+    export ARCH=$(go env GOARCH) &&\
+    curl -o /usr/local/bin/jb -L "https://github.com/jsonnet-bundler/jsonnet-bundler/releases/download/v0.5.1/jb-${OS}-${ARCH}" &&\
+    chmod +x /usr/local/bin/jb
+
 
 FROM golang:1.21.1-alpine as helm
 WORKDIR /tmp/helm
@@ -39,15 +36,11 @@ RUN export TAG=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kus
     curl -SL "https://github.com/kubernetes-sigs/kustomize/releases/download/${TAG}/kustomize_${VERSION_TAG}_${OS}_${ARCH}.tar.gz" > kustomize.tgz && \
     tar -xvf kustomize.tgz
 
-FROM golang:1.21.1 as build
-WORKDIR /app
-COPY . .
-RUN make static
-
 # assemble final container
 FROM alpine:3.18
 RUN apk add --no-cache coreutils diffutils less git openssh-client
-COPY --from=build /app/tk /usr/local/bin/tk
+# Need to `make static` before building the container
+COPY tk /usr/local/bin/tk 
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=jb /usr/local/bin/jb /usr/local/bin/jb
 COPY --from=helm /tmp/helm/helm /usr/local/bin/helm
