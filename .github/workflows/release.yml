@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.20'
+      - run: make cross
+      - id: docker_tag
+        run: echo "DOCKER_TAG=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: |
+            This is release `${{ env.GITHUB_REF_NAME }}` of Tanka (`tk`). Check out the [CHANGELOG](https://github.com/grafana/tanka/blob/main/CHANGELOG.md) for detailed release notes.
+            ## Install instructions
+
+            #### Binary:
+            ```bash
+            # download the binary (adapt os and arch as needed)
+            $ curl -fSL -o "/usr/local/bin/tk" "https://github.com/grafana/tanka/releases/download/${{ env.GITHUB_REF_NAME }}/tk-linux-amd64"
+
+            # make it executable
+            $ chmod a+x "/usr/local/bin/tk"
+
+            # have fun :)
+            $ tk --help
+            ```
+
+            #### Docker container:
+            https://hub.docker.com/r/grafana/tanka
+            ```bash
+            $ docker pull grafana/tanka:${{ env.DOCKER_TAG }}
+            ```
+          draft: true
+          files: |
+            dist/*

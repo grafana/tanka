@@ -38,9 +38,3 @@ cross: $(GOX)
 # Docker container
 container: static
 	docker build -t grafana/tanka .
-
-# CI
-drone:
-	drone jsonnet --source .drone/drone.jsonnet --target .drone/drone.yml --stream --format
-	drone lint .drone/drone.yml
-	drone sign --save grafana/tanka .drone/drone.yml
