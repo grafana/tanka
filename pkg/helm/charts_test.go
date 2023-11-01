@@ -205,10 +205,15 @@ func TestPrune(t *testing.T) {
 			// Add a chart with a directory
 			require.NoError(t, c.Add([]string{"stable/prometheus@11.12.1:custom-dir"}))
 
+			// Add a chart with a sub-directory
+			require.NoError(t, c.Add([]string{"stable/prometheus@11.12.1:" + filepath.Join("second-dir", "chartdir")}))
+
 			// Add unrelated files and folders
 			require.NoError(t, os.WriteFile(filepath.Join(tempDir, "charts", "foo.txt"), []byte("foo"), 0644))
 			require.NoError(t, os.Mkdir(filepath.Join(tempDir, "charts", "foo"), 0755))
 			require.NoError(t, os.WriteFile(filepath.Join(tempDir, "charts", "foo", "Chart.yaml"), []byte("foo"), 0644))
+			require.NoError(t, os.Mkdir(filepath.Join(tempDir, "charts", "second-dir", "bar"), 0755))
+			require.NoError(t, os.WriteFile(filepath.Join(tempDir, "charts", "second-dir", "bar.txt"), []byte("bar"), 0644))
 
 			require.NoError(t, c.Vendor(prune))
 
@@ -216,14 +221,22 @@ func TestPrune(t *testing.T) {
 			listResult, err := os.ReadDir(filepath.Join(tempDir, "charts"))
 			assert.NoError(t, err)
 			if prune {
-				assert.Equal(t, 2, len(listResult))
+				assert.Equal(t, 3, len(listResult))
 				assert.Equal(t, "custom-dir", listResult[0].Name())
 				assert.Equal(t, "prometheus", listResult[1].Name())
+				assert.Equal(t, "second-dir", listResult[2].Name())
+				listResult, err = os.ReadDir(filepath.Join(tempDir, "charts", "second-dir"))
+				assert.NoError(t, err)
+				assert.Equal(t, 1, len(listResult))
+				assert.Equal(t, "chartdir", listResult[0].Name())
 			} else {
-				assert.Equal(t, 4, len(listResult))
+				assert.Equal(t, 5, len(listResult))
 				chartContent, err := os.ReadFile(filepath.Join(tempDir, "charts", "foo", "Chart.yaml"))
 				assert.NoError(t, err)
 				assert.Contains(t, string(chartContent), `foo`)
+				chartContent, err = os.ReadFile(filepath.Join(tempDir, "charts", "second-dir", "bar.txt"))
+				assert.NoError(t, err)
+				assert.Contains(t, string(chartContent), `bar`)
 			}
 		})
 	}

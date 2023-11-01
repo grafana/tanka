@@ -2,9 +2,11 @@ package helm
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -101,6 +103,7 @@ func (c Charts) Vendor(prune bool) error {
 	}
 
 	expectedDirs := make(map[string]bool)
+	expectedDirs[c.Manifest.Directory] = true
 
 	repositoriesUpdated := false
 	log.Info().Msg("Vendoring...")
@@ -111,6 +114,9 @@ func (c Charts) Vendor(prune bool) error {
 		}
 		chartPath := filepath.Join(dir, chartSubDir)
 		chartManifestPath := filepath.Join(chartPath, "Chart.yaml")
+		for _, subDir := range strings.Split(chartSubDir, string(os.PathSeparator)) {
+			expectedDirs[subDir] = true
+		}
 		expectedDirs[chartSubDir] = true
 
 		chartDirExists, chartManifestExists := false, false
@@ -176,21 +182,41 @@ func (c Charts) Vendor(prune bool) error {
 	}
 
 	if prune {
-		items, err := os.ReadDir(dir)
-		if err != nil {
-			return fmt.Errorf("error listing the content of the charts dir: %w", err)
-		}
-		for _, i := range items {
-			if !expectedDirs[i.Name()] {
-				itemType := "file"
-				if i.IsDir() {
+		// Walk the charts directory looking for any unexpected directories or files to remove
+		// Skips walking an expected directory that contains a Chart.yaml
+		isChartFile := func(element fs.DirEntry) bool { return element.Name() == "Chart.yaml" }
+		projectRootFs := os.DirFS(c.projectRoot)
+
+		err := fs.WalkDir(projectRootFs, c.Manifest.Directory, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return fmt.Errorf("error during prune: at path %s: %w", path, err)
+			}
+			itemType := "file"
+			if !expectedDirs[d.Name()] {
+				if d.IsDir() {
 					itemType = "directory"
 				}
-				log.Info().Msgf("Pruning %s: %s", itemType, i.Name())
-				if err := os.RemoveAll(filepath.Join(dir, i.Name())); err != nil {
-					return err
+				log.Info().Msgf("Pruning %s: %s", itemType, path)
+				if localErr := os.RemoveAll(filepath.Join(c.projectRoot, path)); localErr != nil {
+					return localErr
+				}
+				// If we just pruned a directory, the walk needs to skip it.
+				if d.IsDir() {
+					return filepath.SkipDir
+				}
+			} else {
+				items, localErr := fs.ReadDir(projectRootFs, path)
+				if localErr != nil {
+					return fmt.Errorf("error listing content of dir %s: %w", path, localErr)
+				}
+				if slices.ContainsFunc(items, isChartFile) {
+					return filepath.SkipDir
 				}
 			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
 	}
 
