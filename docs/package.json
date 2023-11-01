@@ -20,7 +20,7 @@
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-helmet": "^6.1.0",
-    "typeface-fira-mono": "^0.0.72",
+    "typeface-fira-mono": "^1.1.13",
     "typeface-source-sans-pro": "^0.0.75",
     "typescript": "^4.9.5"
   },
