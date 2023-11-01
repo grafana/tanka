@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/objx v0.5.1
 	github.com/stretchr/testify v1.8.4
 	github.com/thoas/go-funk v0.9.3
-	golang.org/x/term v0.11.0
+	golang.org/x/term v0.13.0
 	golang.org/x/text v0.13.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
