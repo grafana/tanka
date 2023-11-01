@@ -108,15 +108,14 @@ from. This most likely means you didn't call `new(std.thisFile)` when importing 
 
 ```jsonnet
 local tanka = import "github.com/grafana/jsonnet-libs/tanka-util/main.libsonnet";
-local helm = tanka.helm.new(std.thisFile);
-                       ↑ This is important
+local kustomize = tanka.kustomize.new(std.thisFile);
+                                ↑ This is important
 ```
 
 ### Failed to find kustomization
 
 ```
-helmTemplate: Failed to find a kustomization at 'flux2': No such file or directory.
-helmTemplate: Failed to find a kustomization at '/home/user/stuff/tanka/environments/default/flux2': No such file or directory.
+Error: unable to find one of 'kustomization.yaml', 'kustomization.yml' or 'Kustomization' in directory '/home/user/stuff/tanka/environments/default/flux2'
 ```
 
 Tanka failed to locate your kustomization on the filesystem. It looked at the
