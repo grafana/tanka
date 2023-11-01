@@ -46,6 +46,15 @@ func TestParseReq(t *testing.T) {
 			},
 		},
 		{
+			name:  "with-path-with-sub-path",
+			input: "stable/package@3.45.6:" + filepath.Join("myparentdir1", "mysubdir1", "mypath"),
+			expected: &Requirement{
+				Chart:     "stable/package",
+				Version:   "3.45.6",
+				Directory: filepath.Join("myparentdir1", "mysubdir1", "mypath"),
+			},
+		},
+		{
 			name:  "url-instead-of-repo",
 			input: "https://helm.releases.hashicorp.com/vault@0.19.0",
 			err:   errors.New("not of form 'repo/chart@version(:path)' where repo contains no special characters"),
@@ -104,18 +113,31 @@ func TestAdd(t *testing.T) {
 	err = c.Add([]string{"stable/prometheus@11.12.0:prometheus-11.12.0"})
 	assert.NoError(t, err)
 
+	// Add a chart with a nested extract directory
+	err = c.Add([]string{"stable/prometheus@11.12.0:" + filepath.Join("zparentdir", "prometheus-11.12.0")})
+	assert.NoError(t, err)
+
 	// Check file contents
 	listResult, err := os.ReadDir(filepath.Join(tempDir, "charts"))
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(listResult))
+	assert.Equal(t, 3, len(listResult))
 	assert.Equal(t, "prometheus", listResult[0].Name())
 	assert.Equal(t, "prometheus-11.12.0", listResult[1].Name())
+	assert.Equal(t, "zparentdir", listResult[2].Name())
+	listResult, err = os.ReadDir(filepath.Join(tempDir, "charts", "zparentdir"))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(listResult))
+	assert.Equal(t, "prometheus-11.12.0", listResult[0].Name())
 
 	chartContent, err := os.ReadFile(filepath.Join(tempDir, "charts", "prometheus", "Chart.yaml"))
 	assert.NoError(t, err)
 	assert.Contains(t, string(chartContent), `version: 11.12.1`)
 
 	chartContent, err = os.ReadFile(filepath.Join(tempDir, "charts", "prometheus-11.12.0", "Chart.yaml"))
+	assert.NoError(t, err)
+	assert.Contains(t, string(chartContent), `version: 11.12.0`)
+
+	chartContent, err = os.ReadFile(filepath.Join(tempDir, "charts", "zparentdir", "prometheus-11.12.0", "Chart.yaml"))
 	assert.NoError(t, err)
 	assert.Contains(t, string(chartContent), `version: 11.12.0`)
 }

@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	// https://regex101.com/r/7xFFtU/3
-	chartExp = regexp.MustCompile(`^(?P<chart>\w+\/.+)@(?P<version>[^:\n\s]+)(?:\:(?P<path>[\w-. ]+))?$`)
+	// https://regex101.com/r/7xFFtU/4
+	chartExp = regexp.MustCompile(`^(?P<chart>\w+\/.+)@(?P<version>[^:\n\s]+)(?:\:(?P<path>[\w-. /\\]+))?$`)
 	repoExp  = regexp.MustCompile(`^\w+$`)
 )
 
