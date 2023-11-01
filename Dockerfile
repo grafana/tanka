@@ -1,5 +1,5 @@
 # download kubectl
-FROM golang:1.21.1 as kubectl
+FROM golang:1.21.3 as kubectl
 RUN export VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt) &&\
     export OS=$(go env GOOS) && \
     export ARCH=$(go env GOARCH) &&\
@@ -7,14 +7,13 @@ RUN export VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/r
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
-FROM golang:1.21.1 as jb
+FROM golang:1.21.3 as jb
 RUN export OS=$(go env GOOS) &&\
     export ARCH=$(go env GOARCH) &&\
     curl -o /usr/local/bin/jb -L "https://github.com/jsonnet-bundler/jsonnet-bundler/releases/download/v0.5.1/jb-${OS}-${ARCH}" &&\
     chmod +x /usr/local/bin/jb
 
-
-FROM golang:1.21.1-alpine as helm
+FROM golang:1.21.3-alpine as helm
 WORKDIR /tmp/helm
 RUN apk add --no-cache jq curl
 RUN export TAG=$(curl --silent "https://api.github.com/repos/helm/helm/releases/latest" | jq -r .tag_name) &&\
@@ -23,7 +22,7 @@ RUN export TAG=$(curl --silent "https://api.github.com/repos/helm/helm/releases/
     curl -SL "https://get.helm.sh/helm-${TAG}-${OS}-${ARCH}.tar.gz" > helm.tgz && \
     tar -xvf helm.tgz --strip-components=1
 
-FROM golang:1.21.1-alpine as kustomize
+FROM golang:1.21.3-alpine as kustomize
 WORKDIR /tmp/kustomize
 RUN apk add --no-cache jq curl
 # Get the latest version of kustomize
