@@ -23,7 +23,7 @@ require (
 	golang.org/x/text v0.13.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/apimachinery v0.28.1
+	k8s.io/apimachinery v0.28.3
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -46,6 +46,6 @@ require (
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	golang.org/x/crypto v0.3.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 )
