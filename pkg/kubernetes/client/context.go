@@ -58,7 +58,7 @@ func ContextFromName(contextName string) (*Cluster, *Context, error) {
 		return nil, nil, err
 	}
 
-	err = find(contexts, "name", contextName, &context)
+	err = find(contexts, "name", fmt.Sprintf("^%s$", contextName), &context)
 	if err == ErrorNoMatch {
 		return nil, nil, ErrorNoContext(contextName)
 	} else if err != nil {
@@ -70,7 +70,7 @@ func ContextFromName(contextName string) (*Cluster, *Context, error) {
 		return nil, nil, err
 	}
 
-	err = find(clusters, "name", context.Context.Cluster, &cluster)
+	err = find(clusters, "name", fmt.Sprintf("^%s$", context.Context.Cluster), &cluster)
 	if err == ErrorNoMatch {
 		return nil, nil, ErrorNoCluster(contextName)
 	} else if err != nil {
@@ -161,7 +161,7 @@ func IPFromContext(name string) (ip string, err error) {
 		return "", err
 	}
 
-	err = find(contexts, "name", name, &context)
+	err = find(contexts, "name", fmt.Sprintf("^%s$", name), &context)
 	if err == ErrorNoMatch {
 		return "", ErrorNoContext(name)
 	} else if err != nil {
@@ -176,7 +176,7 @@ func IPFromContext(name string) (ip string, err error) {
 	}
 
 	clusterName := context.Context.Cluster
-	err = find(clusters, "name", clusterName, &cluster)
+	err = find(clusters, "name", fmt.Sprintf("^%s$", clusterName), &cluster)
 	if err == ErrorNoMatch {
 		return "", fmt.Errorf("no cluster named `%s` as required by context `%s` was found. Please check your $KUBECONFIG", clusterName, name)
 	} else if err != nil {
