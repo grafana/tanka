@@ -17,7 +17,7 @@ There are three ways of doing so:
 Also check out the [official Jsonnet docs on this
 topic](https://jsonnet.org/ref/language.html#passing-data-to-jsonnet).
 
-## JSON files
+## Local files
 
 Jsonnet is a superset of JSON, it treats any JSON as valid Jsonnet. Because many
 systems can be told to output their data in JSON format, this provides a pretty
@@ -37,6 +37,9 @@ local secrets = import "secrets.json";
 > **Note**: Using `import` with JSON treats it as Jsonnet, so make sure to not
 > use it with untrusted code.  
 > A safer, but more verbose, alternative is `std.parseJson(importstr 'path_to_json.json')`
+
+You can also inject utf-8 strings or binary files directly, with `importstr` and `importbin`. 
+See the [Jsonnet docs on imports](https://jsonnet.org/learning/tutorial.html#imports) for more details.
 
 ## External variables
 
