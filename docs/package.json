@@ -12,7 +12,7 @@
     "gatsby-plugin-catch-links": "^2.1.21",
     "gatsby-plugin-manifest": "^2.2.34",
     "gatsby-plugin-offline": "^3.0.30",
-    "gatsby-plugin-sharp": "^2.3.10",
+    "gatsby-plugin-sharp": "^5.12.3",
     "gatsby-remark-images": "^3.1.39",
     "gatsby-remark-vscode": "^1.4.0",
     "gatsby-theme-docz": "^2.4.0",
