@@ -1,0 +1,14 @@
+{
+  "apiVersion": "tanka.dev/v1alpha1",
+  "kind": "Environment",
+  "metadata": {
+    "name": "static",
+    "labels": {
+      "type": "static"
+    }
+  },
+  "spec": {
+    "apiServer": "https://localhost",
+    "namespace": "static"
+  }
+}
