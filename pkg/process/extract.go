@@ -89,7 +89,11 @@ func walkObj(obj objx.Map, extracted map[string]manifest.Manifest, path trace) e
 		}
 		err := walkJSON(obj[key], extracted, path)
 		if err != nil {
-			return err.(ErrorPrimitiveReached).WithContainingObj(obj, manifestErr)
+			if err, ok := err.(ErrorPrimitiveReached); ok {
+				return err.WithContainingObj(obj, manifestErr)
+			}
+
+			return err
 		}
 	}
 
