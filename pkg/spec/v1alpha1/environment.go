@@ -3,7 +3,9 @@ package v1alpha1
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"strings"
 )
 
 // New creates a new Environment object with internal values already set
@@ -31,6 +33,46 @@ type Environment struct {
 	Data       interface{} `json:"data,omitempty"`
 }
 
+func (e Environment) NameLabel() (string, error) {
+	envLabelFields := e.Spec.TankaEnvLabelFromFields
+	if len(envLabelFields) == 0 {
+		envLabelFields = []string{
+			".metadata.name",
+			".metadata.namespace",
+		}
+	}
+
+	envLabelFieldValues, err := e.getFieldValuesByLabel(envLabelFields)
+	if err != nil {
+		return "", fmt.Errorf("failed to retrieve field values for label: %w", err)
+	}
+
+	labelParts := strings.Join(envLabelFieldValues, ":")
+	partsHash := sha256.Sum256([]byte(labelParts))
+	chars := []rune(hex.EncodeToString(partsHash[:]))
+	return string(chars[:48]), nil
+}
+
+func (e Environment) getFieldValuesByLabel(labels []string) ([]string, error) {
+	if len(labels) == 0 {
+		return nil, errors.New("labels must be set")
+	}
+
+	fieldValues := make([]string, len(labels))
+	for idx, label := range labels {
+		keyPath := strings.Split(strings.TrimPrefix(label, "."), ".")
+
+		labelValue, err := getDeepFieldAsString(e, keyPath)
+		if err != nil {
+			return nil, fmt.Errorf("could not get struct value at path: %w", err)
+		}
+
+		fieldValues[idx] = labelValue
+	}
+
+	return fieldValues, nil
+}
+
 // Metadata is meant for humans and not parsed
 type Metadata struct {
 	Name      string            `json:"name,omitempty"`
@@ -49,12 +91,6 @@ func (m Metadata) Get(label string) (value string) {
 	return m.Labels[label]
 }
 
-func (m Metadata) NameLabel() string {
-	partsHash := sha256.Sum256([]byte(fmt.Sprintf("%s:%s", m.Name, m.Namespace)))
-	chars := []rune(hex.EncodeToString(partsHash[:]))
-	return string(chars[:48])
-}
-
 // Spec defines Kubernetes properties
 type Spec struct {
 	APIServer                   string           `json:"apiServer,omitempty"`
@@ -63,6 +99,7 @@ type Spec struct {
 	DiffStrategy                string           `json:"diffStrategy,omitempty"`
 	ApplyStrategy               string           `json:"applyStrategy,omitempty"`
 	InjectLabels                bool             `json:"injectLabels,omitempty"`
+	TankaEnvLabelFromFields     []string         `json:"tankaEnvLabelFromFields,omitempty"`
 	ResourceDefaults            ResourceDefaults `json:"resourceDefaults"`
 	ExpectVersions              ExpectVersions   `json:"expectVersions"`
 	ExportJsonnetImplementation string           `json:"exportJsonnetImplementation,omitempty"`
