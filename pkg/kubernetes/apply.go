@@ -63,8 +63,13 @@ See https://tanka.dev/garbage-collection for more details`)
 	// get all resources matching our label
 	start = time.Now()
 	log.Info().Msg("fetching resources previously created by this env")
+
+	nameLabel, err := k.Env.NameLabel()
+	if err != nil {
+		return nil, err
+	}
 	matched, err := k.ctl.GetByLabels("", kinds, map[string]string{
-		process.LabelEnvironment: k.Env.Metadata.NameLabel(),
+		process.LabelEnvironment: nameLabel,
 	})
 	if err != nil {
 		return nil, err
