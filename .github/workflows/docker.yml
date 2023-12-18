@@ -76,16 +76,19 @@ jobs:
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
 
       - name: Export digest
+        id: digest
         if: github.event_name != 'pull_request'
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"          
+          echo "artifact_name=digests-${{ matrix.platform }}" | sed -e 's/\//-/g' >> "$GITHUB_OUTPUT"
+
       - name: Upload digest
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: digests
+          name: ${{ steps.digest.outputs.artifact_name }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -96,11 +99,23 @@ jobs:
     needs: 
       - build
     steps:
-      - name: Download digests
+      - name: Download digests (linux/amd64)
         uses: actions/download-artifact@v4
         with:
-          name: digests
-          path: /tmp/digests
+          name: digests-linux-amd64
+          path: /tmp/digests-linux-amd64
+
+      - name: Download digests (linux/arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: digests-linux-arm64
+          path: /tmp/digests-linux-arm64
+
+      - name: Merge digests
+        run: |
+          mkdir -p /tmp/digests
+          cp /tmp/digests-linux-amd64/* /tmp/digests/
+          cp /tmp/digests-linux-arm64/* /tmp/digests/
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
