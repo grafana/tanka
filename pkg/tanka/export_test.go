@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -140,6 +141,25 @@ func TestExportEnvironments(t *testing.T) {
     "static/updated-again-deployment.yaml": "test-export-envs/static-env/main.jsonnet",
     "static/updated-again-service.yaml": "test-export-envs/static-env/main.jsonnet"
 }`)
+}
+
+func TestExportEnvironmentsBroken(t *testing.T) {
+	tempDir := t.TempDir()
+	require.NoError(t, os.Chdir("testdata"))
+	defer func() { require.NoError(t, os.Chdir("..")) }()
+
+	// Find envs
+	envs, err := FindEnvs("test-export-envs-broken", FindOpts{Selector: labels.Everything()})
+	require.NoError(t, err)
+
+	// Export all envs
+	opts := &ExportEnvOpts{
+		Format:    "{{.metadata.namespace}}/{{.metadata.name}}",
+		Extension: "yaml",
+	}
+
+	var schemaError *manifest.SchemaError
+	require.ErrorAs(t, ExportEnvironments(envs, tempDir, opts), &schemaError)
 }
 
 func BenchmarkExportEnvironmentsWithReplaceEnvs(b *testing.B) {
