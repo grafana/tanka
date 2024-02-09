@@ -15,6 +15,9 @@ To accomplish this, it appends the `tanka.dev/environment: <hash>` label to each
 resource. This is used to identify those which are missing from the local state in the
 future.
 
+Currently, this is only a hash of the environment's name, so make sure not to deploy
+multiple applications with the same environment name to the same Kubernetes namespace.
+
 > **Note:** The label value changed from the `<name>` to a `<hash>` in v0.15.0.
 
 Because the label causes a `diff` for every single object in your cluster and
