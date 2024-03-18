@@ -45,7 +45,7 @@ COPY . .
 RUN make static
 
 # assemble final container
-FROM alpine:3.18
+FROM alpine:3.19
 RUN apk add --no-cache coreutils diffutils less git openssh-client
 COPY --from=build /app/tk /usr/local/bin/tk
 COPY --from=kubectl /usr/local/bin/kubectl /usr/local/bin/kubectl
