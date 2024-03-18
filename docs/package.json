@@ -7,7 +7,7 @@
   "dependencies": {
     "@emotion/core": "^10.0.5",
     "docz": "^2.4.0",
-    "gatsby": "^2.0.0",
+    "gatsby": "^5.13.3",
     "gatsby-image": "^3.11.0",
     "gatsby-plugin-catch-links": "^2.1.21",
     "gatsby-plugin-manifest": "^2.2.34",
