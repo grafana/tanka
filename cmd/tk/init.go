@@ -12,7 +12,7 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-const defaultK8sVersion = "1.20"
+const defaultK8sVersion = "1.29"
 
 // initCmd creates a new application
 func initCmd() *cli.Command {
