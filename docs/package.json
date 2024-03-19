@@ -14,7 +14,7 @@
     "gatsby-plugin-offline": "^3.0.30",
     "gatsby-plugin-sharp": "^2.3.10",
     "gatsby-remark-images": "^3.1.39",
-    "gatsby-remark-vscode": "^1.4.0",
+    "gatsby-remark-vscode": "^3.3.1",
     "gatsby-theme-docz": "^2.4.0",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",
