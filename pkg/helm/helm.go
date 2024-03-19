@@ -90,9 +90,14 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 
 	// It is not possible to tell `helm pull` to extract to a specific directory
 	// so we extract to a temp dir and then move the files to the destination
+	// (if the destination is in any subdirectories, they are created if necessary)
+	finalChartPath := filepath.Join(opts.Destination, opts.ExtractDirectory)
+	if err := os.MkdirAll(filepath.Dir(finalChartPath), os.ModePerm); err != nil {
+		return err
+	}
 	return os.Rename(
 		filepath.Join(tempDir, chartName),
-		filepath.Join(opts.Destination, opts.ExtractDirectory),
+		finalChartPath,
 	)
 }
 
