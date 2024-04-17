@@ -1,16 +1,23 @@
 package helm
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/rs/zerolog/log"
 )
 
 // DefaultNameFormat to use when no nameFormat is supplied
 const DefaultNameFormat = `{{ print .kind "_" .metadata.name | snakecase }}`
+
+// helmTemplateCache caches the inline environments' rendered helm templates.
+var helmTemplateCache sync.Map
 
 // JsonnetOpts are additional properties the consumer of the native func might
 // pass.
@@ -57,6 +64,16 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 				return nil, fmt.Errorf("helmTemplate: Failed to find a chart at '%s': %s. See https://tanka.dev/helm#failed-to-find-chart", chart, err)
 			}
 
+			// check if resources exist in cache
+			helmKey, err := templateKey(name, chartpath, opts.TemplateOpts)
+			if err != nil {
+				return nil, err
+			}
+			if entry, ok := helmTemplateCache.Load(helmKey); ok {
+				log.Debug().Msgf("Using cached template for %s", name)
+				return entry, nil
+			}
+
 			// render resources
 			list, err := h.Template(name, chart, opts.TemplateOpts)
 			if err != nil {
@@ -69,9 +86,23 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 				return nil, err
 			}
 
+			helmTemplateCache.Store(helmKey, out)
 			return out, nil
 		},
 	}
+}
+
+// templateKey returns the key identifier used in the template cache for the given helm chart.
+func templateKey(chartName string, chartPath string, opts TemplateOpts) (string, error) {
+	hasher := sha256.New()
+	hasher.Write([]byte(chartName))
+	hasher.Write([]byte(chartPath))
+	valuesBytes, err := json.Marshal(opts)
+	if err != nil {
+		return "", err
+	}
+	hasher.Write(valuesBytes)
+	return base64.URLEncoding.EncodeToString(hasher.Sum(nil)), nil
 }
 
 func parseOpts(data interface{}) (*JsonnetOpts, error) {
