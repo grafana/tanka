@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,6 +25,7 @@ func chartsCmd() *cli.Command {
 		chartsAddRepoCmd(),
 		chartsVendorCmd(),
 		chartsConfigCmd(),
+		chartsVersionCheckCmd(),
 	)
 
 	return cmd
@@ -137,6 +139,36 @@ func chartsInitCmd() *cli.Command {
 		}
 
 		fmt.Fprintf(os.Stderr, "Success! New Chartfile created at '%s'", path)
+		return nil
+	}
+
+	return cmd
+}
+
+func chartsVersionCheckCmd() *cli.Command {
+	cmd := &cli.Command{
+		Use:   "version-check",
+		Short: "Check required charts for updated versions",
+	}
+	repoConfigPath := cmd.Flags().String("repository-config", "", "specify a local helm repository config file to use instead of the repositories in the chartfile.yaml. For use with private repositories")
+
+	cmd.Run = func(cmd *cli.Command, args []string) error {
+		c, err := loadChartfile()
+		if err != nil {
+			return err
+		}
+
+		data, err := c.VersionCheck(*repoConfigPath)
+		if err != nil {
+			return err
+		}
+
+		returnData, err := json.Marshal(data)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("%s", returnData)
 		return nil
 	}
 

@@ -44,6 +44,11 @@ func (m *MockHelm) ChartExists(chart string, opts *JsonnetOpts) (string, error) 
 	return args.String(0), args.Error(1)
 }
 
+func (m *MockHelm) SearchRepo(chart, currVersion string, opts Opts) (ChartSearchVersions, error) {
+	args := m.Called(chart, currVersion, opts)
+	return args.Get(0).(ChartSearchVersions), args.Error(1)
+}
+
 func callNativeFunction(t *testing.T, expectedHelmTemplateOptions TemplateOpts, inputOptionsFromJsonnet map[string]interface{}) []string {
 	t.Helper()
 

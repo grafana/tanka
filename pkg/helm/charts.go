@@ -302,6 +302,43 @@ func (c *Charts) AddRepos(repos ...Repo) error {
 	return nil
 }
 
+// VersionCheck checks each of the charts in the requires section and returns if there are any
+// newer versions of the chart available on the repository.
+func (c *Charts) VersionCheck(repoConfigPath string) (ChartSearchVersions, error) {
+	chartVersions := ChartSearchVersions{}
+
+	if repoConfigPath != "" {
+		repoConfig, err := LoadHelmRepoConfig(repoConfigPath)
+		if err != nil {
+			return nil, err
+		}
+		c.Manifest.Repositories = repoConfig.Repositories
+	}
+
+	for _, r := range c.Manifest.Requires {
+		searchVersions, err := c.Helm.SearchRepo(r.Chart, r.Version, Opts{Repositories: c.Manifest.Repositories})
+		if err != nil {
+			return nil, err
+		}
+
+		// Since we can store multiple versions of the same chart in the chartfile we dedup here.
+		for _, sv := range searchVersions {
+			exists := false
+			for _, cv := range chartVersions {
+				if sv == cv {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				chartVersions = append(chartVersions, sv)
+			}
+		}
+	}
+
+	return chartVersions, nil
+}
+
 func InitChartfile(path string) (*Charts, error) {
 	c := Chartfile{
 		Version: Version,

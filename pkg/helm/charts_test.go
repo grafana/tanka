@@ -278,3 +278,62 @@ repositories:
 	assert.NoError(t, err)
 	assert.Contains(t, string(chartContent), `version: 11.12.1`)
 }
+
+func TestChartsVersionCheck(t *testing.T) {
+	tempDir := t.TempDir()
+	c, err := InitChartfile(filepath.Join(tempDir, Filename))
+	require.NoError(t, err)
+
+	err = c.Add([]string{"stable/prometheus@11.12.0"}, "")
+	assert.NoError(t, err)
+
+	// Having multiple versions of the same chart should only return one update
+	err = c.Add([]string{"stable/prometheus@11.11.0:old"}, "")
+	assert.NoError(t, err)
+
+	chartVersions, err := c.VersionCheck("")
+	assert.NoError(t, err)
+
+	// stable/prometheus is deprecated so only the 11.12.1 should ever be returned
+	assert.Equal(t, 1, len(chartVersions))
+	assert.Equal(t, "stable/prometheus", chartVersions[0].Name)
+	assert.Equal(t, "11.12.1", chartVersions[0].Version)
+}
+
+func TestVersionCheckWithConfig(t *testing.T) {
+	tempDir := t.TempDir()
+	c, err := InitChartfile(filepath.Join(tempDir, Filename))
+	require.NoError(t, err)
+
+	err = c.Add([]string{"private/prometheus@11.12.0"}, "")
+	assert.NoError(t, err)
+
+	// Don't want to commit credentials so we just verify the "private" repo reference will make
+	// use of this helm config since the InitChartfile does not have a reference to it.
+	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "helmConfig.yaml"), []byte(`
+apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  insecure_skip_tls_verify: false
+  keyFile: ""
+  name: private
+  pass_credentials_all: false
+  password: ""
+  url: https://charts.helm.sh/stable
+  username: ""
+`), 0644))
+	c.Manifest.Requires = append(c.Manifest.Requires, Requirement{
+		Chart:   "private/prometheus",
+		Version: "11.12.0",
+	})
+
+	chartVersions, err := c.VersionCheck(filepath.Join(tempDir, "helmConfig.yaml"))
+	assert.NoError(t, err)
+
+	// stable/prometheus is deprecated so only the 11.12.1 should ever be returned
+	assert.Equal(t, 1, len(chartVersions))
+	assert.Equal(t, "private/prometheus", chartVersions[0].Name)
+	assert.Equal(t, "11.12.1", chartVersions[0].Version)
+}

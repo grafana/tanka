@@ -26,6 +26,9 @@ type Helm interface {
 
 	// ChartExists checks if a chart exists in the provided calledFromPath
 	ChartExists(chart string, opts *JsonnetOpts) (string, error)
+
+	// SearchRepo searches the repository for an updated chart version
+	SearchRepo(chart, currVersion string, opts Opts) (ChartSearchVersions, error)
 }
 
 // PullOpts are additional, non-required options for Helm.Pull
@@ -38,6 +41,23 @@ type PullOpts struct {
 	// Where to extract the chart to, defaults to the name of the chart
 	ExtractDirectory string
 }
+
+// ChartSearchVersion represents a single chart version returned from the helm search repo command.
+type ChartSearchVersion struct {
+	// Name of the chart in the form of repo/chartName
+	Name string `json:"name,omitempty"`
+
+	// Version of the Helm chart
+	Version string `json:"version,omitempty"`
+
+	// Version of the application being deployed by the Helm chart
+	AppVersion string `json:"app_version,omitempty"`
+
+	// Description of the Helm chart
+	Description string `json:"description,omitempty"`
+}
+
+type ChartSearchVersions []ChartSearchVersion
 
 // Opts are additional, non-required options that all Helm operations accept
 type Opts struct {
@@ -126,6 +146,40 @@ func (e ExecHelm) ChartExists(chart string, opts *JsonnetOpts) (string, error) {
 	}
 
 	return chart, nil
+}
+
+func (e ExecHelm) SearchRepo(chart, currVersion string, opts Opts) (ChartSearchVersions, error) {
+	repoFile, err := writeRepoTmpFile(opts.Repositories)
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(repoFile)
+
+	// Vertical tabs are used as deliminators in table so \v is used to match exactly the chart.
+	// By default the helm search repo command only returns the latest version for the chart.
+	cmd := e.cmd("search", "repo",
+		"--repository-config", repoFile,
+		"--regexp",
+		fmt.Sprintf("\v%s\v", chart),
+		"--version", fmt.Sprintf(">%s", currVersion),
+		"-o", "json",
+	)
+	var errBuf bytes.Buffer
+	var outBuf bytes.Buffer
+	cmd.Stderr = &errBuf
+	cmd.Stdout = &outBuf
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("%s\n%s", errBuf.String(), err)
+	}
+
+	var chartVersions ChartSearchVersions
+	err = json.Unmarshal(outBuf.Bytes(), &chartVersions)
+	if err != nil {
+		return nil, err
+	}
+
+	return chartVersions, nil
 }
 
 // cmd returns a prepared exec.Cmd to use the `helm` binary
