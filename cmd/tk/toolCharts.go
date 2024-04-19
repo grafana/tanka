@@ -35,6 +35,7 @@ func chartsVendorCmd() *cli.Command {
 		Short: "Download Charts to a local folder",
 	}
 	prune := cmd.Flags().Bool("prune", false, "also remove non-vendored files from the destination directory")
+	repoConfigPath := cmd.Flags().String("repository-config", "", "specify a local helm repository config file to use instead of the repositories in the chartfile.yaml. For use with private repositories")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		c, err := loadChartfile()
@@ -42,7 +43,7 @@ func chartsVendorCmd() *cli.Command {
 			return err
 		}
 
-		return c.Vendor(*prune)
+		return c.Vendor(*prune, *repoConfigPath)
 	}
 
 	return cmd
@@ -53,6 +54,7 @@ func chartsAddCmd() *cli.Command {
 		Use:   "add [chart@version] [...]",
 		Short: "Adds Charts to the chartfile",
 	}
+	repoConfigPath := cmd.Flags().String("repository-config", "", "specify a local helm repository config file to use instead of the repositories in the chartfile.yaml. For use with private repositories")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		c, err := loadChartfile()
@@ -60,7 +62,7 @@ func chartsAddCmd() *cli.Command {
 			return err
 		}
 
-		return c.Add(args)
+		return c.Add(args, *repoConfigPath)
 	}
 
 	return cmd

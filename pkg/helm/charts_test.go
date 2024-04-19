@@ -88,28 +88,47 @@ func TestAdd(t *testing.T) {
 	c, err := InitChartfile(filepath.Join(tempDir, Filename))
 	require.NoError(t, err)
 
-	err = c.Add([]string{"stable/prometheus@11.12.1"})
+	err = c.Add([]string{"stable/prometheus@11.12.1"}, "")
 	assert.NoError(t, err)
 
 	// Adding again the same chart
-	err = c.Add([]string{"stable/prometheus@11.12.1"})
+	err = c.Add([]string{"stable/prometheus@11.12.1"}, "")
 	assert.EqualError(t, err, "1 Chart(s) were skipped. Please check above logs for details")
 
 	// Adding a chart with a different version to the same path, causes a conflict
-	err = c.Add([]string{"stable/prometheus@11.12.0"})
+	err = c.Add([]string{"stable/prometheus@11.12.0"}, "")
 	assert.EqualError(t, err, `Validation errors:
  - output directory "prometheus" is used twice, by charts "stable/prometheus@11.12.1" and "stable/prometheus@11.12.0"`)
 
 	// Add a chart with a specific extract directory
-	err = c.Add([]string{"stable/prometheus@11.12.0:prometheus-11.12.0"})
+	err = c.Add([]string{"stable/prometheus@11.12.0:prometheus-11.12.0"}, "")
+	assert.NoError(t, err)
+
+	// Add a chart while specifying a helm repo config file
+	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "helmConfig.yaml"), []byte(`
+apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  insecure_skip_tls_verify: false
+  keyFile: ""
+  name: private
+  pass_credentials_all: false
+  password: ""
+  url: https://charts.helm.sh/stable
+  username: ""
+`), 0644))
+	err = c.Add([]string{"private/prometheus@11.12.1:private-11.12.1"}, filepath.Join(tempDir, "helmConfig.yaml"))
 	assert.NoError(t, err)
 
 	// Check file contents
 	listResult, err := os.ReadDir(filepath.Join(tempDir, "charts"))
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(listResult))
-	assert.Equal(t, "prometheus", listResult[0].Name())
-	assert.Equal(t, "prometheus-11.12.0", listResult[1].Name())
+	assert.Equal(t, 3, len(listResult))
+	assert.Equal(t, "private-11.12.1", listResult[0].Name())
+	assert.Equal(t, "prometheus", listResult[1].Name())
+	assert.Equal(t, "prometheus-11.12.0", listResult[2].Name())
 
 	chartContent, err := os.ReadFile(filepath.Join(tempDir, "charts", "prometheus", "Chart.yaml"))
 	assert.NoError(t, err)
@@ -118,6 +137,10 @@ func TestAdd(t *testing.T) {
 	chartContent, err = os.ReadFile(filepath.Join(tempDir, "charts", "prometheus-11.12.0", "Chart.yaml"))
 	assert.NoError(t, err)
 	assert.Contains(t, string(chartContent), `version: 11.12.0`)
+
+	chartContent, err = os.ReadFile(filepath.Join(tempDir, "charts", "private-11.12.1", "Chart.yaml"))
+	assert.NoError(t, err)
+	assert.Contains(t, string(chartContent), `version: 11.12.1`)
 }
 
 func TestAddOCI(t *testing.T) {
@@ -128,7 +151,7 @@ func TestAddOCI(t *testing.T) {
 	err = c.AddRepos(Repo{Name: "karpenter", URL: "oci://public.ecr.aws/karpenter"})
 	assert.NoError(t, err)
 
-	err = c.Add([]string{"karpenter/karpenter@v0.27.1"})
+	err = c.Add([]string{"karpenter/karpenter@v0.27.1"}, "")
 	assert.NoError(t, err)
 
 	// Check file contents
@@ -143,7 +166,7 @@ func TestRevendorDeletedFiles(t *testing.T) {
 	c, err := InitChartfile(filepath.Join(tempDir, Filename))
 	require.NoError(t, err)
 
-	err = c.Add([]string{"stable/prometheus@11.12.1"})
+	err = c.Add([]string{"stable/prometheus@11.12.1"}, "")
 	assert.NoError(t, err)
 
 	// Check file contents
@@ -153,7 +176,7 @@ func TestRevendorDeletedFiles(t *testing.T) {
 
 	// Delete the whole dir and revendor
 	require.NoError(t, os.RemoveAll(filepath.Join(tempDir, "charts", "prometheus")))
-	assert.NoError(t, c.Vendor(true))
+	assert.NoError(t, c.Vendor(true, ""))
 
 	// Check file contents
 	chartContent, err = os.ReadFile(filepath.Join(tempDir, "charts", "prometheus", "Chart.yaml"))
@@ -162,7 +185,7 @@ func TestRevendorDeletedFiles(t *testing.T) {
 
 	// Delete just the Chart.yaml and revendor
 	require.NoError(t, os.Remove(filepath.Join(tempDir, "charts", "prometheus", "Chart.yaml")))
-	assert.NoError(t, c.Vendor(true))
+	assert.NoError(t, c.Vendor(true, ""))
 
 	// Check file contents
 	chartContent, err = os.ReadFile(filepath.Join(tempDir, "charts", "prometheus", "Chart.yaml"))
@@ -178,17 +201,17 @@ func TestPrune(t *testing.T) {
 			require.NoError(t, err)
 
 			// Add a chart
-			require.NoError(t, c.Add([]string{"stable/prometheus@11.12.1"}))
+			require.NoError(t, c.Add([]string{"stable/prometheus@11.12.1"}, ""))
 
 			// Add a chart with a directory
-			require.NoError(t, c.Add([]string{"stable/prometheus@11.12.1:custom-dir"}))
+			require.NoError(t, c.Add([]string{"stable/prometheus@11.12.1:custom-dir"}, ""))
 
 			// Add unrelated files and folders
 			require.NoError(t, os.WriteFile(filepath.Join(tempDir, "charts", "foo.txt"), []byte("foo"), 0644))
 			require.NoError(t, os.Mkdir(filepath.Join(tempDir, "charts", "foo"), 0755))
 			require.NoError(t, os.WriteFile(filepath.Join(tempDir, "charts", "foo", "Chart.yaml"), []byte("foo"), 0644))
 
-			require.NoError(t, c.Vendor(prune))
+			require.NoError(t, c.Vendor(prune, ""))
 
 			// Check if files are pruned
 			listResult, err := os.ReadDir(filepath.Join(tempDir, "charts"))
@@ -217,7 +240,41 @@ func TestInvalidChartName(t *testing.T) {
 		Version: "1.0.0",
 	})
 
-	err = c.Vendor(false)
+	err = c.Vendor(false, "")
 	assert.EqualError(t, err, `Validation errors:
  - Chart name "noslash" is not valid. Expecting a repo/name format.`)
+}
+
+func TestConfigFileOption(t *testing.T) {
+	tempDir := t.TempDir()
+	c, err := InitChartfile(filepath.Join(tempDir, Filename))
+	require.NoError(t, err)
+
+	// Don't want to commit credentials so we just verify the "private" repo reference will make
+	// use of this helm config since the InitChartfile does not have a reference to it.
+	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "helmConfig.yaml"), []byte(`
+apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  insecure_skip_tls_verify: false
+  keyFile: ""
+  name: private
+  pass_credentials_all: false
+  password: ""
+  url: https://charts.helm.sh/stable
+  username: ""
+`), 0644))
+	c.Manifest.Requires = append(c.Manifest.Requires, Requirement{
+		Chart:   "private/prometheus",
+		Version: "11.12.1",
+	})
+
+	err = c.Vendor(false, filepath.Join(tempDir, "helmConfig.yaml"))
+	assert.NoError(t, err)
+
+	chartContent, err := os.ReadFile(filepath.Join(tempDir, "charts", "prometheus", "Chart.yaml"))
+	assert.NoError(t, err)
+	assert.Contains(t, string(chartContent), `version: 11.12.1`)
 }
