@@ -33,6 +33,19 @@ type Chartfile struct {
 	Directory string `json:"directory,omitempty"`
 }
 
+// ConfigFile represents the default Helm config structure to be used in place of the chartfile
+// Repositories if supplied.
+type ConfigFile struct {
+	// Version of the Helm repo config schema
+	APIVersion string `json:"apiVersion"`
+
+	// The datetime of when this repo config was generated
+	Generated string `json:"generated"`
+
+	// Repositories to source from
+	Repositories Repos `json:"repositories"`
+}
+
 // Repo describes a single Helm repository
 type Repo struct {
 	Name     string `json:"name,omitempty"`

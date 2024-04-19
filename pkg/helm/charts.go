@@ -58,6 +58,29 @@ func LoadChartfile(projectRoot string) (*Charts, error) {
 	return charts, nil
 }
 
+// LoadHelmRepoConfig reads in a helm config file
+func LoadHelmRepoConfig(repoConfigPath string) (*ConfigFile, error) {
+	// make sure path is valid
+	repoPath, err := filepath.Abs(repoConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// open repo config file
+	data, err := os.ReadFile(repoPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// parse the file non-strictly to account for any minor config changes
+	rc := &ConfigFile{}
+	if err := yaml.Unmarshal(data, rc); err != nil {
+		return nil, err
+	}
+
+	return rc, nil
+}
+
 // Charts exposes the central Chartfile management functions
 type Charts struct {
 	// Manifest are the chartfile.yaml contents. It holds data about the developers intentions
@@ -89,10 +112,18 @@ func (c Charts) ManifestFile() string {
 
 // Vendor pulls all Charts specified in the manifest into the local charts
 // directory. It fetches the repository index before doing so.
-func (c Charts) Vendor(prune bool) error {
+func (c Charts) Vendor(prune bool, repoConfigPath string) error {
 	dir := c.ChartDir()
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return err
+	}
+
+	if repoConfigPath != "" {
+		repoConfig, err := LoadHelmRepoConfig(repoConfigPath)
+		if err != nil {
+			return err
+		}
+		c.Manifest.Repositories = repoConfig.Repositories
 	}
 
 	// Check that there are no output conflicts before vendoring
@@ -199,7 +230,7 @@ func (c Charts) Vendor(prune bool) error {
 
 // Add adds every Chart in reqs to the Manifest after validation, and runs
 // Vendor afterwards
-func (c *Charts) Add(reqs []string) error {
+func (c *Charts) Add(reqs []string, repoConfigPath string) error {
 	log.Info().Msgf("Adding %v Charts ...", len(reqs))
 
 	// parse new charts, append in memory
@@ -238,7 +269,7 @@ func (c *Charts) Add(reqs []string) error {
 
 	// worked fine? vendor it
 	log.Info().Msgf("Added %v Charts to helmfile.yaml. Vendoring ...", added)
-	return c.Vendor(false)
+	return c.Vendor(false, repoConfigPath)
 }
 
 func (c *Charts) AddRepos(repos ...Repo) error {
