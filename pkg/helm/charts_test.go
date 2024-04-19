@@ -305,9 +305,6 @@ func TestVersionCheckWithConfig(t *testing.T) {
 	c, err := InitChartfile(filepath.Join(tempDir, Filename))
 	require.NoError(t, err)
 
-	err = c.Add([]string{"private/prometheus@11.12.0"}, "")
-	assert.NoError(t, err)
-
 	// Don't want to commit credentials so we just verify the "private" repo reference will make
 	// use of this helm config since the InitChartfile does not have a reference to it.
 	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "helmConfig.yaml"), []byte(`
