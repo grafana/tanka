@@ -302,10 +302,11 @@ func (c *Charts) AddRepos(repos ...Repo) error {
 	return nil
 }
 
-// VersionCheck checks each of the charts in the requires section and returns if there are any
-// newer versions of the chart available on the repository.
-func (c *Charts) VersionCheck(repoConfigPath string) (ChartSearchVersions, error) {
-	chartVersions := ChartSearchVersions{}
+// VersionCheck checks each of the charts in the requires section and returns information regarding
+// related to version upgrades. This includes if the current version is latest as well as the
+// latest matching versions of the major and minor version the chart is currently on.
+func (c *Charts) VersionCheck(repoConfigPath string) (map[string]RequiresVersionInfo, error) {
+	requiresVersionInfo := make(map[string]RequiresVersionInfo)
 
 	if repoConfigPath != "" {
 		repoConfig, err := LoadHelmRepoConfig(repoConfigPath)
@@ -320,23 +321,23 @@ func (c *Charts) VersionCheck(repoConfigPath string) (ChartSearchVersions, error
 		if err != nil {
 			return nil, err
 		}
+		usingLatestVersion := false
+		if r.Version == searchVersions[0].Version {
+			usingLatestVersion = true
+		}
 
-		// Since we can store multiple versions of the same chart in the chartfile we dedup here.
-		for _, sv := range searchVersions {
-			exists := false
-			for _, cv := range chartVersions {
-				if sv == cv {
-					exists = true
-					break
-				}
-			}
-			if !exists {
-				chartVersions = append(chartVersions, sv)
-			}
+		requiresVersionInfo[fmt.Sprintf("%s@%s", r.Chart, r.Version)] = RequiresVersionInfo{
+			Name:                       r.Chart,
+			Directory:                  r.Directory,
+			CurrentVersion:             r.Version,
+			UsingLatestVersion:         usingLatestVersion,
+			LatestVersion:              searchVersions[0],
+			LatestMatchingMajorVersion: searchVersions[1],
+			LatestMatchingMinorVersion: searchVersions[2],
 		}
 	}
 
-	return chartVersions, nil
+	return requiresVersionInfo, nil
 }
 
 func InitChartfile(path string) (*Charts, error) {

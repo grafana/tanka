@@ -294,10 +294,39 @@ func TestChartsVersionCheck(t *testing.T) {
 	chartVersions, err := c.VersionCheck("")
 	assert.NoError(t, err)
 
-	// stable/prometheus is deprecated so only the 11.12.1 should ever be returned
-	assert.Equal(t, 1, len(chartVersions))
-	assert.Equal(t, "stable/prometheus", chartVersions[0].Name)
-	assert.Equal(t, "11.12.1", chartVersions[0].Version)
+	// stable/prometheus is deprecated so only the 11.12.1 should ever be returned as latest
+	latestPrometheusChartVersion := ChartSearchVersion{
+		Name:        "stable/prometheus",
+		Version:     "11.12.1",
+		AppVersion:  "2.20.1",
+		Description: "DEPRECATED Prometheus is a monitoring system and time series database.",
+	}
+	stableExpected := RequiresVersionInfo{
+		Name:                       "stable/prometheus",
+		Directory:                  "",
+		CurrentVersion:             "11.12.0",
+		UsingLatestVersion:         false,
+		LatestVersion:              latestPrometheusChartVersion,
+		LatestMatchingMajorVersion: latestPrometheusChartVersion,
+		LatestMatchingMinorVersion: latestPrometheusChartVersion,
+	}
+	oldExpected := RequiresVersionInfo{
+		Name:                       "stable/prometheus",
+		Directory:                  "old",
+		CurrentVersion:             "11.11.0",
+		UsingLatestVersion:         false,
+		LatestVersion:              latestPrometheusChartVersion,
+		LatestMatchingMajorVersion: latestPrometheusChartVersion,
+		LatestMatchingMinorVersion: ChartSearchVersion{
+			Name:        "stable/prometheus",
+			Version:     "11.11.1",
+			AppVersion:  "2.19.0",
+			Description: "Prometheus is a monitoring system and time series database.",
+		},
+	}
+	assert.Equal(t, 2, len(chartVersions))
+	assert.Equal(t, stableExpected, chartVersions["stable/prometheus@11.12.0"])
+	assert.Equal(t, oldExpected, chartVersions["stable/prometheus@11.11.0"])
 }
 
 func TestVersionCheckWithConfig(t *testing.T) {
@@ -329,8 +358,22 @@ repositories:
 	chartVersions, err := c.VersionCheck(filepath.Join(tempDir, "helmConfig.yaml"))
 	assert.NoError(t, err)
 
-	// stable/prometheus is deprecated so only the 11.12.1 should ever be returned
+	// stable/prometheus is deprecated so only the 11.12.1 should ever be returned as latest
+	latestPrometheusChartVersion := ChartSearchVersion{
+		Name:        "private/prometheus",
+		Version:     "11.12.1",
+		AppVersion:  "2.20.1",
+		Description: "DEPRECATED Prometheus is a monitoring system and time series database.",
+	}
+	expected := RequiresVersionInfo{
+		Name:                       "private/prometheus",
+		Directory:                  "",
+		CurrentVersion:             "11.12.0",
+		UsingLatestVersion:         false,
+		LatestVersion:              latestPrometheusChartVersion,
+		LatestMatchingMajorVersion: latestPrometheusChartVersion,
+		LatestMatchingMinorVersion: latestPrometheusChartVersion,
+	}
 	assert.Equal(t, 1, len(chartVersions))
-	assert.Equal(t, "private/prometheus", chartVersions[0].Name)
-	assert.Equal(t, "11.12.1", chartVersions[0].Version)
+	assert.Equal(t, expected, chartVersions["private/prometheus@11.12.0"])
 }

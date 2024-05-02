@@ -59,6 +59,31 @@ type ChartSearchVersion struct {
 
 type ChartSearchVersions []ChartSearchVersion
 
+// RequiresVersionInfo represents a specific required chart and the information around the current
+// version and any upgrade information.
+type RequiresVersionInfo struct {
+	// Name of the required chart in the form of repo/chartName
+	Name string `json:"name,omitempty"`
+
+	// Directory information for the chart.
+	Directory string `json:"directory,omitempty"`
+
+	// The current version information of the required helm chart.
+	CurrentVersion string `json:"current_version,omitempty"`
+
+	// Boolean representing if the required chart is already up to date.
+	UsingLatestVersion bool `json:"using_latest_version"`
+
+	// The most up-to-date version information of the required helm chart.
+	LatestVersion ChartSearchVersion `json:"latest_version,omitempty"`
+
+	// The latest version information of the required helm chart that matches the current major version.
+	LatestMatchingMajorVersion ChartSearchVersion `json:"latest_matching_major_version,omitempty"`
+
+	// The latest version information of the required helm chart that matches the current minor version.
+	LatestMatchingMinorVersion ChartSearchVersion `json:"latest_matching_minor_version,omitempty"`
+}
+
 // Opts are additional, non-required options that all Helm operations accept
 type Opts struct {
 	Repositories []Repo
@@ -148,35 +173,58 @@ func (e ExecHelm) ChartExists(chart string, opts *JsonnetOpts) (string, error) {
 	return chart, nil
 }
 
+// Searches the helm repositories for the latest, the latest matching major, and the latest
+// matching minor versions for the given chart.
 func (e ExecHelm) SearchRepo(chart, currVersion string, opts Opts) (ChartSearchVersions, error) {
+	searchVersions := []string{
+		fmt.Sprintf(">=%s", currVersion), // Latest version X.X.X
+		fmt.Sprintf("^%s", currVersion),  // Latest matching major version 1.X.X
+		fmt.Sprintf("~%s", currVersion),  // Latest matching minor version 1.1.X
+	}
+
 	repoFile, err := writeRepoTmpFile(opts.Repositories)
 	if err != nil {
 		return nil, err
 	}
 	defer os.Remove(repoFile)
 
-	// Vertical tabs are used as deliminators in table so \v is used to match exactly the chart.
-	// By default the helm search repo command only returns the latest version for the chart.
-	cmd := e.cmd("search", "repo",
-		"--repository-config", repoFile,
-		"--regexp",
-		fmt.Sprintf("\v%s\v", chart),
-		"--version", fmt.Sprintf(">%s", currVersion),
-		"-o", "json",
-	)
-	var errBuf bytes.Buffer
-	var outBuf bytes.Buffer
-	cmd.Stderr = &errBuf
-	cmd.Stdout = &outBuf
-
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("%s\n%s", errBuf.String(), err)
-	}
-
 	var chartVersions ChartSearchVersions
-	err = json.Unmarshal(outBuf.Bytes(), &chartVersions)
-	if err != nil {
-		return nil, err
+	for _, versionRegex := range searchVersions {
+		var chartVersion ChartSearchVersions
+
+		// Vertical tabs are used as deliminators in table so \v is used to match exactly the chart.
+		// Helm search by default only returns the latest version matching the given version regex.
+		cmd := e.cmd("search", "repo",
+			"--repository-config", repoFile,
+			"--regexp", fmt.Sprintf("\v%s\v", chart),
+			"--version", versionRegex,
+			"-o", "json",
+		)
+		var errBuf bytes.Buffer
+		var outBuf bytes.Buffer
+		cmd.Stderr = &errBuf
+		cmd.Stdout = &outBuf
+
+		if err := cmd.Run(); err != nil {
+			return nil, fmt.Errorf("%s\n%s", errBuf.String(), err)
+		}
+
+		err = json.Unmarshal(outBuf.Bytes(), &chartVersion)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(chartVersion) != 1 {
+			log.Debug().Msgf("helm search repo for %s did not return 1 version : %+v", chart, chartVersion)
+			chartVersions = append(chartVersions, ChartSearchVersion{
+				Name:        chart,
+				Version:     currVersion,
+				AppVersion:  "",
+				Description: "search did not return 1 version",
+			})
+		} else {
+			chartVersions = append(chartVersions, chartVersion...)
+		}
 	}
 
 	return chartVersions, nil
