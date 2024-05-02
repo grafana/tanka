@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,8 @@ import (
 	"github.com/grafana/tanka/pkg/helm"
 	"gopkg.in/yaml.v2"
 )
+
+const repoConfigFlagUsage = "specify a local helm repository config file to use instead of the repositories in the chartfile.yaml. For use with private repositories"
 
 func chartsCmd() *cli.Command {
 	cmd := &cli.Command{
@@ -24,6 +27,7 @@ func chartsCmd() *cli.Command {
 		chartsAddRepoCmd(),
 		chartsVendorCmd(),
 		chartsConfigCmd(),
+		chartsVersionCheckCmd(),
 	)
 
 	return cmd
@@ -35,7 +39,7 @@ func chartsVendorCmd() *cli.Command {
 		Short: "Download Charts to a local folder",
 	}
 	prune := cmd.Flags().Bool("prune", false, "also remove non-vendored files from the destination directory")
-	repoConfigPath := cmd.Flags().String("repository-config", "", "specify a local helm repository config file to use instead of the repositories in the chartfile.yaml. For use with private repositories")
+	repoConfigPath := cmd.Flags().String("repository-config", "", repoConfigFlagUsage)
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		c, err := loadChartfile()
@@ -54,7 +58,7 @@ func chartsAddCmd() *cli.Command {
 		Use:   "add [chart@version] [...]",
 		Short: "Adds Charts to the chartfile",
 	}
-	repoConfigPath := cmd.Flags().String("repository-config", "", "specify a local helm repository config file to use instead of the repositories in the chartfile.yaml. For use with private repositories")
+	repoConfigPath := cmd.Flags().String("repository-config", "", repoConfigFlagUsage)
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		c, err := loadChartfile()
@@ -138,6 +142,35 @@ func chartsInitCmd() *cli.Command {
 
 		fmt.Fprintf(os.Stderr, "Success! New Chartfile created at '%s'", path)
 		return nil
+	}
+
+	return cmd
+}
+
+func chartsVersionCheckCmd() *cli.Command {
+	cmd := &cli.Command{
+		Use:   "version-check",
+		Short: "Check required charts for updated versions",
+	}
+	repoConfigPath := cmd.Flags().String("repository-config", "", repoConfigFlagUsage)
+	prettyPrint := cmd.Flags().Bool("pretty-print", false, "pretty print json output with indents")
+
+	cmd.Run = func(cmd *cli.Command, args []string) error {
+		c, err := loadChartfile()
+		if err != nil {
+			return err
+		}
+
+		data, err := c.VersionCheck(*repoConfigPath)
+		if err != nil {
+			return err
+		}
+
+		enc := json.NewEncoder(os.Stdout)
+		if *prettyPrint {
+			enc.SetIndent("", "  ")
+		}
+		return enc.Encode(data)
 	}
 
 	return cmd

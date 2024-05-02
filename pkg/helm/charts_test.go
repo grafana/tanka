@@ -278,3 +278,102 @@ repositories:
 	assert.NoError(t, err)
 	assert.Contains(t, string(chartContent), `version: 11.12.1`)
 }
+
+func TestChartsVersionCheck(t *testing.T) {
+	tempDir := t.TempDir()
+	c, err := InitChartfile(filepath.Join(tempDir, Filename))
+	require.NoError(t, err)
+
+	err = c.Add([]string{"stable/prometheus@11.12.0"}, "")
+	assert.NoError(t, err)
+
+	// Having multiple versions of the same chart should only return one update
+	err = c.Add([]string{"stable/prometheus@11.11.0:old"}, "")
+	assert.NoError(t, err)
+
+	chartVersions, err := c.VersionCheck("")
+	assert.NoError(t, err)
+
+	// stable/prometheus is deprecated so only the 11.12.1 should ever be returned as latest
+	latestPrometheusChartVersion := ChartSearchVersion{
+		Name:        "stable/prometheus",
+		Version:     "11.12.1",
+		AppVersion:  "2.20.1",
+		Description: "DEPRECATED Prometheus is a monitoring system and time series database.",
+	}
+	stableExpected := RequiresVersionInfo{
+		Name:                       "stable/prometheus",
+		Directory:                  "",
+		CurrentVersion:             "11.12.0",
+		UsingLatestVersion:         false,
+		LatestVersion:              latestPrometheusChartVersion,
+		LatestMatchingMajorVersion: latestPrometheusChartVersion,
+		LatestMatchingMinorVersion: latestPrometheusChartVersion,
+	}
+	oldExpected := RequiresVersionInfo{
+		Name:                       "stable/prometheus",
+		Directory:                  "old",
+		CurrentVersion:             "11.11.0",
+		UsingLatestVersion:         false,
+		LatestVersion:              latestPrometheusChartVersion,
+		LatestMatchingMajorVersion: latestPrometheusChartVersion,
+		LatestMatchingMinorVersion: ChartSearchVersion{
+			Name:        "stable/prometheus",
+			Version:     "11.11.1",
+			AppVersion:  "2.19.0",
+			Description: "Prometheus is a monitoring system and time series database.",
+		},
+	}
+	assert.Equal(t, 2, len(chartVersions))
+	assert.Equal(t, stableExpected, chartVersions["stable/prometheus@11.12.0"])
+	assert.Equal(t, oldExpected, chartVersions["stable/prometheus@11.11.0"])
+}
+
+func TestVersionCheckWithConfig(t *testing.T) {
+	tempDir := t.TempDir()
+	c, err := InitChartfile(filepath.Join(tempDir, Filename))
+	require.NoError(t, err)
+
+	// Don't want to commit credentials so we just verify the "private" repo reference will make
+	// use of this helm config since the InitChartfile does not have a reference to it.
+	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "helmConfig.yaml"), []byte(`
+apiVersion: ""
+generated: "0001-01-01T00:00:00Z"
+repositories:
+- caFile: ""
+  certFile: ""
+  insecure_skip_tls_verify: false
+  keyFile: ""
+  name: private
+  pass_credentials_all: false
+  password: ""
+  url: https://charts.helm.sh/stable
+  username: ""
+`), 0644))
+	c.Manifest.Requires = append(c.Manifest.Requires, Requirement{
+		Chart:   "private/prometheus",
+		Version: "11.12.0",
+	})
+
+	chartVersions, err := c.VersionCheck(filepath.Join(tempDir, "helmConfig.yaml"))
+	assert.NoError(t, err)
+
+	// stable/prometheus is deprecated so only the 11.12.1 should ever be returned as latest
+	latestPrometheusChartVersion := ChartSearchVersion{
+		Name:        "private/prometheus",
+		Version:     "11.12.1",
+		AppVersion:  "2.20.1",
+		Description: "DEPRECATED Prometheus is a monitoring system and time series database.",
+	}
+	expected := RequiresVersionInfo{
+		Name:                       "private/prometheus",
+		Directory:                  "",
+		CurrentVersion:             "11.12.0",
+		UsingLatestVersion:         false,
+		LatestVersion:              latestPrometheusChartVersion,
+		LatestMatchingMajorVersion: latestPrometheusChartVersion,
+		LatestMatchingMinorVersion: latestPrometheusChartVersion,
+	}
+	assert.Equal(t, 1, len(chartVersions))
+	assert.Equal(t, expected, chartVersions["private/prometheus@11.12.0"])
+}
