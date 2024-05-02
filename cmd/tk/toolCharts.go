@@ -153,6 +153,7 @@ func chartsVersionCheckCmd() *cli.Command {
 		Short: "Check required charts for updated versions",
 	}
 	repoConfigPath := cmd.Flags().String("repository-config", "", repoConfigFlagUsage)
+	prettyPrint := cmd.Flags().Bool("pretty-print", false, "pretty print json output with indents")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		c, err := loadChartfile()
@@ -165,13 +166,11 @@ func chartsVersionCheckCmd() *cli.Command {
 			return err
 		}
 
-		returnData, err := json.Marshal(data)
-		if err != nil {
-			return err
+		enc := json.NewEncoder(os.Stdout)
+		if *prettyPrint {
+			enc.SetIndent("", "  ")
 		}
-
-		fmt.Printf("%s", returnData)
-		return nil
+		return enc.Encode(data)
 	}
 
 	return cmd
