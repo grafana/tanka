@@ -24,10 +24,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
+          cache: 'pnpm'
 
       - name: Install and Build
         working-directory: docs
@@ -36,13 +40,13 @@ jobs:
           # PRs: https://tanka.dev/pr-preview/pr-{number}/
           PATH_PREFIX: "${{ github.event_name == 'pull_request' && format('/pr-preview/pr-{0}', github.event.number) || '' }}"
         run: |
-          yarn install
-          yarn build
+          pnpm install
+          pnpm build
 
       - name: Deploy main
         if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4
-        with: 
+        with:
           clean-exclude: pr-preview/
           folder: ./docs/public/
 

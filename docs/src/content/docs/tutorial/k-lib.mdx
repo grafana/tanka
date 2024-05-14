@@ -1,0 +1,201 @@
+---
+title: Kubernetes library
+sidebar:
+  order: 6
+---
+
+import { FileTree } from '@astrojs/starlight/components';
+
+The last section has shown that using a library for creating Kubernetes objects
+can drastically simplify the code you need to write. However, there is a huge
+amount of different kinds of objects and the Kubernetes API is evolving (and
+thus changing) quite rapidly.
+
+Writing and maintaining such a library could be a full-time job on it's own.
+Luckily, it is possible to generate such a library from the Kubernetes OpenAPI
+specification! Even better, it has already been done for you.
+
+## k8s-libsonnet
+
+The library is called `k8s-libsonnet` (replacing the discontinued `ksonnet-lib`),
+currently available at https://github.com/jsonnet-libs/k8s-libsonnet.
+
+:::note
+The `ksonnet` project has been abandoned, the library is not maintained
+anymore. However, the community backed by Grafana Labs has picked up on this with
+the `k8s-libsonnet` library.
+:::
+
+As `k8s-libsonnet` has broken compatibility in a few places with `ksonnet-lib` (for good
+reason), we have instrumented the widely used `ksonnet-util` library with a
+compatibility layer to improve the developer and user experience:
+https://github.com/grafana/jsonnet-libs/tree/master/ksonnet-util
+
+If you do not have any strong reasons against it, just adopt the wrapper as
+well, it will ease your work. Many of the original `ksonnet-util` enhancements
+have already made their way into `k8s-libsonnet`.
+
+The docs for `k8s-libsonnet` library can be found here:
+https://jsonnet-libs.github.io/k8s-libsonnet/
+
+## Installation
+
+Like every other external library, `k8s-libsonnet` can be installed using
+`jsonnet-bundler`.
+However, Tanka already **did this for you** during [project
+creation (`tk init`)](/tutorial/jsonnet#creating-a-new-project):
+
+```bash
+tk init
+jb install github.com/jsonnet-libs/k8s-libsonnet/1.21@main github.com/grafana/jsonnet-libs/ksonnet-util
+
+```
+
+This created the following structure in `/vendor`:
+
+<FileTree>
+
+- vendor
+  - github.com
+    - grafana
+      - jsonnet-libs
+        - ksonnet-util
+          - kausal.libsonnet # Grafana's wrapper
+          - ...
+    - jsonnet-libs
+      - k8s-libsonnet
+        - 1.21
+          - main.libsonnet # k8s-libsonnet entrypoint
+          - ...
+  - 1.21/ -> github.com/jsonnet-libs/k8s-libsonnet/1.21
+  - ksonnet-util/ -> github.com/grafana/jsonnet-libs/ksonnet-util
+
+</FileTree>
+
+:::note[Info]
+The `vendor/` is the location for external libraries, while `lib/`
+can be used for your own ones. Check [import paths](/libraries/import-paths)
+for more information.
+:::
+
+#### Aliasing
+
+Because of how `jb` works, the library can be imported as
+`github.com/jsonnet-libs/k8s-libsonnet/1.21/main.libsonnet`. Most external
+libraries (including our wrapper) expect it as a simple `k.libsonnet` (without
+the package prefix).
+
+To support both, Tanka automatically created an alias file for you:
+`/lib/k.libsonnet` that just imports the actual library, exposing it under this
+alternative name as well.
+
+:::note[Info]
+This works, because `import` behaves like copy-pasting. So the contents of
+`k8s-libsonnet/1.21` are "copied" into our new file, making them behave exactly the
+same.
+:::
+
+## Using it
+
+First we need to import it in `main.jsonnet`:
+
+```diff
+- local k = import "kubernetes.libsonnet";
++ local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
+  local grafana = import "grafana.jsonnet";
+  local prometheus = import "prometheus.jsonnet";
+  { /* ... */ }
+```
+
+:::note
+`ksonnet-util` imports literal `k.libsonnet`, so [aliasing](#aliasing) is
+a must here. This works, because `/lib` and `/vendor` are automatically searched
+for libraries, and `k.libsonnet` can be found in `/lib` due to aforementioned
+aliasing.
+:::
+
+Now that we have installed the correct version, let's use it in
+`/environments/default/grafana.jsonnet` instead of our own helper:
+
+```jsonnet
+// /environments/default/grafana.jsonnet
+local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
+
+{
+  // use locals to extract the parts we need
+  local deploy = k.apps.v1.deployment,
+  local container = k.core.v1.container,
+  local port = k.core.v1.containerPort,
+  local service = k.core.v1.service,
+  // defining the objects:
+  grafana: {
+    // deployment constructor: name, replicas, containers
+    deployment: deploy.new(name=$._config.grafana.name, replicas=1, containers=[
+      // container constructor
+      container.new($._config.grafana.name, "grafana/grafana")
+      + container.withPorts( // add ports to the container
+          [port.new("ui", $._config.grafana.port)] // port constructor
+        ),
+    ]),
+
+    // instead of using a service constructor, our wrapper provides
+    // a handy helper to automatically generate a service for a Deployment
+    service: k.util.serv.util.serviceFor(self.deployment)
+             + service.mixin.spec.withType("NodePort"),
+  }
+}
+```
+
+## Full example
+
+Now that creating the individual objects does not take more than 5 lines, we can
+merge it all back into a single file (`main.jsonnet`) and take a look at the
+whole picture:
+
+```jsonnet
+local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
+
+{
+  _config:: {
+    grafana: {
+      port: 3000,
+      name: "grafana",
+    },
+    prometheus: {
+      port: 9090,
+      name: "prometheus"
+    }
+  },
+
+  local deployment = k.apps.v1.deployment,
+  local container = k.core.v1.container,
+  local port = k.core.v1.containerPort,
+  local service = k.core.v1.service,
+
+  prometheus: {
+    deployment: deployment.new(
+      name=$._config.prometheus.name, replicas=1,
+      containers=[
+        container.new($._config.prometheus.name, "prom/prometheus")
+        + container.withPorts([port.new("api", $._config.prometheus.port)]),
+      ],
+    ),
+    service: k.util.serviceFor(self.deployment),
+  },
+  grafana: {
+    deployment: deployment.new(
+      name=$._config.grafana.name, replicas=1,
+      containers=[
+        container.new($._config.grafana.name, "grafana/grafana")
+        + container.withPorts([port.new("ui", $._config.grafana.port)]),
+      ],
+    ),
+    service:
+      k.util.serviceFor(self.deployment)
+      + service.mixin.spec.withType("NodePort"),
+  },
+}
+```
+
+That's a pretty big improvement, considering how verbose and error-prone it was
+before!
