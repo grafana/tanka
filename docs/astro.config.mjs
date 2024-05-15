@@ -7,6 +7,7 @@ import tailwind from '@astrojs/tailwind';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://tanka.dev',
+  base: process.env.PATH_PREFIX,
   integrations: [
     starlight({
       plugins: [starlightLinksValidator()],
