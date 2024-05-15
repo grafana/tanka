@@ -188,6 +188,18 @@ func (e ExecHelm) SearchRepo(chart, currVersion string, opts Opts) (ChartSearchV
 	}
 	defer os.Remove(repoFile)
 
+	// Helm repo update in order to let "helm search repo" function
+	updateCmd := e.cmd("repo", "update",
+		"--repository-config", repoFile,
+	)
+	var updateErrBuf bytes.Buffer
+	var updateOutBuf bytes.Buffer
+	updateCmd.Stderr = &updateErrBuf
+	updateCmd.Stdout = &updateOutBuf
+	if err := updateCmd.Run(); err != nil {
+		return nil, fmt.Errorf("%s\n%s", updateErrBuf.String(), err)
+	}
+
 	var chartVersions ChartSearchVersions
 	for _, versionRegex := range searchVersions {
 		var chartVersion ChartSearchVersions
