@@ -43,6 +43,12 @@ jobs:
         run: |
           pnpm install
           pnpm build
+          if [ -d "./public" ]; then
+            touch ./public/.nojekyll
+          fi
+          if [ -d "./dist" ]; then
+            touch ./dist/.nojekyll
+          fi
 
       - name: Deploy main
         if: github.event_name != 'pull_request'
