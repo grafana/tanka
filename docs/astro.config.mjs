@@ -21,7 +21,8 @@ export default defineConfig({
         {
           tag: 'base',
           attrs: {
-            href: `${process.env.PATH_PREFIX}/`,
+            // TODO: change this for local builds
+            href: `https://tanka.dev${process.env.PATH_PREFIX}/`,
           },
         },
       ],
