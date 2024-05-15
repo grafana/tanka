@@ -56,4 +56,4 @@ jobs:
         uses: rossjrw/pr-preview-action@v1
         with:
           deploy-repository: ${{ github.event.pull_request.head.repo.full_name }}
-          source-dir: ./docs/public/
+          source-dir: ./docs/dist/
