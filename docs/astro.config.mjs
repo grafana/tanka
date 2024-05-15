@@ -21,7 +21,7 @@ export default defineConfig({
         {
           tag: 'base',
           attrs: {
-            href: `/${process.env.PATH_PREFIX}`,
+            href: `${process.env.PATH_PREFIX}/`,
           },
         },
       ],
