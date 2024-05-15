@@ -38,6 +38,10 @@ jobs:
         run: |
           yarn install
           yarn build
+          # Create .nojekyll file to allow for additional files to be published
+          # according to
+          # <https://github.blog/2009-12-29-bypassing-jekyll-on-github-pages/>
+          touch ./public/.nojekyll
 
       - name: Deploy main
         if: github.event_name != 'pull_request'
