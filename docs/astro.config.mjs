@@ -10,7 +10,21 @@ export default defineConfig({
   base: process.env.PATH_PREFIX,
   integrations: [
     starlight({
-      plugins: [starlightLinksValidator()],
+      // This doesn't work with preview deplyoments because of the way starlight is designed.
+      // plugins: [starlightLinksValidator()],
+      head: [
+        // We need to set the base tag because Starlight doesn't add one by default.
+        // This is sensible given that when serving a docs webiste from a subdirectory the assumption is that there's
+        // "another" website you may want to be able to link to.
+        // However, in our case, we use the base path only for PR previews and the actual website is always served from the root.
+        // This will make sure that links in markdown files work correctly both in PR previews and the prod website.
+        {
+          tag: 'base',
+          attrs: {
+            href: `/${process.env.PATH_PREFIX}`,
+          },
+        },
+      ],
       title: 'Grafana Tanka',
       description:
         'Grafana Tanka is the robust configuration utility for your Kubernetes cluster, powered by the Jsonnet language.',

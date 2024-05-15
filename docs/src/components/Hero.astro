@@ -42,10 +42,10 @@ local k = import "k.libsonnet";
 		</div>
 		
         <div class="sl-flex actions">
-            <CallToAction  link='/install' variant='primary' icon={{type:'icon', name: 'laptop'}}>
-                Install
+            <CallToAction link={`${import.meta.env.BASE_URL}install`} variant='primary' icon={{type:'icon', name: 'laptop'}}>
+                Install {}
             </CallToAction>
-            <CallToAction  link='/tutorial/overview' variant='minimal' icon={{type:'icon', name: 'laptop'}}>
+            <CallToAction link={`${import.meta.env.BASE_URL}tutorial/overview`} variant='minimal' icon={{type:'icon', name: 'laptop'}}>
                 Read the tutorial
             </CallToAction>
         </div>
