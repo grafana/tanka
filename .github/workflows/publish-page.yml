@@ -32,6 +32,7 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
+          cache-dependency-path: 'docs'
 
       - name: Install and Build
         working-directory: docs
