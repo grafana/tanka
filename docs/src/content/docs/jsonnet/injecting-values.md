@@ -8,9 +8,9 @@ Sometimes it might be required to pass externally acquired data into Jsonnet.
 
 There are three ways of doing so:
 
-1. [JSON files](#json-files)
-2. [External variables](#external-variables)
-3. [Top level arguments](#top-level-arguments)
+1. [JSON files](./jsonnet/injecting-values/#json-files)
+2. [External variables](./jsonnet/injecting-values/#external-variables)
+3. [Top level arguments](./jsonnet/injecting-values/#top-level-arguments)
 
 Also check out the [official Jsonnet docs on this
 topic](https://jsonnet.org/ref/language.html#passing-data-to-jsonnet).
@@ -63,7 +63,7 @@ They can be accessed using `std.extVar` and the name given to them on the comman
 External variables are directly accessible in all parts of the
 configuration, which can make it difficult to track where they are used and
 what effect they have on the final result.
-Try to use [Top Level Arguments](#top-level-arguments) instead.
+Try to use [Top Level Arguments](./jsonnet/injecting-values/#top-level-arguments) instead.
 :::
 
 ## Top Level Arguments

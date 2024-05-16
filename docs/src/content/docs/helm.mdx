@@ -9,7 +9,7 @@ import { FileTree } from '@astrojs/starlight/components';
 The [Helm](https://helm.sh) project is the biggest ecosystem of high quality,
 well maintained application definitions for Kubernetes.
 
-Even though Grafana Tanka uses the [Jsonnet language](./jsonnet/overview) for
+Even though Grafana Tanka uses the [Jsonnet language](./jsonnet/overview/) for
 resource definition, you can still consume Helm resources, as described below.
 
 ## Consuming Helm Charts from Jsonnet
@@ -40,7 +40,7 @@ local helm = tanka.helm.new(std.thisFile);
 ```
 
 The Chart itself is required to be [vendored at a relative
-path](#vendoring-helm-charts), in this case `./charts/grafana`.
+path](./helm/#vendoring-helm-charts), in this case `./charts/grafana`.
 
 :::caution
 You **MUST** include the `.new(std.thisFile)` part in the import.
@@ -62,7 +62,7 @@ a regular Jsonnet object that looks roughly like so:
 }
 ```
 
-Above can be [manipulated](./tutorial/environments#patching) in the same way as any other Jsonnet data.
+Above can be [manipulated](./tutorial/environments/#patching) in the same way as any other Jsonnet data.
 
 Under the hood, this feature invokes the
 [`helm template`](https://helm.sh/docs/helm/helm_template/) CLI command.
@@ -265,7 +265,7 @@ evaluating jsonnet: RUNTIME ERROR: Expanding Helm Chart: exec: "helm": executabl
 
 To solve this, you need to [install Helm](https://helm.sh/docs/intro/install/).
 If you cannot install it system-wide, you can point Tanka at your executable
-using [`TANKA_HELM_PATH`](./env-vars#tanka_helm_path)
+using [`TANKA_HELM_PATH`](./env-vars/#tanka_helm_path)
 
 ### opts.calledFrom unset
 

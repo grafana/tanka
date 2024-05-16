@@ -8,6 +8,7 @@ const isLocalPreview = process.env.npm_lifecycle_script === 'astro dev';
 export default defineConfig({
   site: 'https://tanka.dev',
   base: process.env.PATH_PREFIX,
+  trailingSlash: 'always',
   integrations: [
     starlight({
       head: [
@@ -39,6 +40,8 @@ export default defineConfig({
       },
       components: {
         Hero: './src/components/Hero.astro',
+        TableOfContents: './src/components/TableOfContents.astro',
+        MobileTableOfContents: './src/components/MobileTableOfContents.astro',
       },
       customCss: ['./src/tailwind.css', '@fontsource-variable/inter'],
       sidebar: [

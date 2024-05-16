@@ -7,7 +7,7 @@ sidebar:
 [Kustomize](https://kustomize.io) provides a solution for customizing Kubernetes
 manifests in YAML.
 
-Even though Grafana Tanka uses the [Jsonnet language](./jsonnet/overview) for
+Even though Grafana Tanka uses the [Jsonnet language](./jsonnet/overview/) for
 resource definition, you can still consume kustomizations, as described below.
 
 :::caution
@@ -67,7 +67,7 @@ the kustomization as a regular Jsonnet object that looks roughly like so:
 }
 ```
 
-Above can be [manipulated](./tutorial/environments#patching) in the same way as
+Above can be [manipulated](./tutorial/environments/#patching) in the same way as
 any other Jsonnet data.
 
 ## Working with Kustomize
@@ -101,7 +101,7 @@ evaluating jsonnet: RUNTIME ERROR: Expanding Kustomize: exec: "kustomize": execu
 To solve this, you need to
 [install Kustomize](https://kubectl.docs.kubernetes.io/installation/kustomize/).
 If you cannot install it system-wide, you can point Tanka at your executable
-using [`TANKA_KUSTOMIZE_PATH`](./env-vars#tanka_kustomize_path)
+using [`TANKA_KUSTOMIZE_PATH`](./env-vars/#tanka_kustomize_path)
 
 ### opts.calledFrom unset
 

@@ -10,7 +10,7 @@ by `kubectl`.
 
 ## Default namespaces
 
-In the [`spec.json`](./config#file-format) of each environment, you can set the
+In the [`spec.json`](./config/#file-format) of each environment, you can set the
 `spec.namespace` field, which is the default namespace. The default namespace is
 set for every resource that **does not** have a namespace **set from Jsonnet**.
 

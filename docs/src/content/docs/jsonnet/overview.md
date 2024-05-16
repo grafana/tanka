@@ -9,7 +9,7 @@ expressing what shall be deployed to your Kubernetes cluster. Understanding
 Jsonnet is crucial to using Tanka effectively.
 
 This page covers the Jsonnet language itself. For more information on how to
-use Jsonnet with Kubernetes, see [the tutorial](./tutorial/jsonnet). There's
+use Jsonnet with Kubernetes, see [the tutorial](./tutorial/jsonnet/). There's
 also [the official Jsonnet tutorial](https://jsonnet.org/learning/tutorial.html)
 that provides a more detailed review of language features.
 
@@ -44,9 +44,9 @@ Jsonnet has rich abstraction features, which makes it interesting for
 configuring Kubernetes, as it allows to keep configurations concise, yet
 readable.
 
-- [Imports](#imports)
-- [Merging](#merging)
-- [Functions](#functions)
+- [Imports](./jsonnet/overview/#imports)
+- [Merging](./jsonnet/overview/#merging)
+- [Functions](./jsonnet/overview/#functions)
 
 ### Imports
 
@@ -63,7 +63,7 @@ When using Tanka, it is also possible to directly import `.json` and `.yaml`
 files, as if they were a `.libsonnet`.
 
 Make sure to also take a look at the libraries documentation to learn how to use `import` and re-use code.
-The documentation on [Tanka import paths](./libraries/import-paths) and [vendoring](./libraries/install-publish) are useful to understand how imports work in Tanka's context.
+The documentation on [Tanka import paths](./libraries/import-paths/) and [vendoring](./libraries/install-publish/) are useful to understand how imports work in Tanka's context.
 
 ### Merging
 

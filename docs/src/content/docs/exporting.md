@@ -75,7 +75,7 @@ You can also use a different file extension by providing `--extension='yml'`, fo
 ## Multiple environments
 
 Tanka can also export multiple inline environments, as showcased in [Use case: consistent inline
-environments](./inline-environments#use-case-consistent-inline-environments). This follows the same
+environments](./inline-environments/#use-case-consistent-inline-environments). This follows the same
 principles as describe before with the addition that you can also refer to Environment specific data through the `env`
 keyword.
 

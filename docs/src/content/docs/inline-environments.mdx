@@ -19,7 +19,7 @@ The general take away is:
 ## Converting to an inline environment
 
 Converting a traditional `spec.json` environment into an inline environment is quite
-straight forward. Based on the example from [Using Jsonnet](./tutorial/jsonnet):
+straight forward. Based on the example from [Using Jsonnet](./tutorial/jsonnet/):
 
 The directory structure:
 
@@ -178,7 +178,7 @@ tk export outputDir/ environments/monitoring-stack/main.jsonnet --recursive \
 
 ### `import "tk"`
 
-Inline environments cannot use [`import "tk"`](./config#jsonnet-access) anymore as
+Inline environments cannot use [`import "tk"`](./config/#jsonnet-access) anymore as
 this information was populated before jsonnet evaluation by the existence of
 `spec.json`.
 

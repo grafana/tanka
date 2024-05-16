@@ -11,7 +11,7 @@ find a suitable file for that specific import:
 | ---- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
 | 4    | `<baseDir>`        | The directory of your environment, e.g. `/environments/default`.<br /> Put things that belong to this very environment here. |
 | 3    | `/lib`             | Project-global libraries, that are used in multiple environments, but are specific to this project.                          |
-| 2    | `<baseDir>/vendor` | Per-environment vendor, can be used for [`vendor` overriding](./libraries/overriding#per-environment)                        |
+| 2    | `<baseDir>/vendor` | Per-environment vendor, can be used for [`vendor` overriding](./libraries/overriding/#per-environment)                       |
 | 1    | `/vendor`          | Global vendor, holds external libraries installed using `jb`.                                                                |
 
 :::note

@@ -43,7 +43,7 @@ later. Only the API server (master nodes) needs to have that
 version, worker nodes do not matter.
 
 There is a
-[known issue](./known-issues#unexpected-diff-if-the-same-port-number-is-used-for-udp-and-tcp)
+[known issue](./known-issues/#unexpected-diff-if-the-same-port-number-is-used-for-udp-and-tcp)
 with `kubectl diff`, which affects ports configured to use both TCP and UDP.
 
 ### Server-side diffs
@@ -52,7 +52,7 @@ There are two additional modes which extend `native`: `validate` and `server`.
 While all `kubectl diff` commands are sent to the API server, these two
 methods take advantage of an additional server-side diff mode (which uses the
 `kubectl diff --server-side` flag, complementing the
-[server-side apply](./server-side-apply) mode).
+[server-side apply](./server-side-apply/) mode).
 
 Since a plain `server` diff often produces cruft, and wouldn't be representative
 of a client-side apply, the `validate` method allows the server-side diff to
@@ -72,7 +72,7 @@ This is required, because Kubernetes adds dynamic fields to the state during
 runtime, which we cannot know of on the client side. To produce a somewhat
 usable output, we can effectively only compare what we already know about.
 
-If this is a problem for you, consider switching to [native](#native) mode.
+If this is a problem for you, consider switching to [native](./diff-strategy/#native) mode.
 
 ## External diff utilities
 
