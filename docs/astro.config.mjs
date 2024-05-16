@@ -36,6 +36,7 @@ export default defineConfig({
         src: './img/logo.svg',
         alt: 'Grafana Tanka logo',
       },
+      favicon: '/favicon.svg',
       editLink: {
         baseUrl: 'https://github.com/grafana/tanka/edit/main/docs/',
       },
