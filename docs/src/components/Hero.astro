@@ -1,15 +1,15 @@
 ---
-import type { Props } from '@astrojs/starlight/props';
-import CallToAction from '@astrojs/starlight/components/CallToAction.astro';
-import { Code } from '@astrojs/starlight/components';
-import {Content as Tagline} from './tagline.md';
+import type { Props } from '@astrojs/starlight/props'
+import CallToAction from '@astrojs/starlight/components/CallToAction.astro'
+import { Code } from '@astrojs/starlight/components'
+import { Content as Tagline } from './tagline.md'
 ---
 
 <div class="hero">
 	<div class="hero-html sl-flex">
-        <div>
-            <Code 
-            code={`
+		<div>
+			<Code
+				code={`
 local k = import "k.libsonnet";
 
 {
@@ -21,34 +21,40 @@ local k = import "k.libsonnet";
             image="grafana/grafana",
         )]
     )
-}`} 
-                lang="jsonnet" 
-                title='main.libsonnet' 
-            />
+}`}
+				lang="jsonnet"
+				title="main.libsonnet"
+			/>
 
-            <div class="text-center lg:text-left">
-                Kubernetes Deployment. That's all it takes.
-            </div>
-        </div>
-
-
-    </div>
+			<div class="text-center lg:text-left">
+				Kubernetes Deployment. That's all it takes.
+			</div>
+		</div>
+	</div>
 	<div class="sl-flex stack">
 		<div class="sl-flex copy">
-			<h1  data-page-title >Define. Reuse. Override.</h1>
-			<div class="tagline" >
-                <Tagline />
-            </div>
+			<h1 data-page-title>Define. Reuse. Override.</h1>
+			<div class="tagline">
+				<Tagline />
+			</div>
 		</div>
-		
-        <div class="sl-flex actions">
-            <CallToAction link={`${import.meta.env.BASE_URL}/install`} variant='primary' icon={{type:'icon', name: 'laptop'}}>
-                Install {}
-            </CallToAction>
-            <CallToAction link={`${import.meta.env.BASE_URL}/tutorial/overview`} variant='minimal' icon={{type:'icon', name: 'laptop'}}>
-                Read the tutorial
-            </CallToAction>
-        </div>
+
+		<div class="sl-flex actions">
+			<CallToAction
+				link={`/install`}
+				variant="primary"
+				icon={{ type: 'icon', name: 'laptop' }}
+			>
+				Install {}
+			</CallToAction>
+			<CallToAction
+				link={`/tutorial/overview`}
+				variant="minimal"
+				icon={{ type: 'icon', name: 'laptop' }}
+			>
+				Read the tutorial
+			</CallToAction>
+		</div>
 	</div>
 </div>
 
@@ -84,14 +90,22 @@ local k = import "k.libsonnet";
 	}
 
 	h1 {
-		font-size: clamp(var(--sl-text-3xl), calc(0.25rem + 5vw), var(--sl-text-6xl));
+		font-size: clamp(
+			var(--sl-text-3xl),
+			calc(0.25rem + 5vw),
+			var(--sl-text-6xl)
+		);
 		line-height: var(--sl-line-height-headings);
 		font-weight: 600;
 		color: var(--sl-color-white);
 	}
 
 	.tagline {
-		font-size: clamp(var(--sl-text-base), calc(0.0625rem + 2vw), var(--sl-text-xl));
+		font-size: clamp(
+			var(--sl-text-base),
+			calc(0.0625rem + 2vw),
+			var(--sl-text-xl)
+		);
 		color: var(--sl-color-gray-2);
 	}
 

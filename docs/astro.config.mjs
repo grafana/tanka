@@ -4,10 +4,12 @@ import starlight from '@astrojs/starlight';
 
 import tailwind from '@astrojs/tailwind';
 
+const isLocalPreview = process.env.npm_lifecycle_script === 'astro dev';
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://tanka.dev',
-  base: process.env.PATH_PREFIX,
+  base: isLocalPreview ? '' : process.env.PATH_PREFIX,
   integrations: [
     starlight({
       // This doesn't work with preview deplyoments because of the way starlight is designed.
@@ -21,8 +23,7 @@ export default defineConfig({
         {
           tag: 'base',
           attrs: {
-            // TODO: change this for local builds
-            href: `https://tanka.dev${process.env.PATH_PREFIX}/`,
+            href: isLocalPreview ? '' : `https://tanka.dev${process.env.PATH_PREFIX || ''}/`,
           },
         },
       ],
