@@ -13,7 +13,7 @@ waiting for the upstream maintainer to review it.
 
 ## Shadowing
 
-Because [import paths](/libraries/import-paths) are ranked in Tanka, you can use
+Because [import paths](./libraries/import-paths) are ranked in Tanka, you can use
 a technique called shadowing: By putting a file with the exact same name in a
 higher ranked path, Tanka will prefer that file instead of the original in
 `vendor`, which has the lowest possible rank of 1.
@@ -23,7 +23,7 @@ For example, if `/vendor/foo/bar.libsonnet` contained an error, you could create
 
 :::tip
 Instead of copying the file to the new location and making the edits,
-use an absolute import and [patching](/tutorial/environments#patching):
+use an absolute import and [patching](./tutorial/environments#patching):
 
 ```jsonnet
 // /lib/foo/bar.libsonnet
@@ -43,7 +43,7 @@ the placement of the file is alongside your `main.libsonnet`. This is due to
 the logic behind the Jsonnet importer. Example: We import
 `abc/main.libsonnet` located in `vendor/abc`. Because Jsonnet first looks if
 files are locally present before considering the [import
-paths](/libraries/import-paths), you need to make sure your override is
+paths](./libraries/import-paths), you need to make sure your override is
 actually picked up. In our example, you'd need to copy the `main.libsonnet`
 into `lib/abc` as well.
 :::

@@ -11,7 +11,7 @@ provide the global `__ksonnet` variable, nor does it strictly have the concept
 of components.
 You will need to use the plain Jsonnet `import` feature instead. Note that this
 requires your code to be inside of one of the
-[import paths](/libraries/import-paths).
+[import paths](./libraries/import-paths).
 
 ## `Evaluating jsonnet: RUNTIME ERROR: couldn't open import "k.libsonnet": no match locally or in the Jsonnet library paths`
 
@@ -30,7 +30,7 @@ This does 2 things:
    You can replace the `1.21` matching the Kubernetes version you want to run against.
 
 2. It makes an alias for libraries importing `k.libsonnet` directly. See
-   [Aliasing](/tutorial/k-lib#aliasing) for the alias rationale.
+   [Aliasing](./tutorial/k-lib#aliasing) for the alias rationale.
 
 ## Unexpected diff if the same port number is used for UDP and TCP
 

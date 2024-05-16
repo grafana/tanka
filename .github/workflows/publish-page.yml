@@ -39,7 +39,7 @@ jobs:
         env:
           # Main: https://tanka.dev/
           # PRs: https://tanka.dev/pr-preview/pr-{number}/
-          PATH_PREFIX: "${{ github.event_name == 'pull_request' && format('/pr-preview/pr-{0}', github.event.number) || '' }}"
+          PATH_PREFIX: "${{ github.event_name == 'pull_request' && format('/pr-preview/pr-{0}/', github.event.number) || '' }}"
         run: |
           pnpm install
           pnpm build

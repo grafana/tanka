@@ -13,12 +13,12 @@ The following sections will explain how to deploy an example stack,
 
 To do so, we have the following steps:
 
-1. [Deploying **without** Tanka first](/tutorial/refresher): Using good old `kubectl` to understand what Tanka will do for us.
-2. [Using Jsonnet](/tutorial/jsonnet): Doing the same thing once again, but this time with Tanka and Jsonnet.
-3. [Parameterizing](/tutorial/parameters): Using Variables to avoid data duplication.
-4. [Abstraction](/tutorial/abstraction): Splitting components into individual parts.
-5. [Environments](/tutorial/environments): Dealing with differences between `dev` and `prod`.
-6. [`k.libsonnet`](/tutorial/k-lib): Avoid having to remember API resources.
+1. [Deploying **without** Tanka first](./tutorial/refresher): Using good old `kubectl` to understand what Tanka will do for us.
+2. [Using Jsonnet](./tutorial/jsonnet): Doing the same thing once again, but this time with Tanka and Jsonnet.
+3. [Parameterizing](./tutorial/parameters): Using Variables to avoid data duplication.
+4. [Abstraction](./tutorial/abstraction): Splitting components into individual parts.
+5. [Environments](./tutorial/environments): Dealing with differences between `dev` and `prod`.
+6. [`k.libsonnet`](./tutorial/k-lib): Avoid having to remember API resources.
 
 Completing this gives a solid knowledge of Tanka's fundamentals. Let's get started!
 

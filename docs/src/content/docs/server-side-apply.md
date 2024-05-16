@@ -18,7 +18,7 @@ To enable server-side diff in tanka, add the following field to `spec.json`:
 }
 ```
 
-This also has the effect of changing the default [diff strategy](/diff-strategy)
+This also has the effect of changing the default [diff strategy](./diff-strategy)
 to `server`, but this can be overridden via command line flags or `spec.json`.
 
 While server-side apply doesn't have any effect on the resources being applied
@@ -28,7 +28,7 @@ resources a non-trival change.
 
 Identifying and fixing these changes are beyond the scope of this guide, but
 many can be found before an apply by using the `validate` or `server`
-[diff strategy](/diff-strategy).
+[diff strategy](./diff-strategy).
 
 ## Field conflicts
 

@@ -1,7 +1,5 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-// import starlightLinksValidator from 'starlight-links-validator';
-
 import tailwind from '@astrojs/tailwind';
 
 const isLocalPreview = process.env.npm_lifecycle_script === 'astro dev';
@@ -9,11 +7,9 @@ const isLocalPreview = process.env.npm_lifecycle_script === 'astro dev';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://tanka.dev',
-  base: isLocalPreview ? '' : process.env.PATH_PREFIX,
+  base: process.env.PATH_PREFIX,
   integrations: [
     starlight({
-      // This doesn't work with preview deplyoments because of the way starlight is designed.
-      // plugins: [starlightLinksValidator()],
       head: [
         // We need to set the base tag because Starlight doesn't add one by default.
         // This is sensible given that when serving a docs webiste from a subdirectory the assumption is that there's
@@ -23,7 +19,7 @@ export default defineConfig({
         {
           tag: 'base',
           attrs: {
-            href: isLocalPreview ? '' : `https://tanka.dev${process.env.PATH_PREFIX || ''}/`,
+            href: `${isLocalPreview ? 'http://localhost:4321' : 'https://tanka.dev'}${process.env.PATH_PREFIX || ''}`,
           },
         },
       ],
