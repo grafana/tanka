@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/fatih/color v1.15.0
+	github.com/fatih/color v1.17.0
 	github.com/fatih/structs v1.1.0
 	github.com/go-clix/cli v0.2.0
 	github.com/gobwas/glob v0.2.3
@@ -39,7 +39,7 @@ require (
 	github.com/huandu/xstrings v1.3.3 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
