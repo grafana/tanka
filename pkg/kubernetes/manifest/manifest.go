@@ -203,6 +203,14 @@ func (m Metadata) Name() string {
 	return name.(string)
 }
 
+func (m Metadata) GenerateName() string {
+	generateName, ok := m["generateName"]
+	if !ok {
+		return ""
+	}
+	return generateName.(string)
+}
+
 // HasNamespace returns whether the manifest has a namespace set
 func (m Metadata) HasNamespace() bool {
 	return m2o(m).Get("namespace").IsStr()
