@@ -1,12 +1,12 @@
 ---
-import type { Props } from '@astrojs/starlight/props'
-import CallToAction from '@astrojs/starlight/components/CallToAction.astro'
-import { Code } from '@astrojs/starlight/components'
-import { Content as Tagline } from './tagline.md'
+import type { Props } from '@astrojs/starlight/props';
+import CallToAction from '@astrojs/starlight/components/CallToAction.astro';
+import { Code } from '@astrojs/starlight/components';
+import { Content as Tagline } from './tagline.md';
 ---
 
-<div class="hero">
-	<div class="hero-html sl-flex">
+<div class="hero lg:grid lg:grid-cols-hero lg:gap-5">
+	<div class="hero-html">
 		<div>
 			<Code
 				code={`
@@ -31,7 +31,7 @@ local k = import "k.libsonnet";
 			</div>
 		</div>
 	</div>
-	<div class="sl-flex stack">
+	<div class="flex stack">
 		<div class="sl-flex copy">
 			<h1 data-page-title>Define. Reuse. Override.</h1>
 			<div class="tagline">
@@ -59,10 +59,11 @@ local k = import "k.libsonnet";
 </div>
 
 <style>
+	:global([data-has-hero] .sl-container) {
+		max-width: 67.5rem;
+	}
+
 	.hero {
-		display: grid;
-		align-items: center;
-		gap: 1rem;
 		padding-bottom: 1rem;
 	}
 
@@ -117,8 +118,6 @@ local k = import "k.libsonnet";
 
 	@media (min-width: 50rem) {
 		.hero {
-			grid-template-columns: 7fr 4fr;
-			gap: 3%;
 			padding-block: clamp(2.5rem, calc(1rem + 10vmin), 10rem);
 		}
 

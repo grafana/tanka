@@ -13,6 +13,9 @@ export default {
       fontFamily: {
         sans: ['"Inter Variable"'],
       },
+      gridTemplateColumns: {
+        'hero': '7fr 4fr',
+      },
     },
   },
   plugins: [starlightPlugin()],
