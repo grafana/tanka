@@ -1,41 +1,25 @@
 {
   "name": "tanka-docs",
   "private": true,
-  "description": "Docs for Grafana Tanka",
-  "author": "sh0rez <me@shorez.de>",
-  "repository": "https://github.com/grafana/tanka.git",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "astro": "astro"
+  },
   "dependencies": {
-    "@emotion/core": "^10.0.5",
-    "docz": "^2.4.0",
-    "gatsby": "^2.0.0",
-    "gatsby-image": "^3.11.0",
-    "gatsby-plugin-catch-links": "^2.1.21",
-    "gatsby-plugin-manifest": "^2.2.34",
-    "gatsby-plugin-offline": "^3.0.30",
-    "gatsby-plugin-sharp": "^2.3.10",
-    "gatsby-remark-images": "^3.1.39",
-    "gatsby-remark-vscode": "^1.4.0",
-    "gatsby-theme-docz": "^2.4.0",
-    "prop-types": "^15.7.2",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
-    "react-helmet": "^6.1.0",
-    "typeface-fira-mono": "^1.1.13",
-    "typeface-source-sans-pro": "^0.0.75",
-    "typescript": "^4.9.5"
+    "@astrojs/check": "^0.7.0",
+    "@astrojs/starlight": "^0.22.3",
+    "@astrojs/starlight-tailwind": "^2.0.2",
+    "@astrojs/tailwind": "^5.1.0",
+    "@fontsource-variable/inter": "^5.0.18",
+    "astro": "^4.8.4",
+    "sharp": "^0.33.3",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5"
   },
   "devDependencies": {
     "prettier": "^3.2.5"
-  },
-  "keywords": [
-    "gatsby"
-  ],
-  "license": "Apache v2",
-  "scripts": {
-    "build": "gatsby build --prefix-paths",
-    "dev": "gatsby develop",
-    "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
-    "serve": "gatsby serve --prefix-paths",
-    "clean": "gatsby clean"
   }
 }

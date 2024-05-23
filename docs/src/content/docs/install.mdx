@@ -1,0 +1,187 @@
+---
+title: Installation
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Tanka is distributed as a single binary called `tk`. It already includes the Jsonnet compiler, but requires some tools to be available:
+
+- [`kubectl`](https://kubernetes.io/docs/tasks/tools/): Tanka
+  uses `kubectl` to communicate to your cluster. This means `kubectl` must be
+  available somewhere on your `$PATH`. If you ever have worked with Kubernetes
+  before, this should be the case anyways.
+- `diff`: To compute differences, standard UNIX `diff(1)` is required.
+- (recommended) `jb`: [#Jsonnet Bundler](./install/#jsonnet-bundler), the Jsonnet package
+  manager
+- (recommended) `helm`: [Helm](https://helm.sh), required for [Helm
+  support](./helm/)
+
+## Tanka
+
+<Tabs syncKey="platform">
+<TabItem label="MacOS">
+On macOS, Tanka is best installed using [`brew`](https://brew.sh):
+
+```bash
+brew install tanka
+```
+
+This downloads the most recent version of Tanka and installs it.
+Also, Tanka is automatically kept up to date as part of `brew upgrade`.
+
+</TabItem>
+<TabItem label="ArchLinux">
+
+We maintain two AUR packages, one building [from source](https://aur.archlinux.org/packages/tanka/) and another one using
+a [pre-compiled binary](https://aur.archlinux.org/packages/tanka-bin/).
+
+These can be installed using any AUR helper, e.g. [`yay`](https://github.com/Jguer/yay):
+
+<Tabs>
+<TabItem label="From Source">
+```bash
+yay tanka
+```
+</TabItem>
+
+<TabItem label="Using pre-compiled binaries">
+
+```bash
+yay tanka-bin
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem label="Binary">
+For all other operating systems, we provide pre-compiled binaries for 
+Tanka at [GitHub Releases](https://github.com/grafana/tanka/releases).
+
+Just grab the latest version from there, download it and put somewhere in your `$PATH` (e.g. to `/usr/local/bin/tk`)
+
+#### Linux, macOS
+
+For Linux and macOS, download the binary for your architecture, put it somewhere on your `$PATH`, and make it an executable:
+
+<Tabs syncKey="subplatform">
+<TabItem label="Linux amd64">
+```bash
+sudo curl -Lo /usr/local/bin/tk https://github.com/grafana/tanka/releases/latest/download/tk-linux-amd64
+sudo chmod a+x /usr/local/bin/tk
+```
+</TabItem>
+
+<TabItem label="Linux arm / arm64 (e.g. RaspberryPi)">
+
+```bash
+sudo curl -Lo /usr/local/bin/tk https://github.com/grafana/tanka/releases/latest/download/tk-linux-arm
+sudo curl -Lo /usr/local/bin/tk https://github.com/grafana/tanka/releases/latest/download/tk-linux-arm64
+sudo chmod a+x /usr/local/bin/tk
+```
+
+</TabItem>
+
+<TabItem label="macOS">
+
+```bash
+sudo curl -Lo /usr/local/bin/tk https://github.com/grafana/tanka/releases/latest/download/tk-darwin-amd64
+sudo chmod a+x /usr/local/bin/tk
+```
+
+</TabItem>
+</Tabs>
+
+  </TabItem>
+  <TabItem label="Go">
+If you happen to have a local [Go](https://golang.org) toolchain, you can also build Tanka from source using `go install`:
+
+```bash
+cd /tmp
+go install github.com/grafana/tanka/cmd/tk@latest
+```
+
+If that does not work for whatever reason (Go modules, etc), clone and compile manually:
+
+```bash
+git clone https://github.com/grafana/tanka
+cd tanka
+make install
+```
+
+  </TabItem>
+</Tabs>
+
+## Jsonnet Bundler
+
+The [Jsonnet Bundler](https://github.com/jsonnet-bundler/jsonnet-bundler) project creates a package manager for Jsonnet
+to share and reuse code across the internet, similar to `npm` or `go mod`.
+
+Tanka uses this tool by default, so it's recommended to install it as well:
+
+<Tabs syncKey="platform">
+<TabItem label="MacOS">
+On macOS, Jsonnet Bundler is best installed using [`brew`](https://brew.sh):
+
+```bash
+brew install jsonnet-bundler
+```
+
+This downloads the most recent version of Jsonnet Bundler and installs it.  
+Also, Jsonnet Bundler is automatically kept up to date as part of `brew upgrade`.
+
+</TabItem>
+<TabItem label="ArchLinux">
+On ArchLinux, install using the [`jsonnet-bundler-bin`](https://aur.archlinux.org/packages/jsonnet-bundler-bin/) AUR package:
+
+```bash
+yay jsonnet-bundler-bin
+```
+
+</TabItem>
+<TabItem label="Binary">
+The `jb` binary is primarily distributed using [GitHub releases](https://github.com/jsonnet-bundler/jsonnet-bundler/releases).
+
+##### Linux, macOS
+
+For Linux and macOS, download the binary for your architecture, put it somewhere on your `$PATH`, and make it an executable:
+
+<Tabs syncKey="subplatform">
+<TabItem label="Linux amd64">
+```bash
+sudo curl -Lo /usr/local/bin/jb https://github.com/jsonnet-bundler/jsonnet-bundler/releases/latest/download/jb-linux-amd64
+sudo chmod a+x /usr/local/bin/jb
+```
+</TabItem>
+
+<TabItem label="Linux arm / arm64 (e.g. RaspberryPi)">
+
+```bash
+sudo curl -Lo /usr/local/bin/jb https://github.com/jsonnet-bundler/jsonnet-bundler/releases/latest/download/jb-linux-arm
+sudo curl -Lo /usr/local/bin/jb https://github.com/jsonnet-bundler/jsonnet-bundler/releases/latest/download/jb-linux-arm64
+sudo chmod a+x /usr/local/bin/jb
+```
+
+</TabItem>
+
+<TabItem label="macOS">
+
+```bash
+sudo curl -Lo /usr/local/bin/jb https://github.com/jsonnet-bundler/jsonnet-bundler/releases/latest/download/jb-darwin-amd64
+sudo chmod a+x /usr/local/bin/jb
+```
+
+</TabItem>
+</Tabs>
+
+</TabItem>
+<TabItem label="Go">
+If you happen to have a local [Go](https://golang.org) toolchain available, you can build from source using `go install`:
+
+```bash
+$ cd /tmp
+$ go install github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@latest
+```
+
+</TabItem>
+</Tabs>

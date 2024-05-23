@@ -24,35 +24,42 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: 'docs'
 
       - name: Install and Build
         working-directory: docs
         env:
           # Main: https://tanka.dev/
           # PRs: https://tanka.dev/pr-preview/pr-{number}/
-          PATH_PREFIX: "${{ github.event_name == 'pull_request' && format('/pr-preview/pr-{0}', github.event.number) || '' }}"
+          PATH_PREFIX: "${{ github.event_name == 'pull_request' && format('/pr-preview/pr-{0}/', github.event.number) || '' }}"
         run: |
-          yarn install
-          yarn build
-          # Create .nojekyll file to allow for additional files to be published
-          # according to
-          # <https://github.blog/2009-12-29-bypassing-jekyll-on-github-pages/>
-          touch ./public/.nojekyll
+          pnpm install
+          pnpm build
+          if [ -d "./public" ]; then
+            touch ./public/.nojekyll
+          fi
+          if [ -d "./dist" ]; then
+            touch ./dist/.nojekyll
+          fi
 
       - name: Deploy main
         if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4
-        with: 
+        with:
           clean-exclude: pr-preview/
-          folder: ./docs/public/
+          folder: ./docs/dist/
 
       - name: Deploy preview
         if: github.event_name == 'pull_request'
         uses: rossjrw/pr-preview-action@v1
         with:
           deploy-repository: ${{ github.event.pull_request.head.repo.full_name }}
-          source-dir: ./docs/public/
+          source-dir: ./docs/dist/
