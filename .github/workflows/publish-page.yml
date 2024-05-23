@@ -55,7 +55,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           clean-exclude: pr-preview/
-          folder: ./docs/public/
+          folder: ./docs/dist/
 
       - name: Deploy preview
         if: github.event_name == 'pull_request'
