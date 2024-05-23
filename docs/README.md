@@ -1,54 +1,43 @@
-# Starlight Starter Kit: Basics
+# Tanka documentation & website
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+This folder contains the documentation for Tanka which is also published to
+<https://tanka.dev>. Under the hood we are using [Starlight][Starlight] and
+[Astro][Astro] for this, which allows for a lot of flexiblity regarding markup
+and an easy preview of any changes.
 
-```
-npm create astro@latest -- --template starlight
-```
+## 🚀 Getting started
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/starlight/tree/main/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/starlight/tree/main/examples/basics)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwithastro%2Fstarlight%2Ftree%2Fmain%2Fexamples%2Fbasics&project-name=my-starlight-docs&repository-name=my-starlight-docs)
+Before making your first changes, make sure you have a recent version of NodeJS
+(\>= 20.x) installed. Once you have that, you can build a local previous of the
+docs using the following commands:
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+```bash
+# Install all dependencies
+pnpm install
 
-## 🚀 Project Structure
-
-Inside of your Astro + Starlight project, you'll see the following folders and files:
-
-```
-.
-├── public/
-├── src/
-│   ├── assets/
-│   ├── content/
-│   │   ├── docs/
-│   │   └── config.ts
-│   └── env.d.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
+# Start preview server
+pnpm run dev
 ```
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
+This will prompt you an URL where you can see the preview.
 
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
+You can find the source code for the documentation pages inside the
+`src/content/docs` folder. These are either Markdown files or Markdown + JSX
+(MDX) files.
 
-Static assets, like favicons, can be placed in the `public/` directory.
+If you want to make some changes, go, for instance, to
+<http://localhost:4321/tutorial/overview> while having your development server
+running. Now open an editor and make some changes to
+`src/content/tutorial/overview.md`. The preview will reload upon saving that
+file.
 
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+If you want to add images, place them in `src/assets` and embed them in your
+Markdown files with relative links.
 
 ## 👀 Want to learn more?
 
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+Check out [Starlight’s docs](https://starlight.astro.build/) and the
+[the Astro documentation](https://docs.astro.build)
+
+[astro]: https://astro.build
+[starlight]: https://starlight.astro.build
