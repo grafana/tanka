@@ -14,7 +14,7 @@ require (
 	github.com/karrick/godirwalk v1.17.0
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete v1.2.3
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/objx v0.5.2
 	github.com/stretchr/testify v1.9.0
