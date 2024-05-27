@@ -305,7 +305,7 @@ To handle this, pass a custom name format, e.g. to also include the namespace:
 
 ```jsonnet
 custom: helm.template('foo', './charts/foo', {
-  nameFormat: '{{ print .namespace "_" .kind "_" .metadata.name | snakecase }}'
+  nameFormat: '{{ print .metadata.namespace "_" .kind "_" .metadata.name | snakecase }}'
 })
 ```
 
