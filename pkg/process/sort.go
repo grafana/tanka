@@ -82,7 +82,10 @@ func Sort(list manifest.List) {
 			return list[i].Metadata().Namespace() < list[j].Metadata().Namespace()
 		}
 
-		// Otherwise, order the objects by name.
-		return list[i].Metadata().Name() < list[j].Metadata().Name()
+		if list[i].Metadata().Name() != list[j].Metadata().Name() {
+			return list[i].Metadata().Name() < list[j].Metadata().Name()
+		}
+
+		return list[i].Metadata().GenerateName() < list[j].Metadata().GenerateName()
 	})
 }

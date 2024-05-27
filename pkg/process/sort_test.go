@@ -79,6 +79,19 @@ func TestSort(t *testing.T) {
 			},
 		},
 		{
+			// sorting by the generate name prefix if everything else is the same
+			raw: manifest.List{
+				mkGenerateObj("CustomResourceDefinition", "crd2-", ""),
+				mkGenerateObj("CustomResourceDefinition", "crd-", ""),
+				mkGenerateObj("CustomResourceDefinition", "crd1-", ""),
+			},
+			state: manifest.List{
+				mkGenerateObj("CustomResourceDefinition", "crd-", ""),
+				mkGenerateObj("CustomResourceDefinition", "crd1-", ""),
+				mkGenerateObj("CustomResourceDefinition", "crd2-", ""),
+			},
+		},
+		{
 			raw: manifest.List{
 				mkobj("Deployment", "b", "a"),
 				mkobj("ConfigMap", "a", "a"),
@@ -129,4 +142,10 @@ func mkobj(kind string, name string, ns string) map[string]interface{} {
 	}
 
 	return ret
+}
+
+func mkGenerateObj(kind string, generateName string, ns string) map[string]interface{} {
+	result := mkobj(kind, "", ns)
+	result["metadata"].(map[string]interface{})["generateName"] = generateName
+	return result
 }
