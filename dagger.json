@@ -1,0 +1,15 @@
+{
+  "name": "tanka",
+  "sdk": "go",
+  "source": "dagger",
+  "engineVersion": "v0.11.4",
+  "views": [
+      {
+          "name": "core-files",
+          "patterns": [
+              "!.git",
+              "!docs"
+          ]
+      }
+  ]
+}
