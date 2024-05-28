@@ -14,7 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-tags: true
+          # https://github.com/actions/checkout/issues/1467 
+          fetch-depth: 0
       - uses: ./.github/actions/setup-goversion
       - run: make cross
       - id: docker_tag
