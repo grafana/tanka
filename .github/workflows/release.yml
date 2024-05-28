@@ -23,7 +23,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body: |
-            This is release `${{ env.GITHUB_REF_NAME }}` of Tanka (`tk`). Check out the [CHANGELOG](https://github.com/grafana/tanka/blob/main/CHANGELOG.md) for detailed release notes.
+            This is release `${{ env.GITHUB_REF_NAME }}` of Tanka (`tk`).
+
             ## Install instructions
 
             #### Binary:
