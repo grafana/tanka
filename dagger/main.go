@@ -25,14 +25,14 @@ func (m *Tanka) Build(ctx context.Context, rootDir *Directory) *Container {
 		Build(rootDir)
 }
 
-func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory) error {
-	_, err := dag.Container().
+func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory) (string, error) {
+	output, err := dag.Container().
 		From("golang:1.22-alpine").
 		WithMountedFile("/usr/bin/tk", m.Build(ctx, rootDir).File("/usr/local/bin/tk")).
 		WithMountedDirectory("/tests", rootDir.Directory("acceptance-tests")).
 		WithWorkdir("/tests").
 		WithExec([]string{"go", "test", "./...", "-v"}).
-		Sync(ctx)
-	return err
+		Stdout(ctx)
+	return output, err
 
 }
