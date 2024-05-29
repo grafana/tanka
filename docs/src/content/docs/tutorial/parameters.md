@@ -9,73 +9,194 @@ in terms of maintainability and readability.
 
 To do so, the following sections will explore some ways Jsonnet provides us with.
 
-## Config object
+## Functions parameters
 
-The most straightforward thing to do is creating a hidden object that holds all
-actual values in a single place to be consumed by the actual resources.
+Defining our deployment in a single block is not the best solution.
+Luckily with Jsonnet we can split our configuration into smaller, self-contained chunks.
 
-Luckily, Jsonnet has the `key:: "value"` stanza for private fields. Such are
-only available during compiling and will be removed from the actual output.
+Let's start by creating a new function in `main.jsonnet` responsible of creating a Grafana deployment:
 
-Such an object could look like this:
-
-```jsonnet
-{
-  _config:: {
-    grafana: {
-      port: 3000,
-      name: "grafana",
+```diff lang="jsonnet"
+// envirnoments/default/main.jsonnet
+local grafana() = {
+  deployment: {
+    apiVersion: 'apps/v1',
+    kind: 'Deployment',
+    metadata: {
+      name: 'grafana',
     },
-    prometheus: {
-      port: 9090,
-      name: "prometheus"
-    }
-  }
-}
-```
-
-We can then replace hardcoded values with a reference to this object:
-
-```diff
-{ // <- This is $
-  _config:: { /* .. */ },
-  grafana: {
-    service: {
-      apiVersion: 'v1',
-      kind: 'Service',
-      metadata: {
-        labels: {
--         name: 'grafana',
-+         name: $._config.grafana.name, // $ refers to the outermost object
+    spec: {
+      selector: {
+        matchLabels: {
+          name: 'grafana',
         },
--       name: 'grafana',
-+       name: $._config.grafana.name,
       },
-      spec: {
-        ports: [{
--           name: 'grafana-ui',
-+           name: '%s-ui' % $._config.grafana.name, // printf-style formatting
--           port: 3000,
-+           port: $._config.grafana.port,
--           targetPort: 3000,
-+           targetPort: $._config.grafana.port,
-        }],
-        selector: {
--          name: 'grafana',
-+          name: $._config.grafana.name,
+      template: {
+        metadata: {
+          labels: {
+            name: 'grafana',
+          },
         },
-        type: 'NodePort',
+        spec: {
+          containers: [
+            {
+              image: 'grafana/grafana',
+              name: 'grafana',
+              ports: [{
+                  containerPort: 3000,
+                  name: 'ui',
+              }],
+            },
+          ],
+        },
       },
     },
   },
-}
+  service: {
+    apiVersion: 'v1',
+    kind: 'Service',
+    metadata: {
+      labels: {
+        name: 'grafana',
+      },
+      name: 'grafana',
+    },
+    spec: {
+      ports: [{
+          name: 'grafana-ui',
+          port: 3000,
+          targetPort: 3000,
+      }],
+      selector: {
+        name: 'grafana',
+      },
+      type: 'NodePort',
+    },
+  },
+};
 ```
 
-Here we see that we can easily refer to other parts of the configuration using
-the outer-most object `$` (the root level). Every value is just a regular
-variable that you can refer to using the same familiar syntax from other C-like
-languages.
+and let's use it in our main configuration:
+
+```diff lang="jsonnet"
+// environments/default/main.jsonnet
+local grafana() = {
+  #  ...
+};
+
+{
+-  grafana: {
+-    # ...
+-  },
++  grafana: grafana(),
+  prometheus: #...
+};
+```
+
+We can then replace hardcoded values by adding parameters to our function:
+
+```diff lang="jsonnet"
+// environments/default/main.jsonnet
+-local grafana() = {
++local grafana(name, port) = {
+  deployment: {
+    apiVersion: 'apps/v1',
+    kind: 'Deployment',
+    metadata: {
+-      name: 'grafana',
++      name: name,
+    },
+    spec: {
+      selector: {
+        matchLabels: {
+-          name: 'grafana',
++          name: name,
+        },
+      },
+      template: {
+        metadata: {
+          labels: {
+-            name: 'grafana',
++            name: name,
+          },
+        },
+        spec: {
+          containers: [
+            {
+              image: 'grafana/grafana',
+-              name: 'grafana',
++              name: name,
+              ports: [{
+-                  containerPort: 3000,
++                  containerPort: port,
+                  name: 'ui',
+              }],
+            },
+          ],
+        },
+      },
+    },
+  },
+  service: {
+    apiVersion: 'v1',
+    kind: 'Service',
+    metadata: {
+      labels: {
+-        name: 'grafana',
++        name: name,
+      },
+-      name: 'grafana',
++      name: name,
+    },
+    spec: {
+      ports: [{
+-        name: 'grafana-ui',
+-        port: 3000,
+-        targetPort: 3000,
++        name: '%s-ui' % name, // printf-style formatting
++        port: port,
++        targetPort: port,
+      }],
+      selector: {
+-        name: 'grafana',
++        name: name,
+      },
+      type: 'NodePort',
+    },
+  },
+};
+```
+
+and update the usage accordingly:
+
+```diff lang="jsonnet"
+// environments/default/main.jsonnet
+local grafana(name, port) = {
+  # ...
+};
+
+{
+-  grafana: grafana(),
++  grafana: grafana('grafana', 3000),
+  prometheus: #...
+};
+```
+
+:::tip
+You can also set default values for function parameters:
+
+```jsonnet
+local grafana(name='grafana', port=3000) = {
+  # ...
+};
+```
+
+:::
 
 Now we do not only have a single place to change tunables, but also won't suffer
 from mismatching labels and selectors anymore, as they are defined in a single
 place and all changed at once.
+
+:::tip[Task]
+Now do the same for the Prometheus deployment by creating a function `prometheus` that takes a `name` and a `port` as parameters.
+:::

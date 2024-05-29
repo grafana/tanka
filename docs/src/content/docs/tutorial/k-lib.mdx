@@ -102,8 +102,8 @@ First we need to import it in `main.jsonnet`:
 ```diff
 - local k = import "kubernetes.libsonnet";
 + local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
-  local grafana = import "grafana.jsonnet";
-  local prometheus = import "prometheus.jsonnet";
+  local grafana = import "grafana.libsonnet";
+  local prometheus = import "prometheus.libsonnet";
   { /* ... */ }
 ```
 
@@ -115,10 +115,10 @@ aliasing.
 :::
 
 Now that we have installed the correct version, let's use it in
-`/environments/default/grafana.jsonnet` instead of our own helper:
+`/environments/default/grafana.libsonnet` instead of our own helper:
 
 ```jsonnet
-// /environments/default/grafana.jsonnet
+// /environments/default/grafana.libsonnet
 local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
 
 {
@@ -128,13 +128,13 @@ local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet"
   local port = k.core.v1.containerPort,
   local service = k.core.v1.service,
   // defining the objects:
-  grafana: {
+  new(name, port):: {
     // deployment constructor: name, replicas, containers
-    deployment: deploy.new(name=$._config.grafana.name, replicas=1, containers=[
+    deployment: deploy.new(name, replicas=1, containers=[
       // container constructor
-      container.new($._config.grafana.name, "grafana/grafana")
+      container.new(, "grafana/grafana")
       + container.withPorts( // add ports to the container
-          [port.new("ui", $._config.grafana.port)] // port constructor
+          [port.new("ui", 3000)] // port constructor
         ),
     ]),
 
@@ -156,17 +156,6 @@ whole picture:
 local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
 
 {
-  _config:: {
-    grafana: {
-      port: 3000,
-      name: "grafana",
-    },
-    prometheus: {
-      port: 9090,
-      name: "prometheus"
-    }
-  },
-
   local deployment = k.apps.v1.deployment,
   local container = k.core.v1.container,
   local port = k.core.v1.containerPort,
@@ -174,20 +163,20 @@ local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet"
 
   prometheus: {
     deployment: deployment.new(
-      name=$._config.prometheus.name, replicas=1,
+      name="prometheus", replicas=1,
       containers=[
-        container.new($._config.prometheus.name, "prom/prometheus")
-        + container.withPorts([port.new("api", $._config.prometheus.port)]),
+        container.new("prometheus", "prom/prometheus")
+        + container.withPorts([port.new("api", 9090)]),
       ],
     ),
     service: k.util.serviceFor(self.deployment),
   },
   grafana: {
     deployment: deployment.new(
-      name=$._config.grafana.name, replicas=1,
+      name="grafana", replicas=1,
       containers=[
-        container.new($._config.grafana.name, "grafana/grafana")
-        + container.withPorts([port.new("ui", $._config.grafana.port)]),
+        container.new("grafana", "grafana/grafana")
+        + container.withPorts([port.new("ui", 3000)]),
       ],
     ),
     service:
@@ -199,3 +188,81 @@ local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet"
 
 That's a pretty big improvement, considering how verbose and error-prone it was
 before!
+
+## Bonus: Config object
+
+While this is already a huge improvement, we can do a bit more. There is still some repetition in the `main.jsonnet` file.
+The most straightforward way to address this is by creating a hidden object that holds all actual values in a single place to be consumed by the actual resources.
+
+Luckily, Jsonnet has the key:: "value" stanza for private fields. Such are only available during compiling and will be removed from the actual output.
+
+Such an object could look like this:
+
+```jsonnet
+{
+  _config:: {
+    grafana: {
+      port: 3000,
+      name: "grafana",
+    },
+    prometheus: {
+      port: 9090,
+      name: "prometheus"
+    }
+  }
+}
+```
+
+We can then replace hardcoded values with a reference to this object:
+
+```diff lang="jsonnet" ///.*/
+local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet";
+
+{ // <- This is $
++  _config:: {
++    grafana: {
++      port: 3000,
++      name: "grafana",
++    },
++    prometheus: {
++      port: 9090,
++      name: "prometheus"
++    }
++  }
+
+  local deployment = k.apps.v1.deployment,
+  local container = k.core.v1.container,
+  local port = k.core.v1.containerPort,
+  local service = k.core.v1.service,
+
+  prometheus: {
+    deployment: deployment.new(
+-      name="prometheus", replicas=1,
++      // $ refers to the outermost object
++      name=$._config.prometheus.name, replicas=1,
+      containers=[
+-        container.new("prometheus", "prom/prometheus")
+-        + container.withPorts([port.new("api", 9090)]),
++        container.new($._config.prometheus.name, "prom/prometheus")
++        + container.withPorts([port.new("api", $._config.prometheus.port)]),
+      ],
+    ),
+    service: k.util.serviceFor(self.deployment),
+  },
+  grafana: {
+    deployment: deployment.new(
+-       name="grafana", replicas=1,
++       name=$._config.grafana.name, replicas=1,
+      containers=[
+-        container.new("grafana", "grafana/grafana")
+-        + container.withPorts([port.new("ui", 3000)]),
++        container.new($._config.grafana.name, "grafana/grafana")
++        + container.withPorts([port.new("ui", $._config.grafana.port)]),
+      ],
+    ),
+    service:
+      k.util.serviceFor(self.deployment)
+      + service.mixin.spec.withType("NodePort"),
+  },
+}
+```

@@ -5,7 +5,7 @@ sidebar:
 ---
 
 While we won't need to touch the resource definitions directly that frequently
-anymore now that we have the `_config` object for our tunables, the
+anymore now that our deployments definitions are parametrized, the
 `main.jsonnet` file is still very long and hard to read. Especially because of
 all the brackets, it's even worse than yaml at the moment.
 
@@ -13,41 +13,44 @@ all the brackets, it's even worse than yaml at the moment.
 
 Let's start cleaning this up by separating logical pieces into distinct files:
 
-- `main.jsonnet`: Still our main file, containing the `_config` object and importing the other files
-- `grafana.jsonnet`: `Deployment` and `Service` for the Grafana instance
-- `prometheus.jsonnet`: `Deployment` and `Service` for the Prometheus server
+- `main.jsonnet`: Still our main file, importing the other files
+- `grafana.libsonnet`: `Deployment` and `Service` for the Grafana instance
+- `prometheus.libsonnet`: `Deployment` and `Service` for the Prometheus server
+
+:::note
+The extension for Jsonnet libraries is `.libsonnet`. While you do
+not have to use it, it distinguishes helper code from actual configuration.
+:::
 
 ```jsonnet
-// /environments/default/grafana.jsonnet
+// /environments/default/grafana.libsonnet
 {
-  // DO NOT use the root level here.
-  // Include the grafana subkey, otherwise $ won't work.
-  grafana: {
+  new(name, port)::{
     deployment: {
       apiVersion: 'apps/v1',
       kind: 'Deployment',
       metadata: {
-        name: $._config.grafana.name,
+        name: name,
       },
       spec: {
         selector: {
           matchLabels: {
-            name: $._config.grafana.name,
+            name: name,
           },
         },
         template: {
           metadata: {
             labels: {
-              name: $._config.grafana.name,
+              name:name,
             },
           },
           spec: {
             containers: [
               {
                 image: 'grafana/grafana',
-                name: $._config.grafana.name,
+                name: name,
                 ports: [{
-                    containerPort: $._config.grafana.port,
+                    containerPort: port,
                     name: 'ui',
                 }],
               },
@@ -61,18 +64,18 @@ Let's start cleaning this up by separating logical pieces into distinct files:
       kind: 'Service',
       metadata: {
         labels: {
-          name: $._config.grafana.name,
+          name: name,
         },
-        name: $._config.grafana.name,
+        name: name,
       },
       spec: {
         ports: [{
-            name: '%s-ui' % $._config.grafana.name,
-            port: $._config.grafana.port,
-            targetPort: $._config.grafana.port,
+            name: '%s-ui' % name,
+            port: port,
+            targetPort: port,
         }],
         selector: {
-          name: $._config.grafana.name,
+          name: name,
         },
         type: 'NodePort',
       },
@@ -81,38 +84,19 @@ Let's start cleaning this up by separating logical pieces into distinct files:
 }
 ```
 
-The file should contain just the same that was located under the `grafana` key
-on the root object before. Do the same for `/environments/default/prometheus.jsonnet` as well.
+The file should contain an object with just the same function that was defined under the `grafana` in `/environments/default/main.jsonnet`, but called `new` instead of `grafana`.
+Do the same for `/environments/default/prometheus.libsonnet` as well.
 
 ```jsonnet
 // /environments/default/main.jsonnet
-// Think of `import` as copy-pasting the contents
-// of ./grafana.jsonnet here
-(import "grafana.jsonnet") +
-(import "prometheus.jsonnet") +
+local grafana = import "grafana.libsonnet";
+local prometheus = import "prometheus.libsonnet";
+
 {
-  _config:: {
-    grafana: {
-      port: 3000,
-      name: "grafana",
-    },
-    prometheus: {
-      port: 9090,
-      name: "prometheus"
-    }
-  }
+  grafana: grafana.new("grafana", 3000),
+  prometheus: prometheus.new("prometheus", 9090),
 }
 ```
-
-:::note[Clarification]
-It might seem odd at first sight, that this code works, because
-`grafana.jsonnet` still refers to the root object using `$`, even
-though it is outside of the file's scope.  
-However, Jsonnet is lazy-evaluated which means that the contents of
-`grafana.jsonnet` are **first "copied"** into `main.jsonnet` (the root
-object) and **then evaluated**. This means the above code actually consists of
-all three objects joined to one big object, which is then converted to JSON.
-:::
 
 ## Helper utilities
 
@@ -124,37 +108,30 @@ Let's use functions to create some useful helpers to reduce the amount of
 repetition. For that, we create a new file called `kubernetes.libsonnet`, which
 will hold our Kubernetes utilities.
 
-:::note
-The extension for Jsonnet libraries is `.libsonnet`. While you do
-not have to use it, it distinguishes helper code from actual configuration.
-:::
-
 ### A Deployment constructor
 
 Creating a `Deployment` requires some mandatory information and a lot of
 boilerplate. A function that creates one could look like this:
 
 ```jsonnet
+// /environments/default/kubernetes.libsonnet
 {
-  // hidden k namespace for this library
-  k:: {
-    deployment: {
-      new(name, containers): {
-        apiVersion: "apps/v1",
-        kind: "Deployment",
-        metadata: {
+  deployment: {
+    new(name, containers):: {
+      apiVersion: "apps/v1",
+      kind: "Deployment",
+      metadata: {
+        name: name,
+      },
+      spec: {
+        selector: { matchLabels: {
           name: name,
-        },
-        spec: {
-          selector: { matchLabels: {
+        }},
+        template: {
+          metadata: { labels: {
             name: name,
           }},
-          template: {
-            metadata: { labels: {
-              name: name,
-            }},
-            spec: { containers: containers }
-          }
+          spec: { containers: containers }
         }
       }
     }
@@ -165,25 +142,18 @@ boilerplate. A function that creates one could look like this:
 Invoking this function will substitute all the variables with the respective
 passed function parameters and return the assembled object.
 
-To use it, just add it to the root object in `main.jsonnet`:
+Let's simplify our `grafana.libsonnet` a bit:
 
 ```jsonnet
-  (import "kubernetes.libsonnet") + // this line adds it
-  (import "grafana.jsonnet") +
-  (import "prometheus.jsonnet") +
-  { /* ... */ }
-```
+local k = import "kubernetes.libsonnet";
 
-Let's simplify our `grafana.jsonnet` a bit:
-
-```jsonnet
 {
-  grafana: {
-    deployment: $.k.deployment.new("grafana", [{
+  new(name, port):: {
+    deployment: k.deployment.new(name, [{
       image: 'grafana/grafana',
-      name: 'grafana',
+      name: name,
       ports: [{
-          containerPort: 3000,
+          containerPort: port,
           name: 'ui',
       }],
     }]),
@@ -192,18 +162,18 @@ Let's simplify our `grafana.jsonnet` a bit:
       kind: 'Service',
       metadata: {
         labels: {
-          name: 'grafana',
+          name: name,
         },
-        name: 'grafana',
+        name: name,
       },
       spec: {
         ports: [{
-            name: 'grafana-ui',
-            port: 3000,
-            targetPort: 3000,
+            name: '%s-ui' % name,
+            port: port,
+            targetPort: port,
         }],
         selector: {
-          name: 'grafana',
+          name: name,
         },
         type: 'NodePort',
       },
@@ -213,7 +183,7 @@ Let's simplify our `grafana.jsonnet` a bit:
 ```
 
 This drastically simplified the creation of the `Deployment`, because we do not
-need to remember how exactly a `Deployment` is structured anymore. Just call use
+need to remember how exactly a `Deployment` is structured anymore. Just use
 our helper and you are good to go.
 
 :::tip[Task]
