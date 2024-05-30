@@ -29,7 +29,12 @@ sidebar:
 **Description**: Path to the `kustomize` executable  
 **Default**: `$PATH/kustomize`
 
-## PAGER
+## TANKA_PAGER
 
 **Description**: Pager to use when displaying output. Set to an empty string to disable paging.
+**Default**: `$PAGER`
+
+## PAGER
+
+**Description**: Pager to use when displaying output. Only used if TANKA_PAGER is not set. Set to an empty string to disable paging.
 **Default**: `less --RAW-CONTROL-CHARS --quit-if-one-screen --no-init`
