@@ -14,7 +14,7 @@ To do so, the following sections will explore some ways Jsonnet provides us with
 Defining our deployment in a single block is not the best solution.
 Luckily with Jsonnet we can split our configuration into smaller, self-contained chunks.
 
-Let's start by creating a new function in `main.jsonnet` responsible of creating a Grafana deployment:
+Let's start by creating a new function in `main.jsonnet` responsible for creating a Grafana deployment:
 
 ```diff lang="jsonnet"
 // envirnoments/default/main.jsonnet

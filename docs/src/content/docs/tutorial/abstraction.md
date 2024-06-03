@@ -41,7 +41,7 @@ not have to use it, it distinguishes helper code from actual configuration.
         template: {
           metadata: {
             labels: {
-              name:name,
+              name: name,
             },
           },
           spec: {
