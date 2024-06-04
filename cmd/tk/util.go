@@ -19,7 +19,10 @@ func pageln(i ...interface{}) error {
 // If the PAGER environment variable is empty, no pager is used.
 // If the PAGER environment variable is unset, use GNU less with convenience flags.
 func fPageln(r io.Reader) error {
-	pager, ok := os.LookupEnv("PAGER")
+	pager, ok := os.LookupEnv("TANKA_PAGER")
+	if !ok {
+		pager, ok = os.LookupEnv("PAGER")
+	}
 	if !ok {
 		// --RAW-CONTROL-CHARS  Honors colors from diff. Must be in all caps, otherwise display issues occur.
 		// --quit-if-one-screen Closer to the git experience.
