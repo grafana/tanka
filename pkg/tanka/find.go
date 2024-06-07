@@ -56,7 +56,7 @@ func findEnvsFromPaths(paths []string, opts FindOpts) ([]*v1alpha1.Environment, 
 
 	findEnvsEndTime := time.Now()
 
-	log.Info().
+	log.Debug().
 		Int("environments", len(envs)).
 		Dur("ms_to_find_jsonnet_files", findJsonnetFilesEndTime.Sub(startTime)).
 		Dur("ms_to_find_environments", findEnvsEndTime.Sub(findJsonnetFilesEndTime)).
