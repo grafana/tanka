@@ -21,6 +21,9 @@ func main() {
 		Version: tanka.CurrentVersion,
 	}
 
+	// set default logging level early; not all commands parse --log-level
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
 	// workflow commands
 	addCommandsWithLogLevelOption(
 		rootCmd,
