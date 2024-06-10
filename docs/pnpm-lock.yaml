@@ -10,19 +10,19 @@ dependencies:
     version: 0.7.0(prettier@3.3.0)(typescript@5.4.5)
   '@astrojs/starlight':
     specifier: ^0.24.1
-    version: 0.24.1(astro@4.9.2)
+    version: 0.24.1(astro@4.10.1)
   '@astrojs/starlight-tailwind':
     specifier: ^2.0.2
     version: 2.0.3(@astrojs/starlight@0.24.1)(@astrojs/tailwind@5.1.0)(tailwindcss@3.4.3)
   '@astrojs/tailwind':
     specifier: ^5.1.0
-    version: 5.1.0(astro@4.9.2)(tailwindcss@3.4.3)
+    version: 5.1.0(astro@4.10.1)(tailwindcss@3.4.3)
   '@fontsource-variable/inter':
     specifier: ^5.0.18
     version: 5.0.18
   astro:
-    specifier: ^4.9.2
-    version: 4.9.2(typescript@5.4.5)
+    specifier: ^4.10.1
+    version: 4.10.1(typescript@5.4.5)
   sharp:
     specifier: ^0.33.3
     version: 0.33.4
@@ -136,7 +136,7 @@ packages:
       - supports-color
     dev: false
 
-  /@astrojs/mdx@3.0.1(astro@4.9.2):
+  /@astrojs/mdx@3.0.1(astro@4.10.1):
     resolution: {integrity: sha512-UcPja14Qt6OEm7Wjak41Qa5f7G1M0oB2ARCsyIkXy6+Z65fJ6c1648UqEOqnEgR6Xtqq+V47wtK2qSP6KQKrAg==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0}
     peerDependencies:
@@ -145,7 +145,7 @@ packages:
       '@astrojs/markdown-remark': 5.1.0
       '@mdx-js/mdx': 3.0.1
       acorn: 8.11.3
-      astro: 4.9.2(typescript@5.4.5)
+      astro: 4.10.1(typescript@5.4.5)
       es-module-lexer: 1.5.3
       estree-util-visit: 2.0.0
       github-slugger: 2.0.0
@@ -184,23 +184,23 @@ packages:
       '@astrojs/tailwind': ^5.0.0
       tailwindcss: ^3.3.3
     dependencies:
-      '@astrojs/starlight': 0.24.1(astro@4.9.2)
-      '@astrojs/tailwind': 5.1.0(astro@4.9.2)(tailwindcss@3.4.3)
+      '@astrojs/starlight': 0.24.1(astro@4.10.1)
+      '@astrojs/tailwind': 5.1.0(astro@4.10.1)(tailwindcss@3.4.3)
       tailwindcss: 3.4.3
     dev: false
 
-  /@astrojs/starlight@0.24.1(astro@4.9.2):
+  /@astrojs/starlight@0.24.1(astro@4.10.1):
     resolution: {integrity: sha512-5wuIdF8PfDpzEEjfNcmffDDLbi2GWT0XCJH9pk+Pw5+yftwC9QdGzYrY9Ui9kIaXcODlwvL62L04kHB50j4lhw==}
     peerDependencies:
       astro: ^4.8.6
     dependencies:
-      '@astrojs/mdx': 3.0.1(astro@4.9.2)
+      '@astrojs/mdx': 3.0.1(astro@4.10.1)
       '@astrojs/sitemap': 3.1.5
       '@pagefind/default-ui': 1.1.0
       '@types/hast': 3.0.4
       '@types/mdast': 4.0.4
-      astro: 4.9.2(typescript@5.4.5)
-      astro-expressive-code: 0.35.3(astro@4.9.2)
+      astro: 4.10.1(typescript@5.4.5)
+      astro-expressive-code: 0.35.3(astro@4.10.1)
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.1
       hast-util-select: 6.0.2
@@ -219,13 +219,13 @@ packages:
       - supports-color
     dev: false
 
-  /@astrojs/tailwind@5.1.0(astro@4.9.2)(tailwindcss@3.4.3):
+  /@astrojs/tailwind@5.1.0(astro@4.10.1)(tailwindcss@3.4.3):
     resolution: {integrity: sha512-BJoCDKuWhU9FT2qYg+fr6Nfb3qP4ShtyjXGHKA/4mHN94z7BGcmauQK23iy+YH5qWvTnhqkd6mQPQ1yTZTe9Ig==}
     peerDependencies:
       astro: ^3.0.0 || ^4.0.0
       tailwindcss: ^3.0.24
     dependencies:
-      astro: 4.9.2(typescript@5.4.5)
+      astro: 4.10.1(typescript@5.4.5)
       autoprefixer: 10.4.19(postcss@8.4.38)
       postcss: 8.4.38
       postcss-load-config: 4.0.2(postcss@8.4.38)
@@ -1729,17 +1729,17 @@ packages:
     hasBin: true
     dev: false
 
-  /astro-expressive-code@0.35.3(astro@4.9.2):
+  /astro-expressive-code@0.35.3(astro@4.10.1):
     resolution: {integrity: sha512-f1L1m3J3EzZHDEox6TXmuKo5fTSbaNxE/HU0S0UQmvlCowtOKnU/LOsoDwsbQSYGKz+fdLRPsCjFMiKqEoyfcw==}
     peerDependencies:
       astro: ^4.0.0-beta || ^3.3.0
     dependencies:
-      astro: 4.9.2(typescript@5.4.5)
+      astro: 4.10.1(typescript@5.4.5)
       rehype-expressive-code: 0.35.3
     dev: false
 
-  /astro@4.9.2(typescript@5.4.5):
-    resolution: {integrity: sha512-apzpRoISk6L8g99m3zKIW5SYxw2GhOju/1Gq0Ccf3SH+X2UcFXF+MTdxPOFl5yJUQg7X0qsVQDOIVf8zHRRKFg==}
+  /astro@4.10.1(typescript@5.4.5):
+    resolution: {integrity: sha512-7bbnUX1CW+12suz0Do8ef1CihqVjDyUW/H/0piNHZyBE3W/VFt5GP5ZxlPzzJLoGtaXif0aXJ4iPurEem2LpdA==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0, npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
     dependencies:
