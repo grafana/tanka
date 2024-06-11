@@ -84,7 +84,7 @@ not have to use it, it distinguishes helper code from actual configuration.
 }
 ```
 
-The file should contain an object with just the same function that was defined under the `grafana` in `/environments/default/main.jsonnet`, but called `new` instead of `grafana`.
+The file should contain an object with the same function that was defined under the `grafana` in `/environments/default/main.jsonnet`, but called `new` instead of `grafana`.
 Do the same for `/environments/default/prometheus.libsonnet` as well.
 
 ```jsonnet
