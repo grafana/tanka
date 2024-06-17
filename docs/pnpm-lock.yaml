@@ -9,11 +9,11 @@ dependencies:
     specifier: ^0.7.0
     version: 0.7.0(prettier@3.3.2)(typescript@5.4.5)
   '@astrojs/starlight':
-    specifier: ^0.24.1
-    version: 0.24.1(astro@4.10.1)
+    specifier: ^0.24.2
+    version: 0.24.2(astro@4.10.1)
   '@astrojs/starlight-tailwind':
     specifier: ^2.0.2
-    version: 2.0.3(@astrojs/starlight@0.24.1)(@astrojs/tailwind@5.1.0)(tailwindcss@3.4.4)
+    version: 2.0.3(@astrojs/starlight@0.24.2)(@astrojs/tailwind@5.1.0)(tailwindcss@3.4.4)
   '@astrojs/tailwind':
     specifier: ^5.1.0
     version: 5.1.0(astro@4.10.1)(tailwindcss@3.4.4)
@@ -136,8 +136,8 @@ packages:
       - supports-color
     dev: false
 
-  /@astrojs/mdx@3.0.1(astro@4.10.1):
-    resolution: {integrity: sha512-UcPja14Qt6OEm7Wjak41Qa5f7G1M0oB2ARCsyIkXy6+Z65fJ6c1648UqEOqnEgR6Xtqq+V47wtK2qSP6KQKrAg==}
+  /@astrojs/mdx@3.1.0(astro@4.10.1):
+    resolution: {integrity: sha512-yuGDaOcCAfYgLQvUAlJDezYGK4twHlzW1Kvpyg3inxtDJuAsHdyVyYLWl0Wo5nwkyrbZktdrjnoW5scqzoAqAg==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=21.0.0}
     peerDependencies:
       astro: ^4.8.0
@@ -177,24 +177,24 @@ packages:
       zod: 3.23.8
     dev: false
 
-  /@astrojs/starlight-tailwind@2.0.3(@astrojs/starlight@0.24.1)(@astrojs/tailwind@5.1.0)(tailwindcss@3.4.4):
+  /@astrojs/starlight-tailwind@2.0.3(@astrojs/starlight@0.24.2)(@astrojs/tailwind@5.1.0)(tailwindcss@3.4.4):
     resolution: {integrity: sha512-ZwbdXS/9rxYlo3tKZoTZoBPUnaaqek02b341dHwOkmMT0lIR2w+8k0mRUGxnRaYtPdMcaL+nYFd8RUa8sjdyRg==}
     peerDependencies:
       '@astrojs/starlight': '>=0.9.0'
       '@astrojs/tailwind': ^5.0.0
       tailwindcss: ^3.3.3
     dependencies:
-      '@astrojs/starlight': 0.24.1(astro@4.10.1)
+      '@astrojs/starlight': 0.24.2(astro@4.10.1)
       '@astrojs/tailwind': 5.1.0(astro@4.10.1)(tailwindcss@3.4.4)
       tailwindcss: 3.4.4
     dev: false
 
-  /@astrojs/starlight@0.24.1(astro@4.10.1):
-    resolution: {integrity: sha512-5wuIdF8PfDpzEEjfNcmffDDLbi2GWT0XCJH9pk+Pw5+yftwC9QdGzYrY9Ui9kIaXcODlwvL62L04kHB50j4lhw==}
+  /@astrojs/starlight@0.24.2(astro@4.10.1):
+    resolution: {integrity: sha512-hXFVBHcr2a4UwX5GDCNQEZsRXdgVlNzZ7txpI2jlMvtzbgfoLEGOHjaHpB5QTW/OCrRAMjcx9Zx0HxRliohaxQ==}
     peerDependencies:
       astro: ^4.8.6
     dependencies:
-      '@astrojs/mdx': 3.0.1(astro@4.10.1)
+      '@astrojs/mdx': 3.1.0(astro@4.10.1)
       '@astrojs/sitemap': 3.1.5
       '@pagefind/default-ui': 1.1.0
       '@types/hast': 3.0.4
@@ -205,7 +205,7 @@ packages:
       hast-util-from-html: 2.0.1
       hast-util-select: 6.0.2
       hast-util-to-string: 3.0.0
-      hastscript: 8.0.0
+      hastscript: 9.0.0
       mdast-util-directive: 3.0.0
       mdast-util-to-markdown: 2.1.0
       pagefind: 1.1.0
