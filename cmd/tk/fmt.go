@@ -81,7 +81,7 @@ func fmtCmd() *cli.Command {
 		case len(changed) == 0:
 			fmt.Fprintln(os.Stderr, "All discovered files are already formatted. No changes were made")
 		case len(changed) > 0:
-			fmt.Fprintf(os.Stderr, "Formatted %v files", len(changed))
+			fmt.Fprintf(os.Stderr, "Formatted %v files\n", len(changed))
 		}
 
 		return nil
