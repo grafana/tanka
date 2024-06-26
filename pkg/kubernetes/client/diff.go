@@ -12,6 +12,7 @@ import (
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
+// Provides just the parts of `*exec.ExitError` that we need, so we can swap for a fake in the tests
 type exitError interface {
 	error
 	ExitCode() int
