@@ -2,8 +2,8 @@ package client
 
 import (
 	"bytes"
+	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 
@@ -12,8 +12,15 @@ import (
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 )
 
+// Provides just the parts of `*exec.ExitError` that we need, so we can swap for a fake in the tests
+type exitError interface {
+	error
+	ExitCode() int
+}
+
 // DiffServerSide takes the desired state and computes the differences server-side, returning them in `diff(1)` format
 func (k Kubectl) DiffServerSide(data manifest.List) (*string, error) {
+	fmt.Println(data)
 	return k.diff(data, true)
 }
 
@@ -78,7 +85,7 @@ func (k Kubectl) diff(data manifest.List, serverSide bool) (*string, error) {
 // 0: no error, no differences
 // 1: error OR differences found
 func parseDiffErr(err error, stderr string, version *semver.Version) error {
-	exitErr, ok := err.(*exec.ExitError)
+	exitErr, ok := err.(exitError)
 	if !ok {
 		// this error is not kubectl related
 		return err
@@ -91,7 +98,7 @@ func parseDiffErr(err error, stderr string, version *semver.Version) error {
 
 	// before 1.18 "exit status 1" meant error as well ... so we need to check stderr
 	if version.LessThan(semver.MustParse("1.18.0")) && stderr != "" {
-		return err
+		return fmt.Errorf("diff failed: %w (%s)", err, stderr)
 	}
 
 	// differences found is not an error
