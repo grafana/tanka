@@ -15,3 +15,10 @@ func runCmd(t *testing.T, cmd string, args ...string) {
 	err := c.Run()
 	require.NoError(t, err)
 }
+
+func getCmdOutput(t *testing.T, cmd string, args ...string) string {
+	c := exec.Command(cmd, args...)
+	output, err := c.CombinedOutput()
+	require.NoError(t, err)
+	return string(output)
+}
