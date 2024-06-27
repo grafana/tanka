@@ -16,6 +16,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -27,21 +29,27 @@ func (m *Tanka) Build(ctx context.Context, rootDir *Directory) *Container {
 		Build(rootDir)
 }
 
-func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory, acceptanceTestsDir *Directory) (string, error) {
-	// Determine Go version through Dockerfile
-	goVersion, err := dag.Container().
-		From("busybox").
-		WithMountedFile("/tmp/Dockerfile", rootDir.File("Dockerfile")).
-		WithExec([]string{"/bin/sh", "-c", "cat /tmp/Dockerfile | grep 'FROM golang' | grep 'as build' | awk -e '{print $2}'"}).
-		Stdout(ctx)
+func (m *Tanka) GetGoVersion(ctx context.Context, file *File) (string, error) {
+	versionPattern := regexp.MustCompile(`^go ((\d+)\.(\d+)(\.(\d+))?)$`)
+	content, err := file.Contents(ctx)
 	if err != nil {
 		return "", err
 	}
-	goVersion = strings.TrimSpace(goVersion)
-	if !strings.HasSuffix(goVersion, "-alpine") {
-		goVersion += "-alpine"
+	for _, line := range strings.Split(content, "\n") {
+		matches := versionPattern.FindStringSubmatch(line)
+		if len(matches) < 2 {
+			continue
+		}
+		return matches[1], nil
 	}
+	return "", fmt.Errorf("no Go version found")
+}
 
+func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory, acceptanceTestsDir *Directory) (string, error) {
+	goVersion, err := m.GetGoVersion(ctx, rootDir.File("go.mod"))
+	if err != nil {
+		return "", err
+	}
 	buildContainer := m.Build(ctx, rootDir)
 
 	k3s := dag.K3S("k3sdemo")
@@ -52,7 +60,7 @@ func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory, accepta
 	defer k3sSrv.Stop(ctx)
 
 	output, err := dag.Container().
-		From(goVersion).
+		From(fmt.Sprintf("golang:%s-alpine", goVersion)).
 		WithExec([]string{"apk", "add", "--no-cache", "git"}).
 		WithMountedFile("/usr/bin/tk", buildContainer.File("/usr/local/bin/tk")).
 		WithMountedFile("/usr/bin/jb", buildContainer.File("/usr/local/bin/jb")).
