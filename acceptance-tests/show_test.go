@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,9 +14,8 @@ import (
 
 func TestShow(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Chdir(tmpDir)
-	runCmd(t, "tk", "init")
-	runCmd(t, "tk", "env", "set", "environments/default", "--server=https://kubernetes:6443")
+	runCmd(t, tmpDir, "tk", "init")
+	runCmd(t, tmpDir, "tk", "env", "set", "environments/default", "--server=https://kubernetes:6443")
 	cm := corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -27,8 +27,8 @@ func TestShow(t *testing.T) {
 	}
 	content := fmt.Sprintf(`{config: %s}`, marshalToJSON(t, cm))
 
-	require.NoError(t, os.WriteFile("environments/default/main.jsonnet", []byte(content), 0600))
-	output := getCmdOutput(t, "tk", "show", "--dangerous-allow-redirect", "environments/default")
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "environments/default/main.jsonnet"), []byte(content), 0600))
+	output := getCmdOutput(t, tmpDir, "tk", "show", "--dangerous-allow-redirect", "environments/default")
 	outputObject := corev1.ConfigMap{}
 	require.NoError(t, yaml.Unmarshal([]byte(output), &outputObject))
 

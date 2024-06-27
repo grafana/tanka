@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,9 +10,8 @@ import (
 
 func TestExportEnvironment(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Chdir(tmpDir)
-	runCmd(t, "tk", "init")
-	runCmd(t, "tk", "env", "set", "environments/default", "--server=https://kubernetes:6443")
+	runCmd(t, tmpDir, "tk", "init")
+	runCmd(t, tmpDir, "tk", "env", "set", "environments/default", "--server=https://kubernetes:6443")
 	content := `
 	{
 		config: {
@@ -24,7 +24,7 @@ func TestExportEnvironment(t *testing.T) {
 		},
 	}
 `
-	require.NoError(t, os.WriteFile("environments/default/main.jsonnet", []byte(content), 0600))
-	runCmd(t, "tk", "export", "export", "environments/default")
-	require.FileExists(t, "export/v1.ConfigMap-demo.yaml")
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "environments/default/main.jsonnet"), []byte(content), 0600))
+	runCmd(t, tmpDir, "tk", "export", "export", "environments/default")
+	require.FileExists(t, filepath.Join(tmpDir, "export/v1.ConfigMap-demo.yaml"))
 }
