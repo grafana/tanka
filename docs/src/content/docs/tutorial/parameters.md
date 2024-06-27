@@ -17,7 +17,7 @@ Luckily with Jsonnet we can split our configuration into smaller, self-contained
 Let's start by creating a new function in `main.jsonnet` responsible for creating a Grafana deployment:
 
 ```diff lang="jsonnet"
-// envirnoments/default/main.jsonnet
+// environments/default/main.jsonnet
 local grafana() = {
   deployment: {
     apiVersion: 'apps/v1',
