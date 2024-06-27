@@ -14,7 +14,7 @@ jobs:
         name: Call Dagger Function
         uses: dagger/dagger-for-github@53a90075b0001a5d43da1f8bb5f3b6dba9c33c74 # v5.6.0
         with:
-          version: "0.11.5"
+          version: "0.11.9"
           verb: call
           dagger-flags: "--silent"
           args: "acceptance-tests --root-dir .:source-files --acceptance-tests-dir ./acceptance-tests"
