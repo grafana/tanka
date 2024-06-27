@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"strings"
 	"time"
 )
 
@@ -27,6 +28,22 @@ func (m *Tanka) Build(ctx context.Context, rootDir *Directory) *Container {
 }
 
 func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory, acceptanceTestsDir *Directory) (string, error) {
+	// Determine Go version through Dockerfile
+	goVersion, err := dag.Container().
+		From("busybox").
+		WithMountedFile("/tmp/Dockerfile", rootDir.File("Dockerfile")).
+		WithExec([]string{"/bin/sh", "-c", "cat /tmp/Dockerfile | grep 'FROM golang' | grep 'as build' | awk -e '{print $2}'"}).
+		Stdout(ctx)
+	if err != nil {
+		return "", err
+	}
+	goVersion = strings.TrimSpace(goVersion)
+	if !strings.HasSuffix(goVersion, "-alpine") {
+		goVersion += "-alpine"
+	}
+
+	buildContainer := m.Build(ctx, rootDir)
+
 	k3s := dag.K3S("k3sdemo")
 	k3sSrv, err := k3s.Server().Start(ctx)
 	if err != nil {
@@ -34,9 +51,8 @@ func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory, accepta
 	}
 	defer k3sSrv.Stop(ctx)
 
-	buildContainer := m.Build(ctx, rootDir)
 	output, err := dag.Container().
-		From("golang:1.22-alpine").
+		From(goVersion).
 		WithExec([]string{"apk", "add", "--no-cache", "git"}).
 		WithMountedFile("/usr/bin/tk", buildContainer.File("/usr/local/bin/tk")).
 		WithMountedFile("/usr/bin/jb", buildContainer.File("/usr/local/bin/jb")).
