@@ -1,4 +1,4 @@
-.PHONY: lint test static install uninstall cross
+.PHONY: lint test static install uninstall cross acceptance-tests
 GOPATH := $(shell go env GOPATH)
 VERSION := $(shell git describe --tags --dirty --always)
 BIN_DIR := $(GOPATH)/bin
@@ -13,6 +13,9 @@ lint: $(GOLINTER)
 
 test:
 	go test ./... -bench=. -benchmem
+
+acceptance-tests:
+	dagger call acceptance-tests --root-dir .:source-files --acceptance-tests-dir ./acceptance-tests
 
 # Compilation
 dev:

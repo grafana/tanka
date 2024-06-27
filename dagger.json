@@ -1,0 +1,25 @@
+{
+  "name": "tanka",
+  "sdk": "go",
+  "dependencies": [
+    {
+      "name": "k3s",
+      "source": "github.com/marcosnils/daggerverse/k3s@5e572e251b4a7f1383ca8043da88b724f8f30e64"
+    }
+  ],
+  "source": "dagger",
+  "engineVersion": "v0.11.7",
+  "views": [
+    {
+      "name": "source-files",
+      "patterns": [
+        "go.mod",
+        "go.sum",
+        "Dockerfile",
+        "Makefile",
+        "cmd",
+        "pkg"
+      ]
+    }
+  ]
+}
