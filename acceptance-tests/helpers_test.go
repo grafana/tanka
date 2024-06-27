@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"os/exec"
 	"testing"
@@ -9,6 +10,7 @@ import (
 )
 
 func runCmd(t *testing.T, cmd string, args ...string) {
+	t.Helper()
 	c := exec.Command(cmd, args...)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
@@ -17,8 +19,16 @@ func runCmd(t *testing.T, cmd string, args ...string) {
 }
 
 func getCmdOutput(t *testing.T, cmd string, args ...string) string {
+	t.Helper()
 	c := exec.Command(cmd, args...)
 	output, err := c.CombinedOutput()
+	require.NoError(t, err)
+	return string(output)
+}
+
+func marshalToJSON(t *testing.T, obj any) string {
+	t.Helper()
+	output, err := json.Marshal(obj)
 	require.NoError(t, err)
 	return string(output)
 }

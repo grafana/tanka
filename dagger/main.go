@@ -45,6 +45,8 @@ func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory, accepta
 	}
 	defer k3sSrv.Stop(ctx)
 
+	goCache := dag.CacheVolume("acceptance-tests-gomodules")
+
 	output, err := dag.Container().
 		From(fmt.Sprintf("golang:%s-alpine", goVersion)).
 		WithExec([]string{"apk", "add", "--no-cache", "git"}).
@@ -59,6 +61,7 @@ func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory, accepta
 		WithFile("/root/.kube/config", k3s.Config(false)).
 		WithWorkdir("/tests").
 		WithExec([]string{"sed", "-i", `s/https:.*:6443/https:\/\/kubernetes:6443/g`, "/root/.kube/config"}).
+		WithMountedCache("/go/pkg", goCache).
 		WithExec([]string{"go", "test", "./...", "-v"}).
 		Stdout(ctx)
 	return output, err
