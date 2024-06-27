@@ -17,4 +17,4 @@ jobs:
           version: "0.11.5"
           verb: call
           dagger-flags: "--silent"
-          args: "acceptance-tests --root-dir .:core-files"
+          args: "acceptance-tests --root-dir .:source-files --acceptance-tests-dir ./acceptance-tests"

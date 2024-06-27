@@ -26,7 +26,7 @@ func (m *Tanka) Build(ctx context.Context, rootDir *Directory) *Container {
 		Build(rootDir)
 }
 
-func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory) (string, error) {
+func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory, acceptanceTestsDir *Directory) (string, error) {
 	k3s := dag.K3S("k3sdemo")
 	k3sSrv, err := k3s.Server().Start(ctx)
 	if err != nil {
@@ -37,7 +37,7 @@ func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory) (string
 		From("golang:1.22-alpine").
 		WithExec([]string{"apk", "add", "--no-cache", "kubectl"}).
 		WithMountedFile("/usr/bin/tk", m.Build(ctx, rootDir).File("/usr/local/bin/tk")).
-		WithMountedDirectory("/tests", rootDir.Directory("acceptance-tests")).
+		WithMountedDirectory("/tests", acceptanceTestsDir).
 		WithEnvVariable("CACHE", time.Now().String()).
 		WithServiceBinding("kubernetes", k3sSrv).
 		WithFile("/root/.kube/config", k3s.Config(false)).

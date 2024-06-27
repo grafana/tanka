@@ -11,10 +11,14 @@
   "engineVersion": "v0.11.7",
   "views": [
     {
-      "name": "core-files",
+      "name": "source-files",
       "patterns": [
-        "!.git",
-        "!docs"
+        "go.mod",
+        "go.sum",
+        "Dockerfile",
+        "Makefile",
+        "cmd",
+        "pkg"
       ]
     }
   ]
