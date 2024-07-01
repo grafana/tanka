@@ -12,11 +12,11 @@ importers:
         specifier: ^0.7.0
         version: 0.7.0(prettier@3.3.2)(typescript@5.5.2)
       '@astrojs/starlight':
-        specifier: ^0.24.4
-        version: 0.24.4(astro@4.11.3(typescript@5.5.2))
+        specifier: ^0.24.5
+        version: 0.24.5(astro@4.11.3(typescript@5.5.2))
       '@astrojs/starlight-tailwind':
         specifier: ^2.0.2
-        version: 2.0.3(@astrojs/starlight@0.24.4(astro@4.11.3(typescript@5.5.2)))(@astrojs/tailwind@5.1.0(astro@4.11.3(typescript@5.5.2))(tailwindcss@3.4.4))(tailwindcss@3.4.4)
+        version: 2.0.3(@astrojs/starlight@0.24.5(astro@4.11.3(typescript@5.5.2)))(@astrojs/tailwind@5.1.0(astro@4.11.3(typescript@5.5.2))(tailwindcss@3.4.4))(tailwindcss@3.4.4)
       '@astrojs/tailwind':
         specifier: ^5.1.0
         version: 5.1.0(astro@4.11.3(typescript@5.5.2))(tailwindcss@3.4.4)
@@ -103,8 +103,8 @@ packages:
       '@astrojs/tailwind': ^5.0.0
       tailwindcss: ^3.3.3
 
-  '@astrojs/starlight@0.24.4':
-    resolution: {integrity: sha512-rED8LPQwsXlgclfdHO+okUGcirof1prrxZLuKWp380xC/T7u2qQ5b1gnKqpM+92x+vhs8GYT7mHGKz9VctwdUg==}
+  '@astrojs/starlight@0.24.5':
+    resolution: {integrity: sha512-DDI8NpLzk+ReBudhAV09OhO5DxD+KN4Nnp3YlG6kwn/F8fmywNTNgY7VW67Z8aad+A/85OOiQOtq9wIFNRy3YA==}
     peerDependencies:
       astro: ^4.8.6
 
@@ -2579,13 +2579,13 @@ snapshots:
       stream-replace-string: 2.0.0
       zod: 3.23.8
 
-  '@astrojs/starlight-tailwind@2.0.3(@astrojs/starlight@0.24.4(astro@4.11.3(typescript@5.5.2)))(@astrojs/tailwind@5.1.0(astro@4.11.3(typescript@5.5.2))(tailwindcss@3.4.4))(tailwindcss@3.4.4)':
+  '@astrojs/starlight-tailwind@2.0.3(@astrojs/starlight@0.24.5(astro@4.11.3(typescript@5.5.2)))(@astrojs/tailwind@5.1.0(astro@4.11.3(typescript@5.5.2))(tailwindcss@3.4.4))(tailwindcss@3.4.4)':
     dependencies:
-      '@astrojs/starlight': 0.24.4(astro@4.11.3(typescript@5.5.2))
+      '@astrojs/starlight': 0.24.5(astro@4.11.3(typescript@5.5.2))
       '@astrojs/tailwind': 5.1.0(astro@4.11.3(typescript@5.5.2))(tailwindcss@3.4.4)
       tailwindcss: 3.4.4
 
-  '@astrojs/starlight@0.24.4(astro@4.11.3(typescript@5.5.2))':
+  '@astrojs/starlight@0.24.5(astro@4.11.3(typescript@5.5.2))':
     dependencies:
       '@astrojs/mdx': 3.1.1(astro@4.11.3(typescript@5.5.2))
       '@astrojs/sitemap': 3.1.5
