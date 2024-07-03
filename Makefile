@@ -1,4 +1,4 @@
-.PHONY: lint test static install uninstall cross acceptance-tests
+.PHONY: lint test static install uninstall cross acceptance-tests dagger-develop
 GOPATH := $(shell go env GOPATH)
 VERSION := $(shell git describe --tags --dirty --always)
 BIN_DIR := $(GOPATH)/bin
@@ -41,3 +41,8 @@ cross: $(GOX)
 # Docker container
 container: static
 	docker build -t grafana/tanka .
+
+dagger-develop:
+	@cp dagger/.gitignore dagger/.gitignore.bak
+	@dagger develop --silent
+	@mv dagger/.gitignore.bak dagger/.gitignore

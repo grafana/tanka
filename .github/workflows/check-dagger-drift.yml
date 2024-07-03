@@ -1,0 +1,47 @@
+name: "Check for drift in Dagger files"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-dagger-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
+      - name: Determine Dagger version
+        id: dagger_version
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+          cat .github/workflows/acceptance-tests.yml| yq -r '.jobs.build.steps[] | select(.id == "dagger") | .with.version' > .version
+          echo "version=$(<.version)" > $GITHUB_OUTPUT
+          rm -rf .version
+
+      - uses: actions/cache@v4
+        id: cache_daggercli
+        with:
+          path: bin
+          key: daggercli-download-${{ steps.dagger_version.outputs.version }}
+  
+      - name: Install Dagger CLI
+        if: steps.cache_daggercli.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ steps.dagger_version.outputs.version }} sh
+        
+      - name: Check drift
+        run: |
+          set -e
+          export PATH=$PATH:$PWD/bin
+          make dagger-develop
+          if [[ -z "$(git status --porcelain ./dagger)" ]]; then
+            echo "No drift detected"
+          else
+            echo "Drift detected. Run 'make dagger-develop' and commit the changed files."
+            git diff
+            exit 1
+          fi
