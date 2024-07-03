@@ -8,7 +8,7 @@
     }
   ],
   "source": "dagger",
-  "engineVersion": "v0.11.7",
+  "engineVersion": "v0.11.9",
   "views": [
     {
       "name": "source-files",
