@@ -31,6 +31,8 @@ jobs:
 
     runs-on: ubuntu-22.04
     steps:
+      - name: Print github context
+        run: echo "${{ toJson(github) }}" | jq .
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install pnpm
@@ -40,8 +42,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-          cache-dependency-path: 'docs'
+          cache: "pnpm"
+          cache-dependency-path: "docs"
 
       - name: Install and Build
         working-directory: docs
