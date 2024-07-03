@@ -39,5 +39,7 @@ Markdown files with relative links.
 Check out [Starlight’s docs](https://starlight.astro.build/) and the
 [the Astro documentation](https://docs.astro.build)
 
+test
+
 [astro]: https://astro.build
 [starlight]: https://starlight.astro.build
