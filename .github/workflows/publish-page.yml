@@ -27,7 +27,7 @@ concurrency: ci-${{ github.ref }}
 jobs:
   publish:
     # Do not run this on forks:
-    if: github.repository == 'grafana/tanka'
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'grafana/tanka'
 
     runs-on: ubuntu-22.04
     steps:
