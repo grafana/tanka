@@ -11,18 +11,30 @@ updates:
     package-ecosystem: gomod
     schedule:
       interval: weekly
+    groups:
+      dagger-dependencies:
+        patterns:
+          - "*"
 
   - directory: /acceptance-tests
     open-pull-requests-limit: 5
     package-ecosystem: gomod
     schedule:
       interval: weekly
+    groups:
+      acceptance-tests-dependencies:
+        patterns:
+          - "*"
 
   - directory: /docs
     open-pull-requests-limit: 5
     package-ecosystem: npm
     schedule:
       interval: weekly
+    groups:
+      docs-dependencies:
+        patterns:
+          - "*"
 
   - directory: /
     open-pull-requests-limit: 5
