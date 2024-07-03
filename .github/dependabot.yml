@@ -6,6 +6,18 @@ updates:
     schedule:
       interval: weekly
 
+  - directory: /dagger
+    open-pull-requests-limit: 5
+    package-ecosystem: gomod
+    schedule:
+      interval: weekly
+
+  - directory: /acceptance-tests
+    open-pull-requests-limit: 5
+    package-ecosystem: gomod
+    schedule:
+      interval: weekly
+
   - directory: /docs
     open-pull-requests-limit: 5
     package-ecosystem: npm
