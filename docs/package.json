@@ -9,8 +9,8 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/check": "^0.7.0",
-    "@astrojs/starlight": "^0.25.0",
+    "@astrojs/check": "^0.8.1",
+    "@astrojs/starlight": "^0.25.1",
     "@astrojs/starlight-tailwind": "^2.0.2",
     "@astrojs/tailwind": "^5.1.0",
     "@fontsource-variable/inter": "^5.0.19",
@@ -20,6 +20,6 @@
     "typescript": "^5.5.3"
   },
   "devDependencies": {
-    "prettier": "^3.3.2"
+    "prettier": "^3.3.3"
   }
 }
