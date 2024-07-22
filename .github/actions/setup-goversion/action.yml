@@ -6,6 +6,6 @@ runs:
       run: |
         cat Dockerfile | awk '/^FROM golang:.* as build$/ {v=$2;split(v,a,":")}; END {printf("version=%s", a[2])}' >> $GITHUB_OUTPUT
       shell: bash
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
       with:
         go-version: "${{steps.goversion.outputs.version}}"

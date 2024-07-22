@@ -12,7 +12,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           # https://github.com/actions/checkout/issues/1467 
           fetch-depth: 0
@@ -21,7 +21,7 @@ jobs:
       - id: docker_tag
         run: echo "DOCKER_TAG=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
         with:
           body: |
             This is release `${{ env.GITHUB_REF_NAME }}` of Tanka (`tk`).
