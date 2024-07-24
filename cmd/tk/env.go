@@ -241,6 +241,8 @@ func envListCmd() *cli.Command {
 
 	useNames := cmd.Flags().Bool("names", false, "plain names output")
 
+	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		var path string
 		var err error
@@ -253,7 +255,7 @@ func envListCmd() *cli.Command {
 			}
 		}
 
-		envs, err := tanka.FindEnvs(path, tanka.FindOpts{Selector: getLabelSelector()})
+		envs, err := tanka.FindEnvs(path, tanka.FindOpts{Selector: getLabelSelector(), JsonnetOpts: getJsonnetOpts()})
 		if err != nil {
 			return err
 		}
