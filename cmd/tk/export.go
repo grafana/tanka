@@ -88,7 +88,6 @@ func exportCmd() *cli.Command {
 		var exportEnvs []*v1alpha1.Environment
 		// find possible environments
 		if *recursive {
-
 			// get absolute path to Environment
 			envs, err := tanka.FindEnvsFromPaths(args[1:], tanka.FindOpts{Selector: opts.Selector, Parallelism: opts.Parallelism, JsonnetOpts: opts.Opts.JsonnetOpts})
 			if err != nil {
