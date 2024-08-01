@@ -396,6 +396,9 @@ type GitOpts = dagger.GitOpts
 // HTTPOpts contains options for Client.HTTP
 type HTTPOpts = dagger.HTTPOpts
 
+// K3SOpts contains options for Client.K3S
+type K3SOpts = dagger.K3SOpts
+
 // ModuleDependencyOpts contains options for Client.ModuleDependency
 type ModuleDependencyOpts = dagger.ModuleDependencyOpts
 

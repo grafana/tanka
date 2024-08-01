@@ -4,7 +4,7 @@
   "dependencies": [
     {
       "name": "k3s",
-      "source": "github.com/marcosnils/daggerverse/k3s@5e572e251b4a7f1383ca8043da88b724f8f30e64"
+      "source": "github.com/marcosnils/daggerverse/k3s@e0bd6b9f5519c49db4b6eb0689927214720976f9"
     }
   ],
   "source": "dagger",
