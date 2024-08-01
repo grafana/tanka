@@ -24,14 +24,14 @@ jobs:
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
         with:
           body: |
-            This is release `${{ env.GITHUB_REF_NAME }}` of Tanka (`tk`).
+            This is release `${{ github.ref_name }}` of Tanka (`tk`).
 
             ## Install instructions
 
             #### Binary:
             ```bash
             # download the binary (adapt os and arch as needed)
-            $ curl -fSL -o "/usr/local/bin/tk" "https://github.com/grafana/tanka/releases/download/${{ env.GITHUB_REF_NAME }}/tk-linux-amd64"
+            $ curl -fSL -o "/usr/local/bin/tk" "https://github.com/grafana/tanka/releases/download/${{ github.ref_name }}/tk-linux-amd64"
 
             # make it executable
             $ chmod a+x "/usr/local/bin/tk"
