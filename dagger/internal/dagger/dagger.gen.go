@@ -4055,6 +4055,15 @@ func (r *K3S) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+// runs k9s on the target k3s cluster
+func (r *K3S) Kns() *Container {
+	q := r.query.Select("kns")
+
+	return &Container{
+		query: q,
+	}
+}
+
 // runs kubectl on the target k3s cluster
 func (r *K3S) Kubectl(ctx context.Context, args string) (string, error) {
 	if r.kubectl != nil {
@@ -5827,8 +5836,19 @@ func (r *Client) HTTP(url string, opts ...HTTPOpts) *File {
 	}
 }
 
-func (r *Client) K3S(name string) *K3S {
+// K3SOpts contains options for Client.K3S
+type K3SOpts struct {
+	Image string
+}
+
+func (r *Client) K3S(name string, opts ...K3SOpts) *K3S {
 	q := r.query.Select("k3S")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `image` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Image) {
+			q = q.Arg("image", opts[i].Image)
+		}
+	}
 	q = q.Arg("name", name)
 
 	return &K3S{
