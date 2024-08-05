@@ -75,8 +75,8 @@ readable.</p>
 <div class="expressive-code"><figure class="frame not-content"><figcaption class="header"></figcaption><pre data-language="jsonnet"><code><div class="ec-line"><div class="code"><span style="--0:#C792EA;--1:#8D46B4">local</span><span style="--0:#D6DEEB;--1:#403F53"> secret </span><span style="--0:#7FDBCA;--1:#097174">=</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#C792EA;--1:#8D46B4">import</span><span style="--0:#D6DEEB;--1:#403F53"> </span><span style="--0:#ECC48D;--1:#9B504E">"./secret.libsonnet"</span><span style="--0:#D6DEEB;--1:#403F53">;</span></div></div></code></pre><div class="copy"><button title="Copy to clipboard" data-copied="Copied!" data-code="local secret = import &#x22;./secret.libsonnet&#x22;;"><div></div></button></div></figure></div>
 <p>The exported object (the only non-local one) of <code dir="auto">secret.libsonnet</code> is now
 available as a <code dir="auto">local</code> variable called <code dir="auto">secret</code>.</p>
-<p>When using Tanka, it is also possible to directly import <code dir="auto">.json</code> and <code dir="auto">.yaml</code>
-files, as if they were a <code dir="auto">.libsonnet</code>.</p>
+<p>When using Tanka, it is also possible to directly import <code dir="auto">.json</code> files, as if
+they were a <code dir="auto">.libsonnet</code>.</p>
 <p>Make sure to also take a look at the libraries documentation to learn how to use <code dir="auto">import</code> and re-use code.
 The documentation on <a href="./libraries/import-paths/">Tanka import paths</a> and <a href="./libraries/install-publish/">vendoring</a> are useful to understand how imports work in Tanka’s context.</p>
 <h3 id="merging">Merging</h3>
