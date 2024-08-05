@@ -101,6 +101,22 @@ func TestManifestJSONFromJSONInvalid(t *testing.T) {
 	assert.NotEmpty(t, err)
 }
 
+func TestManifestJSONFromJSONInvalidNull(t *testing.T) {
+	ret, err, callerr := callNative("manifestJsonFromJson", []interface{}{"{}", nil})
+
+	assert.Empty(t, callerr)
+	assert.Empty(t, ret)
+	assert.ErrorContains(t, err, "manifestJsonFromJson(): argument \"indent\" is null")
+}
+
+func TestManifestJSONFromJSONInvalidBadType(t *testing.T) {
+	ret, err, callerr := callNative("manifestJsonFromJson", []interface{}{"{}", "bad"})
+
+	assert.Empty(t, callerr)
+	assert.Empty(t, ret)
+	assert.ErrorContains(t, err, "manifestJsonFromJson(): argument \"indent\" has unexpected type")
+}
+
 func TestManifestYAMLFromJSONEmpty(t *testing.T) {
 	ret, err, callerr := callNative("manifestYamlFromJson", []interface{}{"{}"})
 
