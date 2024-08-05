@@ -59,8 +59,8 @@ local secret = import "./secret.libsonnet";
 The exported object (the only non-local one) of `secret.libsonnet` is now
 available as a `local` variable called `secret`.
 
-When using Tanka, it is also possible to directly import `.json` and `.yaml`
-files, as if they were a `.libsonnet`.
+When using Tanka, it is also possible to directly import `.json` files, as if
+they were a `.libsonnet`.
 
 Make sure to also take a look at the libraries documentation to learn how to use `import` and re-use code.
 The documentation on [Tanka import paths](./libraries/import-paths/) and [vendoring](./libraries/install-publish/) are useful to understand how imports work in Tanka's context.
