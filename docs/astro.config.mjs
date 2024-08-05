@@ -146,6 +146,16 @@ export default defineConfig({
           label: 'Known issues',
           link: '/known-issues',
         },
+        {
+          label: 'Project internals',
+          collapsed: true,
+          items: [
+            {
+              label: 'Releasing a new version',
+              link: '/internal/releasing',
+            }
+          ]
+        },
       ],
     }),
     tailwind({
