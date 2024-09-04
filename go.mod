@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	github.com/Masterminds/semver v1.5.0
-	github.com/Masterminds/sprig/v3 v3.2.3
+	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/fatih/color v1.17.0
 	github.com/fatih/structs v1.1.0
 	github.com/go-clix/cli v0.2.0
@@ -29,29 +29,28 @@ require (
 )
 
 require (
-	github.com/kr/text v0.2.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
 
 require (
+	dario.cat/mergo v1.0.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.2.0 // indirect
+	github.com/Masterminds/semver/v3 v3.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/huandu/xstrings v1.3.3 // indirect
-	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/spf13/cast v1.4.1 // indirect
-	golang.org/x/crypto v0.24.0 // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
+	github.com/spf13/cast v1.7.0 // indirect
+	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/sys v0.23.0 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 )
