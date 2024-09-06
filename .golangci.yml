@@ -1,9 +1,8 @@
 linters:
   enable:
-    - depguard
     - dogsled
     - errcheck
-    - exportloopref
+    - copyloopvar
     - goconst
     - gocritic
     - gofmt
@@ -11,7 +10,6 @@ linters:
     - gosimple
     - govet
     - ineffassign
-    - megacheck
     - misspell
     - revive
     - staticcheck

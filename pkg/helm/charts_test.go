@@ -97,7 +97,7 @@ func TestAdd(t *testing.T) {
 
 	// Adding a chart with a different version to the same path, causes a conflict
 	err = c.Add([]string{"stable/prometheus@11.12.0"}, "")
-	assert.EqualError(t, err, `Validation errors:
+	assert.EqualError(t, err, `validation errors:
  - output directory "prometheus" is used twice, by charts "stable/prometheus@11.12.1" and "stable/prometheus@11.12.0"`)
 
 	// Add a chart with a specific extract directory
@@ -241,7 +241,7 @@ func TestInvalidChartName(t *testing.T) {
 	})
 
 	err = c.Vendor(false, "")
-	assert.EqualError(t, err, `Validation errors:
+	assert.EqualError(t, err, `validation errors:
  - Chart name "noslash" is not valid. Expecting a repo/name format.`)
 }
 

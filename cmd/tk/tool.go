@@ -42,7 +42,7 @@ func jpathCmd() *cli.Command {
 
 	debug := cmd.Flags().BoolP("debug", "d", false, "show debug info")
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		path := args[0]
 
 		entrypoint, err := jpath.Entrypoint(path)
@@ -81,7 +81,7 @@ func importsCmd() *cli.Command {
 
 	check := cmd.Flags().StringP("check", "c", "", "git commit hash to check against")
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		var modFiles []string
 		if *check != "" {
 			var err error
@@ -156,7 +156,7 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 	}
 
 	root := cmd.Flags().String("root", ".", "root directory to search for environments")
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		root, err := filepath.Abs(*root)
 		if err != nil {
 			return fmt.Errorf("resolving root: %w", err)

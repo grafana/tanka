@@ -23,7 +23,7 @@ func statusCmd() *cli.Command {
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		status, err := tanka.Status(args[0], tanka.Opts{
 			JsonnetImplementation: vars.jsonnetImplementation,
 			JsonnetOpts:           getJsonnetOpts(),

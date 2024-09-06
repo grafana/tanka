@@ -27,7 +27,7 @@ func lintCmd() *cli.Command {
 		panic(err)
 	}
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		globs := make([]glob.Glob, len(*exclude))
 		for i, e := range *exclude {
 			g, err := glob.Compile(e)

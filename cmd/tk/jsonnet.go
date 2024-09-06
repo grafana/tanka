@@ -20,7 +20,7 @@ func evalCmd() *cli.Command {
 
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		jsonnetOpts := tanka.Opts{
 			JsonnetImplementation: *jsonnetImplementation,
 			JsonnetOpts:           getJsonnetOpts(),

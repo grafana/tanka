@@ -95,7 +95,7 @@ func applyCmd() *cli.Command {
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
 			return err
@@ -141,7 +141,7 @@ func pruneCmd() *cli.Command {
 	addDiffFlags(cmd.Flags(), &opts.DiffBaseOpts)
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
 			return err
@@ -182,7 +182,7 @@ func deleteCmd() *cli.Command {
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
 			return err
@@ -229,7 +229,7 @@ func diffCmd() *cli.Command {
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		if err := setForceColor(&opts.DiffBaseOpts); err != nil {
 			return err
 		}
@@ -280,7 +280,7 @@ func showCmd() *cli.Command {
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		if !interactive && !*allowRedirect {
 			fmt.Fprintln(os.Stderr, `Redirection of the output of tk show is discouraged and disabled by default.
 If you want to export .yaml files for use with other tools, try 'tk export'.
