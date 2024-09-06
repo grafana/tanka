@@ -2,7 +2,7 @@ linters:
   enable:
     - dogsled
     - errcheck
-    - exportloopref
+    - copyloopvar
     - goconst
     - gocritic
     - gofmt

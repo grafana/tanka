@@ -100,7 +100,7 @@ func chartsConfigCmd() *cli.Command {
 		Short: "Displays the current manifest",
 	}
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, _ []string) error {
 		c, err := loadChartfile()
 		if err != nil {
 			return err
@@ -125,7 +125,7 @@ func chartsInitCmd() *cli.Command {
 		Short: "Create a new Chartfile",
 	}
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, _ []string) error {
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
@@ -155,7 +155,7 @@ func chartsVersionCheckCmd() *cli.Command {
 	repoConfigPath := cmd.Flags().String("repository-config", "", repoConfigFlagUsage)
 	prettyPrint := cmd.Flags().Bool("pretty-print", false, "pretty print json output with indents")
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, _ []string) error {
 		c, err := loadChartfile()
 		if err != nil {
 			return err

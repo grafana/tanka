@@ -206,7 +206,7 @@ func envRemoveCmd() *cli.Command {
 		Aliases: []string{"rm"},
 		Short:   "delete an environment",
 		Args:    workflowArgs,
-		Run: func(cmd *cli.Command, args []string) error {
+		Run: func(_ *cli.Command, args []string) error {
 			for _, arg := range args {
 				path, err := filepath.Abs(arg)
 				if err != nil {
@@ -243,7 +243,7 @@ func envListCmd() *cli.Command {
 
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		var path string
 		var err error
 		if len(args) == 1 {

@@ -48,7 +48,7 @@ func exportCmd() *cli.Command {
 
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		// Allocate a block of memory to alter GC behaviour. See https://github.com/golang/go/issues/23044
 		ballast := make([]byte, *ballastBytes)
 		defer runtime.KeepAlive(ballast)
