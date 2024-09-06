@@ -31,7 +31,7 @@ func prefixCommands(prefix string) (cmds []*cli.Command) {
 		extCommand.Stdout = os.Stdout
 		extCommand.Stderr = os.Stderr
 
-		cmd.Run = func(cmd *cli.Command, args []string) error {
+		cmd.Run = func(_ *cli.Command, args []string) error {
 			extCommand.Args = append(extCommand.Args, args...)
 			return extCommand.Run()
 		}
