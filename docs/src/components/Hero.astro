@@ -1,7 +1,6 @@
 ---
 import type { Props } from '@astrojs/starlight/props';
-import CallToAction from '@astrojs/starlight/components/CallToAction.astro';
-import { Code } from '@astrojs/starlight/components';
+import { Code, LinkButton } from '@astrojs/starlight/components';
 import { Content as Tagline } from './tagline.md';
 ---
 
@@ -40,20 +39,12 @@ local k = import "k.libsonnet";
 		</div>
 
 		<div class="sl-flex actions">
-			<CallToAction
-				link="./install/"
-				variant="primary"
-				icon={{ type: 'icon', name: 'right-arrow' }}
+			<LinkButton href="./install/" variant="primary" icon="right-arrow"
+				>Get started</LinkButton
 			>
-				Get started
-			</CallToAction>
-			<CallToAction
-				link="./tutorial/overview/"
-				variant="minimal"
-				icon={{ type: 'icon', name: 'laptop' }}
+			<LinkButton href="./tutorial/overview/" variant="minimal" icon="laptop"
+				>Read the tutorial</LinkButton
 			>
-				Read the tutorial
-			</CallToAction>
 		</div>
 	</div>
 </div>
