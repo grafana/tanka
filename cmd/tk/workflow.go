@@ -95,7 +95,7 @@ func applyCmd() *cli.Command {
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
 			return err

@@ -26,7 +26,7 @@ func initCmd() *cli.Command {
 	installK8s := cmd.Flags().String("k8s", defaultK8sVersion, "choose the version of k8s-libsonnet, set to false to skip")
 	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, _ []string) error {
 		failed := false
 
 		files, err := os.ReadDir(".")

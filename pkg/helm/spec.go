@@ -132,7 +132,7 @@ func (r Requirements) Validate() error {
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("Validation errors:\n - %s", strings.Join(errs, "\n - "))
+		return fmt.Errorf("validation errors:\n - %s", strings.Join(errs, "\n - "))
 	}
 
 	return nil

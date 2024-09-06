@@ -30,7 +30,7 @@ func fmtCmd() *cli.Command {
 	exclude := cmd.Flags().StringSliceP("exclude", "e", []string{"**/.*", ".*", "**/vendor/**", "vendor/**"}, "globs to exclude")
 	verbose := cmd.Flags().BoolP("verbose", "v", false, "print each checked file")
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		if len(args) == 1 && args[0] == ArgStdin {
 			return fmtStdin(*test)
 		}
