@@ -1,6 +1,5 @@
 linters:
   enable:
-    - depguard
     - dogsled
     - errcheck
     - exportloopref
