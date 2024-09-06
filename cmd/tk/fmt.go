@@ -47,7 +47,7 @@ func fmtCmd() *cli.Command {
 		var outFn tanka.OutFn
 		switch {
 		case *test:
-			outFn = func(name, content string) error { return nil }
+			outFn = func(_, _ string) error { return nil }
 		case *stdout:
 			outFn = func(name, content string) error {
 				fmt.Printf("// %s\n%s", name, content)

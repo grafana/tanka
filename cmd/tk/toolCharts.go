@@ -41,7 +41,7 @@ func chartsVendorCmd() *cli.Command {
 	prune := cmd.Flags().Bool("prune", false, "also remove non-vendored files from the destination directory")
 	repoConfigPath := cmd.Flags().String("repository-config", "", repoConfigFlagUsage)
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		c, err := loadChartfile()
 		if err != nil {
 			return err
@@ -60,7 +60,7 @@ func chartsAddCmd() *cli.Command {
 	}
 	repoConfigPath := cmd.Flags().String("repository-config", "", repoConfigFlagUsage)
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		c, err := loadChartfile()
 		if err != nil {
 			return err
@@ -79,7 +79,7 @@ func chartsAddRepoCmd() *cli.Command {
 		Args:  cli.ArgsExact(2),
 	}
 
-	cmd.Run = func(cmd *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		c, err := loadChartfile()
 		if err != nil {
 			return err
