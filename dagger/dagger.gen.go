@@ -150,7 +150,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var rootDir *any
+			var rootDir *dagger.Directory
 			if inputArgs["rootDir"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["rootDir"]), &rootDir)
 				if err != nil {
@@ -164,7 +164,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var file *any
+			var file *dagger.File
 			if inputArgs["file"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["file"]), &file)
 				if err != nil {
@@ -178,14 +178,14 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var rootDir *any
+			var rootDir *dagger.Directory
 			if inputArgs["rootDir"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["rootDir"]), &rootDir)
 				if err != nil {
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg rootDir", err))
 				}
 			}
-			var acceptanceTestsDir *any
+			var acceptanceTestsDir *dagger.Directory
 			if inputArgs["acceptanceTestsDir"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["acceptanceTestsDir"]), &acceptanceTestsDir)
 				if err != nil {
@@ -202,17 +202,17 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				dag.TypeDef().WithObject("Tanka").
 					WithFunction(
 						dag.Function("Build",
-							dag.TypeDef().WithKind(dagger.VoidKind).WithOptional(true)).
-							WithArg("rootDir", dag.TypeDef().WithKind(dagger.VoidKind).WithOptional(true))).
+							dag.TypeDef().WithObject("Container")).
+							WithArg("rootDir", dag.TypeDef().WithObject("Directory"))).
 					WithFunction(
 						dag.Function("GetGoVersion",
 							dag.TypeDef().WithKind(dagger.StringKind)).
-							WithArg("file", dag.TypeDef().WithKind(dagger.VoidKind).WithOptional(true))).
+							WithArg("file", dag.TypeDef().WithObject("File"))).
 					WithFunction(
 						dag.Function("AcceptanceTests",
 							dag.TypeDef().WithKind(dagger.StringKind)).
-							WithArg("rootDir", dag.TypeDef().WithKind(dagger.VoidKind).WithOptional(true)).
-							WithArg("acceptanceTestsDir", dag.TypeDef().WithKind(dagger.VoidKind).WithOptional(true)))), nil
+							WithArg("rootDir", dag.TypeDef().WithObject("Directory")).
+							WithArg("acceptanceTestsDir", dag.TypeDef().WithObject("Directory")))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}

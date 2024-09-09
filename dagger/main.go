@@ -6,16 +6,18 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/grafana/tanka/dagger/internal/dagger"
 )
 
 type Tanka struct{}
 
-func (m *Tanka) Build(ctx context.Context, rootDir *Directory) *Container {
+func (m *Tanka) Build(ctx context.Context, rootDir *dagger.Directory) *dagger.Container {
 	return dag.Container().
 		Build(rootDir)
 }
 
-func (m *Tanka) GetGoVersion(ctx context.Context, file *File) (string, error) {
+func (m *Tanka) GetGoVersion(ctx context.Context, file *dagger.File) (string, error) {
 	versionPattern := regexp.MustCompile(`^go ((\d+)\.(\d+)(\.(\d+))?)$`)
 	content, err := file.Contents(ctx)
 	if err != nil {
@@ -31,7 +33,7 @@ func (m *Tanka) GetGoVersion(ctx context.Context, file *File) (string, error) {
 	return "", fmt.Errorf("no Go version found")
 }
 
-func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *Directory, acceptanceTestsDir *Directory) (string, error) {
+func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *dagger.Directory, acceptanceTestsDir *dagger.Directory) (string, error) {
 	goVersion, err := m.GetGoVersion(ctx, rootDir.File("go.mod"))
 	if err != nil {
 		return "", err
