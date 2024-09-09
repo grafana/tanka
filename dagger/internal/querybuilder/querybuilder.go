@@ -17,10 +17,11 @@ func Query() *Selection {
 }
 
 type Selection struct {
-	name  string
-	alias string
-	args  map[string]*argument
-	bind  interface{}
+	name     string
+	alias    string
+	args     map[string]*argument
+	bind     any
+	multiple bool
 
 	prev *Selection
 
@@ -54,6 +55,12 @@ func (s *Selection) SelectWithAlias(alias, name string) *Selection {
 
 func (s *Selection) Select(name string) *Selection {
 	return s.SelectWithAlias("", name)
+}
+
+func (s *Selection) SelectMultiple(name ...string) *Selection {
+	sel := s.SelectWithAlias("", strings.Join(name, " "))
+	sel.multiple = true
+	return sel
 }
 
 func (s *Selection) Arg(name string, value any) *Selection {
@@ -99,6 +106,10 @@ func (s *Selection) Build(ctx context.Context) (string, error) {
 	path := s.path()
 
 	for _, sel := range path {
+		if sel.prev != nil && sel.prev.multiple {
+			return "", fmt.Errorf("sibling selections not end of chain")
+		}
+
 		b.WriteRune('{')
 
 		if sel.alias != "" {
@@ -128,21 +139,17 @@ func (s *Selection) Build(ctx context.Context) (string, error) {
 	return b.String(), nil
 }
 
-func (s *Selection) unpack(data interface{}) error {
+func (s *Selection) unpack(data any) error {
 	for _, i := range s.path() {
 		k := i.name
 		if i.alias != "" {
 			k = i.alias
 		}
 
-		// Try to assert type of the value
-		switch f := data.(type) {
-		case map[string]interface{}:
-			data = f[k]
-		case []interface{}:
-			data = f
-		default:
-			fmt.Printf("type not found %s\n", f)
+		if !i.multiple {
+			if f, ok := data.(map[string]any); ok {
+				data = f[k]
+			}
 		}
 
 		if i.bind != nil {
@@ -150,7 +157,7 @@ func (s *Selection) unpack(data interface{}) error {
 			if err != nil {
 				return err
 			}
-			if err := json.Unmarshal(marshalled, s.bind); err != nil {
+			if err := json.Unmarshal(marshalled, i.bind); err != nil {
 				return err
 			}
 		}

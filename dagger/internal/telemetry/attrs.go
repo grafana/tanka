@@ -58,9 +58,13 @@ const (
 	// span represents.
 	LLBOpAttr = "dagger.io/llb.op"
 
-	// The digests of the LLB operations that this span depends on, allowing the
-	// UI to attribute their future "cost."
-	LLBDigestsAttr = "dagger.io/llb.digests"
+	// The IDs of effects which will be correlated to this span.
+	//
+	// This is typically a list of LLB operation digests, but can be any string.
+	EffectIDsAttr = "dagger.io/effect.ids"
+
+	// The ID of the effect that this span represents.
+	EffectIDAttr = "dagger.io/effect.id"
 
 	// The amount of progress that needs to be reached.
 	ProgressTotalAttr = "dagger.io/progress.total"
@@ -70,9 +74,6 @@ const (
 
 	// Indicates the units for the progress numbers.
 	ProgressUnitsAttr = "dagger.io/progress.units"
-
-	// The client ID that generated this telemetry.
-	ClientIDAttr = "dagger.io/client.id"
 
 	// The stdio stream a log corresponds to (1 for stdout, 2 for stderr).
 	StdioStreamAttr = "stdio.stream"
