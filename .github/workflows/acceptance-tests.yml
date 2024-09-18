@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Call Dagger Function
         id: dagger
-        uses: dagger/dagger-for-github@a419ddbf5ee9800810f7e029de674fbe0ce855aa # v6.7.0
+        uses: dagger/dagger-for-github@e49f5bfe7f9a3593f38b9d7391f110d6dff48f94 # v6.8.0
         with:
           version: "0.12.7"
           verb: call
