@@ -61,7 +61,7 @@ jobs:
 
       - name: Deploy main
         if: github.event_name != 'pull_request'
-        uses: JamesIves/github-pages-deploy-action@920cbb300dcd3f0568dbc42700c61e2fd9e6139c # v4.6.4
+        uses: JamesIves/github-pages-deploy-action@881db5376404c5c8d621010bcbec0310b58d5e29 # v4.6.8
         with:
           clean-exclude: pr-preview/
           folder: ./docs/dist/
