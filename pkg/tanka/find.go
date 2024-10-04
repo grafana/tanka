@@ -127,9 +127,13 @@ func findEnvsFromJsonnetFiles(jsonnetFiles []string, opts FindOpts) ([]*v1alpha1
 
 	for i := 0; i < opts.Parallelism; i++ {
 		go func() {
+			// We need to create a copy of the opts for each goroutine because
+			// the content may be modified down the line:
+			jsonnetOpts := opts.JsonnetOpts.Clone()
+
 			for jsonnetFile := range jsonnetFilesChan {
 				// try if this has envs
-				list, err := List(jsonnetFile, Opts{JsonnetOpts: opts.JsonnetOpts})
+				list, err := List(jsonnetFile, Opts{JsonnetOpts: jsonnetOpts})
 				if err != nil &&
 					// expected when looking for environments
 					!errors.As(err, &jpath.ErrorNoBase{}) &&
