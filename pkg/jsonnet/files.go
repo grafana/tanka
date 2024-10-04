@@ -1,11 +1,11 @@
 package jsonnet
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 
 	"github.com/gobwas/glob"
-	"github.com/karrick/godirwalk"
 )
 
 // FindFiles takes a file / directory and finds all Jsonnet files
@@ -21,31 +21,27 @@ func FindFiles(target string, excludes []glob.Glob) ([]string, error) {
 
 	var files []string
 
-	// godirwalk is faster than filepath.Walk, 'cause no os.Stat required
-	err = godirwalk.Walk(target, &godirwalk.Options{
-		Callback: func(rawPath string, de *godirwalk.Dirent) error {
-			// Normalize slashes for Windows
-			path := filepath.ToSlash(rawPath)
+	err = filepath.WalkDir(target, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		path = filepath.ToSlash(path)
+		if d.IsDir() {
+			return nil
+		}
 
-			if de.IsDir() {
+		// excluded?
+		for _, g := range excludes {
+			if g.Match(path) {
 				return nil
 			}
+		}
 
-			// excluded?
-			for _, g := range excludes {
-				if g.Match(path) {
-					return nil
-				}
-			}
-
-			// only .jsonnet or .libsonnet
-			if ext := filepath.Ext(path); ext == ".jsonnet" || ext == ".libsonnet" {
-				files = append(files, path)
-			}
-			return nil
-		},
-		// faster, no sort required
-		Unsorted: true,
+		// only .jsonnet or .libsonnet
+		if ext := filepath.Ext(path); ext == ".jsonnet" || ext == ".libsonnet" {
+			files = append(files, path)
+		}
+		return nil
 	})
 	if err != nil {
 		return nil, err
