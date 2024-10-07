@@ -9,12 +9,12 @@ on:
       - reopened
     branches:
       - main
+  merge_group:
 
 jobs:
   lint-pr-title:
     runs-on: ubuntu-latest
     steps:
-      - uses: grafana/shared-workflows/actions/lint-pr-title@main
+      - uses: grafana/shared-workflows/actions/lint-pr-title@90e72fd7b35f5d30696313aeb736a13a15eb82ad # lint-pr-title-v1.0.0
         env:
           GITHUB_TOKEN: ${{ github.token }}
-
