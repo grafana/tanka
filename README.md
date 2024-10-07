@@ -61,11 +61,6 @@ There are several places to connect with the Tanka community:
 
 - [GitHub Discussions](https://github.com/grafana/tanka/discussions/442): Primary support channel
 - `#tanka` on [Grafana Slack](https://grafana.slack.com)
-- Mailing lists
-  - [`tanka-announce`](https://groups.google.com/forum/#!forum/tanka-announce):
-    Low frequency list with announcements, releases, etc
-  - [`tanka-users`](https://groups.google.com/forum/#!forum/tanka-users):
-    General purpose group for discussions, community support and more
 
 Please don't ask individual project members or open GitHub issues for support
 requests. Use one of the above channels so everyone in the community can
