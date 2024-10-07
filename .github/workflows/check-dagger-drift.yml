@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+  merge_group:
 
 jobs:
   check-dagger-drift:
@@ -26,13 +27,13 @@ jobs:
         with:
           path: bin
           key: daggercli-download-${{ steps.dagger_version.outputs.version }}
-  
+
       - name: Install Dagger CLI
         if: steps.cache_daggercli.outputs.cache-hit != 'true'
         shell: bash
         run: |
           curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ steps.dagger_version.outputs.version }} sh
-        
+
       - name: Check drift
         run: |
           set -e
