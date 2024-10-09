@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tanka
+  title: Tanka
+  description: "Flexible, reusable and concise configuration for Kubernetes"
+  tags:
+    - opensource
+  annotations:
+    github.com/project-slug: grafana/tanka
+  links:
+    - url: "https://tanka.dev"
+      title: Website
+spec:
+  type: application
+  owner: group:platform-productivity
+  lifecycle: production
