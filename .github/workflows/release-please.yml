@@ -1,0 +1,33 @@
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+name: release-please
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - id: get-secrets
+        uses: grafana/shared-workflows/actions/get-vault-secrets@main
+        with:
+          repo_secrets: |
+            TANKABOT_APP_ID=tankabot_app:id
+            TANKABOT_APP_PRIVATE_KEY=tankabot_app:private_key
+
+      - uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v1.11.0
+        id: app-token
+        with:
+          app-id: ${{ env.TANKABOT_APP_ID }}
+          private-key: ${{ env.TANKABOT_APP_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@7987652d64b4581673a76e33ad5e98e3dd56832f # v4.1.3
+        with:
+          config-file: .release-please.json
+          manifest-file: .release-please-manifest.json
+          github-token: ${{ steps.app-token.outputs.token }}
