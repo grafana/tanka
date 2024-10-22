@@ -236,8 +236,8 @@ func envListCmd() *cli.Command {
 		Args:    args,
 	}
 
-	dummyHelm := cmd.Flags().Bool("dummy-helm", false, "do not run helm within the environments. This speeds up listing if your helm charts do not generate any Tanka environments.")
-	dummyKustomize := cmd.Flags().Bool("dummy-kustomize", false, "do not run kustomize within the environments. This speeds up listing if kustomize does not generate any Tanka environments.")
+	skipHelm := cmd.Flags().Bool("skip-helm", false, "do not run helm within the environments. This speeds up listing if your helm charts do not generate any Tanka environments.")
+	skipKustomize := cmd.Flags().Bool("skip-kustomize", false, "do not run kustomize within the environments. This speeds up listing if kustomize does not generate any Tanka environments.")
 	useJSON := cmd.Flags().Bool("json", false, "json output")
 	getLabelSelector := labelSelectorFlag(cmd.Flags())
 
@@ -259,8 +259,8 @@ func envListCmd() *cli.Command {
 		findOpts := tanka.FindOpts{
 			Selector:       getLabelSelector(),
 			JsonnetOpts:    getJsonnetOpts(),
-			DummyHelm:      *dummyHelm,
-			DummyKustomize: *dummyKustomize,
+			DummyHelm:      *skipHelm,
+			DummyKustomize: *skipKustomize,
 		}
 		envs, err := tanka.FindEnvs(path, findOpts)
 		if err != nil {
