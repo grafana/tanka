@@ -10,7 +10,7 @@ import (
 
 // callNative calls a native function used by jsonnet VM.
 func callNative(name string, data []interface{}) (res interface{}, err error, callerr error) {
-	for _, fun := range Funcs() {
+	for _, fun := range Funcs(false, false) {
 		if fun.Name == name {
 			// Call the function
 			ret, err := fun.Func(data)

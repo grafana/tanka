@@ -125,7 +125,9 @@ func getJsonnetImplementation(path string, opts Opts) (types.JsonnetImplementati
 	switch opts.JsonnetImplementation {
 	case "go", "":
 		return &goimpl.JsonnetGoImplementation{
-			Path: path,
+			Path:           path,
+			DummyHelm:      opts.DummyHelm,
+			DummyKustomize: opts.DummyKustomize,
 		}, nil
 	default:
 		return nil, fmt.Errorf("unknown jsonnet implementation: %s", opts.JsonnetImplementation)

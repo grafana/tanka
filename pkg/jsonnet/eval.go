@@ -115,7 +115,7 @@ func evaluateSnippet(jsonnetImpl types.JsonnetImplementation, evalFunc evalFunc,
 	opts.ImportPaths = jpath
 	evaluator := jsonnetImpl.MakeEvaluator(opts.ImportPaths, opts.ExtCode, opts.TLACode, opts.MaxStack)
 	// We're using the go implementation to deal with imports because we're not evaluating, we're reading the AST
-	importVM := goimpl.MakeRawVM(opts.ImportPaths, opts.ExtCode, opts.TLACode, opts.MaxStack)
+	importVM := goimpl.MakeRawVM(opts.ImportPaths, opts.ExtCode, opts.TLACode, opts.MaxStack, false, false)
 
 	var hash string
 	if cache != nil {

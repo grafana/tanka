@@ -19,8 +19,8 @@ import (
 
 // Funcs returns a slice of native Go functions that shall be available
 // from Jsonnet using `std.nativeFunc`
-func Funcs() []*jsonnet.NativeFunction {
-	return []*jsonnet.NativeFunction{
+func Funcs(dummyHelm, dummyKustomize bool) []*jsonnet.NativeFunction {
+	funcs := []*jsonnet.NativeFunction{
 		// Parse serialized data into dicts
 		parseJSON(),
 		parseYAML(),
@@ -36,10 +36,25 @@ func Funcs() []*jsonnet.NativeFunction {
 
 		// Hash functions
 		hashSha256(),
-
-		helm.NativeFunc(helm.ExecHelm{}),
-		kustomize.NativeFunc(kustomize.ExecKustomize{}),
 	}
+
+	helmTemplate := helm.NativeFunc(helm.ExecHelm{})
+	if dummyHelm {
+		helmTemplate.Func = func([]interface{}) (interface{}, error) {
+			return map[string]interface{}{}, nil
+		}
+	}
+	funcs = append(funcs, helmTemplate)
+
+	kustomizeExec := kustomize.NativeFunc(kustomize.ExecKustomize{})
+	if dummyKustomize {
+		kustomizeExec.Func = func([]interface{}) (interface{}, error) {
+			return map[string]interface{}{}, nil
+		}
+	}
+	funcs = append(funcs, kustomizeExec)
+
+	return funcs
 }
 
 // parseJSON wraps `json.Unmarshal` to convert a json string into a dict

@@ -20,13 +20,14 @@ func (vm *JsonnetGoVM) EvaluateFile(filename string) (string, error) {
 }
 
 type JsonnetGoImplementation struct {
-	Path string
+	Path           string
+	DummyHelm      bool
+	DummyKustomize bool
 }
 
 func (i *JsonnetGoImplementation) MakeEvaluator(importPaths []string, extCode map[string]string, tlaCode map[string]string, maxStack int) types.JsonnetEvaluator {
 	return &JsonnetGoVM{
-		vm: MakeRawVM(importPaths, extCode, tlaCode, maxStack),
-
+		vm:   MakeRawVM(importPaths, extCode, tlaCode, maxStack, i.DummyHelm, i.DummyKustomize),
 		path: i.Path,
 	}
 }

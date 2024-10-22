@@ -10,7 +10,7 @@ import (
 // - extCode and tlaCode applied
 // - native functions registered
 // This is exposed because Go is used for advanced use cases, like finding transitive imports or linting.
-func MakeRawVM(importPaths []string, extCode map[string]string, tlaCode map[string]string, maxStack int) *jsonnet.VM {
+func MakeRawVM(importPaths []string, extCode map[string]string, tlaCode map[string]string, maxStack int, dummyHelm bool, dummyKustomize bool) *jsonnet.VM {
 	vm := jsonnet.MakeVM()
 	vm.Importer(newExtendedImporter(importPaths))
 
@@ -21,7 +21,7 @@ func MakeRawVM(importPaths []string, extCode map[string]string, tlaCode map[stri
 		vm.TLACode(k, v)
 	}
 
-	for _, nf := range native.Funcs() {
+	for _, nf := range native.Funcs(dummyHelm, dummyKustomize) {
 		vm.NativeFunction(nf)
 	}
 

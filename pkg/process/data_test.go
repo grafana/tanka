@@ -18,7 +18,7 @@ type testData struct {
 func loadFixture(name string) testData {
 	filename := filepath.Join("./testdata", name)
 
-	vm := goimpl.MakeRawVM([]string{"./testdata"}, nil, nil, 0)
+	vm := goimpl.MakeRawVM([]string{"./testdata"}, nil, nil, 0, false, false)
 
 	data, err := vm.EvaluateFile(filename)
 	if err != nil {

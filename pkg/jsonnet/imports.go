@@ -48,7 +48,7 @@ func TransitiveImports(dir string) ([]string, error) {
 		return nil, errors.Wrap(err, "resolving JPATH")
 	}
 
-	vm := goimpl.MakeRawVM(jpath, nil, nil, 0)
+	vm := goimpl.MakeRawVM(jpath, nil, nil, 0, false, false)
 	node, err := jsonnet.SnippetToAST(filepath.Base(entrypoint), string(sonnet))
 	if err != nil {
 		return nil, errors.Wrap(err, "creating Jsonnet AST")

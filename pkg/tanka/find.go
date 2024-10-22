@@ -17,8 +17,10 @@ import (
 // FindOpts are optional arguments for FindEnvs
 type FindOpts struct {
 	JsonnetOpts
-	Selector    labels.Selector
-	Parallelism int
+	DummyHelm      bool
+	DummyKustomize bool
+	Selector       labels.Selector
+	Parallelism    int
 }
 
 // FindEnvs returns metadata of all environments recursively found in 'path'.
@@ -130,10 +132,15 @@ func findEnvsFromJsonnetFiles(jsonnetFiles []string, opts FindOpts) ([]*v1alpha1
 			// We need to create a copy of the opts for each goroutine because
 			// the content may be modified down the line:
 			jsonnetOpts := opts.JsonnetOpts.Clone()
+			listOpts := Opts{
+				JsonnetOpts:    jsonnetOpts,
+				DummyHelm:      opts.DummyHelm,
+				DummyKustomize: opts.DummyKustomize,
+			}
 
 			for jsonnetFile := range jsonnetFilesChan {
 				// try if this has envs
-				list, err := List(jsonnetFile, Opts{JsonnetOpts: jsonnetOpts})
+				list, err := List(jsonnetFile, listOpts)
 				if err != nil &&
 					// expected when looking for environments
 					!errors.As(err, &jpath.ErrorNoBase{}) &&

@@ -19,6 +19,8 @@ type JsonnetOpts = jsonnet.Opts
 type Opts struct {
 	JsonnetOpts
 	JsonnetImplementation string
+	DummyHelm             bool
+	DummyKustomize        bool
 
 	// Filters are used to optionally select a subset of the resources
 	Filters process.Matchers

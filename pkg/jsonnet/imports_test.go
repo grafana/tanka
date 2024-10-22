@@ -54,7 +54,7 @@ func BenchmarkGetSnippetHash(b *testing.B) {
 			// Create a VM. It's important to reuse the same VM
 			// While there is a caching mechanism that normally shouldn't be shared in a benchmark iteration,
 			// it's useful to evaluate its impact here, because the caching will also improve the evaluation performance afterwards.
-			vm := goimpl.MakeRawVM([]string{tempDir}, nil, nil, 0)
+			vm := goimpl.MakeRawVM([]string{tempDir}, nil, nil, 0, false, false)
 			content, err := os.ReadFile(filepath.Join(tempDir, "main.jsonnet"))
 			require.NoError(b, err)
 

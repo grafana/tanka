@@ -112,7 +112,7 @@ func lintWithRecover(file string) (buf bytes.Buffer, success bool) {
 		fmt.Fprintf(&buf, "got an error getting jpath for %s: %v\n\n", file, err)
 		return
 	}
-	vm := goimpl.MakeRawVM(jpaths, nil, nil, 0)
+	vm := goimpl.MakeRawVM(jpaths, nil, nil, 0, false, false)
 
 	failed := linter.LintSnippet(vm, &buf, []linter.Snippet{{FileName: file, Code: string(content)}})
 	return buf, !failed
