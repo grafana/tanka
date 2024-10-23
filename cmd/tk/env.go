@@ -236,6 +236,7 @@ func envListCmd() *cli.Command {
 		Args:    args,
 	}
 
+	jsonnetImplementation := cmd.Flags().String("jsonnet-implementation", "go", "Use `go` to use native go-jsonnet implementation and `binary:<path>` to delegate evaluation to a binary (with the same API as the regular `jsonnet` binary, see the BinaryImplementation docstrings for more details)")
 	useJSON := cmd.Flags().Bool("json", false, "json output")
 	getLabelSelector := labelSelectorFlag(cmd.Flags())
 
@@ -255,7 +256,7 @@ func envListCmd() *cli.Command {
 			}
 		}
 
-		envs, err := tanka.FindEnvs(path, tanka.FindOpts{Selector: getLabelSelector(), JsonnetOpts: getJsonnetOpts()})
+		envs, err := tanka.FindEnvs(path, tanka.FindOpts{JsonnetImplementation: *jsonnetImplementation, Selector: getLabelSelector(), JsonnetOpts: getJsonnetOpts()})
 		if err != nil {
 			return err
 		}

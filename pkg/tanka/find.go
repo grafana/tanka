@@ -17,8 +17,9 @@ import (
 // FindOpts are optional arguments for FindEnvs
 type FindOpts struct {
 	JsonnetOpts
-	Selector    labels.Selector
-	Parallelism int
+	JsonnetImplementation string
+	Selector              labels.Selector
+	Parallelism           int
 }
 
 // FindEnvs returns metadata of all environments recursively found in 'path'.
@@ -133,7 +134,7 @@ func findEnvsFromJsonnetFiles(jsonnetFiles []string, opts FindOpts) ([]*v1alpha1
 
 			for jsonnetFile := range jsonnetFilesChan {
 				// try if this has envs
-				list, err := List(jsonnetFile, Opts{JsonnetOpts: jsonnetOpts})
+				list, err := List(jsonnetFile, Opts{JsonnetOpts: jsonnetOpts, JsonnetImplementation: opts.JsonnetImplementation})
 				if err != nil &&
 					// expected when looking for environments
 					!errors.As(err, &jpath.ErrorNoBase{}) &&
