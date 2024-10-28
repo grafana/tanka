@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig/v3 v3.3.0
-	github.com/fatih/color v1.17.0
+	github.com/fatih/color v1.18.0
 	github.com/fatih/structs v1.1.0
 	github.com/go-clix/cli v0.2.0
 	github.com/gobwas/glob v0.2.3
