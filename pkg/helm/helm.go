@@ -275,6 +275,7 @@ func writeRepoTmpFile(r []Repo) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer f.Close()
 
 	enc := json.NewEncoder(f)
 	if err := enc.Encode(m); err != nil {
