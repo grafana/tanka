@@ -31,7 +31,7 @@ func TestEnvironmentNameLabel(t *testing.T) {
 			expectedLabelPreHash: "environments/a-nice-go-test:main.jsonnet",
 		},
 		{
-			name: "Overriden single nested field",
+			name: "Overridden single nested field",
 			inputEnvironment: &Environment{
 				Spec: Spec{
 					Namespace: "default",
@@ -46,7 +46,7 @@ func TestEnvironmentNameLabel(t *testing.T) {
 			expectedLabelPreHash: "environments/another-nice-go-test",
 		},
 		{
-			name: "Overriden multiple nested field",
+			name: "Overridden multiple nested field",
 			inputEnvironment: &Environment{
 				Spec: Spec{
 					Namespace: "default",
