@@ -116,7 +116,10 @@ func TestProcess(t *testing.T) {
 
 			if env.Spec.InjectLabels {
 				for i, m := range c.flat {
-					m.Metadata().Labels()[LabelEnvironment] = env.Metadata.NameLabel()
+					nameLabel, err := env.NameLabel()
+					require.NoError(t, err)
+
+					m.Metadata().Labels()[LabelEnvironment] = nameLabel
 					c.flat[i] = m
 				}
 			}

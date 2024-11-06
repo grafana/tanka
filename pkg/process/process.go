@@ -45,7 +45,10 @@ func Process(cfg v1alpha1.Environment, exprs Matchers) (manifest.List, error) {
 	out = Namespace(out, cfg.Spec.Namespace)
 
 	// tanka.dev/** labels
-	out = Label(out, cfg)
+	out, err = Label(out, cfg)
+	if err != nil {
+		return nil, err
+	}
 
 	// arbitrary labels and annotations from spec
 	out = ResourceDefaults(out, cfg)
@@ -62,16 +65,21 @@ func Process(cfg v1alpha1.Environment, exprs Matchers) (manifest.List, error) {
 }
 
 // Label conditionally adds tanka.dev/** labels to each manifest in the List
-func Label(list manifest.List, cfg v1alpha1.Environment) manifest.List {
+func Label(list manifest.List, cfg v1alpha1.Environment) (manifest.List, error) {
 	for i, m := range list {
 		// inject tanka.dev/environment label
 		if cfg.Spec.InjectLabels {
-			m.Metadata().Labels()[LabelEnvironment] = cfg.Metadata.NameLabel()
+			label, err := cfg.NameLabel()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get name label: %w", err)
+			}
+
+			m.Metadata().Labels()[LabelEnvironment] = label
 		}
 		list[i] = m
 	}
 
-	return list
+	return list, nil
 }
 
 func ResourceDefaults(list manifest.List, cfg v1alpha1.Environment) manifest.List {
