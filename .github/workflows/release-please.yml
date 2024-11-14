@@ -50,7 +50,11 @@ jobs:
           script: |
             const currentTag = "${{ needs.release-please.outputs.release_tag }}";
             core.info(`Looking for release associated with '${currentTag}'`);
-            const release = await github.rest.repos.getReleaseByTag({owner: context.repo.owner, repo: context.repo.repo, tag: currentTag});
+            const release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: currentTag
+            });
             core.info(`Release found: ${release.data.id}'`);
             core.setOutput('release_id', release.data.id);
 
