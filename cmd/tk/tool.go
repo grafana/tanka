@@ -28,6 +28,7 @@ func toolCmd() *cli.Command {
 		jpathCmd(),
 		importsCmd(),
 		importersCmd(),
+		importedCountCmd(),
 		chartsCmd(),
 	)
 	return cmd
@@ -177,6 +178,50 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 		}
 
 		fmt.Println(strings.Join(envs, "\n"))
+
+		return nil
+	}
+
+	return cmd
+}
+
+func importedCountCmd() *cli.Command {
+	cmd := &cli.Command{
+		Use:   "imported-count <dir>",
+		Short: "for each file in the given directory, list the number of environments that import it",
+		Long: `for each file in the given directory, list the number of environments that import it
+
+As optimization,
+if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (located at <tk-root>/lib/), we assume:
+- it is used in a Tanka environment
+- it will not be imported by any lib or vendor files
+- the environment base (closest main file in parent dirs) will be considered an importer
+- if no base is found, all main files in child dirs will be considered importers
+`,
+		Args: cli.Args{
+			Validator: cli.ArgsExact(1),
+			Predictor: complete.PredictDirs("*"),
+		},
+	}
+
+	root := cmd.Flags().String("root", ".", "root directory to search for environments")
+	recursive := cmd.Flags().Bool("recursive", false, "find files recursively")
+	filenameRegex := cmd.Flags().String("filename-regex", "", "only count files that match the given regex. Matches only jsonnet files by default")
+
+	cmd.Run = func(_ *cli.Command, args []string) error {
+		dir := args[0]
+
+		root, err := filepath.Abs(*root)
+		if err != nil {
+			return fmt.Errorf("resolving root: %w", err)
+		}
+
+		result, err := jsonnet.CountImports(root, dir, *recursive, *filenameRegex)
+		if err != nil {
+			return fmt.Errorf("resolving imports: %s", err)
+		}
+
+		fmt.Println(result)
 
 		return nil
 	}
