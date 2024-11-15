@@ -1,14 +1,15 @@
 {
   "name": "tanka",
+  "engineVersion": "v0.14.0",
   "sdk": "go",
   "dependencies": [
     {
       "name": "k3s",
-      "source": "github.com/marcosnils/daggerverse/k3s@e0bd6b9f5519c49db4b6eb0689927214720976f9"
+      "source": "github.com/marcosnils/daggerverse/k3s@e0bd6b9f5519c49db4b6eb0689927214720976f9",
+      "pin": "e0bd6b9f5519c49db4b6eb0689927214720976f9"
     }
   ],
   "source": "dagger",
-  "engineVersion": "v0.12.7",
   "views": [
     {
       "name": "source-files",

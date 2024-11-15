@@ -199,20 +199,23 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 	case "":
 		return dag.Module().
 			WithObject(
-				dag.TypeDef().WithObject("Tanka").
+				dag.TypeDef().WithObject("Tanka", dagger.TypeDefWithObjectOpts{SourceMap: dag.SourceMap("main.go", 13, 6)}).
 					WithFunction(
 						dag.Function("Build",
 							dag.TypeDef().WithObject("Container")).
-							WithArg("rootDir", dag.TypeDef().WithObject("Directory"))).
+							WithSourceMap(dag.SourceMap("main.go", 15, 1)).
+							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 15, 44)})).
 					WithFunction(
 						dag.Function("GetGoVersion",
-							dag.TypeDef().WithKind(dagger.StringKind)).
-							WithArg("file", dag.TypeDef().WithObject("File"))).
+							dag.TypeDef().WithKind(dagger.TypeDefKindStringKind)).
+							WithSourceMap(dag.SourceMap("main.go", 20, 1)).
+							WithArg("file", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 20, 51)})).
 					WithFunction(
 						dag.Function("AcceptanceTests",
-							dag.TypeDef().WithKind(dagger.StringKind)).
-							WithArg("rootDir", dag.TypeDef().WithObject("Directory")).
-							WithArg("acceptanceTestsDir", dag.TypeDef().WithObject("Directory")))), nil
+							dag.TypeDef().WithKind(dagger.TypeDefKindStringKind)).
+							WithSourceMap(dag.SourceMap("main.go", 36, 1)).
+							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 36, 54)}).
+							WithArg("acceptanceTestsDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 36, 81)}))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}
