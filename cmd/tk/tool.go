@@ -28,7 +28,7 @@ func toolCmd() *cli.Command {
 		jpathCmd(),
 		importsCmd(),
 		importersCmd(),
-		importedCountCmd(),
+		importersCountCmd(),
 		chartsCmd(),
 	)
 	return cmd
@@ -185,9 +185,9 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 	return cmd
 }
 
-func importedCountCmd() *cli.Command {
+func importersCountCmd() *cli.Command {
 	cmd := &cli.Command{
-		Use:   "imported-count <dir>",
+		Use:   "importers-count <dir>",
 		Short: "for each file in the given directory, list the number of environments that import it",
 		Long: `for each file in the given directory, list the number of environments that import it
 
@@ -216,7 +216,7 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 			return fmt.Errorf("resolving root: %w", err)
 		}
 
-		result, err := jsonnet.CountImports(root, dir, *recursive, *filenameRegex)
+		result, err := jsonnet.CountImporters(root, dir, *recursive, *filenameRegex)
 		if err != nil {
 			return fmt.Errorf("resolving imports: %s", err)
 		}

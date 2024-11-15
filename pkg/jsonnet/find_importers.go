@@ -83,8 +83,8 @@ func FindImporterForFiles(root string, files []string) ([]string, error) {
 	return mapToArray(importers), nil
 }
 
-// CountImports lists all the files in the given directory and for each file counts the number of environments that import it.
-func CountImports(root string, dir string, recursive bool, filenameRegexStr string) (string, error) {
+// CountImporters lists all the files in the given directory and for each file counts the number of environments that import it.
+func CountImporters(root string, dir string, recursive bool, filenameRegexStr string) (string, error) {
 	root, err := filepath.Abs(root)
 	if err != nil {
 		return "", fmt.Errorf("resolving root: %w", err)

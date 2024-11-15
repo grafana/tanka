@@ -239,7 +239,7 @@ func TestFindImportersForFiles(t *testing.T) {
 	}
 }
 
-func TestCountImports(t *testing.T) {
+func TestCountImporters(t *testing.T) {
 	testcases := []struct {
 		name       string
 		dir        string
@@ -279,12 +279,11 @@ testdata/findImporters/lib/lib1/subfolder/test.libsonnet: 0
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			count, err := CountImports("testdata/findImporters", tc.dir, tc.recursive, tc.fileRegexp)
+			count, err := CountImporters("testdata/findImporters", tc.dir, tc.recursive, tc.fileRegexp)
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, count)
 		})
 	}
-
 }
 
 func BenchmarkFindImporters(b *testing.B) {
