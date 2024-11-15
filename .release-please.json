@@ -52,6 +52,7 @@
   ],
   "draft-pull-request": true,
   "include-v-in-tag": true,
+  "bump-minor-pre-major": true,
   "packages": {
     ".": {
     }
