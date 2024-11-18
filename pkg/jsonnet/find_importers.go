@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -80,6 +81,87 @@ func FindImporterForFiles(root string, files []string) ([]string, error) {
 	}
 
 	return mapToArray(importers), nil
+}
+
+// CountImporters lists all the files in the given directory and for each file counts the number of environments that import it.
+func CountImporters(root string, dir string, recursive bool, filenameRegexStr string) (string, error) {
+	root, err := filepath.Abs(root)
+	if err != nil {
+		return "", fmt.Errorf("resolving root: %w", err)
+	}
+
+	if filenameRegexStr == "" {
+		filenameRegexStr = "^.*\\.(jsonnet|libsonnet)$"
+	}
+	filenameRegexp, err := regexp.Compile(filenameRegexStr)
+	if err != nil {
+		return "", fmt.Errorf("compiling filename regex: %w", err)
+	}
+	var files []string
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() && !recursive && path != dir {
+			return filepath.SkipDir
+		}
+
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+
+		if !filenameRegexp.MatchString(path) {
+			return nil
+		}
+
+		if info.Name() == jpath.DefaultEntrypoint {
+			return nil
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		files = append(files, path)
+
+		return nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("walking directory: %w", err)
+	}
+
+	importers := map[string]int{}
+	for _, file := range files {
+		importersList, err := FindImporterForFiles(root, []string{file})
+		if err != nil {
+			return "", fmt.Errorf("resolving imports: %w", err)
+		}
+		importers[file] = len(importersList)
+	}
+
+	// Print sorted by count
+	type importer struct {
+		File  string `json:"file"`
+		Count int    `json:"count"`
+	}
+	var importersList []importer
+	for file, count := range importers {
+		importersList = append(importersList, importer{File: file, Count: count})
+	}
+	sort.Slice(importersList, func(i, j int) bool {
+		if importersList[i].Count == importersList[j].Count {
+			return importersList[i].File < importersList[j].File
+		}
+		return importersList[i].Count > importersList[j].Count
+	})
+
+	var sb strings.Builder
+	for _, importer := range importersList {
+		sb.WriteString(fmt.Sprintf("%s: %d\n", importer.File, importer.Count))
+	}
+
+	return sb.String(), nil
 }
 
 // expandSymlinksInFiles takes an array of files and adds to it:

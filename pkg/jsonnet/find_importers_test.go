@@ -239,6 +239,53 @@ func TestFindImportersForFiles(t *testing.T) {
 	}
 }
 
+func TestCountImporters(t *testing.T) {
+	testcases := []struct {
+		name       string
+		dir        string
+		recursive  bool
+		fileRegexp string
+		expected   string
+	}{
+		{
+			name:      "project with no imports",
+			dir:       "testdata/findImporters/environments/no-imports",
+			recursive: true,
+			expected:  "",
+		},
+		{
+			name:      "project with imports",
+			dir:       "testdata/findImporters/environments/imports-locals-and-vendored",
+			recursive: true,
+			expected: `testdata/findImporters/environments/imports-locals-and-vendored/local-file1.libsonnet: 1
+testdata/findImporters/environments/imports-locals-and-vendored/local-file2.libsonnet: 1
+`,
+		},
+		{
+			name:      "lib non-recursive",
+			dir:       "testdata/findImporters/lib/lib1",
+			recursive: false,
+			expected: `testdata/findImporters/lib/lib1/main.libsonnet: 1
+`,
+		},
+		{
+			name:      "lib recursive",
+			dir:       "testdata/findImporters/lib/lib1",
+			recursive: true,
+			expected: `testdata/findImporters/lib/lib1/main.libsonnet: 1
+testdata/findImporters/lib/lib1/subfolder/test.libsonnet: 0
+`,
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			count, err := CountImporters("testdata/findImporters", tc.dir, tc.recursive, tc.fileRegexp)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, count)
+		})
+	}
+}
+
 func BenchmarkFindImporters(b *testing.B) {
 	// Create a very large and complex project
 	tempDir, err := filepath.EvalSymlinks(b.TempDir())
