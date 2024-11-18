@@ -14,9 +14,9 @@
     "@astrojs/starlight-tailwind": "^2.0.2",
     "@astrojs/tailwind": "^5.1.2",
     "@fontsource-variable/inter": "^5.1.0",
-    "astro": "^4.16.10",
+    "astro": "^4.16.13",
     "sharp": "^0.33.5",
-    "tailwindcss": "^3.4.14",
+    "tailwindcss": "^3.4.15",
     "typescript": "^5.6.3"
   },
   "devDependencies": {
