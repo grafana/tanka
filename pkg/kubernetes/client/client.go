@@ -20,7 +20,7 @@ type Client interface {
 	DiffServerSide(data manifest.List) (*string, error)
 
 	// Delete the specified object(s) from the cluster
-	Delete(namespace, kind, name string, opts DeleteOpts) error
+	Delete(namespace, apiVersion, kind, name string, opts DeleteOpts) error
 
 	// Namespaces the cluster currently has
 	Namespaces() (map[string]bool, error)
