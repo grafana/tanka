@@ -16,7 +16,7 @@ func (k *Kubernetes) Delete(state manifest.List, opts DeleteOpts) error {
 	}
 
 	for _, m := range state {
-		if err := k.ctl.Delete(m.Metadata().Namespace(), m.Kind(), m.Metadata().Name(), client.DeleteOpts(opts)); err != nil {
+		if err := k.ctl.Delete(m.Metadata().Namespace(), m.APIVersion(), m.Kind(), m.Metadata().Name(), client.DeleteOpts(opts)); err != nil {
 			return err
 		}
 	}
