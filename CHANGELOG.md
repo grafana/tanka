@@ -2,6 +2,39 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.30.0](https://github.com/grafana/tanka/compare/v0.29.0...v0.30.0) (2024-11-22)
+
+
+### 🎉 Features
+
+* new `tk tool importers-count` ([#1232](https://github.com/grafana/tanka/issues/1232)) ([5dcb6c5](https://github.com/grafana/tanka/commit/5dcb6c5bb56a704ed806c74d37beede93352415a))
+
+
+### 🐛 Bug Fixes
+
+* delete command supports kinds that do not match singular/plural names ([#1236](https://github.com/grafana/tanka/issues/1236)) ([bf702ef](https://github.com/grafana/tanka/commit/bf702ef1fb562be8f1e998e0468dd7e178f20cac))
+
+
+### 🏗️ Build System
+
+* **deps:** bump actions/checkout from 4.2.0 to 4.2.2 ([#1233](https://github.com/grafana/tanka/issues/1233)) ([cb5d0c8](https://github.com/grafana/tanka/commit/cb5d0c8cafc0d7b855e4210f0e64a205e3cec163))
+* **deps:** bump dagger/dagger-for-github from 6.14.0 to 7.0.1 ([#1224](https://github.com/grafana/tanka/issues/1224)) ([932e7ce](https://github.com/grafana/tanka/commit/932e7ceecf85aa15b9f855eec47d62c4e8cd254f))
+* **deps:** bump golang from 1.23.2 to 1.23.3 ([#1227](https://github.com/grafana/tanka/issues/1227)) ([576bfe5](https://github.com/grafana/tanka/commit/576bfe561c39c783cfe6e1b92918d5483954a060))
+* **deps:** bump golang.org/x/term from 0.25.0 to 0.26.0 ([#1223](https://github.com/grafana/tanka/issues/1223)) ([70d96f8](https://github.com/grafana/tanka/commit/70d96f8c1590563aa33a9ce054d484f22e150cc5))
+* **deps:** bump golang.org/x/text from 0.19.0 to 0.20.0 ([#1222](https://github.com/grafana/tanka/issues/1222)) ([b8119ad](https://github.com/grafana/tanka/commit/b8119adc6a5a893d755e01653682dc7bec754f32))
+* **deps:** bump JamesIves/github-pages-deploy-action from 4.6.8 to 4.6.9 ([#1225](https://github.com/grafana/tanka/issues/1225)) ([e754340](https://github.com/grafana/tanka/commit/e754340c4fc6a8ed7b0f12830b1b573bf591f9b4))
+* **deps:** bump the dagger-dependencies group in /dagger with 3 updates ([#1235](https://github.com/grafana/tanka/issues/1235)) ([7023072](https://github.com/grafana/tanka/commit/70230726ab7e42f8716597174f1b8d2ef9eb5bce))
+* **deps:** bump the dagger-dependencies group in /dagger with 9 updates ([#1221](https://github.com/grafana/tanka/issues/1221)) ([ef52a66](https://github.com/grafana/tanka/commit/ef52a662b6c7dfb4b833115ad082323566e1eae7))
+* **deps:** bump the docs-dependencies group in /docs with 2 updates ([#1226](https://github.com/grafana/tanka/issues/1226)) ([24eeca3](https://github.com/grafana/tanka/commit/24eeca32610d1cf668930558ac970161956d2393))
+* **deps:** bump the docs-dependencies group in /docs with 2 updates ([#1234](https://github.com/grafana/tanka/issues/1234)) ([fe13459](https://github.com/grafana/tanka/commit/fe134590c8a0efd25ad2fe916dd7917b5be2d5a5))
+
+
+### 🤖 Continuous Integration
+
+* prevent breaking change from creating major release &lt; 1.0.0 ([#1231](https://github.com/grafana/tanka/issues/1231)) ([1f34a6e](https://github.com/grafana/tanka/commit/1f34a6e5693af10bf0a0d243b51e87be4d017969))
+* add release-please for release-automation ([#1195](https://github.com/grafana/tanka/issues/1195)) ([6918cec](https://github.com/grafana/tanka/commit/6918ceccee590e225deb1466fa202211a8a554a6))
+
+
 ## 0.23.1 (2022-09-28)
 
 ### Bug Fixes/Enhancements
