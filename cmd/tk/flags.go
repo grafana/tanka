@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -95,7 +95,13 @@ func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[stri
 				if len(split) != 2 {
 					log.Fatal().Msgf(kind+"-str argument has wrong format: `%s`. Expected `key=<value>`", s)
 				}
-				m[split[0]] = fmt.Sprintf(`"%s"`, split[1])
+				// Properly quote the string; note that fmt.Sprintf("%q",...) could
+				// produce \U escapes which are not valid Jsonnet.
+				js, err := json.Marshal(split[1])
+				if err != nil {
+					log.Fatal().Msgf("impossible: failed to convert string to JSON: %s", err)
+				}
+				m[split[0]] = string(js)
 			}
 			return m
 		}
