@@ -135,6 +135,12 @@ func evaluateSnippet(jsonnetImpl types.JsonnetImplementation, evalFunc evalFunc,
 
 	content, err := evalFunc(evaluator)
 	if err != nil {
+		if _, ok := jsonnetImpl.(*goimpl.JsonnetGoImplementation); !ok {
+			return evaluateSnippet(&goimpl.JsonnetGoImplementation{
+				Path: path,
+			}, evalFunc, path, data, opts)
+		}
+
 		return "", err
 	}
 
