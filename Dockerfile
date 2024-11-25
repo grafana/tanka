@@ -19,24 +19,25 @@ RUN apk add --no-cache git make bash &&\
 
 FROM golang:1.23.3-alpine AS helm
 WORKDIR /tmp/helm
+ARG HELM_VERSION
 RUN apk add --no-cache jq curl
-RUN export TAG=$(curl --silent "https://api.github.com/repos/helm/helm/releases/latest" | jq -r .tag_name) &&\
-    export OS=$(go env GOOS) &&\
+RUN export OS=$(go env GOOS) && \
     export ARCH=$(go env GOARCH) &&\
-    curl -SL "https://get.helm.sh/helm-${TAG}-${OS}-${ARCH}.tar.gz" > helm.tgz && \
+    if [[ -z ${HELM_VERSION} ]]; then export HELM_VERSION=$(curl --silent "https://api.github.com/repos/helm/helm/releases" | jq -r '.[0].tag_name'); fi && \
+    curl -SL "https://get.helm.sh/helm-${HELM_VERSION}-${OS}-${ARCH}.tar.gz" > helm.tgz && \
     tar -xvf helm.tgz --strip-components=1
 
 FROM golang:1.23.3-alpine AS kustomize
 WORKDIR /tmp/kustomize
+ARG KUSTOMIZE_VERSION
 RUN apk add --no-cache jq curl
 # Get the latest version of kustomize
 # Releases are filtered by their name since the kustomize repository exposes multiple products in the releases
-RUN export TAG=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kustomize/releases" | jq -r '[ .[] | select(.name | startswith("kustomize")) ] | .[0].tag_name') &&\
-    export VERSION_TAG=${TAG#*/} &&\
-    export OS=$(go env GOOS) &&\
+RUN export OS=$(go env GOOS) &&\
     export ARCH=$(go env GOARCH) &&\
-    echo "https://github.com/kubernetes-sigs/kustomize/releases/download/${TAG}/kustomize_${VERSION_TAG}_${OS}_${ARCH}.tar.gz" && \
-    curl -SL "https://github.com/kubernetes-sigs/kustomize/releases/download/${TAG}/kustomize_${VERSION_TAG}_${OS}_${ARCH}.tar.gz" > kustomize.tgz && \
+    if [[ -z ${KUSTOMIZE_VERSION} ]]; then export KUSTOMIZE_VERSION=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kustomize/releases" | jq -r '[ .[] | select(.name | startswith("kustomize")) ] | .[0].tag_name | split("/")[1]'); fi && \
+    echo "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_${OS}_${ARCH}.tar.gz" && \
+    curl -SL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_${OS}_${ARCH}.tar.gz" > kustomize.tgz && \
     tar -xvf kustomize.tgz
 
 FROM golang:1.23.3 AS build
