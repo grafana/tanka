@@ -3,9 +3,9 @@ module github.com/grafana/tanka/acceptance-tests
 go 1.23.0
 
 require (
-	github.com/stretchr/testify v1.9.0
-	k8s.io/api v0.31.2
-	k8s.io/apimachinery v0.31.2
+	github.com/stretchr/testify v1.10.0
+	k8s.io/api v0.31.3
+	k8s.io/apimachinery v0.31.3
 	sigs.k8s.io/yaml v1.4.0
 )
 
