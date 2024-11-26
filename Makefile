@@ -5,6 +5,7 @@ BIN_DIR := $(GOPATH)/bin
 GOX := $(BIN_DIR)/gox
 GOLINTER := $(GOPATH)/bin/golangci-lint
 
+
 $(GOLINTER):
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.60.3
 
@@ -15,7 +16,7 @@ test:
 	go test ./... -bench=. -benchmem
 
 acceptance-tests:
-	dagger call acceptance-tests --root-dir .:source-files --acceptance-tests-dir ./acceptance-tests
+	dagger call acceptance-tests --root-dir .:source-files --acceptance-tests-dir ./acceptance-tests --kustomize-version "" --helm-version ""
 
 # Compilation
 dev:
