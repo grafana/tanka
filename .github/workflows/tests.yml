@@ -5,6 +5,11 @@ on:
     branches:
       - main
   pull_request:
+    types:
+      - edited
+      - opened
+      - ready_for_review
+      - synchronize
     branches:
       - "*"
   merge_group:

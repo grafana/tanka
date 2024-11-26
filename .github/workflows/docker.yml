@@ -6,6 +6,11 @@ on:
     branches:
       - main
   pull_request:
+    types:
+      - edited
+      - opened
+      - ready_for_review
+      - synchronize
     branches:
       - "*"
     paths-ignore:
