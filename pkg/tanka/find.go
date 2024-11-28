@@ -81,7 +81,7 @@ func findJsonnetFilesFromPaths(paths []string, opts FindOpts) ([]string, error) 
 				jsonnetFiles, err := jsonnet.FindFiles(path, nil)
 				var mainFiles []string
 				for _, file := range jsonnetFiles {
-					if filepath.Base(file) == jpath.DefaultEntrypoint {
+					if filepath.Base(file) == jpath.DefaultEntrypoint || file == path {
 						mainFiles = append(mainFiles, file)
 					}
 				}
