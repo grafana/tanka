@@ -20,6 +20,11 @@ func evalJsonnet(path string, impl types.JsonnetImplementation, opts jsonnet.Opt
 
 	// evaluate Jsonnet
 	if opts.EvalScript != "" {
+		// Determine if the entrypoint is a function.
+		isFunction, err := jsonnet.Evaluate(path, impl, fmt.Sprintf("std.isFunction(import '%s')", entrypoint), opts)
+		if err != nil {
+			return "", fmt.Errorf("evaluating jsonnet in path '%s': %w", path, err)
+		}
 		var tla []string
 		for k := range opts.TLACode {
 			tla = append(tla, k+"="+k)
@@ -29,7 +34,7 @@ func evalJsonnet(path string, impl types.JsonnetImplementation, opts jsonnet.Opt
   %s
 `, entrypoint, opts.EvalScript)
 
-		if len(tla) != 0 {
+		if isFunction == "true\n" {
 			tlaJoin := strings.Join(tla, ", ")
 			evalScript = fmt.Sprintf(`
 function(%s)
