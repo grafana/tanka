@@ -29,6 +29,18 @@ jobs:
           manifest-file: .release-please-manifest.json
           github-token: ${{ github.secret }}
 
+  release-docker-image:
+    needs:
+      - release-please
+    if: needs.release-please.outputs.release_created
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    uses: ./.github/workflows/docker.yml
+    with:
+      tag: ${{ needs.release-please.outputs.release_tag }}
+
   # If a release was created, also create the binaries and attach them
   release-binaries:
     runs-on: ubuntu-latest

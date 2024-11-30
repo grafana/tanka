@@ -2,6 +2,11 @@ name: "Check for drift in Dagger files"
 
 on:
   pull_request:
+    types:
+      - edited
+      - opened
+      - ready_for_review
+      - synchronize
     branches:
       - main
   merge_group:

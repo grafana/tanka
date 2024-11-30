@@ -5,15 +5,23 @@ on:
   push:
     branches:
       - main
-    tags:
-      - v*
   pull_request:
+    types:
+      - edited
+      - opened
+      - ready_for_review
+      - synchronize
     branches:
       - "*"
     paths-ignore:
       - "docs/**"
       - ".github/workflows/publish-page.yml"
-  merge_group:
+  merge_group: {}
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -23,12 +31,39 @@ env:
   REGISTRY_IMAGE: grafana/tanka
   # Docker image tags. See https://github.com/docker/metadata-action for format
   TAGS_CONFIG: |
-    type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
     type=sha,prefix={{branch}}-,format=short,enable=${{ github.ref == 'refs/heads/main' }}
-    type=semver,pattern={{version}}
+    type=raw,value=latest,enable=${{ inputs.tag != '' }}
+    type=semver,pattern={{version}},value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
 
 jobs:
+  determine-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      helm: ${{ steps.versions.outputs.helm }}
+      kustomize: ${{ steps.versions.outputs.kustomize }}
+    steps:
+      - name: "Determine dependency versions"
+        id: "versions"
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const helmRelease = await github.rest.repos.getLatestRelease({
+              'owner': 'helm',
+              'repo': 'helm',
+            });
+            core.setOutput('helm', helmRelease.data.tag_name);
+            console.log('Helm version', helmRelease.data.tag_name);
+            const kustomizeReleases = await github.rest.repos.listReleases({
+              'owner': 'kubernetes-sigs',
+              'repo': 'kustomize',
+            });
+            const kustomizeRelease = kustomizeReleases.data.filter(release => release.tag_name.startsWith('kustomize') && !release.draft && !release.prerelease).map(release => release.tag_name.split('/')[1])[0];
+            console.log('Kustomize version', kustomizeRelease);
+            core.setOutput('kustomize', kustomizeRelease);
+
   build:
+    needs:
+      - determine-versions
     strategy:
       fail-fast: false
       matrix:
@@ -41,9 +76,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         with:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: ${{ env.TAGS_CONFIG }}
@@ -62,6 +98,9 @@ jobs:
           context: .
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=${{ github.event_name == 'push' }}
+          build-args: |
+            HELM_VERSION=${{ needs.determine-versions.outputs.helm }}
+            KUSTOMIZE_VERSION=${{ needs.determine-versions.outputs.kustomize }}
 
       - name: Export digest
         id: digest
@@ -110,7 +149,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
+        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
         with:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: ${{ env.TAGS_CONFIG }}

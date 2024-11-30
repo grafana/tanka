@@ -2,6 +2,32 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.30.1](https://github.com/grafana/tanka/compare/v0.30.0...v0.30.1) (2024-11-26)
+
+
+### 🐛 Bug Fixes
+
+* handle quotes in --tla-str and --ext-str in "tk eval" ([#1237](https://github.com/grafana/tanka/issues/1237)) ([7cba21d](https://github.com/grafana/tanka/commit/7cba21d3ea83b20f359516b7dc2e91424c8f48da))
+
+
+### 🏗️ Build System
+
+* **deps:** bump docker/metadata-action from 5.5.1 to 5.6.1 ([#1245](https://github.com/grafana/tanka/issues/1245)) ([e16af88](https://github.com/grafana/tanka/commit/e16af885811ec4302fbce34223529f4907357dd0))
+* **deps:** bump github.com/99designs/gqlgen from 0.17.56 to 0.17.57 in /dagger ([#1244](https://github.com/grafana/tanka/issues/1244)) ([c03cb00](https://github.com/grafana/tanka/commit/c03cb0098c1079f72ae56d5a69cf3160c5bdef48))
+* **deps:** bump github.com/stretchr/testify from 1.9.0 to 1.10.0 ([#1243](https://github.com/grafana/tanka/issues/1243)) ([ec8ec69](https://github.com/grafana/tanka/commit/ec8ec690057666ee6aeef8d67236d0e9e450d44f))
+* **deps:** bump k8s.io/apimachinery from 0.31.2 to 0.31.3 ([#1242](https://github.com/grafana/tanka/issues/1242)) ([42663ac](https://github.com/grafana/tanka/commit/42663acd25ddc43a9b1e9ad6028ed9318663f86a))
+* **deps:** bump the acceptance-tests-dependencies group with 3 updates ([#1241](https://github.com/grafana/tanka/issues/1241)) ([7fdc5e1](https://github.com/grafana/tanka/commit/7fdc5e16123ff89871e076a0dffd34f815af7c73))
+* **deps:** bump the docs-dependencies group in /docs with 3 updates ([#1240](https://github.com/grafana/tanka/issues/1240)) ([48e2c12](https://github.com/grafana/tanka/commit/48e2c121b2f7b6a720a1e9a9246b6762749b7ec2))
+
+
+### 🤖 Continuous Integration
+
+* create release docker image through workflow-call ([#1246](https://github.com/grafana/tanka/issues/1246)) ([fb6380f](https://github.com/grafana/tanka/commit/fb6380fb0e46bef6ab1657e9f3bdeeea3997aa35))
+* inject dockerfile dependency versions from workflow ([#1247](https://github.com/grafana/tanka/issues/1247)) ([eb9aac0](https://github.com/grafana/tanka/commit/eb9aac0f9fa393d9b010d68289cc3981cc7c5a1f))
+* relevant workflows should react also to ready_for_review ([#1248](https://github.com/grafana/tanka/issues/1248)) ([3183efa](https://github.com/grafana/tanka/commit/3183efa8cb38abc13db1d8a8e4d585f3d8d6c1fb))
+* run lint-pr-title workflow on ready_for_review ([#1249](https://github.com/grafana/tanka/issues/1249)) ([45c822e](https://github.com/grafana/tanka/commit/45c822ed39bef4a50dfc024d6507b5096dd42f71))
+* run lint-pr-title workflow on ready-for-review ([45c822e](https://github.com/grafana/tanka/commit/45c822ed39bef4a50dfc024d6507b5096dd42f71))
+
 ## [0.30.0](https://github.com/grafana/tanka/compare/v0.29.0...v0.30.0) (2024-11-22)
 
 
