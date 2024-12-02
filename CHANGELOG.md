@@ -2,6 +2,21 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.30.2](https://github.com/grafana/tanka/compare/v0.30.1...v0.30.2) (2024-12-02)
+
+
+### 🏗️ Build System
+
+* **deps:** bump docker/build-push-action from 6.9.0 to 6.10.0 ([#1255](https://github.com/grafana/tanka/issues/1255)) ([2118b15](https://github.com/grafana/tanka/commit/2118b153ed24ae5440c89fa552a5430d2f6741df))
+* **deps:** bump github.com/vektah/gqlparser/v2 from 2.5.19 to 2.5.20 ([#1253](https://github.com/grafana/tanka/issues/1253)) ([9b531c9](https://github.com/grafana/tanka/commit/9b531c96c095038593765af187bc8230f6d45a70))
+* **deps:** bump JamesIves/github-pages-deploy-action from 4.6.9 to 4.7.1 ([#1256](https://github.com/grafana/tanka/issues/1256)) ([b3dc764](https://github.com/grafana/tanka/commit/b3dc7645e9ac136a4dc0e270ecb2f2af9978fb99))
+* **deps:** bump the docs-dependencies group in /docs with 2 updates ([#1254](https://github.com/grafana/tanka/issues/1254)) ([b9db0ce](https://github.com/grafana/tanka/commit/b9db0ce6d1a6d480534c5e7a4ee2509d29ecb0c9))
+
+
+### 🔧 Miscellaneous Chores
+
+* update location from where kubectl is downloaded from ([#1257](https://github.com/grafana/tanka/issues/1257)) ([c18e134](https://github.com/grafana/tanka/commit/c18e134590d09e331f2cba3467d6399a005f1bc9))
+
 ## [0.30.1](https://github.com/grafana/tanka/compare/v0.30.0...v0.30.1) (2024-11-26)
 
 
