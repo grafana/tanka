@@ -1,10 +1,10 @@
 # download kubectl
 FROM golang:1.23.3-alpine AS kubectl
 RUN apk add --no-cache curl
-RUN export VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt) &&\
+RUN export VERSION=$(curl -s https://cdn.dl.k8s.io/release/stable.txt) &&\
     export OS=$(go env GOOS) && \
     export ARCH=$(go env GOARCH) &&\
-    curl -o /usr/local/bin/kubectl -L https://storage.googleapis.com/kubernetes-release/release/${VERSION}/bin/${OS}/${ARCH}/kubectl &&\
+    curl -o /usr/local/bin/kubectl -L  https://cdn.dl.k8s.io/release/${VERSION}/bin/${OS}/${ARCH}/kubectl &&\
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
