@@ -36,34 +36,7 @@ env:
     type=semver,pattern={{version}},value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
 
 jobs:
-  determine-versions:
-    runs-on: ubuntu-latest
-    outputs:
-      helm: ${{ steps.versions.outputs.helm }}
-      kustomize: ${{ steps.versions.outputs.kustomize }}
-    steps:
-      - name: "Determine dependency versions"
-        id: "versions"
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            const helmRelease = await github.rest.repos.getLatestRelease({
-              'owner': 'helm',
-              'repo': 'helm',
-            });
-            core.setOutput('helm', helmRelease.data.tag_name);
-            console.log('Helm version', helmRelease.data.tag_name);
-            const kustomizeReleases = await github.rest.repos.listReleases({
-              'owner': 'kubernetes-sigs',
-              'repo': 'kustomize',
-            });
-            const kustomizeRelease = kustomizeReleases.data.filter(release => release.tag_name.startsWith('kustomize') && !release.draft && !release.prerelease).map(release => release.tag_name.split('/')[1])[0];
-            console.log('Kustomize version', kustomizeRelease);
-            core.setOutput('kustomize', kustomizeRelease);
-
   build:
-    needs:
-      - determine-versions
     strategy:
       fail-fast: false
       matrix:
@@ -98,9 +71,6 @@ jobs:
           context: .
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=${{ github.event_name == 'push' }}
-          build-args: |
-            HELM_VERSION=${{ needs.determine-versions.outputs.helm }}
-            KUSTOMIZE_VERSION=${{ needs.determine-versions.outputs.kustomize }}
 
       - name: Export digest
         id: digest

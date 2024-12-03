@@ -1,0 +1,97 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  branchPrefix: "grafanarenovatebot/",
+  customDatasources: {
+    "kubectl": {
+      "defaultRegistryUrlTemplate": "https://cdn.dl.k8s.io/release/stable.txt",
+      "format": "plain",
+      "transformTemplates": [
+          "{\"releases\": [releases . {\"version\": $substring(version, 1)}]}",
+      ],
+    },
+    "helm": {
+      "defaultRegistryUrlTemplate": "https://api.github.com/repos/helm/helm/releases",
+      "format": "json",
+      "transformTemplates": [
+          "{\"releases\": [$.tag_name . {\"version\": $substring($, 1)}]}",
+      ],
+    },
+    "kustomize": {
+      "defaultRegistryUrlTemplate": "https://api.github.com/repos/kubernetes-sigs/kustomize/releases",
+      "format": "json",
+      "transformTemplates": [
+          "{\"releases\": [$$ [$match(tag_name, /kustomize.*/) and $not(draft) and $not(prerelease) ] . {\"version\": $substringAfter(tag_name, \"/v\")}]}",
+      ],
+    },
+  },
+
+  customManagers: [
+    {
+      "customType": "regex",
+      "fileMatch": ["Dockerfile"],
+      "matchStrings": [
+          "ARG KUBECTL_VERSION=(?<currentValue>\\S+)",
+      ],
+      "datasourceTemplate": "custom.kubectl",
+      "depNameTemplate": "kubectl",
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["Dockerfile"],
+      "matchStrings": [
+          "ARG HELM_VERSION=(?<currentValue>\\S+)",
+      ],
+      "datasourceTemplate": "custom.helm",
+      "depNameTemplate": "helm",
+      "versioningTemplate": "semver",
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["Dockerfile"],
+      "matchStrings": [
+          "ARG KUSTOMIZE_VERSION=(?<currentValue>\\S+)",
+      ],
+      "datasourceTemplate": "custom.kustomize",
+      "depNameTemplate": "kustomize",
+      "versioningTemplate": "semver",
+    },
+  ],
+  dependencyDashboard: false,
+  enabledManagers: ["custom.regex"],
+  forkProcessing: "enabled",
+  globalExtends: [":pinDependencies", "config:best-practices"],
+  onboarding: false,
+  osvVulnerabilityAlerts: true,
+  packageRules: [
+    {
+      labels: ["update-major"],
+      matchUpdateTypes: ["major"],
+    },
+    {
+      labels: ["update-minor"],
+      matchUpdateTypes: ["minor"],
+    },
+    {
+      automerge: true,
+      labels: ["automerge-patch"],
+      matchUpdateTypes: ["patch"],
+    },
+    {
+      labels: ["update-digest"],
+      matchUpdateTypes: ["digest"],
+    },
+    {
+      // Run the custom matcher on early Monday mornings (UTC)
+      schedule: "* 0-4 * * 1",
+      matchPackageNames: ["ghcr.io/renovatebot/renovate"],
+    },
+  ],
+  platformCommit: "enabled",
+  rebaseWhen: "behind-base-branch",
+  requireConfig: "optional",
+  vulnerabilityAlerts: {
+    automerge: true,
+    enabled: true,
+    labels: ["automerge-security-update"],
+  },
+}

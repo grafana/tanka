@@ -16,7 +16,7 @@ test:
 	go test ./... -bench=. -benchmem
 
 acceptance-tests:
-	dagger call acceptance-tests --root-dir .:source-files --acceptance-tests-dir ./acceptance-tests --kustomize-version "" --helm-version ""
+	dagger call acceptance-tests --root-dir .:source-files --acceptance-tests-dir ./acceptance-tests
 
 # Compilation
 dev:
