@@ -15,14 +15,15 @@ func evalCmd() *cli.Command {
 		Args:  workflowArgs,
 	}
 
+	var jsonnetImplementation string
 	evalPattern := cmd.Flags().StringP("eval", "e", "", "Evaluate expression on output of jsonnet")
-	jsonnetImplementation := cmd.Flags().String("jsonnet-implementation", "go", "Use `go` to use native go-jsonnet implementation and `binary:<path>` to delegate evaluation to a binary (with the same API as the regular `jsonnet` binary, see the BinaryImplementation docstrings for more details)")
+	jsonnetImplementationFlag(cmd.Flags(), &jsonnetImplementation)
 
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
 		jsonnetOpts := tanka.Opts{
-			JsonnetImplementation: *jsonnetImplementation,
+			JsonnetImplementation: jsonnetImplementation,
 			JsonnetOpts:           getJsonnetOpts(),
 		}
 		if *evalPattern != "" {
