@@ -157,21 +157,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg rootDir", err))
 				}
 			}
-			var helmVersion string
-			if inputArgs["helmVersion"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["helmVersion"]), &helmVersion)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg helmVersion", err))
-				}
-			}
-			var kustomizeVersion string
-			if inputArgs["kustomizeVersion"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["kustomizeVersion"]), &kustomizeVersion)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg kustomizeVersion", err))
-				}
-			}
-			return (*Tanka).Build(&parent, ctx, rootDir, helmVersion, kustomizeVersion), nil
+			return (*Tanka).Build(&parent, ctx, rootDir), nil
 		case "GetGoVersion":
 			var parent Tanka
 			err = json.Unmarshal(parentJSON, &parent)
@@ -199,20 +185,6 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg rootDir", err))
 				}
 			}
-			var helmVersion string
-			if inputArgs["helmVersion"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["helmVersion"]), &helmVersion)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg helmVersion", err))
-				}
-			}
-			var kustomizeVersion string
-			if inputArgs["kustomizeVersion"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["kustomizeVersion"]), &kustomizeVersion)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg kustomizeVersion", err))
-				}
-			}
 			var acceptanceTestsDir *dagger.Directory
 			if inputArgs["acceptanceTestsDir"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["acceptanceTestsDir"]), &acceptanceTestsDir)
@@ -220,7 +192,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg acceptanceTestsDir", err))
 				}
 			}
-			return (*Tanka).AcceptanceTests(&parent, ctx, rootDir, helmVersion, kustomizeVersion, acceptanceTestsDir)
+			return (*Tanka).AcceptanceTests(&parent, ctx, rootDir, acceptanceTestsDir)
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
@@ -232,22 +204,18 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 						dag.Function("Build",
 							dag.TypeDef().WithObject("Container")).
 							WithSourceMap(dag.SourceMap("main.go", 15, 1)).
-							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 15, 44)}).
-							WithArg("helmVersion", dag.TypeDef().WithKind(dagger.TypeDefKindStringKind), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 15, 71)}).
-							WithArg("kustomizeVersion", dag.TypeDef().WithKind(dagger.TypeDefKindStringKind), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 15, 91)})).
+							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 15, 44)})).
 					WithFunction(
 						dag.Function("GetGoVersion",
 							dag.TypeDef().WithKind(dagger.TypeDefKindStringKind)).
-							WithSourceMap(dag.SourceMap("main.go", 29, 1)).
-							WithArg("file", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 29, 51)})).
+							WithSourceMap(dag.SourceMap("main.go", 23, 1)).
+							WithArg("file", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 23, 51)})).
 					WithFunction(
 						dag.Function("AcceptanceTests",
 							dag.TypeDef().WithKind(dagger.TypeDefKindStringKind)).
-							WithSourceMap(dag.SourceMap("main.go", 45, 1)).
-							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 45, 54)}).
-							WithArg("helmVersion", dag.TypeDef().WithKind(dagger.TypeDefKindStringKind), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 45, 81)}).
-							WithArg("kustomizeVersion", dag.TypeDef().WithKind(dagger.TypeDefKindStringKind), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 45, 101)}).
-							WithArg("acceptanceTestsDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 45, 126)}))), nil
+							WithSourceMap(dag.SourceMap("main.go", 39, 1)).
+							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 39, 54)}).
+							WithArg("acceptanceTestsDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 39, 81)}))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}

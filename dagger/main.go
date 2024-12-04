@@ -12,14 +12,8 @@ import (
 
 type Tanka struct{}
 
-func (m *Tanka) Build(ctx context.Context, rootDir *dagger.Directory, helmVersion string, kustomizeVersion string) *dagger.Container {
+func (m *Tanka) Build(ctx context.Context, rootDir *dagger.Directory) *dagger.Container {
 	buildArgs := make([]dagger.BuildArg, 0, 2)
-	if helmVersion != "" {
-		buildArgs = append(buildArgs, dagger.BuildArg{Name: "HELM_VERSION", Value: helmVersion})
-	}
-	if kustomizeVersion != "" {
-		buildArgs = append(buildArgs, dagger.BuildArg{Name: "KUSTOMIZE_VERSION", Value: kustomizeVersion})
-	}
 	return dag.Container().
 		Build(rootDir, dagger.ContainerBuildOpts{
 			BuildArgs: buildArgs,
@@ -42,12 +36,12 @@ func (m *Tanka) GetGoVersion(ctx context.Context, file *dagger.File) (string, er
 	return "", fmt.Errorf("no Go version found")
 }
 
-func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *dagger.Directory, helmVersion string, kustomizeVersion string, acceptanceTestsDir *dagger.Directory) (string, error) {
+func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *dagger.Directory, acceptanceTestsDir *dagger.Directory) (string, error) {
 	goVersion, err := m.GetGoVersion(ctx, rootDir.File("go.mod"))
 	if err != nil {
 		return "", err
 	}
-	buildContainer := m.Build(ctx, rootDir, helmVersion, kustomizeVersion)
+	buildContainer := m.Build(ctx, rootDir)
 
 	k3s := dag.K3S("k3sdemo")
 	k3sSrv, err := k3s.Server().Start(ctx)
