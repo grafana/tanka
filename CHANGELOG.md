@@ -2,6 +2,18 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.30.3](https://github.com/grafana/tanka/compare/v0.30.2...v0.30.3) (2024-12-04)
+
+
+### 🤖 Continuous Integration
+
+* add renovate ([#1262](https://github.com/grafana/tanka/issues/1262)) ([3c9a48d](https://github.com/grafana/tanka/commit/3c9a48d04ee48ef6c1f6dbd7b11c28c71c8ed5a2))
+
+
+### ♻️ Code Refactoring
+
+* define jsonnet-implementation flag in a single place ([#1260](https://github.com/grafana/tanka/issues/1260)) ([d30882b](https://github.com/grafana/tanka/commit/d30882bcd28e77976f7028365851f4911eeb5a1e))
+
 ## [0.30.2](https://github.com/grafana/tanka/compare/v0.30.1...v0.30.2) (2024-12-02)
 
 
