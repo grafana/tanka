@@ -2,6 +2,30 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.30.3](https://github.com/grafana/tanka/compare/v0.30.2...v0.30.3) (2024-12-09)
+
+
+### 🏗️ Build System
+
+* **deps:** bump actions/cache from 4.1.2 to 4.2.0 ([#1267](https://github.com/grafana/tanka/issues/1267)) ([c3f9ceb](https://github.com/grafana/tanka/commit/c3f9ceb35dd22056302a24c0460bd10da4ba932f))
+* **deps:** bump alpine from 3.20 to 3.21 ([#1265](https://github.com/grafana/tanka/issues/1265)) ([b9f4911](https://github.com/grafana/tanka/commit/b9f49116b87764636f4fa26aa29f786f9a83bbef))
+* **deps:** bump golang from 1.23.3 to 1.23.4 ([#1266](https://github.com/grafana/tanka/issues/1266)) ([7f18b87](https://github.com/grafana/tanka/commit/7f18b87f291dfa6d7e6c8d12f63024f394637e0c))
+* **deps:** bump golang.org/x/term from 0.26.0 to 0.27.0 ([#1264](https://github.com/grafana/tanka/issues/1264)) ([dc946ad](https://github.com/grafana/tanka/commit/dc946ad3228c31d33efa16e7f3aaa80de0569557))
+* **deps:** bump golang.org/x/text from 0.20.0 to 0.21.0 ([#1263](https://github.com/grafana/tanka/issues/1263)) ([95258f7](https://github.com/grafana/tanka/commit/95258f75ee28c4defcc8c759af2231db807fdac5))
+* **deps:** bump JamesIves/github-pages-deploy-action from 4.7.1 to 4.7.2 ([#1269](https://github.com/grafana/tanka/issues/1269)) ([5b59c97](https://github.com/grafana/tanka/commit/5b59c9758bab3a26cdf21c6afd0a3b3bfd81a8a9))
+* **deps:** bump renovatebot/github-action from 41.0.5 to 41.0.6 ([#1268](https://github.com/grafana/tanka/issues/1268)) ([bf679bf](https://github.com/grafana/tanka/commit/bf679bf09e4aab27c5ce7fc08fb965ce397bee54))
+* **deps:** bump the dagger-dependencies group in /dagger with 3 updates ([#1271](https://github.com/grafana/tanka/issues/1271)) ([ddb7d4e](https://github.com/grafana/tanka/commit/ddb7d4e59e6db2e806ed8097cc2069d642b69731))
+
+
+### 🤖 Continuous Integration
+
+* add renovate ([#1262](https://github.com/grafana/tanka/issues/1262)) ([3c9a48d](https://github.com/grafana/tanka/commit/3c9a48d04ee48ef6c1f6dbd7b11c28c71c8ed5a2))
+
+
+### ♻️ Code Refactoring
+
+* define jsonnet-implementation flag in a single place ([#1260](https://github.com/grafana/tanka/issues/1260)) ([d30882b](https://github.com/grafana/tanka/commit/d30882bcd28e77976f7028365851f4911eeb5a1e))
+
 ## [0.30.2](https://github.com/grafana/tanka/compare/v0.30.1...v0.30.2) (2024-12-02)
 
 
