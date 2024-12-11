@@ -31,6 +31,10 @@ updates:
     package-ecosystem: npm
     schedule:
       interval: weekly
+    ignore:
+      # Starlight is not yet compatible with Astro 5
+      - dependency-name: "astro"
+        versions: [">=5.0.0"]
     groups:
       docs-dependencies:
         patterns:
