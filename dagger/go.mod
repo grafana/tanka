@@ -3,7 +3,7 @@ module github.com/grafana/tanka/dagger
 go 1.23.0
 
 require (
-	github.com/99designs/gqlgen v0.17.57
+	github.com/99designs/gqlgen v0.17.60
 	github.com/Khan/genqlient v0.7.0
 	github.com/vektah/gqlparser/v2 v2.5.20
 	go.opentelemetry.io/otel v1.32.0
