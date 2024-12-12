@@ -63,8 +63,7 @@ jobs:
         uses: renovatebot/github-action@e3a862510f27d57a380efb11f0b52ad7e8dbf213 # v41.0.6
         with:
           configurationFile: .github/renovate-config.json5
-          # renovate: datasource=docker depName=ghcr.io/renovatebot/renovate
-          renovate-version: 39.42.4@sha256:c5d718e312cdacc0746e37f13c215ff498be28c51e50efd24c070ae29f5b636a
+          renovate-version: ${{ env.RENOVATE_VERSION}}
           token: ${{ steps.generate-token.outputs.token }}
         env:
           LOG_LEVEL: ${{ github.event_name == 'pull_request' && 'debug' || 'info' }}
@@ -77,3 +76,5 @@ jobs:
           RENOVATE_PLATFORM: github
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_USERNAME: GrafanaRenovateBot
+          # renovate: datasource=docker depName=ghcr.io/renovatebot/renovate
+          RENOVATE_VERSION: 39.42.4@sha256:c5d718e312cdacc0746e37f13c215ff498be28c51e50efd24c070ae29f5b636a
