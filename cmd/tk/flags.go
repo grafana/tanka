@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -78,12 +79,16 @@ func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[stri
 	// need to use StringArray instead of StringSlice, because pflag attempts to
 	// parse StringSlice using the csv parser, which breaks when passing objects
 	extCode := fs.StringArray("ext-code", nil, "Set code value of extVar (Format: key=<code>)")
+	extCodeFile := fs.StringArray("ext-code-file", nil, "Set code value of extVar from file (Format: key=filename)")
 	extStr := fs.StringArrayP("ext-str", "V", nil, "Set string value of extVar (Format: key=value)")
+	extStrFile := fs.StringArray("ext-str-file", nil, "Set string value of extVar from file (Format: key=filename)")
 
 	tlaCode := fs.StringArray("tla-code", nil, "Set code value of top level function (Format: key=<code>)")
+	tlaCodeFile := fs.StringArray("tla-code-file", nil, "Set code value of top level function from file (Format: key=filename)")
 	tlaStr := fs.StringArrayP("tla-str", "A", nil, "Set string value of top level function (Format: key=value)")
+	tlaStrFile := fs.StringArray("tla-str-file", nil, "Set string value of top level function from file (Format: key=filename)")
 
-	newParser := func(kind string, code, str *[]string) func() map[string]string {
+	newParser := func(kind string, code, str, codeFile, strFile *[]string) func() map[string]string {
 		return func() map[string]string {
 			m := make(map[string]string)
 			for _, s := range *code {
@@ -107,12 +112,28 @@ func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[stri
 				}
 				m[split[0]] = string(js)
 			}
+
+			for _, x := range []struct {
+				arg        *[]string
+				kind2, imp string
+			}{
+				{arg: codeFile, kind2: "code", imp: "import"},
+				{arg: strFile, kind2: "str", imp: "importstr"},
+			} {
+				for _, s := range *x.arg {
+					split := strings.SplitN(s, "=", 2)
+					if len(split) != 2 {
+						log.Fatal().Msgf("%s-%s-file argument has wrong format: `%s`. Expected `key=filename`", kind, x.kind2, s)
+					}
+					m[split[0]] = fmt.Sprintf(`%s @"%s"`, x.imp, strings.ReplaceAll(split[1], `"`, `""`))
+				}
+			}
 			return m
 		}
 	}
 
-	return newParser("ext", extCode, extStr),
-		newParser("tla", tlaCode, tlaStr)
+	return newParser("ext", extCode, extStr, extCodeFile, extStrFile),
+		newParser("tla", tlaCode, tlaStr, tlaCodeFile, tlaStrFile)
 }
 
 func envSettingsFlags(env *v1alpha1.Environment, fs *pflag.FlagSet) {
