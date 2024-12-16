@@ -2,6 +2,52 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.31.0](https://github.com/grafana/tanka/compare/v0.30.2...v0.31.0) (2024-12-16)
+
+
+### 🎉 Features
+
+* support --{tla,ext}-{code,str}-file flag in "tk eval" ([#1238](https://github.com/grafana/tanka/issues/1238)) ([a93627a](https://github.com/grafana/tanka/commit/a93627ab3abb165f3d2323abb277fda5bda1fb46))
+
+
+### 🏗️ Build System
+
+* **deps:** bump actions/cache from 4.1.2 to 4.2.0 ([#1267](https://github.com/grafana/tanka/issues/1267)) ([c3f9ceb](https://github.com/grafana/tanka/commit/c3f9ceb35dd22056302a24c0460bd10da4ba932f))
+* **deps:** bump alpine from 3.20 to 3.21 ([#1265](https://github.com/grafana/tanka/issues/1265)) ([b9f4911](https://github.com/grafana/tanka/commit/b9f49116b87764636f4fa26aa29f786f9a83bbef))
+* **deps:** bump dagger/dagger-for-github from 7.0.1 to 7.0.3 ([#1285](https://github.com/grafana/tanka/issues/1285)) ([a5ec928](https://github.com/grafana/tanka/commit/a5ec928aa7b793b67f7f6599fbb23e977ca90327))
+* **deps:** bump github.com/99designs/gqlgen from 0.17.57 to 0.17.60 in /dagger ([#1276](https://github.com/grafana/tanka/issues/1276)) ([71defaa](https://github.com/grafana/tanka/commit/71defaa3eeb0a836b5d6944fd5aaebb081489123))
+* **deps:** bump golang from 1.23.3 to 1.23.4 ([#1266](https://github.com/grafana/tanka/issues/1266)) ([7f18b87](https://github.com/grafana/tanka/commit/7f18b87f291dfa6d7e6c8d12f63024f394637e0c))
+* **deps:** bump golang.org/x/crypto from 0.26.0 to 0.31.0 ([#1284](https://github.com/grafana/tanka/issues/1284)) ([6885695](https://github.com/grafana/tanka/commit/68856959a6abc32d5d0a28f9f9879fb32632d553))
+* **deps:** bump golang.org/x/term from 0.26.0 to 0.27.0 ([#1264](https://github.com/grafana/tanka/issues/1264)) ([dc946ad](https://github.com/grafana/tanka/commit/dc946ad3228c31d33efa16e7f3aaa80de0569557))
+* **deps:** bump golang.org/x/text from 0.20.0 to 0.21.0 ([#1263](https://github.com/grafana/tanka/issues/1263)) ([95258f7](https://github.com/grafana/tanka/commit/95258f75ee28c4defcc8c759af2231db807fdac5))
+* **deps:** bump JamesIves/github-pages-deploy-action from 4.7.1 to 4.7.2 ([#1269](https://github.com/grafana/tanka/issues/1269)) ([5b59c97](https://github.com/grafana/tanka/commit/5b59c9758bab3a26cdf21c6afd0a3b3bfd81a8a9))
+* **deps:** bump k8s.io/apimachinery from 0.31.3 to 0.31.4 ([#1275](https://github.com/grafana/tanka/issues/1275)) ([333fc0d](https://github.com/grafana/tanka/commit/333fc0d18f52d6839ff53ee19ce34053689f7461))
+* **deps:** bump k8s.io/apimachinery from 0.31.4 to 0.32.0 ([#1283](https://github.com/grafana/tanka/issues/1283)) ([b475bca](https://github.com/grafana/tanka/commit/b475bca24e40c830316ffbcbbf1fdbfb9383aa18))
+* **deps:** bump renovatebot/github-action from 41.0.5 to 41.0.6 ([#1268](https://github.com/grafana/tanka/issues/1268)) ([bf679bf](https://github.com/grafana/tanka/commit/bf679bf09e4aab27c5ce7fc08fb965ce397bee54))
+* **deps:** bump the acceptance-tests-dependencies group with 2 updates ([#1277](https://github.com/grafana/tanka/issues/1277)) ([7b5140c](https://github.com/grafana/tanka/commit/7b5140c1e421f524131238dc17ae9ccc8fd89e4c))
+* **deps:** bump the acceptance-tests-dependencies group with 2 updates ([#1288](https://github.com/grafana/tanka/issues/1288)) ([9b33ff5](https://github.com/grafana/tanka/commit/9b33ff5a5450e0321932f4bf2acdc9350217de77))
+* **deps:** bump the dagger-dependencies group in /dagger with 10 updates ([#1287](https://github.com/grafana/tanka/issues/1287)) ([5952a38](https://github.com/grafana/tanka/commit/5952a38a3cd15c81fc18c8a115913e0fa3d3865d))
+* **deps:** bump the dagger-dependencies group in /dagger with 3 updates ([#1271](https://github.com/grafana/tanka/issues/1271)) ([ddb7d4e](https://github.com/grafana/tanka/commit/ddb7d4e59e6db2e806ed8097cc2069d642b69731))
+* **deps:** bump the docs-dependencies group across 1 directory with 3 updates ([#1289](https://github.com/grafana/tanka/issues/1289)) ([7df2d2b](https://github.com/grafana/tanka/commit/7df2d2bf1b0d93c86f4183b3dbf2591c951dc3cc))
+* **deps:** bump the docs-dependencies group in /docs with 4 updates ([#1278](https://github.com/grafana/tanka/issues/1278)) ([7aba4bd](https://github.com/grafana/tanka/commit/7aba4bd84d97682d2a86489ac24b1dcff5b88563))
+
+
+### 🤖 Continuous Integration
+
+* add renovate ([#1262](https://github.com/grafana/tanka/issues/1262)) ([3c9a48d](https://github.com/grafana/tanka/commit/3c9a48d04ee48ef6c1f6dbd7b11c28c71c8ed5a2))
+* ignore Astro 5 for now as Starlight does not support it yet ([#1274](https://github.com/grafana/tanka/issues/1274)) ([30d907e](https://github.com/grafana/tanka/commit/30d907e08374f196a64ad241fecce8618c5ea6eb))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency kubectl to v1.31.4 ([#1273](https://github.com/grafana/tanka/issues/1273)) ([1fbf2a2](https://github.com/grafana/tanka/commit/1fbf2a2d78f3431cda5a0e8f7e1f743c894fb851))
+* **deps:** update dependency kubectl to v1.32.0 ([#1280](https://github.com/grafana/tanka/issues/1280)) ([feac755](https://github.com/grafana/tanka/commit/feac755c7e353136f92bd345b8bfa4ba24205128))
+
+
+### ♻️ Code Refactoring
+
+* define jsonnet-implementation flag in a single place ([#1260](https://github.com/grafana/tanka/issues/1260)) ([d30882b](https://github.com/grafana/tanka/commit/d30882bcd28e77976f7028365851f4911eeb5a1e))
+
 ## [0.30.2](https://github.com/grafana/tanka/compare/v0.30.1...v0.30.2) (2024-12-02)
 
 
