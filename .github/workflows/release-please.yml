@@ -55,54 +55,20 @@ jobs:
           fetch-depth: 0
           ref: "${{ needs.release-please.outputs.release_tag }}"
 
-      - name: Look up release
-        id: lookup-release
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            const currentTag = "${{ needs.release-please.outputs.release_tag }}";
-            core.info(`Looking for release associated with '${currentTag}'`);
-            const release = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: currentTag
-            });
-            core.info(`Release found: ${release.data.id}'`);
-            core.setOutput('release_id', release.data.id);
-
-
       - uses: ./.github/actions/setup-goversion
 
       - name: Build binaries
         run: make cross
 
       - name: Attach binaries
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5 # v1.14.0
         with:
-          github-token: ${{ github.token }}
-          script: |
-            const path = require('node:path');
-            const fs = require('node:fs/promises');
-
-            const releaseId = '${{ steps.lookup-release.outputs.release_id }}';
-            const globber = await glob.create('dist/*');
-
-            for await (const file of globber.globGenerator()) {
-              const filename = path.basename(file);
-              try {
-                await github.rest.repos.uploadReleaseAsset({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  release_id: releaseId,
-                  name: filename,
-                  data: await fs.readFile(file),
-                });
-              } catch (e) {
-                if (e.status === 422) {
-                  core.setFailed(`${filename} already attached to release`);
-                  return;
-                }
-                throw e;
-              }
-            }
+          token: ${{ github.token }}
+          allowUpdates: true
+          tag: ${{ needs.release-please.outputs.release_tag }}
+          omitNameDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
+          omitBodyDuringUpdate: true
+          omitDraftDuringUpdate: true
+          artifacts: "dist/**/*"
 
