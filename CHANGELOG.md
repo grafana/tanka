@@ -2,6 +2,23 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.31.1](https://github.com/grafana/tanka/compare/v0.31.0...v0.31.1) (2024-12-19)
+
+
+### 🏗️ Build System
+
+* **deps:** bump astro from 5.0.5 to 5.0.8 in /docs ([#1293](https://github.com/grafana/tanka/issues/1293)) ([060d5e8](https://github.com/grafana/tanka/commit/060d5e88b733b3792e23fa98945d3c82451450ac))
+
+
+### 🤖 Continuous Integration
+
+* use ncipollo/release-action for uploading release artifacts ([#1292](https://github.com/grafana/tanka/issues/1292)) ([4df6ff7](https://github.com/grafana/tanka/commit/4df6ff7c347b01a177eb730cb9368d4f1d9ec4e1))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency helm to v3.16.4 ([#1290](https://github.com/grafana/tanka/issues/1290)) ([336b926](https://github.com/grafana/tanka/commit/336b926b117bcb2e3c52facc66a5647ab42d6aa1))
+
 ## [0.31.0](https://github.com/grafana/tanka/compare/v0.30.2...v0.31.0) (2024-12-16)
 
 
