@@ -2,6 +2,26 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.31.1](https://github.com/grafana/tanka/compare/v0.31.0...v0.31.1) (2025-01-02)
+
+
+### 🏗️ Build System
+
+* **deps:** bump astro from 5.0.5 to 5.0.8 in /docs ([#1293](https://github.com/grafana/tanka/issues/1293)) ([060d5e8](https://github.com/grafana/tanka/commit/060d5e88b733b3792e23fa98945d3c82451450ac))
+* **deps:** bump the dagger-dependencies group across 1 directory with 3 updates ([#1297](https://github.com/grafana/tanka/issues/1297)) ([d7857f0](https://github.com/grafana/tanka/commit/d7857f0ab75384aab5c6399c07f3c1d8e17b4565))
+* **deps:** bump the docs-dependencies group across 1 directory with 5 updates ([#1296](https://github.com/grafana/tanka/issues/1296)) ([cb353f8](https://github.com/grafana/tanka/commit/cb353f8c6a21e230e8ca12cc771be93d2b69aa02))
+
+
+### 🤖 Continuous Integration
+
+* bump x/net to v0.33 in acceptance-tests ([#1298](https://github.com/grafana/tanka/issues/1298)) ([50f7149](https://github.com/grafana/tanka/commit/50f714975b06d8df6362a84703d9fa1187f534f3))
+* use ncipollo/release-action for uploading release artifacts ([#1292](https://github.com/grafana/tanka/issues/1292)) ([4df6ff7](https://github.com/grafana/tanka/commit/4df6ff7c347b01a177eb730cb9368d4f1d9ec4e1))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency helm to v3.16.4 ([#1290](https://github.com/grafana/tanka/issues/1290)) ([336b926](https://github.com/grafana/tanka/commit/336b926b117bcb2e3c52facc66a5647ab42d6aa1))
+
 ## [0.31.0](https://github.com/grafana/tanka/compare/v0.30.2...v0.31.0) (2024-12-16)
 
 
