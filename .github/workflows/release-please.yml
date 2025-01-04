@@ -27,7 +27,6 @@ jobs:
         with:
           config-file: .release-please.json
           manifest-file: .release-please-manifest.json
-          github-token: ${{ github.secret }}
 
   release-docker-image:
     needs:
