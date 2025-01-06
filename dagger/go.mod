@@ -3,7 +3,7 @@ module github.com/grafana/tanka/dagger
 go 1.23.0
 
 require (
-	github.com/99designs/gqlgen v0.17.61
+	github.com/99designs/gqlgen v0.17.62
 	github.com/Khan/genqlient v0.7.0
 	github.com/vektah/gqlparser/v2 v2.5.21
 	go.opentelemetry.io/otel v1.33.0
@@ -41,7 +41,7 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241209162323-e6fa225c2576 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241209162323-e6fa225c2576 // indirect
-	google.golang.org/protobuf v1.35.2 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 )
 
 replace go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc => go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.0.0-20240518090000-14441aefdf88
