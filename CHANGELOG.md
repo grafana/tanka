@@ -2,6 +2,23 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.31.3](https://github.com/grafana/tanka/compare/v0.31.2...v0.31.3) (2025-01-29)
+
+
+### 🏗️ Build System
+
+* **deps:** bump actions/create-github-app-token from 1.11.0 to 1.11.1 ([#1323](https://github.com/grafana/tanka/issues/1323)) ([be354cc](https://github.com/grafana/tanka/commit/be354cca593e07d17f32262ae7b81ffb6690a5c4))
+* **deps:** bump actions/setup-node from 4.1.0 to 4.2.0 ([#1321](https://github.com/grafana/tanka/issues/1321)) ([1067607](https://github.com/grafana/tanka/commit/106760704673bf8e8a61e64e3b08120677251d65))
+* **deps:** bump astro from 5.1.7 to 5.1.10 in /docs ([#1328](https://github.com/grafana/tanka/issues/1328)) ([e75bbf8](https://github.com/grafana/tanka/commit/e75bbf888c4fcfe1fb933fc60e947c35b3dca603))
+* **deps:** bump docker/build-push-action from 6.10.0 to 6.13.0 ([#1320](https://github.com/grafana/tanka/issues/1320)) ([fb3d545](https://github.com/grafana/tanka/commit/fb3d545762daa11bd0fdd8874a8b410eda674f79))
+* **deps:** bump google.golang.org/grpc from 1.69.4 to 1.70.0 ([#1326](https://github.com/grafana/tanka/issues/1326)) ([d349a7a](https://github.com/grafana/tanka/commit/d349a7a8437db9fa696127a290b70d4430d2cbed))
+* **deps:** bump renovatebot/github-action from 41.0.6 to 41.0.11 ([#1322](https://github.com/grafana/tanka/issues/1322)) ([d46c9bb](https://github.com/grafana/tanka/commit/d46c9bb26d187c4185df2549608b403360171334))
+
+
+### 🔧 Miscellaneous Chores
+
+* **docs:** bump to tailwind 4.0 ([#1327](https://github.com/grafana/tanka/issues/1327)) ([6c5d340](https://github.com/grafana/tanka/commit/6c5d340ef9cdd8992f9e96f421e4f5ae7ee81ef1))
+
 ## [0.31.2](https://github.com/grafana/tanka/compare/v0.31.1...v0.31.2) (2025-01-20)
 
 
