@@ -1,6 +1,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import tailwind from '@astrojs/tailwind';
+import tailwindcss from '@tailwindcss/vite';
 
 const isLocalPreview = process.env.npm_lifecycle_script === 'astro dev';
 
@@ -153,13 +153,13 @@ export default defineConfig({
             {
               label: 'Releasing a new version',
               link: '/internal/releasing',
-            }
-          ]
+            },
+          ],
         },
       ],
     }),
-    tailwind({
-      applyBaseStyles: false,
-    }),
   ],
+  vite: {
+    plugins: [tailwindcss()],
+  },
 });

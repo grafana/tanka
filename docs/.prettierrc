@@ -1,5 +1,14 @@
 {
   "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": "*.astro",
+      "options": {
+        "parser": "astro"
+      }
+    }
+  ],
+  "plugins": ["prettier-plugin-astro", "prettier-plugin-tailwindcss"],
   "singleQuote": true,
   "tabWidth": 2
 }

@@ -4,11 +4,13 @@ import { Code, LinkButton } from '@astrojs/starlight/components';
 import { Content as Tagline } from './tagline.md';
 ---
 
-<div class="hero lg:grid lg:grid-cols-hero lg:gap-5">
-	<div class="hero-html">
-		<div>
-			<Code
-				code={`
+<div
+  class="grid grid-cols-1 justify-items-center gap-3 pb-1.5 lg:grid-cols-[7fr_4fr] lg:gap-5 lg:pt-35"
+>
+  <div class="object-contain lg:order-2">
+    <div>
+      <Code
+        code={`
 local k = import "k.libsonnet";
 
 {
@@ -21,113 +23,37 @@ local k = import "k.libsonnet";
         )]
     )
 }`}
-				lang="jsonnet"
-				title="main.libsonnet"
-			/>
+        lang="jsonnet"
+        title="main.libsonnet"
+      />
 
-			<div class="text-center lg:text-left">
-				Kubernetes Deployment. That's all it takes.
-			</div>
-		</div>
-	</div>
-	<div class="flex stack">
-		<div class="sl-flex copy">
-			<h1 data-page-title>Define. Reuse. Override.</h1>
-			<div class="tagline">
-				<Tagline />
-			</div>
-		</div>
+      <div class="text-center opacity-60 lg:text-left">
+        Kubernetes Deployment. That's all it takes.
+      </div>
+    </div>
+  </div>
+  <div class="flex flex-col items-center gap-5">
+    <h1 class="text-3xl font-semibold lg:text-6xl/18" data-page-title>
+      Define. Reuse. Override.
+    </h1>
 
-		<div class="sl-flex actions">
-			<LinkButton href="./install/" variant="primary" icon="right-arrow"
-				>Get started</LinkButton
-			>
-			<LinkButton href="./tutorial/overview/" variant="minimal" icon="laptop"
-				>Read the tutorial</LinkButton
-			>
-		</div>
-	</div>
+    <div class="tagline max-w-[50ch] text-center lg:text-left lg:text-xl">
+      <Tagline />
+    </div>
+
+    <div class="flex flex-wrap gap-x-4 gap-y-8 self-center lg:self-start">
+      <LinkButton href="./install/" variant="primary" icon="right-arrow"
+        >Get started</LinkButton
+      >
+      <LinkButton href="./tutorial/overview/" variant="minimal" icon="laptop"
+        >Read the tutorial</LinkButton
+      >
+    </div>
+  </div>
 </div>
 
 <style>
-	:global([data-has-hero]) {
-		--sl-content-width: 66.7rem;
-	}
-
-	.hero {
-		padding-bottom: 1rem;
-	}
-
-	.hero > img,
-	.hero > .hero-html {
-		object-fit: contain;
-		height: auto;
-		margin-inline: auto;
-	}
-
-	.stack {
-		flex-direction: column;
-		gap: clamp(1.5rem, calc(1.5rem + 1vw), 2rem);
-		text-align: center;
-	}
-
-	.copy {
-		flex-direction: column;
-		gap: 1rem;
-		align-items: center;
-	}
-
-	.copy > * {
-		max-width: 50ch;
-	}
-
-	h1 {
-		font-size: clamp(
-			var(--sl-text-3xl),
-			calc(0.25rem + 5vw),
-			var(--sl-text-6xl)
-		);
-		line-height: var(--sl-line-height-headings);
-		font-weight: 600;
-		color: var(--sl-color-white);
-	}
-
-	.tagline {
-		font-size: clamp(
-			var(--sl-text-base),
-			calc(0.0625rem + 2vw),
-			var(--sl-text-xl)
-		);
-		color: var(--sl-color-gray-2);
-	}
-
-	.actions {
-		gap: 1rem 2rem;
-		flex-wrap: wrap;
-		justify-content: center;
-	}
-
-	@media (min-width: 50rem) {
-		.hero {
-			padding-block: clamp(2.5rem, calc(1rem + 10vmin), 10rem);
-		}
-
-		.hero > img,
-		.hero > .hero-html {
-			order: 2;
-			width: min(100%, 25rem);
-		}
-
-		.stack {
-			text-align: start;
-		}
-
-		.copy {
-			align-items: flex-start;
-		}
-
-		.actions {
-			justify-content: flex-start;
-		}
-	}
+  :global([data-has-hero]) {
+    --sl-content-width: 66.7rem;
+  }
 </style>

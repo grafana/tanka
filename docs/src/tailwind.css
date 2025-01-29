@@ -1,3 +1,74 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme {
+  --color-accent-50: #fff7ed;
+  --color-accent-100: #ffedd5;
+  --color-accent-200: #fed7aa;
+  --color-accent-300: #fdba74;
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+  --color-accent-700: #c2410c;
+  --color-accent-800: #9a3412;
+  --color-accent-900: #7c2d12;
+  --color-accent-950: #431407;
+
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f4f4f5;
+  --color-gray-200: #e4e4e7;
+  --color-gray-300: #d4d4d8;
+  --color-gray-400: #a1a1aa;
+  --color-gray-500: #71717a;
+  --color-gray-600: #52525b;
+  --color-gray-700: #3f3f46;
+  --color-gray-800: #27272a;
+  --color-gray-900: #18181b;
+  --color-gray-950: #09090b;
+
+  --grid-template-columns-hero: 7fr 4fr;
+}
+
+@layer components {
+  a {
+    @apply text-accent-600 underline;
+  }
+}
+
+@layer base {
+  :root {
+    --sl-font: 'Inter Variable';
+  }
+}
+
+/* TODO: this block can be removed once `@astrojs/starlight-tailwind` supports
+ * Tailwind 4 */
+:root[data-theme='light'] {
+  --sl-color-white: var(--color-gray-900);
+  --sl-color-gray-1: var(--color-gray-800);
+  --sl-color-gray-2: var(--color-gray-700);
+  --sl-color-gray-3: var(--color-gray-500);
+  --sl-color-gray-4: var(--color-gray-400);
+  --sl-color-gray-5: var(--color-gray-300);
+  --sl-color-gray-6: var(--color-gray-200);
+  --sl-color-gray-7: var(--color-gray-100);
+  --sl-color-black: white;
+  --sl-color-accent-low: var(--color-accent-200);
+  --sl-color-accent: var(--color-accent-600);
+  --sl-color-accent-high: var(--color-accent-900);
+}
+:root[data-theme='dark'] {
+  --sl-color-gray-1: var(--color-gray-200);
+  --sl-color-gray-2: var(--color-gray-300);
+  --sl-color-gray-3: var(--color-gray-400);
+  --sl-color-gray-4: var(--color-gray-600);
+  --sl-color-gray-5: var(--color-gray-700);
+  --sl-color-gray-6: var(--color-gray-800);
+  --sl-color-black: var(--color-gray-900);
+  --sl-color-accent: var(--color-accent-950);
+  --sl-color-accent-high: var(--color-accent-200);
+}
