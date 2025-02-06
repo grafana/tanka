@@ -52,3 +52,61 @@ func TestEvalJsonnetWithExpression(t *testing.T) {
 		})
 	}
 }
+
+// An EvalScript with a top-level function containing only optional arguments
+// should be evaluated as a function even if no TLAs are provided.
+func TestEvalWithOptionalTlas(t *testing.T) {
+	opts := jsonnet.Opts{
+		EvalScript: "main.metadata.name",
+	}
+	json, err := evalJsonnet("testdata/cases/with-optional-tlas/main.jsonnet", jsonnetImpl, opts)
+	assert.NoError(t, err)
+	assert.Equal(t, `"bar-baz"`, strings.TrimSpace(json))
+}
+
+// An EvalScript with a top-level function containing should allow passing only
+// a subset of the TLAs.
+func TestEvalWithOptionalTlasSpecifiedArg2(t *testing.T) {
+	opts := jsonnet.Opts{
+		EvalScript: "main.metadata.name",
+		TLACode:    jsonnet.InjectedCode{"baz": "'changed'"},
+	}
+	json, err := evalJsonnet("testdata/cases/with-optional-tlas/main.jsonnet", jsonnetImpl, opts)
+	assert.NoError(t, err)
+	assert.Equal(t, `"bar-changed"`, strings.TrimSpace(json))
+}
+
+// An EvalScript with a top-level function having no arguments should be
+// evaluated as a function even if no TLAs are provided.
+func TestEvalFunctionWithNoTlas(t *testing.T) {
+	opts := jsonnet.Opts{
+		EvalScript: "main.metadata.name",
+	}
+	json, err := evalJsonnet("testdata/cases/function-with-zero-params/main.jsonnet", jsonnetImpl, opts)
+	assert.NoError(t, err)
+	assert.Equal(t, `"inline"`, strings.TrimSpace(json))
+}
+
+// An EvalScript with a top-level function should return an understandable
+// error message if an incorrect TLA is provided.
+func TestInvalidTlaArg(t *testing.T) {
+	opts := jsonnet.Opts{
+		EvalScript: "main",
+		TLACode:    jsonnet.InjectedCode{"foo": "'bar'"},
+	}
+	json, err := evalJsonnet("testdata/cases/function-with-zero-params/main.jsonnet", jsonnetImpl, opts)
+	assert.Contains(t, err.Error(), "function has no parameter foo")
+	assert.Equal(t, "", json)
+}
+
+// Providing a TLA to an EvalScript with a non-function top level mainfile
+// should not return an error.
+func TestTlaWithNonFunction(t *testing.T) {
+	opts := jsonnet.Opts{
+		EvalScript: "main",
+		TLACode:    jsonnet.InjectedCode{"foo": "'bar'"},
+	}
+	json, err := evalJsonnet("testdata/cases/withenv/main.jsonnet", jsonnetImpl, opts)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, json)
+}
