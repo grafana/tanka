@@ -2,6 +2,51 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.31.3](https://github.com/grafana/tanka/compare/v0.31.2...v0.31.3) (2025-02-13)
+
+
+### 🐛 Bug Fixes
+
+* mimic --tla-code behavior from jsonnet for functions in main.jsonnet in env discovery ([#1251](https://github.com/grafana/tanka/issues/1251)) ([3065778](https://github.com/grafana/tanka/commit/3065778d03f9cecb4896fc0275af510c836e991d))
+
+
+### 🏗️ Build System
+
+* **deps:** bump actions/create-github-app-token from 1.11.0 to 1.11.1 ([#1323](https://github.com/grafana/tanka/issues/1323)) ([be354cc](https://github.com/grafana/tanka/commit/be354cca593e07d17f32262ae7b81ffb6690a5c4))
+* **deps:** bump actions/create-github-app-token from 1.11.1 to 1.11.2 ([#1330](https://github.com/grafana/tanka/issues/1330)) ([0e930c6](https://github.com/grafana/tanka/commit/0e930c6432ba97687d7d5e6e36825d5d76239acf))
+* **deps:** bump actions/create-github-app-token from 1.11.2 to 1.11.3 ([#1341](https://github.com/grafana/tanka/issues/1341)) ([aa5d4d1](https://github.com/grafana/tanka/commit/aa5d4d180d704fc008c0f37fefdedc446118c697))
+* **deps:** bump actions/setup-node from 4.1.0 to 4.2.0 ([#1321](https://github.com/grafana/tanka/issues/1321)) ([1067607](https://github.com/grafana/tanka/commit/106760704673bf8e8a61e64e3b08120677251d65))
+* **deps:** bump astro from 5.1.7 to 5.1.10 in /docs ([#1328](https://github.com/grafana/tanka/issues/1328)) ([e75bbf8](https://github.com/grafana/tanka/commit/e75bbf888c4fcfe1fb933fc60e947c35b3dca603))
+* **deps:** bump dagger/dagger-for-github from 7.0.4 to 7.0.5 ([#1340](https://github.com/grafana/tanka/issues/1340)) ([5645dfd](https://github.com/grafana/tanka/commit/5645dfdf23d929fbc73b62205dcbbf832832dadb))
+* **deps:** bump docker/build-push-action from 6.10.0 to 6.13.0 ([#1320](https://github.com/grafana/tanka/issues/1320)) ([fb3d545](https://github.com/grafana/tanka/commit/fb3d545762daa11bd0fdd8874a8b410eda674f79))
+* **deps:** bump docker/setup-buildx-action from 3.7.1 to 3.8.0 ([#1332](https://github.com/grafana/tanka/issues/1332)) ([b6ffaa9](https://github.com/grafana/tanka/commit/b6ffaa9f151e211ec8051a906bc51998a1d111a6))
+* **deps:** bump docker/setup-buildx-action from 3.8.0 to 3.9.0 ([#1343](https://github.com/grafana/tanka/issues/1343)) ([65c0b67](https://github.com/grafana/tanka/commit/65c0b67c1361715088ca4055d19e0bae56a074e0))
+* **deps:** bump github.com/spf13/pflag from 1.0.5 to 1.0.6 ([#1333](https://github.com/grafana/tanka/issues/1333)) ([64c51f9](https://github.com/grafana/tanka/commit/64c51f996ec8ac41ce0a627b337eebc98dc9f654))
+* **deps:** bump golang from 1.23.5 to 1.23.6 ([#1344](https://github.com/grafana/tanka/issues/1344)) ([04acba0](https://github.com/grafana/tanka/commit/04acba05c14923044fb335bbb82ac09cccd6efb1))
+* **deps:** bump golang.org/x/sync from 0.10.0 to 0.11.0 in the dagger-dependencies group ([#1346](https://github.com/grafana/tanka/issues/1346)) ([b0938b8](https://github.com/grafana/tanka/commit/b0938b82f38d639110708b05dc820df9525191db))
+* **deps:** bump golang.org/x/term from 0.28.0 to 0.29.0 ([#1337](https://github.com/grafana/tanka/issues/1337)) ([7357261](https://github.com/grafana/tanka/commit/73572618605a9b4fc976524c5fab3be9f288fb15))
+* **deps:** bump golang.org/x/text from 0.21.0 to 0.22.0 ([#1338](https://github.com/grafana/tanka/issues/1338)) ([bf90b60](https://github.com/grafana/tanka/commit/bf90b601b41474317d42bb916f2fe5f46116c734))
+* **deps:** bump google.golang.org/grpc from 1.69.4 to 1.70.0 ([#1326](https://github.com/grafana/tanka/issues/1326)) ([d349a7a](https://github.com/grafana/tanka/commit/d349a7a8437db9fa696127a290b70d4430d2cbed))
+* **deps:** bump pnpm/action-setup from 4.0.0 to 4.1.0 ([#1339](https://github.com/grafana/tanka/issues/1339)) ([7ca7ab1](https://github.com/grafana/tanka/commit/7ca7ab1810c3fc8109a66c8985bfdbc3a3b1848f))
+* **deps:** bump renovatebot/github-action from 41.0.11 to 41.0.12 ([#1331](https://github.com/grafana/tanka/issues/1331)) ([98f7b1d](https://github.com/grafana/tanka/commit/98f7b1dadfe5b6601162370f00fef04e244aa5d2))
+* **deps:** bump renovatebot/github-action from 41.0.12 to 41.0.13 ([#1342](https://github.com/grafana/tanka/issues/1342)) ([18c6f45](https://github.com/grafana/tanka/commit/18c6f45b82bc42f80289404623812ec9203df675))
+* **deps:** bump renovatebot/github-action from 41.0.6 to 41.0.11 ([#1322](https://github.com/grafana/tanka/issues/1322)) ([d46c9bb](https://github.com/grafana/tanka/commit/d46c9bb26d187c4185df2549608b403360171334))
+* **deps:** bump the dagger-dependencies group in /dagger with 3 updates ([#1335](https://github.com/grafana/tanka/issues/1335)) ([3d19732](https://github.com/grafana/tanka/commit/3d197322d1760859709b2de2ffef571ffcfb810e))
+* **deps:** bump the docs-dependencies group in /docs with 3 updates ([#1334](https://github.com/grafana/tanka/issues/1334)) ([50b0b27](https://github.com/grafana/tanka/commit/50b0b278e1c0948030f62b1ba5dd330230a0cc1f))
+* **deps:** bump the docs-dependencies group in /docs with 4 updates ([#1345](https://github.com/grafana/tanka/issues/1345)) ([cd614ed](https://github.com/grafana/tanka/commit/cd614ed72c026813115315479c788f7aa6f1fc17))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency helm to v3.17.1 ([#1348](https://github.com/grafana/tanka/issues/1348)) ([d0df7f1](https://github.com/grafana/tanka/commit/d0df7f1f8bfdc5400b8a500fb38eb177f7803f90))
+* **deps:** update dependency kubectl to v1.32.2 ([#1349](https://github.com/grafana/tanka/issues/1349)) ([a71826d](https://github.com/grafana/tanka/commit/a71826de254863af2af27f71468c2cdfa9822ebf))
+* **docs:** bump to tailwind 4.0 ([#1327](https://github.com/grafana/tanka/issues/1327)) ([6c5d340](https://github.com/grafana/tanka/commit/6c5d340ef9cdd8992f9e96f421e4f5ae7ee81ef1))
+
+
+### ✅ Tests
+
+* add acceptance test for tk export -l ([#1347](https://github.com/grafana/tanka/issues/1347)) ([3109dc9](https://github.com/grafana/tanka/commit/3109dc9d63da175d95646c955c34ff9934ea97da))
+
 ## [0.31.2](https://github.com/grafana/tanka/compare/v0.31.1...v0.31.2) (2025-01-20)
 
 
