@@ -1,6 +1,6 @@
 # download kubectl
 FROM golang:1.23.6-alpine AS kubectl
-ARG KUBECTL_VERSION=1.32.1
+ARG KUBECTL_VERSION=1.32.2
 RUN apk add --no-cache curl
 RUN export OS=$(go env GOOS) && \
     export ARCH=$(go env GOARCH) &&\
