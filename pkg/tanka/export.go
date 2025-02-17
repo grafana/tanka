@@ -229,7 +229,7 @@ func deletePreviouslyExportedManifests(path string, tankaEnvNames []string) erro
 }
 
 // exportManifestFile writes a manifest file that maps the exported files to their environment.
-// If the file already exists, the new entries will be merged with the existing ones.
+// If the file already exists, the newString entries will be merged with the existing ones.
 func exportManifestFile(path string, newFileToEnvMap map[string]string, deletedKeys []string) error {
 	if len(newFileToEnvMap) == 0 && len(deletedKeys) == 0 {
 		return nil
@@ -241,7 +241,7 @@ func exportManifestFile(path string, newFileToEnvMap map[string]string, deletedK
 		return fmt.Errorf("reading existing manifest file: %w", err)
 	} else if err == nil {
 		// Only read the manifest file if it exists.
-		// If it doesn't exist, currentFileToEnvMap will be empty, meaning that we're starting from a new export dir.
+		// If it doesn't exist, currentFileToEnvMap will be empty, meaning that we're starting from a newString export dir.
 		if err := json.Unmarshal(manifestContent, &currentFileToEnvMap); err != nil {
 			return fmt.Errorf("unmarshalling existing manifest file: %w", err)
 		}
@@ -287,21 +287,21 @@ func createTemplate(format string, env manifest.Manifest) (*template.Template, e
 	return template, nil
 }
 
-func replaceTmplText(s, old, new string) string {
+func replaceTmplText(s, oldString, newString string) string {
 	parts := []string{}
 	l := strings.Index(s, "{{")
 	r := strings.Index(s, "}}") + 2
 
 	for l != -1 && l < r {
 		// replace only in text between template action blocks
-		text := strings.ReplaceAll(s[:l], old, new)
+		text := strings.ReplaceAll(s[:l], oldString, newString)
 		action := s[l:r]
 		parts = append(parts, text, action)
 		s = s[r:]
 		l = strings.Index(s, "{{")
 		r = strings.Index(s, "}}") + 2
 	}
-	parts = append(parts, strings.ReplaceAll(s, old, new))
+	parts = append(parts, strings.ReplaceAll(s, oldString, newString))
 	return strings.Join(parts, "")
 }
 

@@ -137,14 +137,14 @@ func printPlusAndMinuses(added, removed int, maxChanges int) string {
 	addedAndRemoved := float64(added + removed)
 	chars := math.Ceil(addedAndRemoved / float64(maxChanges) * 40)
 
-	added = min(added, int(float64(added)/addedAndRemoved*chars))
-	removed = min(removed, int(chars)-added)
+	added = minInt(added, int(float64(added)/addedAndRemoved*chars))
+	removed = minInt(removed, int(chars)-added)
 
 	return color.New(color.FgGreen).Sprint(strings.Repeat("+", added)) +
 		color.New(color.FgRed).Sprint(strings.Repeat("-", removed))
 }
 
-func min(a, b int) int {
+func minInt(a, b int) int {
 	if a < b {
 		return a
 	}

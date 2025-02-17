@@ -7,7 +7,7 @@ GOLINTER := $(GOPATH)/bin/golangci-lint
 
 
 $(GOLINTER):
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.60.3
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.5
 
 lint: $(GOLINTER)
 	$(GOLINTER) run
