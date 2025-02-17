@@ -23,7 +23,7 @@ jobs:
 
       - name: Call Dagger Function
         id: dagger
-        uses: dagger/dagger-for-github@31393402b06d9d3524e2bc67a14f63d1462821ab # v7.0.5
+        uses: dagger/dagger-for-github@b81317a976cb7f7125469707321849737cd1b3bc # v7.0.6
         with:
           version: "0.14.0"
           verb: call
