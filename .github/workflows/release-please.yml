@@ -11,7 +11,7 @@ name: release-please
 
 jobs:
   release-please:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       release_created: "${{ steps.release-please.outputs.release_created }}"
       release_tag: "${{ steps.release-please.outputs.tag_name }}"
@@ -42,7 +42,7 @@ jobs:
 
   # If a release was created, also create the binaries and attach them
   release-binaries:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - release-please
     if: needs.release-please.outputs.release_created
