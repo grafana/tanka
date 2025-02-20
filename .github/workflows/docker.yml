@@ -41,8 +41,8 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - ubuntu-latest
-          - github-hosted-ubuntu-arm64
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
 
     runs-on: ${{ matrix.platform }}
 
@@ -91,22 +91,22 @@ jobs:
           retention-days: 1
 
   merge:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: github.event_name == 'push'
     needs:
       - build
     steps:
-      - name: Download digests (linux/amd64)
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
-        with:
-          name: digests-github-hosted-ubuntu-arm64
-          path: /tmp/digests-linux-amd64
-
       - name: Download digests (linux/arm64)
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
-          name: digests-ubuntu-latest
+          name: digests-ubuntu-24.04-arm
           path: /tmp/digests-linux-arm64
+
+      - name: Download digests (linux/amd64)
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: digests-ubuntu-24.04
+          path: /tmp/digests-linux-amd64
 
       - name: Merge digests
         run: |
