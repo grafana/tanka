@@ -62,7 +62,7 @@ jobs:
 
       - name: Login to DockerHub
         if: github.event_name == 'push'
-        uses: grafana/shared-workflows/actions/dockerhub-login@main
+        uses: grafana/shared-workflows/actions/dockerhub-login@13fb504e3bfe323c1188bf244970d94b2d336e86 # dockerhub-login-v1.0.1
 
       - name: Build and push by digest
         id: build
@@ -125,7 +125,7 @@ jobs:
           tags: ${{ env.TAGS_CONFIG }}
 
       - name: Login to DockerHub
-        uses: grafana/shared-workflows/actions/dockerhub-login@main
+        uses: grafana/shared-workflows/actions/dockerhub-login@13fb504e3bfe323c1188bf244970d94b2d336e86 # dockerhub-login-v1.0.1
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
