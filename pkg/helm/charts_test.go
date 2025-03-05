@@ -50,6 +50,15 @@ func TestParseReq(t *testing.T) {
 			input: "https://helm.releases.hashicorp.com/vault@0.19.0",
 			err:   errors.New("not of form 'repo/chart@version(:path)' where repo contains no special characters"),
 		},
+		{
+			name:  "repo-with-special-chars",
+			input: "with-dashes/package@1.0.0",
+			expected: &Requirement{
+				Chart:     "with-dashes/package",
+				Version:   "1.0.0",
+				Directory: "",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -68,14 +77,9 @@ func TestAddRepos(t *testing.T) {
 	err = c.AddRepos(
 		Repo{Name: "foo", URL: "https://foo.com"},
 		Repo{Name: "foo2", URL: "https://foo2.com"},
-	)
-	assert.NoError(t, err)
-
-	// Only \w characters are allowed in repo names
-	err = c.AddRepos(
 		Repo{Name: "with-dashes", URL: "https://foo.com"},
 	)
-	assert.EqualError(t, err, "1 Repo(s) were skipped. Please check above logs for details")
+	assert.NoError(t, err)
 
 	err = c.AddRepos(
 		Repo{Name: "foo", URL: "https://foo.com"},
