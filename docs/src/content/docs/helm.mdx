@@ -310,3 +310,15 @@ custom: helm.template('foo', './charts/foo', {
 ```
 
 The literal default format used is `{{ print .kind "_" .metadata.name | snakecase }}`
+
+### Tanka deploys test charts
+
+By default, Tanka will deploy charts using the default flags for `helm
+template` which also includes things like test resources. If that's not what
+you want, then you can set the `skipTests` option when running `helm.template`:
+
+```jsonnet
+custom: helm.template('foo', './charts/foo', {
+  skipTests: true,
+})
+```
