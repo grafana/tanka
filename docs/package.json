@@ -13,10 +13,10 @@
     "@astrojs/starlight": "^0.32.2",
     "@astrojs/starlight-tailwind": "^3.0.0",
     "@fontsource-variable/inter": "^5.2.5",
-    "@tailwindcss/vite": "^4.0.9",
-    "astro": "^5.4.1",
+    "@tailwindcss/vite": "^4.0.12",
+    "astro": "^5.4.2",
     "sharp": "^0.33.5",
-    "tailwindcss": "^4.0.9",
+    "tailwindcss": "^4.0.12",
     "typescript": "^5.8.2"
   },
   "devDependencies": {
