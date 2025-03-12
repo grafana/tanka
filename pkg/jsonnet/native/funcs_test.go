@@ -3,8 +3,11 @@ package native
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
+	jsonnet "github.com/google/go-jsonnet"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,6 +22,20 @@ func callNative(name string, data []interface{}) (res interface{}, err error, ca
 	}
 
 	return nil, nil, fmt.Errorf("could not find native function %s", name)
+}
+
+// callVMNative calls a native function used by jsonnet VM that requires access to the VM resource
+func callVMNative(name string, data []interface{}) (res interface{}, err error, callerr error) {
+	vm := jsonnet.MakeVM()
+	for _, fun := range VMFuncs(vm) {
+		if fun.Name == name {
+			// Call the function
+			ret, err := fun.Func(data)
+			return ret, err, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("could not find VM native function %s", name)
 }
 
 func TestSha256(t *testing.T) {
@@ -207,4 +224,42 @@ func TestRegexSubstInvalid(t *testing.T) {
 	assert.Empty(t, callerr)
 	assert.Empty(t, ret)
 	assert.NotEmpty(t, err)
+}
+
+func TestImportFiles(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "importFilesTest")
+	assert.Nil(t, err)
+	defer os.RemoveAll(tempDir)
+	importDirName := "imports"
+	importDir := filepath.Join(tempDir, importDirName)
+	err = os.Mkdir(importDir, 0750)
+	assert.Nil(t, err)
+	importFiles := []string{"test1.libsonnet", "test2.libsonnet"}
+	excludeFiles := []string{"skip1.libsonnet", "skip2.libsonnet"}
+	for i, fName := range append(importFiles, excludeFiles...) {
+		fPath := filepath.Join(importDir, fName)
+		content := fmt.Sprintf("{ test: %d }", i)
+		err = os.WriteFile(fPath, []byte(content), 0644)
+		assert.Nil(t, err)
+	}
+	opts := make(map[string]interface{})
+	opts["calledFrom"] = filepath.Join(tempDir, "main.jsonnet")
+	opts["exclude"] = excludeFiles
+	ret, err, callerr := callVMNative("importFiles", []interface{}{importDirName, opts})
+	assert.Nil(t, err)
+	assert.Nil(t, callerr)
+	importMap, ok := ret.(map[string]interface{})
+	assert.True(t, ok)
+	for i, fName := range importFiles {
+		content, ok := importMap[fName]
+		assert.True(t, ok)
+		cMap, ok := content.(map[string]interface{})
+		assert.True(t, ok)
+		assert.Equal(t, cMap["test"], float64(i))
+	}
+	// Make sure excluded files were not imported
+	for _, fName := range excludeFiles {
+		_, ok = importMap[fName]
+		assert.False(t, ok)
+	}
 }
