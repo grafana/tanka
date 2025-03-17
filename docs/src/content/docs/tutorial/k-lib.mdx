@@ -123,14 +123,14 @@ local k = import "github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet"
 
 {
   // use locals to extract the parts we need
-  local deploy = k.apps.v1.deployment,
+  local deployment = k.apps.v1.deployment,
   local container = k.core.v1.container,
   local port = k.core.v1.containerPort,
   local service = k.core.v1.service,
   // defining the objects:
   new(name, port):: {
     // deployment constructor: name, replicas, containers
-    deployment: deploy.new(name, replicas=1, containers=[
+    deployment: deployment.new(name, replicas=1, containers=[
       // container constructor
       container.new(, "grafana/grafana")
       + container.withPorts( // add ports to the container
