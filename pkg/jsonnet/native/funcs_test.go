@@ -227,26 +227,35 @@ func TestRegexSubstInvalid(t *testing.T) {
 }
 
 func TestImportFiles(t *testing.T) {
+	cwd, err := os.Getwd()
+	assert.NoError(t, err)
 	tempDir, err := os.MkdirTemp("", "importFilesTest")
-	assert.Nil(t, err)
-	defer os.RemoveAll(tempDir)
+	assert.NoError(t, err)
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			panic(err)
+		}
+		os.RemoveAll(tempDir)
+	}()
+	err = os.Chdir(tempDir)
+	assert.NoError(t, err)
 	importDirName := "imports"
 	importDir := filepath.Join(tempDir, importDirName)
 	err = os.Mkdir(importDir, 0750)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	importFiles := []string{"test1.libsonnet", "test2.libsonnet"}
 	excludeFiles := []string{"skip1.libsonnet", "skip2.libsonnet"}
 	for i, fName := range append(importFiles, excludeFiles...) {
 		fPath := filepath.Join(importDir, fName)
 		content := fmt.Sprintf("{ test: %d }", i)
 		err = os.WriteFile(fPath, []byte(content), 0644)
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 	}
 	opts := make(map[string]interface{})
 	opts["calledFrom"] = filepath.Join(tempDir, "main.jsonnet")
 	opts["exclude"] = excludeFiles
 	ret, err, callerr := callVMNative("importFiles", []interface{}{importDirName, opts})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, callerr)
 	importMap, ok := ret.(map[string]interface{})
 	assert.True(t, ok)

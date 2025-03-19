@@ -213,6 +213,18 @@ func parseImportOpts(data interface{}) (*importFilesOpts, error) {
 	if opts.CalledFrom == "" {
 		return nil, fmt.Errorf("importFiles: `opts.calledFrom` is unset or empty\nTanka needs this to find your directory.")
 	}
+	// Make sure calledFrom is inside the current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("importFiles: failed to get current working directory: %s", err)
+	}
+	calledFromAbs, err := filepath.Abs(opts.CalledFrom)
+	if err != nil {
+		return nil, fmt.Errorf("importFiles: failed to get absolute path to `opts.calledFrom`: %s", err)
+	}
+	if !strings.HasPrefix(calledFromAbs, cwd) {
+		return nil, fmt.Errorf("importFiles: `opts.calledFrom` must be a subdirectory of the current working directory: %s", cwd)
+	}
 	return &opts, nil
 }
 
