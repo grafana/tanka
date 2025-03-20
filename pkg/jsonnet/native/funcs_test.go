@@ -3,8 +3,10 @@ package native
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	jsonnet "github.com/google/go-jsonnet"
@@ -229,13 +231,11 @@ func TestRegexSubstInvalid(t *testing.T) {
 func TestImportFiles(t *testing.T) {
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
-	tempDir, err := os.MkdirTemp("", "importFilesTest")
-	assert.NoError(t, err)
+	tempDir := t.TempDir()
 	defer func() {
 		if err := os.Chdir(cwd); err != nil {
 			panic(err)
 		}
-		os.RemoveAll(tempDir)
 	}()
 	err = os.Chdir(tempDir)
 	assert.NoError(t, err)
@@ -243,32 +243,30 @@ func TestImportFiles(t *testing.T) {
 	importDir := filepath.Join(tempDir, importDirName)
 	err = os.Mkdir(importDir, 0750)
 	assert.NoError(t, err)
-	importFiles := []string{"test1.libsonnet", "test2.libsonnet"}
-	excludeFiles := []string{"skip1.libsonnet", "skip2.libsonnet"}
-	for i, fName := range append(importFiles, excludeFiles...) {
+	importMap := map[string]string{
+		"test1.libsonnet": "{ test: 1 }",
+		"test2.libsonnet": "{ test: 2 }",
+	}
+	excludeMap := map[string]string{
+		"skip1.libsonnet": `{ test: error "should not be included" }`,
+		"skip2.libsonnet": `{ test: error "should not be included" }`,
+	}
+	expectedJson := `{"test1.libsonnet":{"test":1},"test2.libsonnet":{"test":2}}`
+	allMap := make(map[string]string)
+	maps.Copy(allMap, importMap)
+	maps.Copy(allMap, excludeMap)
+	for fName, content := range allMap {
 		fPath := filepath.Join(importDir, fName)
-		content := fmt.Sprintf("{ test: %d }", i)
 		err = os.WriteFile(fPath, []byte(content), 0644)
 		assert.NoError(t, err)
 	}
 	opts := make(map[string]interface{})
 	opts["calledFrom"] = filepath.Join(tempDir, "main.jsonnet")
-	opts["exclude"] = excludeFiles
+	opts["exclude"] = slices.Collect(maps.Keys(excludeMap))
 	ret, err, callerr := callVMNative("importFiles", []interface{}{importDirName, opts})
 	assert.NoError(t, err)
 	assert.Nil(t, callerr)
-	importMap, ok := ret.(map[string]interface{})
-	assert.True(t, ok)
-	for i, fName := range importFiles {
-		content, ok := importMap[fName]
-		assert.True(t, ok)
-		cMap, ok := content.(map[string]interface{})
-		assert.True(t, ok)
-		assert.Equal(t, cMap["test"], float64(i))
-	}
-	// Make sure excluded files were not imported
-	for _, fName := range excludeFiles {
-		_, ok = importMap[fName]
-		assert.False(t, ok)
-	}
+	retJson, err := json.Marshal(ret)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedJson, string(retJson))
 }
