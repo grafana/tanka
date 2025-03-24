@@ -46,7 +46,7 @@ jobs:
 
       - name: Retrieve renovate secrets
         id: get-secrets
-        uses: grafana/shared-workflows/actions/get-vault-secrets@97c6f45f01d4bca8a3b1acfe397113ce88858a81 # get-vault-secrets-v1.0.1
+        uses: grafana/shared-workflows/actions/get-vault-secrets@13fb504e3bfe323c1188bf244970d94b2d336e86 # get-vault-secrets-v1.0.1
         with:
           common_secrets: |
             GRAFANA_RENOVATE_APP_ID=grafana-renovate-app:app-id
