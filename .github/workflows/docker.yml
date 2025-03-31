@@ -97,13 +97,13 @@ jobs:
       - build
     steps:
       - name: Download digests (linux/arm64)
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           name: digests-ubuntu-24.04-arm
           path: /tmp/digests-linux-arm64
 
       - name: Download digests (linux/amd64)
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           name: digests-ubuntu-24.04
           path: /tmp/digests-linux-amd64
