@@ -68,7 +68,7 @@ jobs:
 
       - name: Deploy preview
         if: github.event_name == 'pull_request'
-        uses: rossjrw/pr-preview-action@df22037db54ab6ee34d3c1e2b8810ac040a530c6 # v1.6.0
+        uses: rossjrw/pr-preview-action@2fb559e4766555e23d07b73d313fe97c4f8c3cfe # v1.6.1
         with:
           deploy-repository: ${{ github.event.pull_request.head.repo.full_name }}
           source-dir: ./docs/dist/
