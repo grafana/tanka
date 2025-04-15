@@ -7,7 +7,7 @@ const isLocalPreview = process.env.npm_lifecycle_script === 'astro dev';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://tanka.dev',
-  base: process.env.PATH_PREFIX,
+  base: process.env.PATH_PREFIX ?? '/',
   trailingSlash: 'always',
   integrations: [
     starlight({
@@ -27,9 +27,11 @@ export default defineConfig({
       title: 'Grafana Tanka',
       description:
         'Grafana Tanka is the robust configuration utility for your Kubernetes cluster, powered by the Jsonnet language.',
-      social: {
-        github: 'https://github.com/grafana/tanka',
-      },
+      social: [{
+        icon: "github",
+        label: "github",
+        href: 'https://github.com/grafana/tanka',
+      }],
       logo: {
         src: './img/logo.svg',
         alt: 'Grafana Tanka logo',
