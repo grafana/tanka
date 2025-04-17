@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
+	"github.com/rs/zerolog/log"
 )
 
 type JsonnetBinaryRunner struct {
@@ -16,7 +18,15 @@ type JsonnetBinaryRunner struct {
 func (r *JsonnetBinaryRunner) EvaluateAnonymousSnippet(snippet string) (string, error) {
 	cmd := exec.Command(r.binPath, append(r.args, "-e", snippet)...)
 
-	out, err := cmd.CombinedOutput()
+	var errbuf strings.Builder
+	cmd.Stderr = &errbuf
+
+	out, err := cmd.Output()
+
+	for _, line := range strings.Split(errbuf.String(), "\n\n") {
+		log.Info().Msg(line)
+	}
+
 	if err != nil {
 		return "", fmt.Errorf("error running anonymous snippet: %w\n%s", err, string(out))
 	}
@@ -27,7 +37,15 @@ func (r *JsonnetBinaryRunner) EvaluateAnonymousSnippet(snippet string) (string, 
 func (r *JsonnetBinaryRunner) EvaluateFile(filename string) (string, error) {
 	cmd := exec.Command(r.binPath, append(r.args, filename)...)
 
-	out, err := cmd.CombinedOutput()
+	var errbuf strings.Builder
+	cmd.Stderr = &errbuf
+
+	out, err := cmd.Output()
+
+	for _, line := range strings.Split(errbuf.String(), "\n\n") {
+		log.Info().Msg(line)
+	}
+
 	if err != nil {
 		return "", fmt.Errorf("error running file %s: %w\n%s", filename, err, string(out))
 	}
