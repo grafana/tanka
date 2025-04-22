@@ -60,7 +60,7 @@ jobs:
           private-key: ${{ env.GRAFANA_RENOVATE_PRIVATE_KEY }}
 
       - name: Self-hosted Renovate
-        uses: renovatebot/github-action@19e3d87179488d6a0cd9da744d37123ea4b338e5 # v41.0.20
+        uses: renovatebot/github-action@fdbe2b88946ea8b6fb5785a5267b46677d13a4d2 # v41.0.21
         with:
           configurationFile: .github/renovate-config.json5
           # renovate: datasource=docker depName=ghcr.io/renovatebot/renovate
