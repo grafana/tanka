@@ -12,7 +12,11 @@ import (
 
 type Tanka struct{}
 
-func (m *Tanka) Build(ctx context.Context, rootDir *dagger.Directory) *dagger.Container {
+func (m *Tanka) Build(
+	ctx context.Context,
+	// +ignore=["docs/**", "dagger/**", "dist/**", ".git/**", "examples/**"]
+	rootDir *dagger.Directory,
+) *dagger.Container {
 	buildArgs := make([]dagger.BuildArg, 0, 2)
 	return dag.Container().
 		Build(rootDir, dagger.ContainerBuildOpts{

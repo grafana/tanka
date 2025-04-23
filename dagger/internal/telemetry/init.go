@@ -23,7 +23,7 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"google.golang.org/grpc"
 )
 
@@ -442,13 +442,10 @@ func Init(ctx context.Context, cfg Config) context.Context {
 			sdkmetric.WithResource(cfg.Resource),
 		}
 		const metricsExportInterval = 1 * time.Second
-		const metricsExportTimeout = 1 * time.Second
 		for _, exp := range cfg.LiveMetricExporters {
 			MetricExporters = append(MetricExporters, exp)
 			reader := sdkmetric.NewPeriodicReader(exp,
-				sdkmetric.WithInterval(metricsExportInterval),
-				sdkmetric.WithTimeout(metricsExportTimeout),
-			)
+				sdkmetric.WithInterval(metricsExportInterval))
 			meterOpts = append(meterOpts, sdkmetric.WithReader(reader))
 		}
 		ctx = WithMeterProvider(ctx, sdkmetric.NewMeterProvider(meterOpts...))

@@ -32,6 +32,42 @@ const (
 	// OTel metric for number of microseconds ALL tasks in a cgroup were stalled on CPU due to resource contention
 	CPUStatPressureFullTotal = "dagger.io/metrics.cpustat.pressure.full.total"
 
+	// OTel metric for bytes of memory currently consumed by this cgroup and its descendents
+	MemoryCurrentBytes = "dagger.io/metrics.memory.current"
+
+	// OTel metric for peak memory bytes consumed by this cgroup and its descendents
+	MemoryPeakBytes = "dagger.io/metrics.memory.peak"
+
+	// OTel metric for number of bytes received by a container, pulled from buildkit's network namespace representation
+	NetstatRxBytes = "dagger.io/metrics.netstat.rx.bytes"
+
+	// OTel metric for number of packets received by a container, pulled from buildkit's network namespace representation
+	NetstatRxPackets = "dagger.io/metrics.netstat.rx.packets"
+
+	// OTel metric for number of received packets dropped by a container, pulled from buildkit's network namespace representation
+	NetstatRxDropped = "dagger.io/metrics.netstat.rx.dropped"
+
+	// OTel metric for number of bytes transmitted by a container, pulled from buildkit's network namespace representation
+	NetstatTxBytes = "dagger.io/metrics.netstat.tx.bytes"
+
+	// OTel metric for number of packets transmitted by a container, pulled from buildkit's network namespace representation
+	NetstatTxPackets = "dagger.io/metrics.netstat.tx.packets"
+
+	// OTel metric for number of transmitted packets dropped by a container, pulled from buildkit's network namespace representation
+	NetstatTxDropped = "dagger.io/metrics.netstat.tx.dropped"
+
+	// OTel metric for number of input tokens used by an LLM
+	LLMInputTokens = "dagger.io/metrics.llm.input.tokens"
+
+	// OTel metric for number of input tokens read from cache by an LLM
+	LLMInputTokensCacheReads = "dagger.io/metrics.llm.input.tokens.cache.reads"
+
+	// OTel metric for number of input tokens written to cache by an LLM
+	LLMInputTokensCacheWrites = "dagger.io/metrics.llm.input.tokens.cache.writes"
+
+	// OTel metric for number of output tokens used by an LLM
+	LLMOutputTokens = "dagger.io/metrics.llm.output.tokens"
+
 	// OTel metric units should be in UCUM format
 	// https://unitsofmeasure.org/ucum
 
