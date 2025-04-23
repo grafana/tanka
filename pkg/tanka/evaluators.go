@@ -105,7 +105,7 @@ local singleEnv(object) =
          && std.objectHas(object, 'kind')
       then
         if object.kind == 'Environment'
-        && object.metadata.name == '%s'
+        && std.member(object.metadata.name, '%s')
         then object { data:: super.data }
         else {}
       else
