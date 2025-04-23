@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -15,6 +16,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
+	collogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
 	otlpcommonv1 "go.opentelemetry.io/proto/otlp/common/v1"
 	otlplogsv1 "go.opentelemetry.io/proto/otlp/logs/v1"
 	otlpmetricsv1 "go.opentelemetry.io/proto/otlp/metrics/v1"
@@ -440,7 +442,7 @@ func KeyValues(attrs []attribute.KeyValue) []*otlpcommonv1.KeyValue {
 	return out
 }
 
-// linksFromPB transforms span Links to OTLP span linksFromPB.
+// SpanLinksToPB transforms span Links to OTLP span linksFromPB.
 func SpanLinksToPB(links []sdktrace.Link) []*otlptracev1.Span_Link {
 	if len(links) == 0 {
 		return nil
@@ -635,10 +637,12 @@ func StatusCodeFromPB(st *otlptracev1.Status) codes.Code {
 		return codes.Unset
 	}
 	switch st.Code {
+	case otlptracev1.Status_STATUS_CODE_OK:
+		return codes.Ok
 	case otlptracev1.Status_STATUS_CODE_ERROR:
 		return codes.Error
 	default:
-		return codes.Ok
+		return codes.Unset
 	}
 }
 
@@ -830,27 +834,6 @@ func InstrumentationScopeFromPB(is *otlpcommonv1.InstrumentationScope) instrumen
 	}
 }
 
-func LogsFromPB(resLogs []*otlplogsv1.ResourceLogs) []sdklog.Record {
-	logs := []sdklog.Record{}
-	for _, rl := range resLogs {
-		for _, scopeLog := range rl.GetScopeLogs() {
-			for _, rec := range scopeLog.GetLogRecords() {
-				var logRec sdklog.Record
-				logRec.SetTraceID(trace.TraceID(rec.GetTraceId()))
-				logRec.SetSpanID(trace.SpanID(rec.GetSpanId()))
-				logRec.SetTimestamp(time.Unix(0, int64(rec.GetTimeUnixNano())))
-				logRec.SetBody(LogValueFromPB(rec.GetBody()))
-				logRec.SetSeverity(log.Severity(rec.GetSeverityNumber()))
-				logRec.SetSeverityText(rec.GetSeverityText())
-				logRec.SetObservedTimestamp(time.Unix(0, int64(rec.GetObservedTimeUnixNano())))
-				logRec.SetAttributes(LogKeyValuesFromPB(rec.GetAttributes())...)
-				logs = append(logs, logRec)
-			}
-		}
-	}
-	return logs
-}
-
 func LogKeyValuesFromPB(kvs []*otlpcommonv1.KeyValue) []log.KeyValue {
 	res := make([]log.KeyValue, len(kvs))
 	for i, kv := range kvs {
@@ -963,6 +946,75 @@ func LogValueToPB(v log.Value) *otlpcommonv1.AnyValue {
 	return av
 }
 
+func ReexportLogsFromPB(ctx context.Context, exp sdklog.Exporter, req *collogspb.ExportLogsServiceRequest) error {
+	processor := &collectLogProcessor{}
+
+	for _, rl := range req.GetResourceLogs() {
+		resource := ResourceFromPB(rl.GetSchemaUrl(), rl.GetResource())
+
+		provider := sdklog.NewLoggerProvider(
+			sdklog.WithResource(resource),
+			sdklog.WithProcessor(processor),
+		)
+
+		for _, scopeLog := range rl.GetScopeLogs() {
+			logger := provider.Logger(scopeLog.GetScope().GetName(),
+				log.WithInstrumentationVersion(scopeLog.GetScope().GetVersion()),
+				log.WithInstrumentationAttributes(
+					AttributesFromProto(scopeLog.GetScope().GetAttributes())...,
+				),
+				log.WithSchemaURL(scopeLog.GetSchemaUrl()),
+			)
+			for _, rec := range scopeLog.GetLogRecords() {
+				var logRec log.Record
+				var tid trace.TraceID
+				var sid trace.SpanID
+				if rec.GetTraceId() != nil {
+					tid = trace.TraceID(rec.GetTraceId())
+				}
+				if rec.GetSpanId() != nil {
+					sid = trace.SpanID(rec.GetSpanId())
+				}
+				emitCtx := trace.ContextWithSpanContext(ctx, trace.NewSpanContext(trace.SpanContextConfig{
+					TraceID: tid,
+					SpanID:  sid,
+				}))
+				logRec.SetTimestamp(time.Unix(0, int64(rec.GetTimeUnixNano())))
+				logRec.SetBody(LogValueFromPB(rec.GetBody()))
+				logRec.SetSeverity(log.Severity(rec.GetSeverityNumber()))
+				logRec.SetSeverityText(rec.GetSeverityText())
+				logRec.SetObservedTimestamp(time.Unix(0, int64(rec.GetObservedTimeUnixNano())))
+				logRec.AddAttributes(LogKeyValuesFromPB(rec.GetAttributes())...)
+				logger.Emit(emitCtx, logRec)
+			}
+		}
+	}
+	return exp.Export(ctx, processor.logs)
+}
+
+type collectLogProcessor struct {
+	logs []sdklog.Record
+}
+
+var _ sdklog.Processor = (*collectLogProcessor)(nil)
+
+func (p *collectLogProcessor) OnEmit(ctx context.Context, record *sdklog.Record) error {
+	p.logs = append(p.logs, *record)
+	return nil
+}
+
+func (p *collectLogProcessor) Enabled(ctx context.Context, record sdklog.Record) bool {
+	return true
+}
+
+func (p *collectLogProcessor) Shutdown(ctx context.Context) error {
+	return nil
+}
+
+func (p *collectLogProcessor) ForceFlush(ctx context.Context) error {
+	return nil
+}
+
 func ResourceMetricsFromPB(pbResourceMetrics *otlpmetricsv1.ResourceMetrics) (*metricdata.ResourceMetrics, error) {
 	resourceMetrics := &metricdata.ResourceMetrics{
 		Resource: ResourceFromPB(pbResourceMetrics.GetSchemaUrl(), pbResourceMetrics.GetResource()),
@@ -975,7 +1027,7 @@ func ResourceMetricsFromPB(pbResourceMetrics *otlpmetricsv1.ResourceMetrics) (*m
 	return resourceMetrics, nil
 }
 
-// ResourceMetrics returns an OTLP ResourceMetrics generated from rm. If rm
+// ResourceMetricsToPB returns an OTLP ResourceMetrics generated from rm. If rm
 // contains invalid ScopeMetrics, an error will be returned along with an OTLP
 // ResourceMetrics that contains partial OTLP ScopeMetrics.
 func ResourceMetricsToPB(rm *metricdata.ResourceMetrics) (*otlpmetricsv1.ResourceMetrics, error) {
@@ -1007,7 +1059,7 @@ func ScopeMetricsFromPB(pbScopeMetrics []*otlpmetricsv1.ScopeMetrics) ([]metricd
 	return scopeMetrics, errs
 }
 
-// ScopeMetrics returns a slice of OTLP ScopeMetrics generated from sms. If
+// ScopeMetricsToPB returns a slice of OTLP ScopeMetrics generated from sms. If
 // sms contains invalid metric values, an error will be returned along with a
 // slice that contains partial OTLP ScopeMetrics.
 func ScopeMetricsToPB(sms []metricdata.ScopeMetrics) ([]*otlpmetricsv1.ScopeMetrics, error) {

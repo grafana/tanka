@@ -5,18 +5,21 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
+	"sort"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/grafana/tanka/dagger/internal/dagger"
 	"github.com/grafana/tanka/dagger/internal/querybuilder"
 	"github.com/grafana/tanka/dagger/internal/telemetry"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 var dag = dagger.Connect()
@@ -77,12 +80,34 @@ func main() {
 	})))
 
 	if err := dispatch(ctx); err != nil {
-		fmt.Println(err.Error())
 		os.Exit(2)
 	}
 }
 
-func dispatch(ctx context.Context) error {
+func convertError(rerr error) *dagger.Error {
+	var gqlErr *gqlerror.Error
+	if errors.As(rerr, &gqlErr) {
+		dagErr := dag.Error(gqlErr.Message)
+		if gqlErr.Extensions != nil {
+			keys := make([]string, 0, len(gqlErr.Extensions))
+			for k := range gqlErr.Extensions {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				val, err := json.Marshal(gqlErr.Extensions[k])
+				if err != nil {
+					fmt.Println("failed to marshal error value:", err)
+				}
+				dagErr = dagErr.WithValue(k, dagger.JSON(val))
+			}
+		}
+		return dagErr
+	}
+	return dag.Error(rerr.Error())
+}
+
+func dispatch(ctx context.Context) (rerr error) {
 	ctx = telemetry.InitEmbedded(ctx, resource.NewWithAttributes(
 		semconv.SchemaURL,
 		semconv.ServiceNameKey.String("dagger-go-sdk"),
@@ -96,6 +121,14 @@ func dispatch(ctx context.Context) error {
 	setMarshalContext(ctx)
 
 	fnCall := dag.CurrentFunctionCall()
+	defer func() {
+		if rerr != nil {
+			if err := fnCall.ReturnError(ctx, convertError(rerr)); err != nil {
+				fmt.Println("failed to return error:", err, "\noriginal error:", rerr)
+			}
+		}
+	}()
+
 	parentName, err := fnCall.ParentName(ctx)
 	if err != nil {
 		return fmt.Errorf("get parent name: %w", err)
@@ -128,13 +161,18 @@ func dispatch(ctx context.Context) error {
 
 	result, err := invoke(ctx, []byte(parentJson), parentName, fnName, inputArgs)
 	if err != nil {
-		return fmt.Errorf("invoke: %w", err)
+		var exec *dagger.ExecError
+		if errors.As(err, &exec) {
+			return exec.Unwrap()
+		}
+		return err
 	}
 	resultBytes, err := json.Marshal(result)
 	if err != nil {
 		return fmt.Errorf("marshal: %w", err)
 	}
-	if err = fnCall.ReturnValue(ctx, dagger.JSON(resultBytes)); err != nil {
+
+	if err := fnCall.ReturnValue(ctx, dagger.JSON(resultBytes)); err != nil {
 		return fmt.Errorf("store return value: %w", err)
 	}
 	return nil
@@ -204,18 +242,18 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 						dag.Function("Build",
 							dag.TypeDef().WithObject("Container")).
 							WithSourceMap(dag.SourceMap("main.go", 15, 1)).
-							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 15, 44)})).
+							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 18, 2), Ignore: []string{"docs/**", "dagger/**", "dist/**", ".git/**", "examples/**"}})).
 					WithFunction(
 						dag.Function("GetGoVersion",
 							dag.TypeDef().WithKind(dagger.TypeDefKindStringKind)).
-							WithSourceMap(dag.SourceMap("main.go", 23, 1)).
-							WithArg("file", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 23, 51)})).
+							WithSourceMap(dag.SourceMap("main.go", 27, 1)).
+							WithArg("file", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 27, 51)})).
 					WithFunction(
 						dag.Function("AcceptanceTests",
 							dag.TypeDef().WithKind(dagger.TypeDefKindStringKind)).
-							WithSourceMap(dag.SourceMap("main.go", 39, 1)).
-							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 39, 54)}).
-							WithArg("acceptanceTestsDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 39, 81)}))), nil
+							WithSourceMap(dag.SourceMap("main.go", 43, 1)).
+							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 43, 54)}).
+							WithArg("acceptanceTestsDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 43, 81)}))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}

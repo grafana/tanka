@@ -1,7 +1,9 @@
 {
   "name": "tanka",
-  "engineVersion": "v0.14.0",
-  "sdk": "go",
+  "engineVersion": "v0.18.3",
+  "sdk": {
+    "source": "go"
+  },
   "dependencies": [
     {
       "name": "k3s",
@@ -9,18 +11,5 @@
       "pin": "e0bd6b9f5519c49db4b6eb0689927214720976f9"
     }
   ],
-  "source": "dagger",
-  "views": [
-    {
-      "name": "source-files",
-      "patterns": [
-        "go.mod",
-        "go.sum",
-        "Dockerfile",
-        "Makefile",
-        "cmd",
-        "pkg"
-      ]
-    }
-  ]
+  "source": "dagger"
 }

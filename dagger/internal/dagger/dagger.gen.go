@@ -12,7 +12,6 @@ import (
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/Khan/genqlient/graphql"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -102,16 +101,7 @@ type ExecError struct {
 }
 
 func (e *ExecError) Error() string {
-	// As a default when just printing the error, include the stdout
-	// and stderr for visibility
-	msg := e.Message()
-	if strings.TrimSpace(e.Stdout) != "" {
-		msg += "\nStdout:\n" + e.Stdout
-	}
-	if strings.TrimSpace(e.Stderr) != "" {
-		msg += "\nStderr:\n" + e.Stderr
-	}
-	return msg
+	return e.Message()
 }
 
 func (e *ExecError) Message() string {
@@ -121,6 +111,9 @@ func (e *ExecError) Message() string {
 func (e *ExecError) Unwrap() error {
 	return e.original
 }
+
+// The `BindingID` scalar type represents an identifier for an object of type Binding.
+type BindingID string
 
 // The `CacheVolumeID` scalar type represents an identifier for an object of type CacheVolume.
 type CacheVolumeID string
@@ -140,8 +133,17 @@ type EnumTypeDefID string
 // The `EnumValueTypeDefID` scalar type represents an identifier for an object of type EnumValueTypeDef.
 type EnumValueTypeDefID string
 
+// The `EnvID` scalar type represents an identifier for an object of type Env.
+type EnvID string
+
 // The `EnvVariableID` scalar type represents an identifier for an object of type EnvVariable.
 type EnvVariableID string
+
+// The `ErrorID` scalar type represents an identifier for an object of type Error.
+type ErrorID string
+
+// The `ErrorValueID` scalar type represents an identifier for an object of type ErrorValue.
+type ErrorValueID string
 
 // The `FieldTypeDefID` scalar type represents an identifier for an object of type FieldTypeDef.
 type FieldTypeDefID string
@@ -164,9 +166,6 @@ type FunctionID string
 // The `GeneratedCodeID` scalar type represents an identifier for an object of type GeneratedCode.
 type GeneratedCodeID string
 
-// The `GitModuleSourceID` scalar type represents an identifier for an object of type GitModuleSource.
-type GitModuleSourceID string
-
 // The `GitRefID` scalar type represents an identifier for an object of type GitRef.
 type GitRefID string
 
@@ -185,26 +184,26 @@ type JSON string
 // The `K3SID` scalar type represents an identifier for an object of type K3S.
 type K3SID string
 
+// The `LLMID` scalar type represents an identifier for an object of type LLM.
+type LLMID string
+
+// The `LLMTokenUsageID` scalar type represents an identifier for an object of type LLMTokenUsage.
+type LLMTokenUsageID string
+
 // The `LabelID` scalar type represents an identifier for an object of type Label.
 type LabelID string
 
 // The `ListTypeDefID` scalar type represents an identifier for an object of type ListTypeDef.
 type ListTypeDefID string
 
-// The `LocalModuleSourceID` scalar type represents an identifier for an object of type LocalModuleSource.
-type LocalModuleSourceID string
-
-// The `ModuleDependencyID` scalar type represents an identifier for an object of type ModuleDependency.
-type ModuleDependencyID string
+// The `ModuleConfigClientID` scalar type represents an identifier for an object of type ModuleConfigClient.
+type ModuleConfigClientID string
 
 // The `ModuleID` scalar type represents an identifier for an object of type Module.
 type ModuleID string
 
 // The `ModuleSourceID` scalar type represents an identifier for an object of type ModuleSource.
 type ModuleSourceID string
-
-// The `ModuleSourceViewID` scalar type represents an identifier for an object of type ModuleSourceView.
-type ModuleSourceViewID string
 
 // The `ObjectTypeDefID` scalar type represents an identifier for an object of type ObjectTypeDef.
 type ObjectTypeDefID string
@@ -216,6 +215,9 @@ type Platform string
 
 // The `PortID` scalar type represents an identifier for an object of type Port.
 type PortID string
+
+// The `SDKConfigID` scalar type represents an identifier for an object of type SDKConfig.
+type SDKConfigID string
 
 // The `ScalarTypeDefID` scalar type represents an identifier for an object of type ScalarTypeDef.
 type ScalarTypeDefID string
@@ -271,6 +273,244 @@ type PortForward struct {
 
 	// Transport layer protocol to use for traffic.
 	Protocol NetworkProtocol `json:"protocol,omitempty"`
+}
+
+type Binding struct {
+	query *querybuilder.Selection
+
+	digest   *string
+	id       *BindingID
+	name     *string
+	typeName *string
+}
+
+func (r *Binding) WithGraphQLQuery(q *querybuilder.Selection) *Binding {
+	return &Binding{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type CacheVolume
+func (r *Binding) AsCacheVolume() *CacheVolume {
+	q := r.query.Select("asCacheVolume")
+
+	return &CacheVolume{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type Container
+func (r *Binding) AsContainer() *Container {
+	q := r.query.Select("asContainer")
+
+	return &Container{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type Directory
+func (r *Binding) AsDirectory() *Directory {
+	q := r.query.Select("asDirectory")
+
+	return &Directory{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type Env
+func (r *Binding) AsEnv() *Env {
+	q := r.query.Select("asEnv")
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type File
+func (r *Binding) AsFile() *File {
+	q := r.query.Select("asFile")
+
+	return &File{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type GitRef
+func (r *Binding) AsGitRef() *GitRef {
+	q := r.query.Select("asGitRef")
+
+	return &GitRef{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type GitRepository
+func (r *Binding) AsGitRepository() *GitRepository {
+	q := r.query.Select("asGitRepository")
+
+	return &GitRepository{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type K3S
+func (r *Binding) AsK3S() *K3S {
+	q := r.query.Select("asK3S")
+
+	return &K3S{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type LLM
+func (r *Binding) AsLLM() *LLM {
+	q := r.query.Select("asLLM")
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type Module
+func (r *Binding) AsModule() *Module {
+	q := r.query.Select("asModule")
+
+	return &Module{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type ModuleConfigClient
+func (r *Binding) AsModuleConfigClient() *ModuleConfigClient {
+	q := r.query.Select("asModuleConfigClient")
+
+	return &ModuleConfigClient{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type ModuleSource
+func (r *Binding) AsModuleSource() *ModuleSource {
+	q := r.query.Select("asModuleSource")
+
+	return &ModuleSource{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type Secret
+func (r *Binding) AsSecret() *Secret {
+	q := r.query.Select("asSecret")
+
+	return &Secret{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type Service
+func (r *Binding) AsService() *Service {
+	q := r.query.Select("asService")
+
+	return &Service{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type Socket
+func (r *Binding) AsSocket() *Socket {
+	q := r.query.Select("asSocket")
+
+	return &Socket{
+		query: q,
+	}
+}
+
+// The digest of the binding value
+func (r *Binding) Digest(ctx context.Context) (string, error) {
+	if r.digest != nil {
+		return *r.digest, nil
+	}
+	q := r.query.Select("digest")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// A unique identifier for this Binding.
+func (r *Binding) ID(ctx context.Context) (BindingID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response BindingID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *Binding) XXX_GraphQLType() string {
+	return "Binding"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *Binding) XXX_GraphQLIDType() string {
+	return "BindingID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *Binding) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *Binding) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *Binding) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadBindingFromID(BindingID(id))
+	return nil
+}
+
+// The binding name
+func (r *Binding) Name(ctx context.Context) (string, error) {
+	if r.name != nil {
+		return *r.name, nil
+	}
+	q := r.query.Select("name")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The binding type
+func (r *Binding) TypeName(ctx context.Context) (string, error) {
+	if r.typeName != nil {
+		return *r.typeName, nil
+	}
+	q := r.query.Select("typeName")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 // A directory whose contents persist across runs.
@@ -369,11 +609,59 @@ func (r *Container) WithGraphQLQuery(q *querybuilder.Selection) *Container {
 	}
 }
 
+// ContainerAsServiceOpts contains options for Container.AsService
+type ContainerAsServiceOpts struct {
+	// Command to run instead of the container's default command (e.g., ["go", "run", "main.go"]).
+	//
+	// If empty, the container's default command is used.
+	Args []string
+	// If the container has an entrypoint, prepend it to the args.
+	UseEntrypoint bool
+	// Provides Dagger access to the executed command.
+	//
+	// Do not use this option unless you trust the command being executed; the command being executed WILL BE GRANTED FULL ACCESS TO YOUR HOST FILESYSTEM.
+	ExperimentalPrivilegedNesting bool
+	// Execute the command with all root capabilities. This is similar to running a command with "sudo" or executing "docker run" with the "--privileged" flag. Containerization does not provide any security guarantees when using this option. It should only be used when absolutely necessary and only with trusted commands.
+	InsecureRootCapabilities bool
+	// Replace "${VAR}" or "$VAR" in the args according to the current environment variables defined in the container (e.g. "/$VAR/foo").
+	Expand bool
+	// If set, skip the automatic init process injected into containers by default.
+	//
+	// This should only be used if the user requires that their exec process be the pid 1 process in the container. Otherwise it may result in unexpected behavior.
+	NoInit bool
+}
+
 // Turn the container into a Service.
 //
 // Be sure to set any exposed ports before this conversion.
-func (r *Container) AsService() *Service {
+func (r *Container) AsService(opts ...ContainerAsServiceOpts) *Service {
 	q := r.query.Select("asService")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `args` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Args) {
+			q = q.Arg("args", opts[i].Args)
+		}
+		// `useEntrypoint` optional argument
+		if !querybuilder.IsZeroValue(opts[i].UseEntrypoint) {
+			q = q.Arg("useEntrypoint", opts[i].UseEntrypoint)
+		}
+		// `experimentalPrivilegedNesting` optional argument
+		if !querybuilder.IsZeroValue(opts[i].ExperimentalPrivilegedNesting) {
+			q = q.Arg("experimentalPrivilegedNesting", opts[i].ExperimentalPrivilegedNesting)
+		}
+		// `insecureRootCapabilities` optional argument
+		if !querybuilder.IsZeroValue(opts[i].InsecureRootCapabilities) {
+			q = q.Arg("insecureRootCapabilities", opts[i].InsecureRootCapabilities)
+		}
+		// `expand` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Expand) {
+			q = q.Arg("expand", opts[i].Expand)
+		}
+		// `noInit` optional argument
+		if !querybuilder.IsZeroValue(opts[i].NoInit) {
+			q = q.Arg("noInit", opts[i].NoInit)
+		}
+	}
 
 	return &Service{
 		query: q,
@@ -396,7 +684,7 @@ type ContainerAsTarballOpts struct {
 	MediaTypes ImageMediaTypes
 }
 
-// Returns a File representing the container serialized to a tarball.
+// Package the container state as an OCI image, and return it as a tar archive
 func (r *Container) AsTarball(opts ...ContainerAsTarballOpts) *File {
 	q := r.query.Select("asTarball")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -433,6 +721,10 @@ type ContainerBuildOpts struct {
 	//
 	// They can be accessed in the Dockerfile using the "secret" mount type and mount path /run/secrets/[secret-name], e.g. RUN --mount=type=secret,id=my-secret curl [http://example.com?token=$(cat /run/secrets/my-secret)](http://example.com?token=$(cat /run/secrets/my-secret))
 	Secrets []*Secret
+	// If set, skip the automatic init process injected into containers created by RUN statements.
+	//
+	// This should only be used if the user requires that their exec processes be the pid 1 process in the container. Otherwise it may result in unexpected behavior.
+	NoInit bool
 }
 
 // Initializes this container from a Dockerfile build.
@@ -456,6 +748,10 @@ func (r *Container) Build(context *Directory, opts ...ContainerBuildOpts) *Conta
 		if !querybuilder.IsZeroValue(opts[i].Secrets) {
 			q = q.Arg("secrets", opts[i].Secrets)
 		}
+		// `noInit` optional argument
+		if !querybuilder.IsZeroValue(opts[i].NoInit) {
+			q = q.Arg("noInit", opts[i].NoInit)
+		}
 	}
 	q = q.Arg("context", context)
 
@@ -464,7 +760,7 @@ func (r *Container) Build(context *Directory, opts ...ContainerBuildOpts) *Conta
 	}
 }
 
-// Retrieves default arguments for future commands.
+// Return the container's default arguments.
 func (r *Container) DefaultArgs(ctx context.Context) ([]string, error) {
 	q := r.query.Select("defaultArgs")
 
@@ -480,7 +776,7 @@ type ContainerDirectoryOpts struct {
 	Expand bool
 }
 
-// Retrieves a directory at the given path.
+// Retrieve a directory from the container's root filesystem
 //
 // Mounts are included.
 func (r *Container) Directory(path string, opts ...ContainerDirectoryOpts) *Directory {
@@ -498,7 +794,7 @@ func (r *Container) Directory(path string, opts ...ContainerDirectoryOpts) *Dire
 	}
 }
 
-// Retrieves entrypoint to be prepended to the arguments of all commands.
+// Return the container's OCI entrypoint.
 func (r *Container) Entrypoint(ctx context.Context) ([]string, error) {
 	q := r.query.Select("entrypoint")
 
@@ -555,9 +851,9 @@ func (r *Container) EnvVariables(ctx context.Context) ([]EnvVariable, error) {
 	return convert(response), nil
 }
 
-// The exit code of the last executed command.
+// The exit code of the last executed command
 //
-// Returns an error if no command was set.
+// Returns an error if no command was executed
 func (r *Container) ExitCode(ctx context.Context) (int, error) {
 	if r.exitCode != nil {
 		return *r.exitCode, nil
@@ -708,7 +1004,7 @@ func (r *Container) File(path string, opts ...ContainerFileOpts) *File {
 	}
 }
 
-// Initializes this container from a pulled base image.
+// Download a container image, and apply it to the container state. All previous state will be lost.
 func (r *Container) From(address string) *Container {
 	q := r.query.Select("from")
 	q = q.Arg("address", address)
@@ -885,15 +1181,13 @@ type ContainerPublishOpts struct {
 	ForcedCompression ImageLayerCompression
 	// Use the specified media types for the published image's layers.
 	//
-	// Defaults to OCI, which is largely compatible with most recent registries, but Docker may be needed for older registries without OCI support.
+	// Defaults to "OCI", which is compatible with most recent registries, but "Docker" may be needed for older registries without OCI support.
 	MediaTypes ImageMediaTypes
 }
 
-// Publishes this container as a new image to the specified address.
+// Package the container state as an OCI image, and publish it to a registry
 //
-// Publish returns a fully qualified ref.
-//
-// It can also publish platform variants.
+// Returns the fully qualified address of the published image, with digest
 func (r *Container) Publish(ctx context.Context, address string, opts ...ContainerPublishOpts) (string, error) {
 	if r.publish != nil {
 		return *r.publish, nil
@@ -921,7 +1215,7 @@ func (r *Container) Publish(ctx context.Context, address string, opts ...Contain
 	return response, q.Execute(ctx)
 }
 
-// Retrieves this container's root filesystem. Mounts are not included.
+// Return a snapshot of the container's root filesystem. The snapshot can be modified then written back using withRootfs. Use that method for filesystem modifications.
 func (r *Container) Rootfs() *Directory {
 	q := r.query.Select("rootfs")
 
@@ -930,9 +1224,9 @@ func (r *Container) Rootfs() *Directory {
 	}
 }
 
-// The error stream of the last executed command.
+// The buffered standard error stream of the last executed command
 //
-// Returns an error if no command was set.
+// Returns an error if no command was executed
 func (r *Container) Stderr(ctx context.Context) (string, error) {
 	if r.stderr != nil {
 		return *r.stderr, nil
@@ -945,9 +1239,9 @@ func (r *Container) Stderr(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// The output stream of the last executed command.
+// The buffered standard output stream of the last executed command
 //
-// Returns an error if no command was set.
+// Returns an error if no command was executed
 func (r *Container) Stdout(ctx context.Context) (string, error) {
 	if r.stdout != nil {
 		return *r.stdout, nil
@@ -1018,6 +1312,24 @@ type ContainerUpOpts struct {
 	Ports []PortForward
 	// Bind each tunnel port to a random port on the host.
 	Random bool
+	// Command to run instead of the container's default command (e.g., ["go", "run", "main.go"]).
+	//
+	// If empty, the container's default command is used.
+	Args []string
+	// If the container has an entrypoint, prepend it to the args.
+	UseEntrypoint bool
+	// Provides Dagger access to the executed command.
+	//
+	// Do not use this option unless you trust the command being executed; the command being executed WILL BE GRANTED FULL ACCESS TO YOUR HOST FILESYSTEM.
+	ExperimentalPrivilegedNesting bool
+	// Execute the command with all root capabilities. This is similar to running a command with "sudo" or executing "docker run" with the "--privileged" flag. Containerization does not provide any security guarantees when using this option. It should only be used when absolutely necessary and only with trusted commands.
+	InsecureRootCapabilities bool
+	// Replace "${VAR}" or "$VAR" in the args according to the current environment variables defined in the container (e.g. "/$VAR/foo").
+	Expand bool
+	// If set, skip the automatic init process injected into containers by default.
+	//
+	// This should only be used if the user requires that their exec process be the pid 1 process in the container. Otherwise it may result in unexpected behavior.
+	NoInit bool
 }
 
 // Starts a Service and creates a tunnel that forwards traffic from the caller's network to that service.
@@ -1036,6 +1348,30 @@ func (r *Container) Up(ctx context.Context, opts ...ContainerUpOpts) error {
 		// `random` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Random) {
 			q = q.Arg("random", opts[i].Random)
+		}
+		// `args` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Args) {
+			q = q.Arg("args", opts[i].Args)
+		}
+		// `useEntrypoint` optional argument
+		if !querybuilder.IsZeroValue(opts[i].UseEntrypoint) {
+			q = q.Arg("useEntrypoint", opts[i].UseEntrypoint)
+		}
+		// `experimentalPrivilegedNesting` optional argument
+		if !querybuilder.IsZeroValue(opts[i].ExperimentalPrivilegedNesting) {
+			q = q.Arg("experimentalPrivilegedNesting", opts[i].ExperimentalPrivilegedNesting)
+		}
+		// `insecureRootCapabilities` optional argument
+		if !querybuilder.IsZeroValue(opts[i].InsecureRootCapabilities) {
+			q = q.Arg("insecureRootCapabilities", opts[i].InsecureRootCapabilities)
+		}
+		// `expand` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Expand) {
+			q = q.Arg("expand", opts[i].Expand)
+		}
+		// `noInit` optional argument
+		if !querybuilder.IsZeroValue(opts[i].NoInit) {
+			q = q.Arg("noInit", opts[i].NoInit)
 		}
 	}
 
@@ -1066,7 +1402,7 @@ func (r *Container) WithAnnotation(name string, value string) *Container {
 	}
 }
 
-// Configures default arguments for future commands.
+// Configures default arguments for future commands. Like CMD in Dockerfile.
 func (r *Container) WithDefaultArgs(args []string) *Container {
 	q := r.query.Select("withDefaultArgs")
 	q = q.Arg("args", args)
@@ -1122,7 +1458,7 @@ type ContainerWithDirectoryOpts struct {
 	Expand bool
 }
 
-// Retrieves this container plus a directory written at the given path.
+// Return a new container snapshot, with a directory added to its filesystem
 func (r *Container) WithDirectory(path string, directory *Directory, opts ...ContainerWithDirectoryOpts) *Container {
 	assertNotNil("directory", directory)
 	q := r.query.Select("withDirectory")
@@ -1154,11 +1490,11 @@ func (r *Container) WithDirectory(path string, directory *Directory, opts ...Con
 
 // ContainerWithEntrypointOpts contains options for Container.WithEntrypoint
 type ContainerWithEntrypointOpts struct {
-	// Don't remove the default arguments when setting the entrypoint.
+	// Don't reset the default arguments when setting the entrypoint. By default it is reset, since entrypoint and default args are often tightly coupled.
 	KeepDefaultArgs bool
 }
 
-// Retrieves this container but with a different command entrypoint.
+// Set an OCI-style entrypoint. It will be included in the container's OCI configuration. Note, withExec ignores the entrypoint by default.
 func (r *Container) WithEntrypoint(args []string, opts ...ContainerWithEntrypointOpts) *Container {
 	q := r.query.Select("withEntrypoint")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -1180,7 +1516,7 @@ type ContainerWithEnvVariableOpts struct {
 	Expand bool
 }
 
-// Retrieves this container plus the given environment variable.
+// Set a new environment variable in the container.
 func (r *Container) WithEnvVariable(name string, value string, opts ...ContainerWithEnvVariableOpts) *Container {
 	q := r.query.Select("withEnvVariable")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -1199,31 +1535,31 @@ func (r *Container) WithEnvVariable(name string, value string, opts ...Container
 
 // ContainerWithExecOpts contains options for Container.WithExec
 type ContainerWithExecOpts struct {
-	// If the container has an entrypoint, prepend it to the args.
+	// Apply the OCI entrypoint, if present, by prepending it to the args. Ignored by default.
 	UseEntrypoint bool
-	// Content to write to the command's standard input before closing (e.g., "Hello world").
+	// Content to write to the command's standard input. Example: "Hello world")
 	Stdin string
-	// Redirect the command's standard output to a file in the container (e.g., "/tmp/stdout").
+	// Redirect the command's standard output to a file in the container. Example: "./stdout.txt"
 	RedirectStdout string
-	// Redirect the command's standard error to a file in the container (e.g., "/tmp/stderr").
+	// Like redirectStdout, but for standard error
 	RedirectStderr string
 	// Exit codes this command is allowed to exit with without error
 	Expect ReturnType
 	// Provides Dagger access to the executed command.
-	//
-	// Do not use this option unless you trust the command being executed; the command being executed WILL BE GRANTED FULL ACCESS TO YOUR HOST FILESYSTEM.
 	ExperimentalPrivilegedNesting bool
-	// Execute the command with all root capabilities. This is similar to running a command with "sudo" or executing "docker run" with the "--privileged" flag. Containerization does not provide any security guarantees when using this option. It should only be used when absolutely necessary and only with trusted commands.
+	// Execute the command with all root capabilities. Like --privileged in Docker
+	//
+	// DANGER: this grants the command full access to the host system. Only use when 1) you trust the command being executed and 2) you specifically need this level of access.
 	InsecureRootCapabilities bool
 	// Replace "${VAR}" or "$VAR" in the args according to the current environment variables defined in the container (e.g. "/$VAR/foo").
 	Expand bool
-	// If set, skip the automatic init process injected into containers by default.
+	// Skip the automatic init process injected into containers by default.
 	//
-	// This should only be used if the user requires that their exec process be the pid 1 process in the container. Otherwise it may result in unexpected behavior.
+	// Only use this if you specifically need the command to be pid 1 in the container. Otherwise it may result in unexpected behavior. If you're not sure, you don't need this.
 	NoInit bool
 }
 
-// Retrieves this container after executing the specified command inside it.
+// Execute a command in the container, and return a new snapshot of the container state after execution.
 func (r *Container) WithExec(args []string, opts ...ContainerWithExecOpts) *Container {
 	q := r.query.Select("withExec")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -1273,15 +1609,15 @@ func (r *Container) WithExec(args []string, opts ...ContainerWithExecOpts) *Cont
 
 // ContainerWithExposedPortOpts contains options for Container.WithExposedPort
 type ContainerWithExposedPortOpts struct {
-	// Transport layer network protocol
+	// Network protocol. Example: "tcp"
 	Protocol NetworkProtocol
-	// Optional port description
+	// Port description. Example: "payment API endpoint"
 	Description string
 	// Skip the health check when run as a service.
 	ExperimentalSkipHealthcheck bool
 }
 
-// Expose a network port.
+// Expose a network port. Like EXPOSE in Dockerfile (but with healthcheck support)
 //
 // Exposed ports serve two purposes:
 //
@@ -1313,7 +1649,7 @@ func (r *Container) WithExposedPort(port int, opts ...ContainerWithExposedPortOp
 
 // ContainerWithFileOpts contains options for Container.WithFile
 type ContainerWithFileOpts struct {
-	// Permission given to the copied file (e.g., 0600).
+	// Permissions of the new file. Example: 0600
 	Permissions int
 	// A user:group to set for the file.
 	//
@@ -1325,7 +1661,7 @@ type ContainerWithFileOpts struct {
 	Expand bool
 }
 
-// Retrieves this container plus the contents of the given file copied to the given path.
+// Return a container snapshot with a file added
 func (r *Container) WithFile(path string, source *File, opts ...ContainerWithFileOpts) *Container {
 	assertNotNil("source", source)
 	q := r.query.Select("withFile")
@@ -1589,7 +1925,7 @@ func (r *Container) WithMountedTemp(path string, opts ...ContainerWithMountedTem
 
 // ContainerWithNewFileOpts contains options for Container.WithNewFile
 type ContainerWithNewFileOpts struct {
-	// Permission given to the written file (e.g., 0600).
+	// Permissions of the new file. Example: 0600
 	Permissions int
 	// A user:group to set for the file.
 	//
@@ -1601,7 +1937,7 @@ type ContainerWithNewFileOpts struct {
 	Expand bool
 }
 
-// Retrieves this container plus a new file written at the given path.
+// Return a new container snapshot, with a file added to its filesystem
 func (r *Container) WithNewFile(path string, contents string, opts ...ContainerWithNewFileOpts) *Container {
 	q := r.query.Select("withNewFile")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -1626,7 +1962,7 @@ func (r *Container) WithNewFile(path string, contents string, opts ...ContainerW
 	}
 }
 
-// Retrieves this container with a registry authentication for a given address.
+// Attach credentials for future publishing to a registry. Use in combination with publish
 func (r *Container) WithRegistryAuth(address string, username string, secret *Secret) *Container {
 	assertNotNil("secret", secret)
 	q := r.query.Select("withRegistryAuth")
@@ -1639,7 +1975,7 @@ func (r *Container) WithRegistryAuth(address string, username string, secret *Se
 	}
 }
 
-// Retrieves the container with the given directory mounted to /.
+// Change the container's root filesystem. The previous root filesystem will be lost.
 func (r *Container) WithRootfs(directory *Directory) *Container {
 	assertNotNil("directory", directory)
 	q := r.query.Select("withRootfs")
@@ -1650,7 +1986,7 @@ func (r *Container) WithRootfs(directory *Directory) *Container {
 	}
 }
 
-// Retrieves this container plus an env variable containing the given secret.
+// Set a new environment variable, using a secret value
 func (r *Container) WithSecretVariable(name string, secret *Secret) *Container {
 	assertNotNil("secret", secret)
 	q := r.query.Select("withSecretVariable")
@@ -1662,7 +1998,7 @@ func (r *Container) WithSecretVariable(name string, secret *Secret) *Container {
 	}
 }
 
-// Establish a runtime dependency on a service.
+// Establish a runtime dependency on a from a container to a network service.
 //
 // The service will be started automatically when needed and detached when it is no longer needed, executing the default command if none is set.
 //
@@ -1730,7 +2066,7 @@ type ContainerWithWorkdirOpts struct {
 	Expand bool
 }
 
-// Retrieves this container with a different working directory.
+// Change the container's working directory. Like WORKDIR in Dockerfile.
 func (r *Container) WithWorkdir(path string, opts ...ContainerWithWorkdirOpts) *Container {
 	q := r.query.Select("withWorkdir")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -1756,7 +2092,7 @@ func (r *Container) WithoutAnnotation(name string) *Container {
 	}
 }
 
-// Retrieves this container with unset default arguments for future commands.
+// Remove the container's default arguments.
 func (r *Container) WithoutDefaultArgs() *Container {
 	q := r.query.Select("withoutDefaultArgs")
 
@@ -1771,7 +2107,7 @@ type ContainerWithoutDirectoryOpts struct {
 	Expand bool
 }
 
-// Retrieves this container with the directory at the given path removed.
+// Return a new container snapshot, with a directory removed from its filesystem
 func (r *Container) WithoutDirectory(path string, opts ...ContainerWithoutDirectoryOpts) *Container {
 	q := r.query.Select("withoutDirectory")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -1793,7 +2129,7 @@ type ContainerWithoutEntrypointOpts struct {
 	KeepDefaultArgs bool
 }
 
-// Retrieves this container with an unset command entrypoint.
+// Reset the container's OCI entrypoint.
 func (r *Container) WithoutEntrypoint(opts ...ContainerWithoutEntrypointOpts) *Container {
 	q := r.query.Select("withoutEntrypoint")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -1868,7 +2204,7 @@ type ContainerWithoutFilesOpts struct {
 	Expand bool
 }
 
-// Retrieves this container with the files at the given paths removed.
+// Return a new container spanshot with specified files removed
 func (r *Container) WithoutFiles(paths []string, opts ...ContainerWithoutFilesOpts) *Container {
 	q := r.query.Select("withoutFiles")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -1969,7 +2305,7 @@ func (r *Container) WithoutUser() *Container {
 	}
 }
 
-// Retrieves this container with an unset working directory.
+// Unset the container's working directory.
 //
 // Should default to "/".
 func (r *Container) WithoutWorkdir() *Container {
@@ -2123,6 +2459,7 @@ type Directory struct {
 	digest *string
 	export *string
 	id     *DirectoryID
+	name   *string
 	sync   *DirectoryID
 }
 type WithDirectoryFunc func(r *Directory) *Directory
@@ -2140,29 +2477,30 @@ func (r *Directory) WithGraphQLQuery(q *querybuilder.Selection) *Directory {
 	}
 }
 
+// Converts this directory to a local git repository
+func (r *Directory) AsGit() *GitRepository {
+	q := r.query.Select("asGit")
+
+	return &GitRepository{
+		query: q,
+	}
+}
+
 // DirectoryAsModuleOpts contains options for Directory.AsModule
 type DirectoryAsModuleOpts struct {
 	// An optional subpath of the directory which contains the module's configuration file.
 	//
-	// This is needed when the module code is in a subdirectory but requires parent directories to be loaded in order to execute. For example, the module source code may need a go.mod, project.toml, package.json, etc. file from a parent directory.
-	//
 	// If not set, the module source code is loaded from the root of the directory.
 	SourceRootPath string
-	// The engine version to upgrade to.
-	EngineVersion string
 }
 
-// Load the directory as a Dagger module
+// Load the directory as a Dagger module source
 func (r *Directory) AsModule(opts ...DirectoryAsModuleOpts) *Module {
 	q := r.query.Select("asModule")
 	for i := len(opts) - 1; i >= 0; i-- {
 		// `sourceRootPath` optional argument
 		if !querybuilder.IsZeroValue(opts[i].SourceRootPath) {
 			q = q.Arg("sourceRootPath", opts[i].SourceRootPath)
-		}
-		// `engineVersion` optional argument
-		if !querybuilder.IsZeroValue(opts[i].EngineVersion) {
-			q = q.Arg("engineVersion", opts[i].EngineVersion)
 		}
 	}
 
@@ -2171,7 +2509,30 @@ func (r *Directory) AsModule(opts ...DirectoryAsModuleOpts) *Module {
 	}
 }
 
-// Gets the difference between this directory and an another directory.
+// DirectoryAsModuleSourceOpts contains options for Directory.AsModuleSource
+type DirectoryAsModuleSourceOpts struct {
+	// An optional subpath of the directory which contains the module's configuration file.
+	//
+	// If not set, the module source code is loaded from the root of the directory.
+	SourceRootPath string
+}
+
+// Load the directory as a Dagger module source
+func (r *Directory) AsModuleSource(opts ...DirectoryAsModuleSourceOpts) *ModuleSource {
+	q := r.query.Select("asModuleSource")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `sourceRootPath` optional argument
+		if !querybuilder.IsZeroValue(opts[i].SourceRootPath) {
+			q = q.Arg("sourceRootPath", opts[i].SourceRootPath)
+		}
+	}
+
+	return &ModuleSource{
+		query: q,
+	}
+}
+
+// Return the difference between this directory and an another directory. The difference is encoded as a directory.
 func (r *Directory) Diff(other *Directory) *Directory {
 	assertNotNil("other", other)
 	q := r.query.Select("diff")
@@ -2219,9 +2580,13 @@ type DirectoryDockerBuildOpts struct {
 	//
 	// They will be mounted at /run/secrets/[secret-name].
 	Secrets []*Secret
+	// If set, skip the automatic init process injected into containers created by RUN statements.
+	//
+	// This should only be used if the user requires that their exec processes be the pid 1 process in the container. Otherwise it may result in unexpected behavior.
+	NoInit bool
 }
 
-// Builds a new Docker container from this directory.
+// Use Dockerfile compatibility to build a container from this directory. Only use this function for Dockerfile compatibility. Otherwise use the native Container type directly, it is feature-complete and supports all Dockerfile features.
 func (r *Directory) DockerBuild(opts ...DirectoryDockerBuildOpts) *Container {
 	q := r.query.Select("dockerBuild")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -2244,6 +2609,10 @@ func (r *Directory) DockerBuild(opts ...DirectoryDockerBuildOpts) *Container {
 		// `secrets` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Secrets) {
 			q = q.Arg("secrets", opts[i].Secrets)
+		}
+		// `noInit` optional argument
+		if !querybuilder.IsZeroValue(opts[i].NoInit) {
+			q = q.Arg("noInit", opts[i].NoInit)
 		}
 	}
 
@@ -2300,12 +2669,39 @@ func (r *Directory) Export(ctx context.Context, path string, opts ...DirectoryEx
 	return response, q.Execute(ctx)
 }
 
-// Retrieves a file at the given path.
+// Retrieve a file at the given path.
 func (r *Directory) File(path string) *File {
 	q := r.query.Select("file")
 	q = q.Arg("path", path)
 
 	return &File{
+		query: q,
+	}
+}
+
+// DirectoryFilterOpts contains options for Directory.Filter
+type DirectoryFilterOpts struct {
+	// If set, paths matching one of these glob patterns is excluded from the new snapshot. Example: ["node_modules/", ".git*", ".env"]
+	Exclude []string
+	// If set, only paths matching one of these glob patterns is included in the new snapshot. Example: (e.g., ["app/", "package.*"]).
+	Include []string
+}
+
+// Return a snapshot with some paths included or excluded
+func (r *Directory) Filter(opts ...DirectoryFilterOpts) *Directory {
+	q := r.query.Select("filter")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `exclude` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Exclude) {
+			q = q.Arg("exclude", opts[i].Exclude)
+		}
+		// `include` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Include) {
+			q = q.Arg("include", opts[i].Include)
+		}
+	}
+
+	return &Directory{
 		query: q,
 	}
 }
@@ -2370,6 +2766,19 @@ func (r *Directory) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+// Returns the name of the directory.
+func (r *Directory) Name(ctx context.Context) (string, error) {
+	if r.name != nil {
+		return *r.name, nil
+	}
+	q := r.query.Select("name")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
 // Force evaluation in the engine.
 func (r *Directory) Sync(ctx context.Context) (*Directory, error) {
 	q := r.query.Select("sync")
@@ -2432,7 +2841,7 @@ type DirectoryWithDirectoryOpts struct {
 	Include []string
 }
 
-// Retrieves this directory plus a directory written at the given path.
+// Return a snapshot with a directory added
 func (r *Directory) WithDirectory(path string, directory *Directory, opts ...DirectoryWithDirectoryOpts) *Directory {
 	assertNotNil("directory", directory)
 	q := r.query.Select("withDirectory")
@@ -2525,11 +2934,11 @@ func (r *Directory) WithNewDirectory(path string, opts ...DirectoryWithNewDirect
 
 // DirectoryWithNewFileOpts contains options for Directory.WithNewFile
 type DirectoryWithNewFileOpts struct {
-	// Permission given to the copied file (e.g., 0600).
+	// Permissions of the new file. Example: 0600
 	Permissions int
 }
 
-// Retrieves this directory plus a new file written at the given path.
+// Return a snapshot with a new file added
 func (r *Directory) WithNewFile(path string, contents string, opts ...DirectoryWithNewFileOpts) *Directory {
 	q := r.query.Select("withNewFile")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -2556,7 +2965,7 @@ func (r *Directory) WithTimestamps(timestamp int) *Directory {
 	}
 }
 
-// Retrieves this directory with the directory at the given path removed.
+// Return a snapshot with a subdirectory removed
 func (r *Directory) WithoutDirectory(path string) *Directory {
 	q := r.query.Select("withoutDirectory")
 	q = q.Arg("path", path)
@@ -2566,7 +2975,7 @@ func (r *Directory) WithoutDirectory(path string) *Directory {
 	}
 }
 
-// Retrieves this directory with the file at the given path removed.
+// Return a snapshot with a file removed
 func (r *Directory) WithoutFile(path string) *Directory {
 	q := r.query.Select("withoutFile")
 	q = q.Arg("path", path)
@@ -2576,7 +2985,7 @@ func (r *Directory) WithoutFile(path string) *Directory {
 	}
 }
 
-// Retrieves this directory with the files at the given paths removed.
+// Return a snapshot with files removed
 func (r *Directory) WithoutFiles(paths []string) *Directory {
 	q := r.query.Select("withoutFiles")
 	q = q.Arg("paths", paths)
@@ -2831,6 +3240,533 @@ func (r *EnumValueTypeDef) SourceMap() *SourceMap {
 	}
 }
 
+type Env struct {
+	query *querybuilder.Selection
+
+	id *EnvID
+}
+type WithEnvFunc func(r *Env) *Env
+
+// With calls the provided function with current Env.
+//
+// This is useful for reusability and readability by not breaking the calling chain.
+func (r *Env) With(f WithEnvFunc) *Env {
+	return f(r)
+}
+
+func (r *Env) WithGraphQLQuery(q *querybuilder.Selection) *Env {
+	return &Env{
+		query: q,
+	}
+}
+
+// A unique identifier for this Env.
+func (r *Env) ID(ctx context.Context) (EnvID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response EnvID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *Env) XXX_GraphQLType() string {
+	return "Env"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *Env) XXX_GraphQLIDType() string {
+	return "EnvID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *Env) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *Env) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *Env) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadEnvFromID(EnvID(id))
+	return nil
+}
+
+// retrieve an input value by name
+func (r *Env) Input(name string) *Binding {
+	q := r.query.Select("input")
+	q = q.Arg("name", name)
+
+	return &Binding{
+		query: q,
+	}
+}
+
+// return all input values for the environment
+func (r *Env) Inputs(ctx context.Context) ([]Binding, error) {
+	q := r.query.Select("inputs")
+
+	q = q.Select("id")
+
+	type inputs struct {
+		Id BindingID
+	}
+
+	convert := func(fields []inputs) []Binding {
+		out := []Binding{}
+
+		for i := range fields {
+			val := Binding{id: &fields[i].Id}
+			val.query = q.Root().Select("loadBindingFromID").Arg("id", fields[i].Id)
+			out = append(out, val)
+		}
+
+		return out
+	}
+	var response []inputs
+
+	q = q.Bind(&response)
+
+	err := q.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert(response), nil
+}
+
+// retrieve an output value by name
+func (r *Env) Output(name string) *Binding {
+	q := r.query.Select("output")
+	q = q.Arg("name", name)
+
+	return &Binding{
+		query: q,
+	}
+}
+
+// return all output values for the environment
+func (r *Env) Outputs(ctx context.Context) ([]Binding, error) {
+	q := r.query.Select("outputs")
+
+	q = q.Select("id")
+
+	type outputs struct {
+		Id BindingID
+	}
+
+	convert := func(fields []outputs) []Binding {
+		out := []Binding{}
+
+		for i := range fields {
+			val := Binding{id: &fields[i].Id}
+			val.query = q.Root().Select("loadBindingFromID").Arg("id", fields[i].Id)
+			out = append(out, val)
+		}
+
+		return out
+	}
+	var response []outputs
+
+	q = q.Bind(&response)
+
+	err := q.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert(response), nil
+}
+
+// Create or update a binding of type CacheVolume in the environment
+func (r *Env) WithCacheVolumeInput(name string, value *CacheVolume, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withCacheVolumeInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired CacheVolume output to be assigned in the environment
+func (r *Env) WithCacheVolumeOutput(name string, description string) *Env {
+	q := r.query.Select("withCacheVolumeOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type Container in the environment
+func (r *Env) WithContainerInput(name string, value *Container, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withContainerInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired Container output to be assigned in the environment
+func (r *Env) WithContainerOutput(name string, description string) *Env {
+	q := r.query.Select("withContainerOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type Directory in the environment
+func (r *Env) WithDirectoryInput(name string, value *Directory, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withDirectoryInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired Directory output to be assigned in the environment
+func (r *Env) WithDirectoryOutput(name string, description string) *Env {
+	q := r.query.Select("withDirectoryOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type Env in the environment
+func (r *Env) WithEnvInput(name string, value *Env, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withEnvInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired Env output to be assigned in the environment
+func (r *Env) WithEnvOutput(name string, description string) *Env {
+	q := r.query.Select("withEnvOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type File in the environment
+func (r *Env) WithFileInput(name string, value *File, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withFileInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired File output to be assigned in the environment
+func (r *Env) WithFileOutput(name string, description string) *Env {
+	q := r.query.Select("withFileOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type GitRef in the environment
+func (r *Env) WithGitRefInput(name string, value *GitRef, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withGitRefInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired GitRef output to be assigned in the environment
+func (r *Env) WithGitRefOutput(name string, description string) *Env {
+	q := r.query.Select("withGitRefOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type GitRepository in the environment
+func (r *Env) WithGitRepositoryInput(name string, value *GitRepository, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withGitRepositoryInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired GitRepository output to be assigned in the environment
+func (r *Env) WithGitRepositoryOutput(name string, description string) *Env {
+	q := r.query.Select("withGitRepositoryOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type K3S in the environment
+func (r *Env) WithK3SInput(name string, value *K3S, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withK3SInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired K3S output to be assigned in the environment
+func (r *Env) WithK3SOutput(name string, description string) *Env {
+	q := r.query.Select("withK3SOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type LLM in the environment
+func (r *Env) WithLLMInput(name string, value *LLM, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withLLMInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired LLM output to be assigned in the environment
+func (r *Env) WithLLMOutput(name string, description string) *Env {
+	q := r.query.Select("withLLMOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type ModuleConfigClient in the environment
+func (r *Env) WithModuleConfigClientInput(name string, value *ModuleConfigClient, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withModuleConfigClientInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired ModuleConfigClient output to be assigned in the environment
+func (r *Env) WithModuleConfigClientOutput(name string, description string) *Env {
+	q := r.query.Select("withModuleConfigClientOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type Module in the environment
+func (r *Env) WithModuleInput(name string, value *Module, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withModuleInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired Module output to be assigned in the environment
+func (r *Env) WithModuleOutput(name string, description string) *Env {
+	q := r.query.Select("withModuleOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type ModuleSource in the environment
+func (r *Env) WithModuleSourceInput(name string, value *ModuleSource, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withModuleSourceInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired ModuleSource output to be assigned in the environment
+func (r *Env) WithModuleSourceOutput(name string, description string) *Env {
+	q := r.query.Select("withModuleSourceOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type Secret in the environment
+func (r *Env) WithSecretInput(name string, value *Secret, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withSecretInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired Secret output to be assigned in the environment
+func (r *Env) WithSecretOutput(name string, description string) *Env {
+	q := r.query.Select("withSecretOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type Service in the environment
+func (r *Env) WithServiceInput(name string, value *Service, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withServiceInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired Service output to be assigned in the environment
+func (r *Env) WithServiceOutput(name string, description string) *Env {
+	q := r.query.Select("withServiceOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type Socket in the environment
+func (r *Env) WithSocketInput(name string, value *Socket, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withSocketInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired Socket output to be assigned in the environment
+func (r *Env) WithSocketOutput(name string, description string) *Env {
+	q := r.query.Select("withSocketOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update an input value of type string
+func (r *Env) WithStringInput(name string, value string, description string) *Env {
+	q := r.query.Select("withStringInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
 // An environment variable name and value.
 type EnvVariable struct {
 	query *querybuilder.Selection
@@ -2916,6 +3852,222 @@ func (r *EnvVariable) Value(ctx context.Context) (string, error) {
 	q := r.query.Select("value")
 
 	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+type Error struct {
+	query *querybuilder.Selection
+
+	id      *ErrorID
+	message *string
+}
+type WithErrorFunc func(r *Error) *Error
+
+// With calls the provided function with current Error.
+//
+// This is useful for reusability and readability by not breaking the calling chain.
+func (r *Error) With(f WithErrorFunc) *Error {
+	return f(r)
+}
+
+func (r *Error) WithGraphQLQuery(q *querybuilder.Selection) *Error {
+	return &Error{
+		query: q,
+	}
+}
+
+// A unique identifier for this Error.
+func (r *Error) ID(ctx context.Context) (ErrorID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response ErrorID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *Error) XXX_GraphQLType() string {
+	return "Error"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *Error) XXX_GraphQLIDType() string {
+	return "ErrorID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *Error) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *Error) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *Error) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadErrorFromID(ErrorID(id))
+	return nil
+}
+
+// A description of the error.
+func (r *Error) Message(ctx context.Context) (string, error) {
+	if r.message != nil {
+		return *r.message, nil
+	}
+	q := r.query.Select("message")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The extensions of the error.
+func (r *Error) Values(ctx context.Context) ([]ErrorValue, error) {
+	q := r.query.Select("values")
+
+	q = q.Select("id")
+
+	type values struct {
+		Id ErrorValueID
+	}
+
+	convert := func(fields []values) []ErrorValue {
+		out := []ErrorValue{}
+
+		for i := range fields {
+			val := ErrorValue{id: &fields[i].Id}
+			val.query = q.Root().Select("loadErrorValueFromID").Arg("id", fields[i].Id)
+			out = append(out, val)
+		}
+
+		return out
+	}
+	var response []values
+
+	q = q.Bind(&response)
+
+	err := q.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert(response), nil
+}
+
+// Add a value to the error.
+func (r *Error) WithValue(name string, value JSON) *Error {
+	q := r.query.Select("withValue")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+
+	return &Error{
+		query: q,
+	}
+}
+
+type ErrorValue struct {
+	query *querybuilder.Selection
+
+	id    *ErrorValueID
+	name  *string
+	value *JSON
+}
+
+func (r *ErrorValue) WithGraphQLQuery(q *querybuilder.Selection) *ErrorValue {
+	return &ErrorValue{
+		query: q,
+	}
+}
+
+// A unique identifier for this ErrorValue.
+func (r *ErrorValue) ID(ctx context.Context) (ErrorValueID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response ErrorValueID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *ErrorValue) XXX_GraphQLType() string {
+	return "ErrorValue"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *ErrorValue) XXX_GraphQLIDType() string {
+	return "ErrorValueID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *ErrorValue) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *ErrorValue) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *ErrorValue) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadErrorValueFromID(ErrorValueID(id))
+	return nil
+}
+
+// The name of the value.
+func (r *ErrorValue) Name(ctx context.Context) (string, error) {
+	if r.name != nil {
+		return *r.name, nil
+	}
+	q := r.query.Select("name")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The value.
+func (r *ErrorValue) Value(ctx context.Context) (JSON, error) {
+	if r.value != nil {
+		return *r.value, nil
+	}
+	q := r.query.Select("value")
+
+	var response JSON
 
 	q = q.Bind(&response)
 	return response, q.Execute(ctx)
@@ -3606,6 +4758,7 @@ type FunctionCall struct {
 	name        *string
 	parent      *JSON
 	parentName  *string
+	returnError *Void
 	returnValue *Void
 }
 
@@ -3734,6 +4887,18 @@ func (r *FunctionCall) ParentName(ctx context.Context) (string, error) {
 
 	q = q.Bind(&response)
 	return response, q.Execute(ctx)
+}
+
+// Return an error from the function.
+func (r *FunctionCall) ReturnError(ctx context.Context, error *Error) error {
+	assertNotNil("error", error)
+	if r.returnError != nil {
+		return nil
+	}
+	q := r.query.Select("returnError")
+	q = q.Arg("error", error)
+
+	return q.Execute(ctx)
 }
 
 // Set the return value of the function call to the provided value.
@@ -3954,175 +5119,6 @@ func (r *GeneratedCode) WithVCSIgnoredPaths(paths []string) *GeneratedCode {
 	return &GeneratedCode{
 		query: q,
 	}
-}
-
-// Module source originating from a git repo.
-type GitModuleSource struct {
-	query *querybuilder.Selection
-
-	cloneRef    *string
-	commit      *string
-	htmlRepoURL *string
-	htmlURL     *string
-	id          *GitModuleSourceID
-	root        *string
-	rootSubpath *string
-	version     *string
-}
-
-func (r *GitModuleSource) WithGraphQLQuery(q *querybuilder.Selection) *GitModuleSource {
-	return &GitModuleSource{
-		query: q,
-	}
-}
-
-// The ref to clone the root of the git repo from
-func (r *GitModuleSource) CloneRef(ctx context.Context) (string, error) {
-	if r.cloneRef != nil {
-		return *r.cloneRef, nil
-	}
-	q := r.query.Select("cloneRef")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// The resolved commit of the git repo this source points to.
-func (r *GitModuleSource) Commit(ctx context.Context) (string, error) {
-	if r.commit != nil {
-		return *r.commit, nil
-	}
-	q := r.query.Select("commit")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// The directory containing everything needed to load load and use the module.
-func (r *GitModuleSource) ContextDirectory() *Directory {
-	q := r.query.Select("contextDirectory")
-
-	return &Directory{
-		query: q,
-	}
-}
-
-// The URL to access the web view of the repository (e.g., GitHub, GitLab, Bitbucket)
-func (r *GitModuleSource) HTMLRepoURL(ctx context.Context) (string, error) {
-	if r.htmlRepoURL != nil {
-		return *r.htmlRepoURL, nil
-	}
-	q := r.query.Select("htmlRepoURL")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// The URL to the source's git repo in a web browser
-func (r *GitModuleSource) HTMLURL(ctx context.Context) (string, error) {
-	if r.htmlURL != nil {
-		return *r.htmlURL, nil
-	}
-	q := r.query.Select("htmlURL")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// A unique identifier for this GitModuleSource.
-func (r *GitModuleSource) ID(ctx context.Context) (GitModuleSourceID, error) {
-	if r.id != nil {
-		return *r.id, nil
-	}
-	q := r.query.Select("id")
-
-	var response GitModuleSourceID
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
-func (r *GitModuleSource) XXX_GraphQLType() string {
-	return "GitModuleSource"
-}
-
-// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
-func (r *GitModuleSource) XXX_GraphQLIDType() string {
-	return "GitModuleSourceID"
-}
-
-// XXX_GraphQLID is an internal function. It returns the underlying type ID
-func (r *GitModuleSource) XXX_GraphQLID(ctx context.Context) (string, error) {
-	id, err := r.ID(ctx)
-	if err != nil {
-		return "", err
-	}
-	return string(id), nil
-}
-
-func (r *GitModuleSource) MarshalJSON() ([]byte, error) {
-	id, err := r.ID(marshalCtx)
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(id)
-}
-func (r *GitModuleSource) UnmarshalJSON(bs []byte) error {
-	var id string
-	err := json.Unmarshal(bs, &id)
-	if err != nil {
-		return err
-	}
-	*r = *dag.LoadGitModuleSourceFromID(GitModuleSourceID(id))
-	return nil
-}
-
-// The clean module name of the root of the module
-func (r *GitModuleSource) Root(ctx context.Context) (string, error) {
-	if r.root != nil {
-		return *r.root, nil
-	}
-	q := r.query.Select("root")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// The path to the root of the module source under the context directory. This directory contains its configuration file. It also contains its source code (possibly as a subdirectory).
-func (r *GitModuleSource) RootSubpath(ctx context.Context) (string, error) {
-	if r.rootSubpath != nil {
-		return *r.rootSubpath, nil
-	}
-	q := r.query.Select("rootSubpath")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// The specified version of the git repo this source points to.
-func (r *GitModuleSource) Version(ctx context.Context) (string, error) {
-	if r.version != nil {
-		return *r.version, nil
-	}
-	q := r.query.Select("version")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
 }
 
 // A git ref (tag, branch, or commit).
@@ -4774,6 +5770,368 @@ func (r *K3S) WithContainer(c *Container) *K3S {
 	}
 }
 
+type LLM struct {
+	query *querybuilder.Selection
+
+	historyJSON *string
+	id          *LLMID
+	lastReply   *string
+	model       *string
+	provider    *string
+	sync        *LLMID
+	tools       *string
+}
+type WithLLMFunc func(r *LLM) *LLM
+
+// With calls the provided function with current LLM.
+//
+// This is useful for reusability and readability by not breaking the calling chain.
+func (r *LLM) With(f WithLLMFunc) *LLM {
+	return f(r)
+}
+
+func (r *LLM) WithGraphQLQuery(q *querybuilder.Selection) *LLM {
+	return &LLM{
+		query: q,
+	}
+}
+
+// create a branch in the LLM's history
+func (r *LLM) Attempt(number int) *LLM {
+	q := r.query.Select("attempt")
+	q = q.Arg("number", number)
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// returns the type of the current state
+func (r *LLM) BindResult(name string) *Binding {
+	q := r.query.Select("bindResult")
+	q = q.Arg("name", name)
+
+	return &Binding{
+		query: q,
+	}
+}
+
+// return the LLM's current environment
+func (r *LLM) Env() *Env {
+	q := r.query.Select("env")
+
+	return &Env{
+		query: q,
+	}
+}
+
+// return the llm message history
+func (r *LLM) History(ctx context.Context) ([]string, error) {
+	q := r.query.Select("history")
+
+	var response []string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// return the raw llm message history as json
+func (r *LLM) HistoryJSON(ctx context.Context) (string, error) {
+	if r.historyJSON != nil {
+		return *r.historyJSON, nil
+	}
+	q := r.query.Select("historyJSON")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// A unique identifier for this LLM.
+func (r *LLM) ID(ctx context.Context) (LLMID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response LLMID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *LLM) XXX_GraphQLType() string {
+	return "LLM"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *LLM) XXX_GraphQLIDType() string {
+	return "LLMID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *LLM) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *LLM) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *LLM) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadLLMFromID(LLMID(id))
+	return nil
+}
+
+// return the last llm reply from the history
+func (r *LLM) LastReply(ctx context.Context) (string, error) {
+	if r.lastReply != nil {
+		return *r.lastReply, nil
+	}
+	q := r.query.Select("lastReply")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// synchronize LLM state
+func (r *LLM) Loop() *LLM {
+	q := r.query.Select("loop")
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// return the model used by the llm
+func (r *LLM) Model(ctx context.Context) (string, error) {
+	if r.model != nil {
+		return *r.model, nil
+	}
+	q := r.query.Select("model")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// return the provider used by the llm
+func (r *LLM) Provider(ctx context.Context) (string, error) {
+	if r.provider != nil {
+		return *r.provider, nil
+	}
+	q := r.query.Select("provider")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// synchronize LLM state
+func (r *LLM) Sync(ctx context.Context) (*LLM, error) {
+	q := r.query.Select("sync")
+
+	var id LLMID
+	if err := q.Bind(&id).Execute(ctx); err != nil {
+		return nil, err
+	}
+	return &LLM{
+		query: q.Root().Select("loadLLMFromID").Arg("id", id),
+	}, nil
+}
+
+// returns the token usage of the current state
+func (r *LLM) TokenUsage() *LLMTokenUsage {
+	q := r.query.Select("tokenUsage")
+
+	return &LLMTokenUsage{
+		query: q,
+	}
+}
+
+// print documentation for available tools
+func (r *LLM) Tools(ctx context.Context) (string, error) {
+	if r.tools != nil {
+		return *r.tools, nil
+	}
+	q := r.query.Select("tools")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// allow the LLM to interact with an environment via MCP
+func (r *LLM) WithEnv(env *Env) *LLM {
+	assertNotNil("env", env)
+	q := r.query.Select("withEnv")
+	q = q.Arg("env", env)
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// swap out the llm model
+func (r *LLM) WithModel(model string) *LLM {
+	q := r.query.Select("withModel")
+	q = q.Arg("model", model)
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// append a prompt to the llm context
+func (r *LLM) WithPrompt(prompt string) *LLM {
+	q := r.query.Select("withPrompt")
+	q = q.Arg("prompt", prompt)
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// append the contents of a file to the llm context
+func (r *LLM) WithPromptFile(file *File) *LLM {
+	assertNotNil("file", file)
+	q := r.query.Select("withPromptFile")
+	q = q.Arg("file", file)
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// Add a system prompt to the LLM's environment
+func (r *LLM) WithSystemPrompt(prompt string) *LLM {
+	q := r.query.Select("withSystemPrompt")
+	q = q.Arg("prompt", prompt)
+
+	return &LLM{
+		query: q,
+	}
+}
+
+type LLMTokenUsage struct {
+	query *querybuilder.Selection
+
+	id           *LLMTokenUsageID
+	inputTokens  *int
+	outputTokens *int
+	totalTokens  *int
+}
+
+func (r *LLMTokenUsage) WithGraphQLQuery(q *querybuilder.Selection) *LLMTokenUsage {
+	return &LLMTokenUsage{
+		query: q,
+	}
+}
+
+// A unique identifier for this LLMTokenUsage.
+func (r *LLMTokenUsage) ID(ctx context.Context) (LLMTokenUsageID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response LLMTokenUsageID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *LLMTokenUsage) XXX_GraphQLType() string {
+	return "LLMTokenUsage"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *LLMTokenUsage) XXX_GraphQLIDType() string {
+	return "LLMTokenUsageID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *LLMTokenUsage) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *LLMTokenUsage) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *LLMTokenUsage) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadLLMTokenUsageFromID(LLMTokenUsageID(id))
+	return nil
+}
+
+func (r *LLMTokenUsage) InputTokens(ctx context.Context) (int, error) {
+	if r.inputTokens != nil {
+		return *r.inputTokens, nil
+	}
+	q := r.query.Select("inputTokens")
+
+	var response int
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+func (r *LLMTokenUsage) OutputTokens(ctx context.Context) (int, error) {
+	if r.outputTokens != nil {
+		return *r.outputTokens, nil
+	}
+	q := r.query.Select("outputTokens")
+
+	var response int
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+func (r *LLMTokenUsage) TotalTokens(ctx context.Context) (int, error) {
+	if r.totalTokens != nil {
+		return *r.totalTokens, nil
+	}
+	q := r.query.Select("totalTokens")
+
+	var response int
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
 // A simple key value object that represents a label.
 type Label struct {
 	query *querybuilder.Selection
@@ -4935,105 +6293,6 @@ func (r *ListTypeDef) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
-// Module source that that originates from a path locally relative to an arbitrary directory.
-type LocalModuleSource struct {
-	query *querybuilder.Selection
-
-	id          *LocalModuleSourceID
-	relHostPath *string
-	rootSubpath *string
-}
-
-func (r *LocalModuleSource) WithGraphQLQuery(q *querybuilder.Selection) *LocalModuleSource {
-	return &LocalModuleSource{
-		query: q,
-	}
-}
-
-// The directory containing everything needed to load load and use the module.
-func (r *LocalModuleSource) ContextDirectory() *Directory {
-	q := r.query.Select("contextDirectory")
-
-	return &Directory{
-		query: q,
-	}
-}
-
-// A unique identifier for this LocalModuleSource.
-func (r *LocalModuleSource) ID(ctx context.Context) (LocalModuleSourceID, error) {
-	if r.id != nil {
-		return *r.id, nil
-	}
-	q := r.query.Select("id")
-
-	var response LocalModuleSourceID
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
-func (r *LocalModuleSource) XXX_GraphQLType() string {
-	return "LocalModuleSource"
-}
-
-// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
-func (r *LocalModuleSource) XXX_GraphQLIDType() string {
-	return "LocalModuleSourceID"
-}
-
-// XXX_GraphQLID is an internal function. It returns the underlying type ID
-func (r *LocalModuleSource) XXX_GraphQLID(ctx context.Context) (string, error) {
-	id, err := r.ID(ctx)
-	if err != nil {
-		return "", err
-	}
-	return string(id), nil
-}
-
-func (r *LocalModuleSource) MarshalJSON() ([]byte, error) {
-	id, err := r.ID(marshalCtx)
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(id)
-}
-func (r *LocalModuleSource) UnmarshalJSON(bs []byte) error {
-	var id string
-	err := json.Unmarshal(bs, &id)
-	if err != nil {
-		return err
-	}
-	*r = *dag.LoadLocalModuleSourceFromID(LocalModuleSourceID(id))
-	return nil
-}
-
-// The relative path to the module root from the host directory
-func (r *LocalModuleSource) RelHostPath(ctx context.Context) (string, error) {
-	if r.relHostPath != nil {
-		return *r.relHostPath, nil
-	}
-	q := r.query.Select("relHostPath")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// The path to the root of the module source under the context directory. This directory contains its configuration file. It also contains its source code (possibly as a subdirectory).
-func (r *LocalModuleSource) RootSubpath(ctx context.Context) (string, error) {
-	if r.rootSubpath != nil {
-		return *r.rootSubpath, nil
-	}
-	q := r.query.Select("rootSubpath")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
 // A Dagger module.
 type Module struct {
 	query *querybuilder.Selection
@@ -5041,8 +6300,8 @@ type Module struct {
 	description *string
 	id          *ModuleID
 	name        *string
-	sdk         *string
 	serve       *Void
+	sync        *ModuleID
 }
 type WithModuleFunc func(r *Module) *Module
 
@@ -5059,7 +6318,7 @@ func (r *Module) WithGraphQLQuery(q *querybuilder.Selection) *Module {
 	}
 }
 
-// Modules used by this module.
+// The dependencies of the module.
 func (r *Module) Dependencies(ctx context.Context) ([]Module, error) {
 	q := r.query.Select("dependencies")
 
@@ -5081,39 +6340,6 @@ func (r *Module) Dependencies(ctx context.Context) ([]Module, error) {
 		return out
 	}
 	var response []dependencies
-
-	q = q.Bind(&response)
-
-	err := q.Execute(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return convert(response), nil
-}
-
-// The dependencies as configured by the module.
-func (r *Module) DependencyConfig(ctx context.Context) ([]ModuleDependency, error) {
-	q := r.query.Select("dependencyConfig")
-
-	q = q.Select("id")
-
-	type dependencyConfig struct {
-		Id ModuleDependencyID
-	}
-
-	convert := func(fields []dependencyConfig) []ModuleDependency {
-		out := []ModuleDependency{}
-
-		for i := range fields {
-			val := ModuleDependency{id: &fields[i].Id}
-			val.query = q.Root().Select("loadModuleDependencyFromID").Arg("id", fields[i].Id)
-			out = append(out, val)
-		}
-
-		return out
-	}
-	var response []dependencyConfig
 
 	q = q.Bind(&response)
 
@@ -5172,15 +6398,6 @@ func (r *Module) Enums(ctx context.Context) ([]TypeDef, error) {
 }
 
 // The generated files and directories made on top of the module source's context directory.
-func (r *Module) GeneratedContextDiff() *Directory {
-	q := r.query.Select("generatedContextDiff")
-
-	return &Directory{
-		query: q,
-	}
-}
-
-// The module source's context plus any configuration and source files created by codegen.
 func (r *Module) GeneratedContextDirectory() *Directory {
 	q := r.query.Select("generatedContextDirectory")
 
@@ -5236,15 +6453,6 @@ func (r *Module) UnmarshalJSON(bs []byte) error {
 	}
 	*r = *dag.LoadModuleFromID(ModuleID(id))
 	return nil
-}
-
-// Retrieves the module with the objects loaded via its SDK.
-func (r *Module) Initialize() *Module {
-	q := r.query.Select("initialize")
-
-	return &Module{
-		query: q,
-	}
 }
 
 // Interfaces served by this module.
@@ -5335,17 +6543,13 @@ func (r *Module) Runtime() *Container {
 	}
 }
 
-// The SDK used by this module. Either a name of a builtin SDK or a module source ref string pointing to the SDK's implementation.
-func (r *Module) SDK(ctx context.Context) (string, error) {
-	if r.sdk != nil {
-		return *r.sdk, nil
-	}
+// The SDK config used by this module.
+func (r *Module) SDK() *SDKConfig {
 	q := r.query.Select("sdk")
 
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
+	return &SDKConfig{
+		query: q,
+	}
 }
 
 // Serve a module's API in the current session.
@@ -5367,6 +6571,19 @@ func (r *Module) Source() *ModuleSource {
 	return &ModuleSource{
 		query: q,
 	}
+}
+
+// Forces evaluation of the module, including any loading into the engine and associated validation.
+func (r *Module) Sync(ctx context.Context) (*Module, error) {
+	q := r.query.Select("sync")
+
+	var id ModuleID
+	if err := q.Bind(&id).Execute(ctx); err != nil {
+		return nil, err
+	}
+	return &Module{
+		query: q.Root().Select("loadModuleFromID").Arg("id", id),
+	}, nil
 }
 
 // Retrieves the module with the given description
@@ -5412,98 +6629,41 @@ func (r *Module) WithObject(object *TypeDef) *Module {
 	}
 }
 
-// ModuleWithSourceOpts contains options for Module.WithSource
-type ModuleWithSourceOpts struct {
-	// The engine version to upgrade to.
-	EngineVersion string
-}
-
-// Retrieves the module with basic configuration loaded if present.
-func (r *Module) WithSource(source *ModuleSource, opts ...ModuleWithSourceOpts) *Module {
-	assertNotNil("source", source)
-	q := r.query.Select("withSource")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `engineVersion` optional argument
-		if !querybuilder.IsZeroValue(opts[i].EngineVersion) {
-			q = q.Arg("engineVersion", opts[i].EngineVersion)
-		}
-	}
-	q = q.Arg("source", source)
-
-	return &Module{
-		query: q,
-	}
-}
-
-// The configuration of dependency of a module.
-type ModuleDependency struct {
+// The client generated for the module.
+type ModuleConfigClient struct {
 	query *querybuilder.Selection
 
-	id   *ModuleDependencyID
-	name *string
+	dev       *bool
+	directory *string
+	generator *string
+	id        *ModuleConfigClientID
 }
 
-func (r *ModuleDependency) WithGraphQLQuery(q *querybuilder.Selection) *ModuleDependency {
-	return &ModuleDependency{
+func (r *ModuleConfigClient) WithGraphQLQuery(q *querybuilder.Selection) *ModuleConfigClient {
+	return &ModuleConfigClient{
 		query: q,
 	}
 }
 
-// A unique identifier for this ModuleDependency.
-func (r *ModuleDependency) ID(ctx context.Context) (ModuleDependencyID, error) {
-	if r.id != nil {
-		return *r.id, nil
+// If true, generate the client in developer mode.
+func (r *ModuleConfigClient) Dev(ctx context.Context) (bool, error) {
+	if r.dev != nil {
+		return *r.dev, nil
 	}
-	q := r.query.Select("id")
+	q := r.query.Select("dev")
 
-	var response ModuleDependencyID
+	var response bool
 
 	q = q.Bind(&response)
 	return response, q.Execute(ctx)
 }
 
-// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
-func (r *ModuleDependency) XXX_GraphQLType() string {
-	return "ModuleDependency"
-}
-
-// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
-func (r *ModuleDependency) XXX_GraphQLIDType() string {
-	return "ModuleDependencyID"
-}
-
-// XXX_GraphQLID is an internal function. It returns the underlying type ID
-func (r *ModuleDependency) XXX_GraphQLID(ctx context.Context) (string, error) {
-	id, err := r.ID(ctx)
-	if err != nil {
-		return "", err
+// The directory the client is generated in.
+func (r *ModuleConfigClient) Directory(ctx context.Context) (string, error) {
+	if r.directory != nil {
+		return *r.directory, nil
 	}
-	return string(id), nil
-}
-
-func (r *ModuleDependency) MarshalJSON() ([]byte, error) {
-	id, err := r.ID(marshalCtx)
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(id)
-}
-func (r *ModuleDependency) UnmarshalJSON(bs []byte) error {
-	var id string
-	err := json.Unmarshal(bs, &id)
-	if err != nil {
-		return err
-	}
-	*r = *dag.LoadModuleDependencyFromID(ModuleDependencyID(id))
-	return nil
-}
-
-// The name of the dependency module.
-func (r *ModuleDependency) Name(ctx context.Context) (string, error) {
-	if r.name != nil {
-		return *r.name, nil
-	}
-	q := r.query.Select("name")
+	q := r.query.Select("directory")
 
 	var response string
 
@@ -5511,29 +6671,92 @@ func (r *ModuleDependency) Name(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// The source for the dependency module.
-func (r *ModuleDependency) Source() *ModuleSource {
-	q := r.query.Select("source")
-
-	return &ModuleSource{
-		query: q,
+// The generator to use
+func (r *ModuleConfigClient) Generator(ctx context.Context) (string, error) {
+	if r.generator != nil {
+		return *r.generator, nil
 	}
+	q := r.query.Select("generator")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// A unique identifier for this ModuleConfigClient.
+func (r *ModuleConfigClient) ID(ctx context.Context) (ModuleConfigClientID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response ModuleConfigClientID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *ModuleConfigClient) XXX_GraphQLType() string {
+	return "ModuleConfigClient"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *ModuleConfigClient) XXX_GraphQLIDType() string {
+	return "ModuleConfigClientID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *ModuleConfigClient) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *ModuleConfigClient) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *ModuleConfigClient) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadModuleConfigClientFromID(ModuleConfigClientID(id))
+	return nil
 }
 
 // The source needed to load and run a module, along with any metadata about the source such as versions/urls/etc.
 type ModuleSource struct {
 	query *querybuilder.Selection
 
-	asString                     *string
-	configExists                 *bool
-	digest                       *string
-	id                           *ModuleSourceID
-	kind                         *ModuleSourceKind
-	moduleName                   *string
-	moduleOriginalName           *string
-	resolveContextPathFromCaller *string
-	sourceRootSubpath            *string
-	sourceSubpath                *string
+	asString                  *string
+	cloneRef                  *string
+	commit                    *string
+	configExists              *bool
+	digest                    *string
+	engineVersion             *string
+	htmlRepoURL               *string
+	htmlURL                   *string
+	id                        *ModuleSourceID
+	kind                      *ModuleSourceKind
+	localContextDirectoryPath *string
+	moduleName                *string
+	moduleOriginalName        *string
+	originalSubpath           *string
+	pin                       *string
+	repoRootPath              *string
+	sourceRootSubpath         *string
+	sourceSubpath             *string
+	sync                      *ModuleSourceID
+	version                   *string
 }
 type WithModuleSourceFunc func(r *ModuleSource) *ModuleSource
 
@@ -5550,39 +6773,9 @@ func (r *ModuleSource) WithGraphQLQuery(q *querybuilder.Selection) *ModuleSource
 	}
 }
 
-// If the source is a of kind git, the git source representation of it.
-func (r *ModuleSource) AsGitSource() *GitModuleSource {
-	q := r.query.Select("asGitSource")
-
-	return &GitModuleSource{
-		query: q,
-	}
-}
-
-// If the source is of kind local, the local source representation of it.
-func (r *ModuleSource) AsLocalSource() *LocalModuleSource {
-	q := r.query.Select("asLocalSource")
-
-	return &LocalModuleSource{
-		query: q,
-	}
-}
-
-// ModuleSourceAsModuleOpts contains options for ModuleSource.AsModule
-type ModuleSourceAsModuleOpts struct {
-	// The engine version to upgrade to.
-	EngineVersion string
-}
-
 // Load the source as a module. If this is a local source, the parent directory must have been provided during module source creation
-func (r *ModuleSource) AsModule(opts ...ModuleSourceAsModuleOpts) *Module {
+func (r *ModuleSource) AsModule() *Module {
 	q := r.query.Select("asModule")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `engineVersion` optional argument
-		if !querybuilder.IsZeroValue(opts[i].EngineVersion) {
-			q = q.Arg("engineVersion", opts[i].EngineVersion)
-		}
-	}
 
 	return &Module{
 		query: q,
@@ -5602,7 +6795,66 @@ func (r *ModuleSource) AsString(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// Returns whether the module source has a configuration file.
+// The ref to clone the root of the git repo from. Only valid for git sources.
+func (r *ModuleSource) CloneRef(ctx context.Context) (string, error) {
+	if r.cloneRef != nil {
+		return *r.cloneRef, nil
+	}
+	q := r.query.Select("cloneRef")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The resolved commit of the git repo this source points to.
+func (r *ModuleSource) Commit(ctx context.Context) (string, error) {
+	if r.commit != nil {
+		return *r.commit, nil
+	}
+	q := r.query.Select("commit")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The clients generated for the module.
+func (r *ModuleSource) ConfigClients(ctx context.Context) ([]ModuleConfigClient, error) {
+	q := r.query.Select("configClients")
+
+	q = q.Select("id")
+
+	type configClients struct {
+		Id ModuleConfigClientID
+	}
+
+	convert := func(fields []configClients) []ModuleConfigClient {
+		out := []ModuleConfigClient{}
+
+		for i := range fields {
+			val := ModuleConfigClient{id: &fields[i].Id}
+			val.query = q.Root().Select("loadModuleConfigClientFromID").Arg("id", fields[i].Id)
+			out = append(out, val)
+		}
+
+		return out
+	}
+	var response []configClients
+
+	q = q.Bind(&response)
+
+	err := q.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert(response), nil
+}
+
+// Whether an existing dagger.json for the module was found.
 func (r *ModuleSource) ConfigExists(ctx context.Context) (bool, error) {
 	if r.configExists != nil {
 		return *r.configExists, nil
@@ -5615,7 +6867,7 @@ func (r *ModuleSource) ConfigExists(ctx context.Context) (bool, error) {
 	return response, q.Execute(ctx)
 }
 
-// The directory containing everything needed to load load and use the module.
+// The full directory loaded for the module source, including the source code as a subdirectory.
 func (r *ModuleSource) ContextDirectory() *Directory {
 	q := r.query.Select("contextDirectory")
 
@@ -5624,22 +6876,22 @@ func (r *ModuleSource) ContextDirectory() *Directory {
 	}
 }
 
-// The dependencies of the module source. Includes dependencies from the configuration and any extras from withDependencies calls.
-func (r *ModuleSource) Dependencies(ctx context.Context) ([]ModuleDependency, error) {
+// The dependencies of the module source.
+func (r *ModuleSource) Dependencies(ctx context.Context) ([]ModuleSource, error) {
 	q := r.query.Select("dependencies")
 
 	q = q.Select("id")
 
 	type dependencies struct {
-		Id ModuleDependencyID
+		Id ModuleSourceID
 	}
 
-	convert := func(fields []dependencies) []ModuleDependency {
-		out := []ModuleDependency{}
+	convert := func(fields []dependencies) []ModuleSource {
+		out := []ModuleSource{}
 
 		for i := range fields {
-			val := ModuleDependency{id: &fields[i].Id}
-			val.query = q.Root().Select("loadModuleDependencyFromID").Arg("id", fields[i].Id)
+			val := ModuleSource{id: &fields[i].Id}
+			val.query = q.Root().Select("loadModuleSourceFromID").Arg("id", fields[i].Id)
 			out = append(out, val)
 		}
 
@@ -5657,7 +6909,7 @@ func (r *ModuleSource) Dependencies(ctx context.Context) ([]ModuleDependency, er
 	return convert(response), nil
 }
 
-// Return the module source's content digest. The format of the digest is not guaranteed to be stable between releases of Dagger. It is guaranteed to be stable between invocations of the same Dagger engine.
+// A content-hash of the module source. Module sources with the same digest will output the same generated context and convert into the same module instance.
 func (r *ModuleSource) Digest(ctx context.Context) (string, error) {
 	if r.digest != nil {
 		return *r.digest, nil
@@ -5678,6 +6930,54 @@ func (r *ModuleSource) Directory(path string) *Directory {
 	return &Directory{
 		query: q,
 	}
+}
+
+// The engine version of the module.
+func (r *ModuleSource) EngineVersion(ctx context.Context) (string, error) {
+	if r.engineVersion != nil {
+		return *r.engineVersion, nil
+	}
+	q := r.query.Select("engineVersion")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The generated files and directories made on top of the module source's context directory.
+func (r *ModuleSource) GeneratedContextDirectory() *Directory {
+	q := r.query.Select("generatedContextDirectory")
+
+	return &Directory{
+		query: q,
+	}
+}
+
+// The URL to access the web view of the repository (e.g., GitHub, GitLab, Bitbucket).
+func (r *ModuleSource) HTMLRepoURL(ctx context.Context) (string, error) {
+	if r.htmlRepoURL != nil {
+		return *r.htmlRepoURL, nil
+	}
+	q := r.query.Select("htmlRepoURL")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The URL to the source's git repo in a web browser. Only valid for git sources.
+func (r *ModuleSource) HTMLURL(ctx context.Context) (string, error) {
+	if r.htmlURL != nil {
+		return *r.htmlURL, nil
+	}
+	q := r.query.Select("htmlURL")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 // A unique identifier for this ModuleSource.
@@ -5729,7 +7029,7 @@ func (r *ModuleSource) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
-// The kind of source (e.g. local, git, etc.)
+// The kind of module source (currently local, git or dir).
 func (r *ModuleSource) Kind(ctx context.Context) (ModuleSourceKind, error) {
 	if r.kind != nil {
 		return *r.kind, nil
@@ -5742,7 +7042,20 @@ func (r *ModuleSource) Kind(ctx context.Context) (ModuleSourceKind, error) {
 	return response, q.Execute(ctx)
 }
 
-// If set, the name of the module this source references, including any overrides at runtime by callers.
+// The full absolute path to the context directory on the caller's host filesystem that this module source is loaded from. Only valid for local module sources.
+func (r *ModuleSource) LocalContextDirectoryPath(ctx context.Context) (string, error) {
+	if r.localContextDirectoryPath != nil {
+		return *r.localContextDirectoryPath, nil
+	}
+	q := r.query.Select("localContextDirectoryPath")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The name of the module, including any setting via the withName API.
 func (r *ModuleSource) ModuleName(ctx context.Context) (string, error) {
 	if r.moduleName != nil {
 		return *r.moduleName, nil
@@ -5755,7 +7068,7 @@ func (r *ModuleSource) ModuleName(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// The original name of the module this source references, as defined in the module configuration.
+// The original name of the module as read from the module's dagger.json (or set for the first time with the withName API).
 func (r *ModuleSource) ModuleOriginalName(ctx context.Context) (string, error) {
 	if r.moduleOriginalName != nil {
 		return *r.moduleOriginalName, nil
@@ -5768,12 +7081,12 @@ func (r *ModuleSource) ModuleOriginalName(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// The path to the module source's context directory on the caller's filesystem. Only valid for local sources.
-func (r *ModuleSource) ResolveContextPathFromCaller(ctx context.Context) (string, error) {
-	if r.resolveContextPathFromCaller != nil {
-		return *r.resolveContextPathFromCaller, nil
+// The original subpath used when instantiating this module source, relative to the context directory.
+func (r *ModuleSource) OriginalSubpath(ctx context.Context) (string, error) {
+	if r.originalSubpath != nil {
+		return *r.originalSubpath, nil
 	}
-	q := r.query.Select("resolveContextPathFromCaller")
+	q := r.query.Select("originalSubpath")
 
 	var response string
 
@@ -5781,55 +7094,42 @@ func (r *ModuleSource) ResolveContextPathFromCaller(ctx context.Context) (string
 	return response, q.Execute(ctx)
 }
 
-// Resolve the provided module source arg as a dependency relative to this module source.
-func (r *ModuleSource) ResolveDependency(dep *ModuleSource) *ModuleSource {
-	assertNotNil("dep", dep)
-	q := r.query.Select("resolveDependency")
-	q = q.Arg("dep", dep)
+// The pinned version of this module source.
+func (r *ModuleSource) Pin(ctx context.Context) (string, error) {
+	if r.pin != nil {
+		return *r.pin, nil
+	}
+	q := r.query.Select("pin")
 
-	return &ModuleSource{
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The import path corresponding to the root of the git repo this source points to. Only valid for git sources.
+func (r *ModuleSource) RepoRootPath(ctx context.Context) (string, error) {
+	if r.repoRootPath != nil {
+		return *r.repoRootPath, nil
+	}
+	q := r.query.Select("repoRootPath")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The SDK configuration of the module.
+func (r *ModuleSource) SDK() *SDKConfig {
+	q := r.query.Select("sdk")
+
+	return &SDKConfig{
 		query: q,
 	}
 }
 
-// ModuleSourceResolveDirectoryFromCallerOpts contains options for ModuleSource.ResolveDirectoryFromCaller
-type ModuleSourceResolveDirectoryFromCallerOpts struct {
-	// If set, the name of the view to apply to the path.
-	ViewName string
-	// Patterns to ignore when loading the directory.
-	Ignore []string
-}
-
-// Load a directory from the caller optionally with a given view applied.
-func (r *ModuleSource) ResolveDirectoryFromCaller(path string, opts ...ModuleSourceResolveDirectoryFromCallerOpts) *Directory {
-	q := r.query.Select("resolveDirectoryFromCaller")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `viewName` optional argument
-		if !querybuilder.IsZeroValue(opts[i].ViewName) {
-			q = q.Arg("viewName", opts[i].ViewName)
-		}
-		// `ignore` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Ignore) {
-			q = q.Arg("ignore", opts[i].Ignore)
-		}
-	}
-	q = q.Arg("path", path)
-
-	return &Directory{
-		query: q,
-	}
-}
-
-// Load the source from its path on the caller's filesystem, including only needed+configured files and directories. Only valid for local sources.
-func (r *ModuleSource) ResolveFromCaller() *ModuleSource {
-	q := r.query.Select("resolveFromCaller")
-
-	return &ModuleSource{
-		query: q,
-	}
-}
-
-// The path relative to context of the root of the module source, which contains dagger.json. It also contains the module implementation source code, but that may or may not being a subdir of this root.
+// The path, relative to the context directory, that contains the module's dagger.json.
 func (r *ModuleSource) SourceRootSubpath(ctx context.Context) (string, error) {
 	if r.sourceRootSubpath != nil {
 		return *r.sourceRootSubpath, nil
@@ -5842,7 +7142,7 @@ func (r *ModuleSource) SourceRootSubpath(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// The path relative to context of the module implementation source code.
+// The path to the directory containing the module's source code, relative to the context directory.
 func (r *ModuleSource) SourceSubpath(ctx context.Context) (string, error) {
 	if r.sourceSubpath != nil {
 		return *r.sourceSubpath, nil
@@ -5855,54 +7155,49 @@ func (r *ModuleSource) SourceSubpath(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// Retrieve a named view defined for this module source.
-func (r *ModuleSource) View(name string) *ModuleSourceView {
-	q := r.query.Select("view")
-	q = q.Arg("name", name)
+// Forces evaluation of the module source, including any loading into the engine and associated validation.
+func (r *ModuleSource) Sync(ctx context.Context) (*ModuleSource, error) {
+	q := r.query.Select("sync")
 
-	return &ModuleSourceView{
-		query: q,
-	}
-}
-
-// The named views defined for this module source, which are sets of directory filters that can be applied to directory arguments provided to functions.
-func (r *ModuleSource) Views(ctx context.Context) ([]ModuleSourceView, error) {
-	q := r.query.Select("views")
-
-	q = q.Select("id")
-
-	type views struct {
-		Id ModuleSourceViewID
-	}
-
-	convert := func(fields []views) []ModuleSourceView {
-		out := []ModuleSourceView{}
-
-		for i := range fields {
-			val := ModuleSourceView{id: &fields[i].Id}
-			val.query = q.Root().Select("loadModuleSourceViewFromID").Arg("id", fields[i].Id)
-			out = append(out, val)
-		}
-
-		return out
-	}
-	var response []views
-
-	q = q.Bind(&response)
-
-	err := q.Execute(ctx)
-	if err != nil {
+	var id ModuleSourceID
+	if err := q.Bind(&id).Execute(ctx); err != nil {
 		return nil, err
 	}
-
-	return convert(response), nil
+	return &ModuleSource{
+		query: q.Root().Select("loadModuleSourceFromID").Arg("id", id),
+	}, nil
 }
 
-// Update the module source with a new context directory. Only valid for local sources.
-func (r *ModuleSource) WithContextDirectory(dir *Directory) *ModuleSource {
-	assertNotNil("dir", dir)
-	q := r.query.Select("withContextDirectory")
-	q = q.Arg("dir", dir)
+// The specified version of the git repo this source points to.
+func (r *ModuleSource) Version(ctx context.Context) (string, error) {
+	if r.version != nil {
+		return *r.version, nil
+	}
+	q := r.query.Select("version")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// ModuleSourceWithClientOpts contains options for ModuleSource.WithClient
+type ModuleSourceWithClientOpts struct {
+	// Generate in developer mode
+	Dev bool
+}
+
+// Update the module source with a new client to generate.
+func (r *ModuleSource) WithClient(generator string, outputDir string, opts ...ModuleSourceWithClientOpts) *ModuleSource {
+	q := r.query.Select("withClient")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `dev` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Dev) {
+			q = q.Arg("dev", opts[i].Dev)
+		}
+	}
+	q = q.Arg("generator", generator)
+	q = q.Arg("outputDir", outputDir)
 
 	return &ModuleSource{
 		query: q,
@@ -5910,7 +7205,7 @@ func (r *ModuleSource) WithContextDirectory(dir *Directory) *ModuleSource {
 }
 
 // Append the provided dependencies to the module source's dependency list.
-func (r *ModuleSource) WithDependencies(dependencies []*ModuleDependency) *ModuleSource {
+func (r *ModuleSource) WithDependencies(dependencies []*ModuleSource) *ModuleSource {
 	q := r.query.Select("withDependencies")
 	q = q.Arg("dependencies", dependencies)
 
@@ -5919,21 +7214,20 @@ func (r *ModuleSource) WithDependencies(dependencies []*ModuleDependency) *Modul
 	}
 }
 
-// ModuleSourceWithInitOpts contains options for ModuleSource.WithInit
-type ModuleSourceWithInitOpts struct {
-	// Merge module dependencies into the current project's
-	Merge bool
+// Upgrade the engine version of the module to the given value.
+func (r *ModuleSource) WithEngineVersion(version string) *ModuleSource {
+	q := r.query.Select("withEngineVersion")
+	q = q.Arg("version", version)
+
+	return &ModuleSource{
+		query: q,
+	}
 }
 
-// Sets module init arguments
-func (r *ModuleSource) WithInit(opts ...ModuleSourceWithInitOpts) *ModuleSource {
-	q := r.query.Select("withInit")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `merge` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Merge) {
-			q = q.Arg("merge", opts[i].Merge)
-		}
-	}
+// Update the module source with additional include patterns for files+directories from its context that are required for building it
+func (r *ModuleSource) WithIncludes(patterns []string) *ModuleSource {
+	q := r.query.Select("withIncludes")
+	q = q.Arg("patterns", patterns)
 
 	return &ModuleSource{
 		query: q,
@@ -5951,9 +7245,9 @@ func (r *ModuleSource) WithName(name string) *ModuleSource {
 }
 
 // Update the module source with a new SDK.
-func (r *ModuleSource) WithSDK(sdk string) *ModuleSource {
+func (r *ModuleSource) WithSDK(source string) *ModuleSource {
 	q := r.query.Select("withSDK")
-	q = q.Arg("sdk", sdk)
+	q = q.Arg("source", source)
 
 	return &ModuleSource{
 		query: q,
@@ -5970,101 +7264,24 @@ func (r *ModuleSource) WithSourceSubpath(path string) *ModuleSource {
 	}
 }
 
-// Update the module source with a new named view.
-func (r *ModuleSource) WithView(name string, patterns []string) *ModuleSource {
-	q := r.query.Select("withView")
-	q = q.Arg("name", name)
-	q = q.Arg("patterns", patterns)
+// Update one or more module dependencies.
+func (r *ModuleSource) WithUpdateDependencies(dependencies []string) *ModuleSource {
+	q := r.query.Select("withUpdateDependencies")
+	q = q.Arg("dependencies", dependencies)
 
 	return &ModuleSource{
 		query: q,
 	}
 }
 
-// A named set of path filters that can be applied to directory arguments provided to functions.
-type ModuleSourceView struct {
-	query *querybuilder.Selection
+// Remove the provided dependencies from the module source's dependency list.
+func (r *ModuleSource) WithoutDependencies(dependencies []string) *ModuleSource {
+	q := r.query.Select("withoutDependencies")
+	q = q.Arg("dependencies", dependencies)
 
-	id   *ModuleSourceViewID
-	name *string
-}
-
-func (r *ModuleSourceView) WithGraphQLQuery(q *querybuilder.Selection) *ModuleSourceView {
-	return &ModuleSourceView{
+	return &ModuleSource{
 		query: q,
 	}
-}
-
-// A unique identifier for this ModuleSourceView.
-func (r *ModuleSourceView) ID(ctx context.Context) (ModuleSourceViewID, error) {
-	if r.id != nil {
-		return *r.id, nil
-	}
-	q := r.query.Select("id")
-
-	var response ModuleSourceViewID
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
-func (r *ModuleSourceView) XXX_GraphQLType() string {
-	return "ModuleSourceView"
-}
-
-// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
-func (r *ModuleSourceView) XXX_GraphQLIDType() string {
-	return "ModuleSourceViewID"
-}
-
-// XXX_GraphQLID is an internal function. It returns the underlying type ID
-func (r *ModuleSourceView) XXX_GraphQLID(ctx context.Context) (string, error) {
-	id, err := r.ID(ctx)
-	if err != nil {
-		return "", err
-	}
-	return string(id), nil
-}
-
-func (r *ModuleSourceView) MarshalJSON() ([]byte, error) {
-	id, err := r.ID(marshalCtx)
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(id)
-}
-func (r *ModuleSourceView) UnmarshalJSON(bs []byte) error {
-	var id string
-	err := json.Unmarshal(bs, &id)
-	if err != nil {
-		return err
-	}
-	*r = *dag.LoadModuleSourceViewFromID(ModuleSourceViewID(id))
-	return nil
-}
-
-// The name of the view
-func (r *ModuleSourceView) Name(ctx context.Context) (string, error) {
-	if r.name != nil {
-		return *r.name, nil
-	}
-	q := r.query.Select("name")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// The patterns of the view used to filter paths
-func (r *ModuleSourceView) Patterns(ctx context.Context) ([]string, error) {
-	q := r.query.Select("patterns")
-
-	var response []string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
 }
 
 // A definition of a custom object defined in a Module.
@@ -6380,32 +7597,20 @@ func (r *Client) WithGraphQLQuery(q *querybuilder.Selection) *Client {
 	}
 }
 
-// Retrieves a content-addressed blob.
-func (r *Client) Blob(digest string, size int, mediaType string, uncompressed string) *Directory {
-	q := r.query.Select("blob")
-	q = q.Arg("digest", digest)
-	q = q.Arg("size", size)
-	q = q.Arg("mediaType", mediaType)
-	q = q.Arg("uncompressed", uncompressed)
-
-	return &Directory{
-		query: q,
-	}
-}
-
-// Retrieves a container builtin to the engine.
-func (r *Client) BuiltinContainer(digest string) *Container {
-	q := r.query.Select("builtinContainer")
-	q = q.Arg("digest", digest)
-
-	return &Container{
-		query: q,
-	}
+// CacheVolumeOpts contains options for Client.CacheVolume
+type CacheVolumeOpts struct {
+	Namespace string
 }
 
 // Constructs a cache volume for a given cache key.
-func (r *Client) CacheVolume(key string) *CacheVolume {
+func (r *Client) CacheVolume(key string, opts ...CacheVolumeOpts) *CacheVolume {
 	q := r.query.Select("cacheVolume")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `namespace` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Namespace) {
+			q = q.Arg("namespace", opts[i].Namespace)
+		}
+	}
 	q = q.Arg("key", key)
 
 	return &CacheVolume{
@@ -6415,13 +7620,13 @@ func (r *Client) CacheVolume(key string) *CacheVolume {
 
 // ContainerOpts contains options for Client.Container
 type ContainerOpts struct {
-	// Platform to initialize the container with.
+	// Platform to initialize the container with. Defaults to the native platform of the current engine
 	Platform Platform
 }
 
-// Creates a scratch container.
+// Creates a scratch container, with no image or metadata.
 //
-// Optional platform argument initializes new containers to execute and publish as that platform. Platform defaults to that of the builder's host.
+// To pull an image, follow up with the "from" function.
 func (r *Client) Container(opts ...ContainerOpts) *Container {
 	q := r.query.Select("container")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -6504,6 +7709,37 @@ func (r *Client) Directory() *Directory {
 	q := r.query.Select("directory")
 
 	return &Directory{
+		query: q,
+	}
+}
+
+// EnvOpts contains options for Client.Env
+type EnvOpts struct {
+	// Give the environment the same privileges as the caller: core API including host access, current module, and dependencies
+	Privileged bool
+}
+
+// Initialize a new environment
+func (r *Client) Env(opts ...EnvOpts) *Env {
+	q := r.query.Select("env")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `privileged` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Privileged) {
+			q = q.Arg("privileged", opts[i].Privileged)
+		}
+	}
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create a new error.
+func (r *Client) Error(message string) *Error {
+	q := r.query.Select("error")
+	q = q.Arg("message", message)
+
+	return &Error{
 		query: q,
 	}
 }
@@ -6613,6 +7849,43 @@ func (r *Client) K3S(name string, opts ...K3SOpts) *K3S {
 	}
 }
 
+// LLMOpts contains options for Client.LLM
+type LLMOpts struct {
+	// Model to use
+	Model string
+	// Cap the number of API calls for this LLM
+	MaxAPICalls int
+}
+
+// Initialize a Large Language Model (LLM)
+func (r *Client) LLM(opts ...LLMOpts) *LLM {
+	q := r.query.Select("llm")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `model` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Model) {
+			q = q.Arg("model", opts[i].Model)
+		}
+		// `maxAPICalls` optional argument
+		if !querybuilder.IsZeroValue(opts[i].MaxAPICalls) {
+			q = q.Arg("maxAPICalls", opts[i].MaxAPICalls)
+		}
+	}
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// Load a Binding from its ID.
+func (r *Client) LoadBindingFromID(id BindingID) *Binding {
+	q := r.query.Select("loadBindingFromID")
+	q = q.Arg("id", id)
+
+	return &Binding{
+		query: q,
+	}
+}
+
 // Load a CacheVolume from its ID.
 func (r *Client) LoadCacheVolumeFromID(id CacheVolumeID) *CacheVolume {
 	q := r.query.Select("loadCacheVolumeFromID")
@@ -6673,12 +7946,42 @@ func (r *Client) LoadEnumValueTypeDefFromID(id EnumValueTypeDefID) *EnumValueTyp
 	}
 }
 
+// Load a Env from its ID.
+func (r *Client) LoadEnvFromID(id EnvID) *Env {
+	q := r.query.Select("loadEnvFromID")
+	q = q.Arg("id", id)
+
+	return &Env{
+		query: q,
+	}
+}
+
 // Load a EnvVariable from its ID.
 func (r *Client) LoadEnvVariableFromID(id EnvVariableID) *EnvVariable {
 	q := r.query.Select("loadEnvVariableFromID")
 	q = q.Arg("id", id)
 
 	return &EnvVariable{
+		query: q,
+	}
+}
+
+// Load a Error from its ID.
+func (r *Client) LoadErrorFromID(id ErrorID) *Error {
+	q := r.query.Select("loadErrorFromID")
+	q = q.Arg("id", id)
+
+	return &Error{
+		query: q,
+	}
+}
+
+// Load a ErrorValue from its ID.
+func (r *Client) LoadErrorValueFromID(id ErrorValueID) *ErrorValue {
+	q := r.query.Select("loadErrorValueFromID")
+	q = q.Arg("id", id)
+
+	return &ErrorValue{
 		query: q,
 	}
 }
@@ -6753,16 +8056,6 @@ func (r *Client) LoadGeneratedCodeFromID(id GeneratedCodeID) *GeneratedCode {
 	}
 }
 
-// Load a GitModuleSource from its ID.
-func (r *Client) LoadGitModuleSourceFromID(id GitModuleSourceID) *GitModuleSource {
-	q := r.query.Select("loadGitModuleSourceFromID")
-	q = q.Arg("id", id)
-
-	return &GitModuleSource{
-		query: q,
-	}
-}
-
 // Load a GitRef from its ID.
 func (r *Client) LoadGitRefFromID(id GitRefID) *GitRef {
 	q := r.query.Select("loadGitRefFromID")
@@ -6813,6 +8106,26 @@ func (r *Client) LoadK3SFromID(id K3SID) *K3S {
 	}
 }
 
+// Load a LLM from its ID.
+func (r *Client) LoadLLMFromID(id LLMID) *LLM {
+	q := r.query.Select("loadLLMFromID")
+	q = q.Arg("id", id)
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// Load a LLMTokenUsage from its ID.
+func (r *Client) LoadLLMTokenUsageFromID(id LLMTokenUsageID) *LLMTokenUsage {
+	q := r.query.Select("loadLLMTokenUsageFromID")
+	q = q.Arg("id", id)
+
+	return &LLMTokenUsage{
+		query: q,
+	}
+}
+
 // Load a Label from its ID.
 func (r *Client) LoadLabelFromID(id LabelID) *Label {
 	q := r.query.Select("loadLabelFromID")
@@ -6833,22 +8146,12 @@ func (r *Client) LoadListTypeDefFromID(id ListTypeDefID) *ListTypeDef {
 	}
 }
 
-// Load a LocalModuleSource from its ID.
-func (r *Client) LoadLocalModuleSourceFromID(id LocalModuleSourceID) *LocalModuleSource {
-	q := r.query.Select("loadLocalModuleSourceFromID")
+// Load a ModuleConfigClient from its ID.
+func (r *Client) LoadModuleConfigClientFromID(id ModuleConfigClientID) *ModuleConfigClient {
+	q := r.query.Select("loadModuleConfigClientFromID")
 	q = q.Arg("id", id)
 
-	return &LocalModuleSource{
-		query: q,
-	}
-}
-
-// Load a ModuleDependency from its ID.
-func (r *Client) LoadModuleDependencyFromID(id ModuleDependencyID) *ModuleDependency {
-	q := r.query.Select("loadModuleDependencyFromID")
-	q = q.Arg("id", id)
-
-	return &ModuleDependency{
+	return &ModuleConfigClient{
 		query: q,
 	}
 }
@@ -6873,16 +8176,6 @@ func (r *Client) LoadModuleSourceFromID(id ModuleSourceID) *ModuleSource {
 	}
 }
 
-// Load a ModuleSourceView from its ID.
-func (r *Client) LoadModuleSourceViewFromID(id ModuleSourceViewID) *ModuleSourceView {
-	q := r.query.Select("loadModuleSourceViewFromID")
-	q = q.Arg("id", id)
-
-	return &ModuleSourceView{
-		query: q,
-	}
-}
-
 // Load a ObjectTypeDef from its ID.
 func (r *Client) LoadObjectTypeDefFromID(id ObjectTypeDefID) *ObjectTypeDef {
 	q := r.query.Select("loadObjectTypeDefFromID")
@@ -6899,6 +8192,16 @@ func (r *Client) LoadPortFromID(id PortID) *Port {
 	q = q.Arg("id", id)
 
 	return &Port{
+		query: q,
+	}
+}
+
+// Load a SDKConfig from its ID.
+func (r *Client) LoadSDKConfigFromID(id SDKConfigID) *SDKConfig {
+	q := r.query.Select("loadSDKConfigFromID")
+	q = q.Arg("id", id)
+
+	return &SDKConfig{
 		query: q,
 	}
 }
@@ -6982,40 +8285,19 @@ func (r *Client) Module() *Module {
 	}
 }
 
-// ModuleDependencyOpts contains options for Client.ModuleDependency
-type ModuleDependencyOpts struct {
-	// If set, the name to use for the dependency. Otherwise, once installed to a parent module, the name of the dependency module will be used by default.
-	Name string
-}
-
-// Create a new module dependency configuration from a module source and name
-func (r *Client) ModuleDependency(source *ModuleSource, opts ...ModuleDependencyOpts) *ModuleDependency {
-	assertNotNil("source", source)
-	q := r.query.Select("moduleDependency")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `name` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Name) {
-			q = q.Arg("name", opts[i].Name)
-		}
-	}
-	q = q.Arg("source", source)
-
-	return &ModuleDependency{
-		query: q,
-	}
-}
-
 // ModuleSourceOpts contains options for Client.ModuleSource
 type ModuleSourceOpts struct {
 	// The pinned version of the module source
 	RefPin string
-	// If true, enforce that the source is a stable version for source kinds that support versioning.
-	Stable bool
-	// The relative path to the module root from the host directory
-	RelHostPath string
+	// If true, do not attempt to find dagger.json in a parent directory of the provided path. Only relevant for local module sources.
+	DisableFindUp bool
+	// If true, do not error out if the provided ref string is a local path and does not exist yet. Useful when initializing new modules in directories that don't exist yet.
+	AllowNotExists bool
+	// If set, error out if the ref string is not of the provided requireKind.
+	RequireKind ModuleSourceKind
 }
 
-// Create a new module source instance from a source ref string.
+// Create a new module source instance from a source ref string
 func (r *Client) ModuleSource(refString string, opts ...ModuleSourceOpts) *ModuleSource {
 	q := r.query.Select("moduleSource")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -7023,13 +8305,17 @@ func (r *Client) ModuleSource(refString string, opts ...ModuleSourceOpts) *Modul
 		if !querybuilder.IsZeroValue(opts[i].RefPin) {
 			q = q.Arg("refPin", opts[i].RefPin)
 		}
-		// `stable` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Stable) {
-			q = q.Arg("stable", opts[i].Stable)
+		// `disableFindUp` optional argument
+		if !querybuilder.IsZeroValue(opts[i].DisableFindUp) {
+			q = q.Arg("disableFindUp", opts[i].DisableFindUp)
 		}
-		// `relHostPath` optional argument
-		if !querybuilder.IsZeroValue(opts[i].RelHostPath) {
-			q = q.Arg("relHostPath", opts[i].RelHostPath)
+		// `allowNotExists` optional argument
+		if !querybuilder.IsZeroValue(opts[i].AllowNotExists) {
+			q = q.Arg("allowNotExists", opts[i].AllowNotExists)
+		}
+		// `requireKind` optional argument
+		if !querybuilder.IsZeroValue(opts[i].RequireKind) {
+			q = q.Arg("requireKind", opts[i].RequireKind)
 		}
 	}
 	q = q.Arg("refString", refString)
@@ -7039,21 +8325,10 @@ func (r *Client) ModuleSource(refString string, opts ...ModuleSourceOpts) *Modul
 	}
 }
 
-// SecretOpts contains options for Client.Secret
-type SecretOpts struct {
-	Accessor string
-}
-
-// Reference a secret by name.
-func (r *Client) Secret(name string, opts ...SecretOpts) *Secret {
+// Creates a new secret.
+func (r *Client) Secret(uri string) *Secret {
 	q := r.query.Select("secret")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `accessor` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Accessor) {
-			q = q.Arg("accessor", opts[i].Accessor)
-		}
-	}
-	q = q.Arg("name", name)
+	q = q.Arg("uri", uri)
 
 	return &Secret{
 		query: q,
@@ -7097,6 +8372,82 @@ func (r *Client) TypeDef() *TypeDef {
 // Get the current Dagger Engine version.
 func (r *Client) Version(ctx context.Context) (string, error) {
 	q := r.query.Select("version")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The SDK config of the module.
+type SDKConfig struct {
+	query *querybuilder.Selection
+
+	id     *SDKConfigID
+	source *string
+}
+
+func (r *SDKConfig) WithGraphQLQuery(q *querybuilder.Selection) *SDKConfig {
+	return &SDKConfig{
+		query: q,
+	}
+}
+
+// A unique identifier for this SDKConfig.
+func (r *SDKConfig) ID(ctx context.Context) (SDKConfigID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response SDKConfigID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *SDKConfig) XXX_GraphQLType() string {
+	return "SDKConfig"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *SDKConfig) XXX_GraphQLIDType() string {
+	return "SDKConfigID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *SDKConfig) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *SDKConfig) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *SDKConfig) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadSDKConfigFromID(SDKConfigID(id))
+	return nil
+}
+
+// Source of the SDK. Either a name of a builtin SDK or a module source ref string pointing to the SDK's implementation.
+func (r *SDKConfig) Source(ctx context.Context) (string, error) {
+	if r.source != nil {
+		return *r.source, nil
+	}
+	q := r.query.Select("source")
 
 	var response string
 
@@ -7215,6 +8566,7 @@ type Secret struct {
 	id        *SecretID
 	name      *string
 	plaintext *string
+	uri       *string
 }
 
 func (r *Secret) WithGraphQLQuery(q *querybuilder.Selection) *Secret {
@@ -7291,6 +8643,19 @@ func (r *Secret) Plaintext(ctx context.Context) (string, error) {
 		return *r.plaintext, nil
 	}
 	q := r.query.Select("plaintext")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The URI of this secret.
+func (r *Secret) URI(ctx context.Context) (string, error) {
+	if r.uri != nil {
+		return *r.uri, nil
+	}
+	q := r.query.Select("uri")
 
 	var response string
 
@@ -8171,23 +9536,11 @@ const (
 	// Shares the cache volume amongst many build pipelines, but will serialize the writes
 	CacheSharingModeLocked CacheSharingMode = "LOCKED"
 
-	// Shares the cache volume amongst many build pipelines, but will serialize the writes
-	// Deprecated: use CacheSharingModeLocked instead
-	Locked CacheSharingMode = CacheSharingModeLocked
-
 	// Keeps a cache volume for a single build pipeline
 	CacheSharingModePrivate CacheSharingMode = "PRIVATE"
 
-	// Keeps a cache volume for a single build pipeline
-	// Deprecated: use CacheSharingModePrivate instead
-	Private CacheSharingMode = CacheSharingModePrivate
-
 	// Shares the cache volume amongst many build pipelines
 	CacheSharingModeShared CacheSharingMode = "SHARED"
-
-	// Shares the cache volume amongst many build pipelines
-	// Deprecated: use CacheSharingModeShared instead
-	Shared CacheSharingMode = CacheSharingModeShared
 )
 
 // Compression algorithm to use for image layers.
@@ -8198,23 +9551,11 @@ func (ImageLayerCompression) IsEnum() {}
 const (
 	ImageLayerCompressionEstarGz ImageLayerCompression = "EStarGZ"
 
-	// Deprecated: use ImageLayerCompressionEstarGz instead
-	Estargz ImageLayerCompression = ImageLayerCompressionEstarGz
-
 	ImageLayerCompressionGzip ImageLayerCompression = "Gzip"
-
-	// Deprecated: use ImageLayerCompressionGzip instead
-	Gzip ImageLayerCompression = ImageLayerCompressionGzip
 
 	ImageLayerCompressionUncompressed ImageLayerCompression = "Uncompressed"
 
-	// Deprecated: use ImageLayerCompressionUncompressed instead
-	Uncompressed ImageLayerCompression = ImageLayerCompressionUncompressed
-
 	ImageLayerCompressionZstd ImageLayerCompression = "Zstd"
-
-	// Deprecated: use ImageLayerCompressionZstd instead
-	Zstd ImageLayerCompression = ImageLayerCompressionZstd
 )
 
 // Mediatypes to use in published or exported image metadata.
@@ -8225,13 +9566,7 @@ func (ImageMediaTypes) IsEnum() {}
 const (
 	ImageMediaTypesDockerMediaTypes ImageMediaTypes = "DockerMediaTypes"
 
-	// Deprecated: use ImageMediaTypesDockerMediaTypes instead
-	Dockermediatypes ImageMediaTypes = ImageMediaTypesDockerMediaTypes
-
 	ImageMediaTypesOcimediaTypes ImageMediaTypes = "OCIMediaTypes"
-
-	// Deprecated: use ImageMediaTypesOcimediaTypes instead
-	Ocimediatypes ImageMediaTypes = ImageMediaTypesOcimediaTypes
 )
 
 // The kind of module source.
@@ -8240,15 +9575,11 @@ type ModuleSourceKind string
 func (ModuleSourceKind) IsEnum() {}
 
 const (
+	ModuleSourceKindDirSource ModuleSourceKind = "DIR_SOURCE"
+
 	ModuleSourceKindGitSource ModuleSourceKind = "GIT_SOURCE"
 
-	// Deprecated: use ModuleSourceKindGitSource instead
-	GitSource ModuleSourceKind = ModuleSourceKindGitSource
-
 	ModuleSourceKindLocalSource ModuleSourceKind = "LOCAL_SOURCE"
-
-	// Deprecated: use ModuleSourceKindLocalSource instead
-	LocalSource ModuleSourceKind = ModuleSourceKindLocalSource
 )
 
 // Transport layer network protocol associated to a port.
@@ -8259,13 +9590,7 @@ func (NetworkProtocol) IsEnum() {}
 const (
 	NetworkProtocolTcp NetworkProtocol = "TCP"
 
-	// Deprecated: use NetworkProtocolTcp instead
-	Tcp NetworkProtocol = NetworkProtocolTcp
-
 	NetworkProtocolUdp NetworkProtocol = "UDP"
-
-	// Deprecated: use NetworkProtocolUdp instead
-	Udp NetworkProtocol = NetworkProtocolUdp
 )
 
 // Expected return type of an execution
@@ -8277,23 +9602,11 @@ const (
 	// Any execution (exit codes 0-127)
 	ReturnTypeAny ReturnType = "ANY"
 
-	// Any execution (exit codes 0-127)
-	// Deprecated: use ReturnTypeAny instead
-	Any ReturnType = ReturnTypeAny
-
 	// A failed execution (exit codes 1-127)
 	ReturnTypeFailure ReturnType = "FAILURE"
 
-	// A failed execution (exit codes 1-127)
-	// Deprecated: use ReturnTypeFailure instead
-	Failure ReturnType = ReturnTypeFailure
-
 	// A successful execution (exit code 0)
 	ReturnTypeSuccess ReturnType = "SUCCESS"
-
-	// A successful execution (exit code 0)
-	// Deprecated: use ReturnTypeSuccess instead
-	Success ReturnType = ReturnTypeSuccess
 )
 
 // Distinguishes the different kinds of TypeDefs.
@@ -8305,92 +9618,45 @@ const (
 	// A boolean value.
 	TypeDefKindBooleanKind TypeDefKind = "BOOLEAN_KIND"
 
-	// A boolean value.
-	// Deprecated: use TypeDefKindBooleanKind instead
-	BooleanKind TypeDefKind = TypeDefKindBooleanKind
-
 	// A GraphQL enum type and its values
 	//
 	// Always paired with an EnumTypeDef.
 	TypeDefKindEnumKind TypeDefKind = "ENUM_KIND"
 
-	// A GraphQL enum type and its values
-	//
-	// Always paired with an EnumTypeDef.
-	// Deprecated: use TypeDefKindEnumKind instead
-	EnumKind TypeDefKind = TypeDefKindEnumKind
+	// A float value.
+	TypeDefKindFloatKind TypeDefKind = "FLOAT_KIND"
 
 	// A graphql input type, used only when representing the core API via TypeDefs.
 	TypeDefKindInputKind TypeDefKind = "INPUT_KIND"
 
-	// A graphql input type, used only when representing the core API via TypeDefs.
-	// Deprecated: use TypeDefKindInputKind instead
-	InputKind TypeDefKind = TypeDefKindInputKind
-
 	// An integer value.
 	TypeDefKindIntegerKind TypeDefKind = "INTEGER_KIND"
-
-	// An integer value.
-	// Deprecated: use TypeDefKindIntegerKind instead
-	IntegerKind TypeDefKind = TypeDefKindIntegerKind
 
 	// A named type of functions that can be matched+implemented by other objects+interfaces.
 	//
 	// Always paired with an InterfaceTypeDef.
 	TypeDefKindInterfaceKind TypeDefKind = "INTERFACE_KIND"
 
-	// A named type of functions that can be matched+implemented by other objects+interfaces.
-	//
-	// Always paired with an InterfaceTypeDef.
-	// Deprecated: use TypeDefKindInterfaceKind instead
-	InterfaceKind TypeDefKind = TypeDefKindInterfaceKind
-
 	// A list of values all having the same type.
 	//
 	// Always paired with a ListTypeDef.
 	TypeDefKindListKind TypeDefKind = "LIST_KIND"
-
-	// A list of values all having the same type.
-	//
-	// Always paired with a ListTypeDef.
-	// Deprecated: use TypeDefKindListKind instead
-	ListKind TypeDefKind = TypeDefKindListKind
 
 	// A named type defined in the GraphQL schema, with fields and functions.
 	//
 	// Always paired with an ObjectTypeDef.
 	TypeDefKindObjectKind TypeDefKind = "OBJECT_KIND"
 
-	// A named type defined in the GraphQL schema, with fields and functions.
-	//
-	// Always paired with an ObjectTypeDef.
-	// Deprecated: use TypeDefKindObjectKind instead
-	ObjectKind TypeDefKind = TypeDefKindObjectKind
-
 	// A scalar value of any basic kind.
 	TypeDefKindScalarKind TypeDefKind = "SCALAR_KIND"
 
-	// A scalar value of any basic kind.
-	// Deprecated: use TypeDefKindScalarKind instead
-	ScalarKind TypeDefKind = TypeDefKindScalarKind
-
 	// A string value.
 	TypeDefKindStringKind TypeDefKind = "STRING_KIND"
-
-	// A string value.
-	// Deprecated: use TypeDefKindStringKind instead
-	StringKind TypeDefKind = TypeDefKindStringKind
 
 	// A special kind used to signify that no value is returned.
 	//
 	// This is used for functions that have no return value. The outer TypeDef specifying this Kind is always Optional, as the Void is never actually represented.
 	TypeDefKindVoidKind TypeDefKind = "VOID_KIND"
-
-	// A special kind used to signify that no value is returned.
-	//
-	// This is used for functions that have no return value. The outer TypeDef specifying this Kind is always Optional, as the Void is never actually represented.
-	// Deprecated: use TypeDefKindVoidKind instead
-	VoidKind TypeDefKind = TypeDefKindVoidKind
 )
 
 type Client struct {
