@@ -43,6 +43,7 @@ jobs:
         with:
           sparse-checkout: |
             .github/renovate-config.json5
+          persist-credentials: false
 
       - name: Retrieve renovate secrets
         id: get-secrets

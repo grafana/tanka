@@ -12,6 +12,8 @@ on:
       - main
   merge_group:
 
+permissions: {}
+
 jobs:
   lint-pr-title:
     runs-on: ubuntu-24.04
