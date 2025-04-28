@@ -12,6 +12,10 @@ on:
       - main
   merge_group:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   lint-pr-title:
     runs-on: ubuntu-24.04
