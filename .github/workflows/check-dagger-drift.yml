@@ -41,8 +41,10 @@ jobs:
       - name: Install Dagger CLI
         if: steps.cache_daggercli.outputs.cache-hit != 'true'
         shell: bash
+        env:
+          DAGGER_VERSION: ${{ steps.dagger_version.outputs.version }}
         run: |
-          curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ steps.dagger_version.outputs.version }} sh
+          curl -L https://dl.dagger.io/dagger/install.sh | $DAGGER_VERSION sh
 
       - name: Check drift
         run: |

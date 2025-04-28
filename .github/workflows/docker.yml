@@ -76,11 +76,13 @@ jobs:
       - name: Export digest
         id: digest
         if: github.event_name == 'push'
+        env:
+          DIGEST: "${{ steps.build.outputs.digest }}"
+          PLATFORM: "${{ matrix.platform }}"
         run: |
           mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
-          echo "artifact_name=digests-${{ matrix.platform }}" | sed -e 's/\//-/g' >> "$GITHUB_OUTPUT"
+          touch "/tmp/digests/${DIGEST#sha256:}"
+          echo "artifact_name=digests-${PLATFORM}" | sed -e 's/\//-/g' >> "$GITHUB_OUTPUT"
 
       - name: Upload digest
         if: github.event_name == 'push'
@@ -137,5 +139,7 @@ jobs:
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
       - name: Inspect image
+        env:
+          META_VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${META_VERSION}
