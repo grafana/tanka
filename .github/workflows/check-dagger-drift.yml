@@ -14,16 +14,20 @@ on:
 jobs:
   check-dagger-drift:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
       - name: Determine Dagger version
         id: dagger_version
         run: |
           sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
           sudo chmod +x /usr/bin/yq
-          cat .github/workflows/acceptance-tests.yml| yq -r '.jobs.build.steps[] | select(.id == "dagger") | .with.version' > .version
+          cat .github/workflows/acceptance-tests.yml| yq -r '.jobs.build.steps[] | select(.id == "dagger") | .with.version | select(test("^([0-9]+\.[0-9]+\.[0-9]+)$"))' > .version
           echo "version=$(<.version)" > $GITHUB_OUTPUT
           rm -rf .version
 
@@ -36,8 +40,7 @@ jobs:
       - name: Install Dagger CLI
         if: steps.cache_daggercli.outputs.cache-hit != 'true'
         shell: bash
-        run: |
-          curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ steps.dagger_version.outputs.version }} sh
+        run: "curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ steps.dagger_version.outputs.version }} sh" # zizmor: ignore[template-injection] Covered by regex check in dagger_version step
 
       - name: Check drift
         run: |
