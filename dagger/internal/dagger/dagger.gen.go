@@ -278,8 +278,10 @@ type PortForward struct {
 type Binding struct {
 	query *querybuilder.Selection
 
+	asString *string
 	digest   *string
 	id       *BindingID
+	isNull   *bool
 	name     *string
 	typeName *string
 }
@@ -425,6 +427,19 @@ func (r *Binding) AsSocket() *Socket {
 	}
 }
 
+// The binding's string value
+func (r *Binding) AsString(ctx context.Context) (string, error) {
+	if r.asString != nil {
+		return *r.asString, nil
+	}
+	q := r.query.Select("asString")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
 // The digest of the binding value
 func (r *Binding) Digest(ctx context.Context) (string, error) {
 	if r.digest != nil {
@@ -485,6 +500,19 @@ func (r *Binding) UnmarshalJSON(bs []byte) error {
 	}
 	*r = *dag.LoadBindingFromID(BindingID(id))
 	return nil
+}
+
+// Returns true if the binding is null
+func (r *Binding) IsNull(ctx context.Context) (bool, error) {
+	if r.isNull != nil {
+		return *r.isNull, nil
+	}
+	q := r.query.Select("isNull")
+
+	var response bool
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 // The binding name
@@ -618,8 +646,6 @@ type ContainerAsServiceOpts struct {
 	// If the container has an entrypoint, prepend it to the args.
 	UseEntrypoint bool
 	// Provides Dagger access to the executed command.
-	//
-	// Do not use this option unless you trust the command being executed; the command being executed WILL BE GRANTED FULL ACCESS TO YOUR HOST FILESYSTEM.
 	ExperimentalPrivilegedNesting bool
 	// Execute the command with all root capabilities. This is similar to running a command with "sudo" or executing "docker run" with the "--privileged" flag. Containerization does not provide any security guarantees when using this option. It should only be used when absolutely necessary and only with trusted commands.
 	InsecureRootCapabilities bool
@@ -681,6 +707,8 @@ type ContainerAsTarballOpts struct {
 	// Use the specified media types for the image's layers.
 	//
 	// Defaults to OCI, which is largely compatible with most recent container runtimes, but Docker may be needed for older runtimes without OCI support.
+	//
+	// Default: OCIMediaTypes
 	MediaTypes ImageMediaTypes
 }
 
@@ -710,6 +738,8 @@ func (r *Container) AsTarball(opts ...ContainerAsTarballOpts) *File {
 // ContainerBuildOpts contains options for Container.Build
 type ContainerBuildOpts struct {
 	// Path to the Dockerfile to use.
+	//
+	// Default: "Dockerfile"
 	Dockerfile string
 	// Target build stage to build.
 	Target string
@@ -906,6 +936,8 @@ type ContainerExportOpts struct {
 	// Use the specified media types for the exported image's layers.
 	//
 	// Defaults to OCI, which is largely compatible with most recent container runtimes, but Docker may be needed for older runtimes without OCI support.
+	//
+	// Default: OCIMediaTypes
 	MediaTypes ImageMediaTypes
 	// Replace "${VAR}" or "$VAR" in the value of path according to the current environment variables defined in the container (e.g. "/$VAR/foo").
 	Expand bool
@@ -1182,6 +1214,8 @@ type ContainerPublishOpts struct {
 	// Use the specified media types for the published image's layers.
 	//
 	// Defaults to "OCI", which is compatible with most recent registries, but "Docker" may be needed for older registries without OCI support.
+	//
+	// Default: OCIMediaTypes
 	MediaTypes ImageMediaTypes
 }
 
@@ -1274,8 +1308,6 @@ type ContainerTerminalOpts struct {
 	// If set, override the container's default terminal command and invoke these command arguments instead.
 	Cmd []string
 	// Provides Dagger access to the executed command.
-	//
-	// Do not use this option unless you trust the command being executed; the command being executed WILL BE GRANTED FULL ACCESS TO YOUR HOST FILESYSTEM.
 	ExperimentalPrivilegedNesting bool
 	// Execute the command with all root capabilities. This is similar to running a command with "sudo" or executing "docker run" with the "--privileged" flag. Containerization does not provide any security guarantees when using this option. It should only be used when absolutely necessary and only with trusted commands.
 	InsecureRootCapabilities bool
@@ -1319,8 +1351,6 @@ type ContainerUpOpts struct {
 	// If the container has an entrypoint, prepend it to the args.
 	UseEntrypoint bool
 	// Provides Dagger access to the executed command.
-	//
-	// Do not use this option unless you trust the command being executed; the command being executed WILL BE GRANTED FULL ACCESS TO YOUR HOST FILESYSTEM.
 	ExperimentalPrivilegedNesting bool
 	// Execute the command with all root capabilities. This is similar to running a command with "sudo" or executing "docker run" with the "--privileged" flag. Containerization does not provide any security guarantees when using this option. It should only be used when absolutely necessary and only with trusted commands.
 	InsecureRootCapabilities bool
@@ -1415,8 +1445,6 @@ func (r *Container) WithDefaultArgs(args []string) *Container {
 // ContainerWithDefaultTerminalCmdOpts contains options for Container.WithDefaultTerminalCmd
 type ContainerWithDefaultTerminalCmdOpts struct {
 	// Provides Dagger access to the executed command.
-	//
-	// Do not use this option unless you trust the command being executed; the command being executed WILL BE GRANTED FULL ACCESS TO YOUR HOST FILESYSTEM.
 	ExperimentalPrivilegedNesting bool
 	// Execute the command with all root capabilities. This is similar to running a command with "sudo" or executing "docker run" with the "--privileged" flag. Containerization does not provide any security guarantees when using this option. It should only be used when absolutely necessary and only with trusted commands.
 	InsecureRootCapabilities bool
@@ -1544,6 +1572,8 @@ type ContainerWithExecOpts struct {
 	// Like redirectStdout, but for standard error
 	RedirectStderr string
 	// Exit codes this command is allowed to exit with without error
+	//
+	// Default: SUCCESS
 	Expect ReturnType
 	// Provides Dagger access to the executed command.
 	ExperimentalPrivilegedNesting bool
@@ -1610,6 +1640,8 @@ func (r *Container) WithExec(args []string, opts ...ContainerWithExecOpts) *Cont
 // ContainerWithExposedPortOpts contains options for Container.WithExposedPort
 type ContainerWithExposedPortOpts struct {
 	// Network protocol. Example: "tcp"
+	//
+	// Default: TCP
 	Protocol NetworkProtocol
 	// Port description. Example: "payment API endpoint"
 	Description string
@@ -1742,6 +1774,8 @@ type ContainerWithMountedCacheOpts struct {
 	// Identifier of the directory to use as the cache volume's root.
 	Source *Directory
 	// Sharing mode of the cache volume.
+	//
+	// Default: SHARED
 	Sharing CacheSharingMode
 	// A user:group to set for the mounted cache directory.
 	//
@@ -1864,6 +1898,8 @@ type ContainerWithMountedSecretOpts struct {
 	// Permission given to the mounted secret (e.g., 0600).
 	//
 	// This option requires an owner to be set to be active.
+	//
+	// Default: 256
 	Mode int
 	// Replace "${VAR}" or "$VAR" in the value of path according to the current environment variables defined in the container (e.g. "/$VAR/foo").
 	Expand bool
@@ -1926,6 +1962,8 @@ func (r *Container) WithMountedTemp(path string, opts ...ContainerWithMountedTem
 // ContainerWithNewFileOpts contains options for Container.WithNewFile
 type ContainerWithNewFileOpts struct {
 	// Permissions of the new file. Example: 0600
+	//
+	// Default: 420
 	Permissions int
 	// A user:group to set for the file.
 	//
@@ -1937,7 +1975,7 @@ type ContainerWithNewFileOpts struct {
 	Expand bool
 }
 
-// Return a new container snapshot, with a file added to its filesystem
+// Return a new container snapshot, with a file added to its filesystem with text content
 func (r *Container) WithNewFile(path string, contents string, opts ...ContainerWithNewFileOpts) *Container {
 	q := r.query.Select("withNewFile")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -2157,6 +2195,8 @@ func (r *Container) WithoutEnvVariable(name string) *Container {
 // ContainerWithoutExposedPortOpts contains options for Container.WithoutExposedPort
 type ContainerWithoutExposedPortOpts struct {
 	// Port protocol to unexpose
+	//
+	// Default: TCP
 	Protocol NetworkProtocol
 }
 
@@ -2491,6 +2531,8 @@ type DirectoryAsModuleOpts struct {
 	// An optional subpath of the directory which contains the module's configuration file.
 	//
 	// If not set, the module source code is loaded from the root of the directory.
+	//
+	// Default: "."
 	SourceRootPath string
 }
 
@@ -2514,6 +2556,8 @@ type DirectoryAsModuleSourceOpts struct {
 	// An optional subpath of the directory which contains the module's configuration file.
 	//
 	// If not set, the module source code is loaded from the root of the directory.
+	//
+	// Default: "."
 	SourceRootPath string
 }
 
@@ -2571,6 +2615,8 @@ type DirectoryDockerBuildOpts struct {
 	// The platform to build.
 	Platform Platform
 	// Path to the Dockerfile to use (e.g., "frontend.Dockerfile").
+	//
+	// Default: "Dockerfile"
 	Dockerfile string
 	// Target build stage to build.
 	Target string
@@ -2797,8 +2843,6 @@ type DirectoryTerminalOpts struct {
 	// If set, override the container's default terminal command and invoke these command arguments instead.
 	Cmd []string
 	// Provides Dagger access to the executed command.
-	//
-	// Do not use this option unless you trust the command being executed; the command being executed WILL BE GRANTED FULL ACCESS TO YOUR HOST FILESYSTEM.
 	ExperimentalPrivilegedNesting bool
 	// Execute the command with all root capabilities. This is similar to running a command with "sudo" or executing "docker run" with the "--privileged" flag. Containerization does not provide any security guarantees when using this option. It should only be used when absolutely necessary and only with trusted commands.
 	InsecureRootCapabilities bool
@@ -2913,6 +2957,8 @@ func (r *Directory) WithFiles(path string, sources []*File, opts ...DirectoryWit
 // DirectoryWithNewDirectoryOpts contains options for Directory.WithNewDirectory
 type DirectoryWithNewDirectoryOpts struct {
 	// Permission granted to the created directory (e.g., 0777).
+	//
+	// Default: 420
 	Permissions int
 }
 
@@ -2935,6 +2981,8 @@ func (r *Directory) WithNewDirectory(path string, opts ...DirectoryWithNewDirect
 // DirectoryWithNewFileOpts contains options for Directory.WithNewFile
 type DirectoryWithNewFileOpts struct {
 	// Permissions of the new file. Example: 0600
+	//
+	// Default: 420
 	Permissions int
 }
 
@@ -3760,6 +3808,17 @@ func (r *Env) WithStringInput(name string, value string, description string) *En
 	q := r.query.Select("withStringInput")
 	q = q.Arg("name", name)
 	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update an input value of type string
+func (r *Env) WithStringOutput(name string, description string) *Env {
+	q := r.query.Select("withStringOutput")
+	q = q.Arg("name", name)
 	q = q.Arg("description", description)
 
 	return &Env{
@@ -5127,6 +5186,7 @@ type GitRef struct {
 
 	commit *string
 	id     *GitRefID
+	ref    *string
 }
 
 func (r *GitRef) WithGraphQLQuery(q *querybuilder.Selection) *GitRef {
@@ -5197,10 +5257,27 @@ func (r *GitRef) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+// The resolved ref name at this ref.
+func (r *GitRef) Ref(ctx context.Context) (string, error) {
+	if r.ref != nil {
+		return *r.ref, nil
+	}
+	q := r.query.Select("ref")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
 // GitRefTreeOpts contains options for GitRef.Tree
 type GitRefTreeOpts struct {
 	// Set to true to discard .git directory.
 	DiscardGitDir bool
+	// The depth of the tree to fetch.
+	//
+	// Default: 1
+	Depth int
 }
 
 // The filesystem tree at this ref.
@@ -5210,6 +5287,10 @@ func (r *GitRef) Tree(opts ...GitRefTreeOpts) *Directory {
 		// `discardGitDir` optional argument
 		if !querybuilder.IsZeroValue(opts[i].DiscardGitDir) {
 			q = q.Arg("discardGitDir", opts[i].DiscardGitDir)
+		}
+		// `depth` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Depth) {
+			q = q.Arg("depth", opts[i].Depth)
 		}
 	}
 
@@ -5773,7 +5854,7 @@ func (r *K3S) WithContainer(c *Container) *K3S {
 type LLM struct {
 	query *querybuilder.Selection
 
-	historyJSON *string
+	historyJSON *JSON
 	id          *LLMID
 	lastReply   *string
 	model       *string
@@ -5836,13 +5917,13 @@ func (r *LLM) History(ctx context.Context) ([]string, error) {
 }
 
 // return the raw llm message history as json
-func (r *LLM) HistoryJSON(ctx context.Context) (string, error) {
+func (r *LLM) HistoryJSON(ctx context.Context) (JSON, error) {
 	if r.historyJSON != nil {
 		return *r.historyJSON, nil
 	}
 	q := r.query.Select("historyJSON")
 
-	var response string
+	var response JSON
 
 	q = q.Bind(&response)
 	return response, q.Execute(ctx)
@@ -6026,6 +6107,15 @@ func (r *LLM) WithPromptFile(file *File) *LLM {
 func (r *LLM) WithSystemPrompt(prompt string) *LLM {
 	q := r.query.Select("withSystemPrompt")
 	q = q.Arg("prompt", prompt)
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// Disable the default system prompt
+func (r *LLM) WithoutDefaultSystemPrompt() *LLM {
+	q := r.query.Select("withoutDefaultSystemPrompt")
 
 	return &LLM{
 		query: q,
@@ -7274,6 +7364,16 @@ func (r *ModuleSource) WithUpdateDependencies(dependencies []string) *ModuleSour
 	}
 }
 
+// Remove a client from the module source.
+func (r *ModuleSource) WithoutClient(path string) *ModuleSource {
+	q := r.query.Select("withoutClient")
+	q = q.Arg("path", path)
+
+	return &ModuleSource{
+		query: q,
+	}
+}
+
 // Remove the provided dependencies from the module source's dependency list.
 func (r *ModuleSource) WithoutDependencies(dependencies []string) *ModuleSource {
 	q := r.query.Select("withoutDependencies")
@@ -7717,15 +7817,23 @@ func (r *Client) Directory() *Directory {
 type EnvOpts struct {
 	// Give the environment the same privileges as the caller: core API including host access, current module, and dependencies
 	Privileged bool
+	// Allow new outputs to be declared and saved in the environment
+	Writable bool
 }
 
 // Initialize a new environment
+//
+// Experimental: Environments are not yet stabilized
 func (r *Client) Env(opts ...EnvOpts) *Env {
 	q := r.query.Select("env")
 	for i := len(opts) - 1; i >= 0; i-- {
 		// `privileged` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Privileged) {
 			q = q.Arg("privileged", opts[i].Privileged)
+		}
+		// `writable` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Writable) {
+			q = q.Arg("writable", opts[i].Writable)
 		}
 	}
 
@@ -7770,6 +7878,8 @@ func (r *Client) GeneratedCode(code *Directory) *GeneratedCode {
 // GitOpts contains options for Client.Git
 type GitOpts struct {
 	// DEPRECATED: Set to true to keep .git directory.
+	//
+	// Default: true
 	KeepGitDir bool
 	// A service which must be started before the repo is fetched.
 	ExperimentalServiceHost *Service
@@ -7831,6 +7941,8 @@ func (r *Client) HTTP(url string, opts ...HTTPOpts) *File {
 
 // K3SOpts contains options for Client.K3S
 type K3SOpts struct {
+
+	// Default: "rancher/k3s:latest"
 	Image string
 }
 
@@ -7858,6 +7970,8 @@ type LLMOpts struct {
 }
 
 // Initialize a Large Language Model (LLM)
+//
+// Experimental: LLM support is not yet stabilized
 func (r *Client) LLM(opts ...LLMOpts) *LLM {
 	q := r.query.Select("llm")
 	for i := len(opts) - 1; i >= 0; i-- {
