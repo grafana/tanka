@@ -29,7 +29,7 @@ jobs:
         id: dagger
         uses: dagger/dagger-for-github@e47aba410ef9bb9ed81a4d2a97df31061e5e842e # v8.0.0
         with:
-          version: "0.18.3"
+          version: "0.18.5"
           verb: call
           dagger-flags: "--silent"
           args: "acceptance-tests --root-dir . --acceptance-tests-dir ./acceptance-tests"
