@@ -5723,8 +5723,7 @@ func (r *InterfaceTypeDef) SourceModuleName(ctx context.Context) (string, error)
 type K3S struct {
 	query *querybuilder.Selection
 
-	id      *K3SID
-	kubectl *string
+	id *K3SID
 }
 type WithK3SFunc func(r *K3S) *K3S
 
@@ -5741,10 +5740,20 @@ func (r *K3S) WithGraphQLQuery(q *querybuilder.Selection) *K3S {
 	}
 }
 
+// K3SConfigOpts contains options for K3S.Config
+type K3SConfigOpts struct {
+	Local bool
+}
+
 // returns the config file for the k3s cluster
-func (r *K3S) Config(local bool) *File {
+func (r *K3S) Config(opts ...K3SConfigOpts) *File {
 	q := r.query.Select("config")
-	q = q.Arg("local", local)
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `local` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Local) {
+			q = q.Arg("local", opts[i].Local)
+		}
+	}
 
 	return &File{
 		query: q,
@@ -5818,17 +5827,13 @@ func (r *K3S) Kns() *Container {
 }
 
 // runs kubectl on the target k3s cluster
-func (r *K3S) Kubectl(ctx context.Context, args string) (string, error) {
-	if r.kubectl != nil {
-		return *r.kubectl, nil
-	}
+func (r *K3S) Kubectl(args string) *Container {
 	q := r.query.Select("kubectl")
 	q = q.Arg("args", args)
 
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
+	return &Container{
+		query: q,
+	}
 }
 
 // Returns a newly initialized kind cluster
@@ -7944,6 +7949,10 @@ type K3SOpts struct {
 
 	// Default: "rancher/k3s:latest"
 	Image string
+	//
+	// keeps the state of the cluster (not recommended).
+	//
+	KeepState bool
 }
 
 func (r *Client) K3S(name string, opts ...K3SOpts) *K3S {
@@ -7952,6 +7961,10 @@ func (r *Client) K3S(name string, opts ...K3SOpts) *K3S {
 		// `image` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Image) {
 			q = q.Arg("image", opts[i].Image)
+		}
+		// `keepState` optional argument
+		if !querybuilder.IsZeroValue(opts[i].KeepState) {
+			q = q.Arg("keepState", opts[i].KeepState)
 		}
 	}
 	q = q.Arg("name", name)
