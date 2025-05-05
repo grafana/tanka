@@ -137,6 +137,8 @@ jobs:
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
       - name: Inspect image
-        run: | # zizmor: ignore[template-injection] docker/metadata-action output should be safe
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+        env:
+          RELEASE_VERSION: "${{ steps.meta.outputs.version }}"
+        run: |
+          docker buildx imagetools inspect "${{ env.REGISTRY_IMAGE }}:${RELEASE_VERSION}"
 

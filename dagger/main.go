@@ -47,7 +47,9 @@ func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *dagger.Directory, 
 	}
 	buildContainer := m.Build(ctx, rootDir)
 
-	k3s := dag.K3S("k3sdemo")
+	k3s := dag.K3S("k3sdemo", dagger.K3SOpts{
+		Image: "rancher/k3s:v1.31.8-k3s1",
+	})
 	k3sSrv, err := k3s.Server().Start(ctx)
 	if err != nil {
 		return "", err
@@ -67,7 +69,7 @@ func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *dagger.Directory, 
 		WithMountedDirectory("/tests", acceptanceTestsDir).
 		WithEnvVariable("CACHE", time.Now().String()).
 		WithServiceBinding("kubernetes", k3sSrv).
-		WithFile("/root/.kube/config", k3s.Config(false)).
+		WithFile("/root/.kube/config", k3s.Config()).
 		WithWorkdir("/tests").
 		WithExec([]string{"sed", "-i", `s/https:.*:6443/https:\/\/kubernetes:6443/g`, "/root/.kube/config"}).
 		WithMountedCache("/go/pkg", goCache).
