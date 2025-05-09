@@ -2,6 +2,38 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.32.1](https://github.com/grafana/tanka/compare/v0.32.0...v0.32.1) (2025-05-09)
+
+
+### 🏗️ Build System
+
+* **deps:** bump actions/create-github-app-token from 2.0.2 to 2.0.6 ([#1446](https://github.com/grafana/tanka/issues/1446)) ([47892f0](https://github.com/grafana/tanka/commit/47892f02dda7aeffdff3e7088bb545cd6b791f12))
+* **deps:** bump actions/download-artifact from 4.2.1 to 4.3.0 ([#1438](https://github.com/grafana/tanka/issues/1438)) ([cd1123d](https://github.com/grafana/tanka/commit/cd1123d164289be5666155372252bff2ca2015fb))
+* **deps:** bump docker/build-push-action from 6.15.0 to 6.16.0 ([#1437](https://github.com/grafana/tanka/issues/1437)) ([a08234f](https://github.com/grafana/tanka/commit/a08234feafd4da3c2fde4dd77baaa8aa85707817))
+* **deps:** bump github.com/google/go-jsonnet from 0.20.0 to 0.21.0 ([#1449](https://github.com/grafana/tanka/issues/1449)) ([ff44275](https://github.com/grafana/tanka/commit/ff442751bc61ca7126c2b74e1749d3e1e258a71e))
+* **deps:** bump golang.org/x/term from 0.31.0 to 0.32.0 ([#1450](https://github.com/grafana/tanka/issues/1450)) ([5a70656](https://github.com/grafana/tanka/commit/5a70656863ad6bc863bd488debebf394b4e415ba))
+* **deps:** bump golang.org/x/text from 0.24.0 to 0.25.0 ([#1451](https://github.com/grafana/tanka/issues/1451)) ([8136dc5](https://github.com/grafana/tanka/commit/8136dc5e00f3bd2c9923648bea9b88a6e2b145a2))
+* **deps:** bump k8s.io/apimachinery from 0.32.3 to 0.33.0 ([#1440](https://github.com/grafana/tanka/issues/1440)) ([0a97be9](https://github.com/grafana/tanka/commit/0a97be99be9d62ab43932fe28c41b398b9107088))
+* **deps:** bump renovatebot/github-action from 41.0.21 to 41.0.22 ([#1436](https://github.com/grafana/tanka/issues/1436)) ([7b1367c](https://github.com/grafana/tanka/commit/7b1367ce08ecb7cac062289c82fcecd691d63469))
+* **deps:** bump renovatebot/github-action from 41.0.22 to 42.0.1 ([#1447](https://github.com/grafana/tanka/issues/1447)) ([b95f821](https://github.com/grafana/tanka/commit/b95f8211847161ec0ca6516a47eab482fb106c2e))
+* **deps:** bump the acceptance-tests-dependencies group with 2 updates ([#1435](https://github.com/grafana/tanka/issues/1435)) ([3de332b](https://github.com/grafana/tanka/commit/3de332b3558ae692ebe799e49454bca1916bdd18))
+* **deps:** bump the dagger-dependencies group ([cddd02a](https://github.com/grafana/tanka/commit/cddd02af3ca0f5e7d1ca83fc30a85df01a7d94b1))
+* **deps:** bump the dagger-dependencies group in /dagger with 2 updates ([#1439](https://github.com/grafana/tanka/issues/1439)) ([f505b1b](https://github.com/grafana/tanka/commit/f505b1bbf654b268e5bc16b29bf051556d4b0e47))
+* **deps:** bump the dagger-dependencies group in /dagger with 2 updates ([#1445](https://github.com/grafana/tanka/issues/1445)) ([cddd02a](https://github.com/grafana/tanka/commit/cddd02af3ca0f5e7d1ca83fc30a85df01a7d94b1))
+* **deps:** bump the docs-dependencies group in /docs with 3 updates ([#1434](https://github.com/grafana/tanka/issues/1434)) ([979d796](https://github.com/grafana/tanka/commit/979d796805adea4b7b4525aac96ecf9ce897bcc9))
+* **deps:** bump the docs-dependencies group in /docs with 4 updates ([#1444](https://github.com/grafana/tanka/issues/1444)) ([d021aca](https://github.com/grafana/tanka/commit/d021acafd4fd6648862a2b6c669a6d6efdfb7f51))
+
+
+### 🤖 Continuous Integration
+
+* apply zizmor findings ([#1441](https://github.com/grafana/tanka/issues/1441)) ([0cbb9b6](https://github.com/grafana/tanka/commit/0cbb9b62a8456d47ff61ab0903352d66c772e7c3))
+* escape docker output ([#1443](https://github.com/grafana/tanka/issues/1443)) ([c7f0cd3](https://github.com/grafana/tanka/commit/c7f0cd3e339833c55e4bb71adb24c2bac331300d))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency kubectl to v1.33.0 ([#1432](https://github.com/grafana/tanka/issues/1432)) ([ee74690](https://github.com/grafana/tanka/commit/ee7469029d12b3cf9714c669ad1240a4e0b19891))
+
 ## [0.32.0](https://github.com/grafana/tanka/compare/v0.31.3...v0.32.0) (2025-04-23)
 
 
