@@ -15,6 +15,9 @@ type findImportersTestCase struct {
 	files             []string
 	expectedImporters []string
 	expectedErr       error
+
+	checkTransitiveImporters    bool
+	expectedTransitiveImporters []string
 }
 
 func (tc findImportersTestCase) run(t testing.TB) {
@@ -25,6 +28,12 @@ func (tc findImportersTestCase) run(t testing.TB) {
 	} else {
 		require.NoError(t, err)
 		require.Equal(t, tc.expectedImporters, importers)
+
+		if tc.checkTransitiveImporters {
+			transitiveImporters, err := FindTransitiveImportersForFile("testdata/findImporters", tc.files)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedTransitiveImporters, transitiveImporters)
+		}
 	}
 }
 
@@ -72,6 +81,17 @@ func findImportersTestCases(t testing.TB) []findImportersTestCase {
 				absPath(t, "testdata/findImporters/environments/imports-locals-and-vendored/main.jsonnet"),
 				absPath(t, "testdata/findImporters/environments/imports-symlinked-vendor/main.jsonnet"),
 			},
+			expectedTransitiveImporters: []string{
+				absPath(t, "testdata/findImporters/environments/imports-lib-and-vendored-through-chain/chain1.libsonnet"),
+				absPath(t, "testdata/findImporters/environments/imports-lib-and-vendored-through-chain/chain2.libsonnet"),
+				absPath(t, "testdata/findImporters/environments/imports-lib-and-vendored-through-chain/main.jsonnet"),
+				absPath(t, "testdata/findImporters/environments/imports-locals-and-vendored/main.jsonnet"),
+				absPath(t, "testdata/findImporters/environments/imports-symlinked-vendor/main.jsonnet"),
+				absPath(t, "testdata/findImporters/lib/lib1/main.libsonnet"),
+				absPath(t, "testdata/findImporters/vendor/vendor-symlinked/main.libsonnet"),
+				absPath(t, "testdata/findImporters/vendor/vendored/main.libsonnet"),
+			},
+			checkTransitiveImporters: true,
 		},
 		{
 			name:  "vendored lib found through symlink", // expect same result as previous test
