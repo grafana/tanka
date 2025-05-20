@@ -38,7 +38,6 @@ func FindImporterForFiles(root string, files []string) ([]string, error) {
 		if filepath.Base(importer) == jpath.DefaultEntrypoint {
 			mainFiles = append(mainFiles, importer)
 		}
-
 	}
 	return mainFiles, nil
 }
