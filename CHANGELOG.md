@@ -2,6 +2,58 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.33.0](https://github.com/grafana/tanka/compare/v0.32.0...v0.33.0) (2025-05-21)
+
+
+### 🎉 Features
+
+* **jsonnet lib:** add function to find transitive importers ([#1464](https://github.com/grafana/tanka/issues/1464)) ([fa219d3](https://github.com/grafana/tanka/commit/fa219d35d24f14acdb86fc9954b26d17f0865ac7))
+
+
+### 🏗️ Build System
+
+* **deps:** bump actions/create-github-app-token from 2.0.2 to 2.0.6 ([#1446](https://github.com/grafana/tanka/issues/1446)) ([47892f0](https://github.com/grafana/tanka/commit/47892f02dda7aeffdff3e7088bb545cd6b791f12))
+* **deps:** bump actions/download-artifact from 4.2.1 to 4.3.0 ([#1438](https://github.com/grafana/tanka/issues/1438)) ([cd1123d](https://github.com/grafana/tanka/commit/cd1123d164289be5666155372252bff2ca2015fb))
+* **deps:** bump docker/build-push-action from 6.15.0 to 6.16.0 ([#1437](https://github.com/grafana/tanka/issues/1437)) ([a08234f](https://github.com/grafana/tanka/commit/a08234feafd4da3c2fde4dd77baaa8aa85707817))
+* **deps:** bump docker/build-push-action from 6.16.0 to 6.17.0 ([#1462](https://github.com/grafana/tanka/issues/1462)) ([b176e7e](https://github.com/grafana/tanka/commit/b176e7ef511ae88d5216c0e38a345837834b9e72))
+* **deps:** bump github.com/google/go-jsonnet from 0.20.0 to 0.21.0 ([#1449](https://github.com/grafana/tanka/issues/1449)) ([ff44275](https://github.com/grafana/tanka/commit/ff442751bc61ca7126c2b74e1749d3e1e258a71e))
+* **deps:** bump golang from 1.24.2 to 1.24.3 ([#1454](https://github.com/grafana/tanka/issues/1454)) ([f14153a](https://github.com/grafana/tanka/commit/f14153aca5762c98178edf5b31247e8f61c19011))
+* **deps:** bump golang.org/x/term from 0.31.0 to 0.32.0 ([#1450](https://github.com/grafana/tanka/issues/1450)) ([5a70656](https://github.com/grafana/tanka/commit/5a70656863ad6bc863bd488debebf394b4e415ba))
+* **deps:** bump golang.org/x/text from 0.24.0 to 0.25.0 ([#1451](https://github.com/grafana/tanka/issues/1451)) ([8136dc5](https://github.com/grafana/tanka/commit/8136dc5e00f3bd2c9923648bea9b88a6e2b145a2))
+* **deps:** bump k8s.io/apimachinery from 0.32.3 to 0.33.0 ([#1440](https://github.com/grafana/tanka/issues/1440)) ([0a97be9](https://github.com/grafana/tanka/commit/0a97be99be9d62ab43932fe28c41b398b9107088))
+* **deps:** bump k8s.io/apimachinery from 0.33.0 to 0.33.1 ([#1457](https://github.com/grafana/tanka/issues/1457)) ([2f632a7](https://github.com/grafana/tanka/commit/2f632a7d0d08ae39ef4b1f398a23c4896ce59dc9))
+* **deps:** bump renovatebot/github-action from 41.0.21 to 41.0.22 ([#1436](https://github.com/grafana/tanka/issues/1436)) ([7b1367c](https://github.com/grafana/tanka/commit/7b1367ce08ecb7cac062289c82fcecd691d63469))
+* **deps:** bump renovatebot/github-action from 41.0.22 to 42.0.1 ([#1447](https://github.com/grafana/tanka/issues/1447)) ([b95f821](https://github.com/grafana/tanka/commit/b95f8211847161ec0ca6516a47eab482fb106c2e))
+* **deps:** bump renovatebot/github-action from 42.0.1 to 42.0.2 ([#1453](https://github.com/grafana/tanka/issues/1453)) ([19fb364](https://github.com/grafana/tanka/commit/19fb364b8d93303b11da577e2e7d552276f3be32))
+* **deps:** bump renovatebot/github-action from 42.0.2 to 42.0.3 ([#1461](https://github.com/grafana/tanka/issues/1461)) ([9a18527](https://github.com/grafana/tanka/commit/9a18527ef1e4a5e06f11ed2d157d98bc1622d202))
+* **deps:** bump the acceptance-tests-dependencies group ([d6fe7e9](https://github.com/grafana/tanka/commit/d6fe7e96c91332efe554ed16195802bc7eef2c7f))
+* **deps:** bump the acceptance-tests-dependencies group in /acceptance-tests ([#1460](https://github.com/grafana/tanka/issues/1460)) ([d6fe7e9](https://github.com/grafana/tanka/commit/d6fe7e96c91332efe554ed16195802bc7eef2c7f))
+* **deps:** bump the acceptance-tests-dependencies group with 2 updates ([#1435](https://github.com/grafana/tanka/issues/1435)) ([3de332b](https://github.com/grafana/tanka/commit/3de332b3558ae692ebe799e49454bca1916bdd18))
+* **deps:** bump the dagger-dependencies group ([e1ebc9d](https://github.com/grafana/tanka/commit/e1ebc9d04a492d2513855404413ab12ae584943d))
+* **deps:** bump the dagger-dependencies group ([23016f6](https://github.com/grafana/tanka/commit/23016f6ac6f9103abfefd35892a62a650fd6cf14))
+* **deps:** bump the dagger-dependencies group ([cddd02a](https://github.com/grafana/tanka/commit/cddd02af3ca0f5e7d1ca83fc30a85df01a7d94b1))
+* **deps:** bump the dagger-dependencies group in /dagger with 2 updates ([#1439](https://github.com/grafana/tanka/issues/1439)) ([f505b1b](https://github.com/grafana/tanka/commit/f505b1bbf654b268e5bc16b29bf051556d4b0e47))
+* **deps:** bump the dagger-dependencies group in /dagger with 2 updates ([#1445](https://github.com/grafana/tanka/issues/1445)) ([cddd02a](https://github.com/grafana/tanka/commit/cddd02af3ca0f5e7d1ca83fc30a85df01a7d94b1))
+* **deps:** bump the dagger-dependencies group in /dagger with 2 updates ([#1455](https://github.com/grafana/tanka/issues/1455)) ([23016f6](https://github.com/grafana/tanka/commit/23016f6ac6f9103abfefd35892a62a650fd6cf14))
+* **deps:** bump the dagger-dependencies group in /dagger with 2 updates ([#1459](https://github.com/grafana/tanka/issues/1459)) ([e1ebc9d](https://github.com/grafana/tanka/commit/e1ebc9d04a492d2513855404413ab12ae584943d))
+* **deps:** bump the docs-dependencies group in /docs with 3 updates ([#1434](https://github.com/grafana/tanka/issues/1434)) ([979d796](https://github.com/grafana/tanka/commit/979d796805adea4b7b4525aac96ecf9ce897bcc9))
+* **deps:** bump the docs-dependencies group in /docs with 4 updates ([#1444](https://github.com/grafana/tanka/issues/1444)) ([d021aca](https://github.com/grafana/tanka/commit/d021acafd4fd6648862a2b6c669a6d6efdfb7f51))
+* **deps:** bump the docs-dependencies group in /docs with 4 updates ([#1458](https://github.com/grafana/tanka/issues/1458)) ([3766943](https://github.com/grafana/tanka/commit/3766943f4fa12468282934676b3970df16751cdd))
+* **deps:** bump the docs-dependencies group in /docs with 5 updates ([#1452](https://github.com/grafana/tanka/issues/1452)) ([45c21f2](https://github.com/grafana/tanka/commit/45c21f2c72bf5d95ad714b1cac5f092ee2cb81fb))
+
+
+### 🤖 Continuous Integration
+
+* apply zizmor findings ([#1441](https://github.com/grafana/tanka/issues/1441)) ([0cbb9b6](https://github.com/grafana/tanka/commit/0cbb9b62a8456d47ff61ab0903352d66c772e7c3))
+* escape docker output ([#1443](https://github.com/grafana/tanka/issues/1443)) ([c7f0cd3](https://github.com/grafana/tanka/commit/c7f0cd3e339833c55e4bb71adb24c2bac331300d))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency helm to v3.18.0 ([#1463](https://github.com/grafana/tanka/issues/1463)) ([d1e6347](https://github.com/grafana/tanka/commit/d1e63477d97dbfeef4ba2b17d8504557799ca48e))
+* **deps:** update dependency kubectl to v1.33.0 ([#1432](https://github.com/grafana/tanka/issues/1432)) ([ee74690](https://github.com/grafana/tanka/commit/ee7469029d12b3cf9714c669ad1240a4e0b19891))
+* **deps:** update dependency kubectl to v1.33.1 ([#1456](https://github.com/grafana/tanka/issues/1456)) ([26b308c](https://github.com/grafana/tanka/commit/26b308cba85aa15f721c9bcdffc45ae37c079775))
+
 ## [0.32.0](https://github.com/grafana/tanka/compare/v0.31.3...v0.32.0) (2025-04-23)
 
 
