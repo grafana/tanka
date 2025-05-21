@@ -28,6 +28,22 @@ type cachedJsonnetFile struct {
 // It looks through imports transitively, so if a file is imported through a chain, it will still be reported.
 // If the given file is a main.jsonnet file, it will be returned as well.
 func FindImporterForFiles(root string, files []string) ([]string, error) {
+	transitiveImporters, err := FindTransitiveImportersForFile(root, files)
+	if err != nil {
+		return nil, err
+	}
+
+	var mainFiles []string
+	for _, importer := range transitiveImporters {
+		if filepath.Base(importer) == jpath.DefaultEntrypoint {
+			mainFiles = append(mainFiles, importer)
+		}
+	}
+	return mainFiles, nil
+}
+
+// FindTransitiveImportersForFile finds all files
+func FindTransitiveImportersForFile(root string, files []string) ([]string, error) {
 	var err error
 	root, err = filepath.Abs(root)
 	if err != nil {
@@ -63,10 +79,7 @@ func FindImporterForFiles(root string, files []string) ([]string, error) {
 
 	// Loop through all given files and add their importers to the list
 	for _, file := range filesToCheck {
-		if filepath.Base(file) == jpath.DefaultEntrypoint {
-			importers[file] = struct{}{}
-		}
-
+		importers[file] = struct{}{}
 		newImporters, err := findImporters(root, file, map[string]struct{}{})
 		if err != nil {
 			return nil, err
@@ -359,6 +372,7 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 	// This will go on until we hit a main file, which will be returned
 	if len(intermediateImporters) > 0 {
 		for _, intermediateImporter := range intermediateImporters {
+			importers = append(importers, intermediateImporter)
 			newImporters, err := findImporters(root, intermediateImporter, chain)
 			if err != nil {
 				return nil, err
