@@ -14,6 +14,7 @@ const kubeVersion = "1.18.0"
 
 type MockHelm struct {
 	mock.Mock
+	templateCommandArgs []string
 }
 
 // fulfill the Helm interface
@@ -34,7 +35,7 @@ func (m *MockHelm) Template(name, chart string, opts TemplateOpts) (manifest.Lis
 	// them
 	execHelm := &ExecHelm{}
 	cmdArgs := execHelm.templateCommandArgs(name, chart, opts)
-	m.TestData().Set("templateCommandArgs", cmdArgs)
+	m.templateCommandArgs = cmdArgs
 
 	return args.Get(0).(manifest.List), args.Error(1)
 }
@@ -88,7 +89,7 @@ func callNativeFunction(t *testing.T, expectedHelmTemplateOptions TemplateOpts, 
 
 	helmMock.AssertExpectations(t)
 
-	return helmMock.TestData().Get("templateCommandArgs").StringSlice()
+	return helmMock.templateCommandArgs
 }
 
 // TestDefaultCommandineFlagsIncludeCrds tests that the includeCrds flag is set
