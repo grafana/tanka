@@ -19,7 +19,7 @@ RUN apk add --no-cache git make bash &&\
 
 FROM golang:1.24.3-alpine AS helm
 WORKDIR /tmp/helm
-ARG HELM_VERSION=3.18.0
+ARG HELM_VERSION=3.18.1
 RUN apk add --no-cache jq curl
 RUN export OS=$(go env GOOS) && \
     export ARCH=$(go env GOARCH) &&\
