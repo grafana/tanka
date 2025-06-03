@@ -42,7 +42,7 @@ COPY . .
 RUN make static
 
 # assemble final container
-FROM alpine:3.21
+FROM alpine:3.22
 RUN apk add --no-cache coreutils diffutils less git openssh-client && \
     apk upgrade --quiet
 COPY --from=build /app/tk /usr/local/bin/tk
