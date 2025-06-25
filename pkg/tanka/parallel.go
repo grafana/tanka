@@ -3,6 +3,7 @@ package tanka
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
@@ -56,6 +57,12 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 		// be to make the jsonnet package less general, more tightly coupling it
 		// to Tanka workflow thus being able to handle such cases
 		o.JsonnetOpts = o.JsonnetOpts.Clone()
+
+		if strings.Contains(env.Metadata.Name, "dev") {
+			// Also inject the dev environment into the possible import paths
+			// with higher priority than root/vendor:
+			o.JsonnetOpts.ImportPaths = append(o.JsonnetOpts.ImportPaths, "shared-vendors/dev/vendor")
+		}
 
 		o.Name = env.Metadata.Name
 		path := env.Metadata.Namespace

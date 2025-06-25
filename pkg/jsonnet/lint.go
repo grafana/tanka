@@ -107,7 +107,7 @@ func lintWithRecover(file string) (buf bytes.Buffer, success bool) {
 		return
 	}
 
-	jpaths, _, _, err := jpath.Resolve(file, true)
+	jpaths, _, _, err := jpath.Resolve(file, true, nil)
 	if err != nil {
 		fmt.Fprintf(&buf, "got an error getting jpath for %s: %v\n\n", file, err)
 		return
