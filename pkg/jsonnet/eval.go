@@ -36,8 +36,11 @@ type Opts struct {
 	ExtCode     InjectedCode
 	TLACode     InjectedCode
 	ImportPaths []string
-	EvalScript  string
-	CachePath   string
+	// AdditionalImportPaths represent custom import paths that are used as
+	// input to the operation
+	AdditionalImportPaths []jpath.WeightedJPath
+	EvalScript            string
+	CachePath             string
 
 	CachePathRegexes []*regexp.Regexp
 }
@@ -108,7 +111,7 @@ func evaluateSnippet(jsonnetImpl types.JsonnetImplementation, evalFunc evalFunc,
 		cache = NewFileEvalCache(opts.CachePath)
 	}
 
-	jpath, _, _, err := jpath.Resolve(path, false)
+	jpath, _, _, err := jpath.Resolve(path, false, opts.AdditionalImportPaths)
 	if err != nil {
 		return "", errors.Wrap(err, "resolving import paths")
 	}

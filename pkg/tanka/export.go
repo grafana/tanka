@@ -86,6 +86,10 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 		return fmt.Errorf("deleting previously exported manifests from deleted environments: %w", err)
 	}
 
+	for _, env := range envs {
+		fmt.Println(env.Metadata.Labels)
+	}
+
 	// get all environments for paths
 	loadedEnvs, err := parallelLoadEnvironments(envs, parallelOpts{
 		Opts:        opts.Opts,
