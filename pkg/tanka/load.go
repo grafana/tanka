@@ -66,7 +66,7 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 	// the necessary labels for doing matching additional jpaths:
 	peeked, err := loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name, opts.AdditionalJPathRules})
 	if err != nil {
-		return nil, fmt.Errorf("failed to peek at environment: %w", err)
+		return nil, err
 	}
 	additionalPaths := make([]jpath.WeightedJPath, 0, 10)
 	for _, rule := range opts.AdditionalJPathRules {
