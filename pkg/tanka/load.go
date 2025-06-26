@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/grafana/tanka/internal/tkrc"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/binary"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
@@ -17,6 +18,7 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 // environmentExtCode is the extCode ID `tk.env` uses underneath
@@ -60,7 +62,22 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	env, err := loader.Load(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	// First, we need to take a peek at the environment so that we can extract
+	// the necessary labels for doing matching additional jpaths:
+	peeked, err := loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name, opts.AdditionalJPathRules})
+	if err != nil {
+		return nil, fmt.Errorf("failed to peek at environment: %w", err)
+	}
+	additionalPaths := make([]jpath.WeightedJPath, 0, 10)
+	for _, rule := range opts.AdditionalJPathRules {
+		if rule.Matches(labels.Set(peeked.Metadata.Labels)) {
+			additionalPaths = append(additionalPaths, &rule)
+		}
+	}
+
+	opts.JsonnetOpts.AdditionalImportPaths = additionalPaths
+
+	env, err := loader.Load(path, LoaderOpts{JsonnetOpts: opts.JsonnetOpts, Name: opts.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +106,7 @@ func Peek(path string, opts Opts) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	return loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name, opts.AdditionalJPathRules})
 }
 
 // List finds metadata of all environments at path that could possibly be
@@ -101,7 +118,7 @@ func List(path string, opts Opts) ([]*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	return loader.List(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.List(path, LoaderOpts{opts.JsonnetOpts, opts.Name, opts.AdditionalJPathRules})
 }
 
 func getJsonnetImplementation(path string, opts Opts) (types.JsonnetImplementation, error) {
@@ -139,7 +156,7 @@ func Eval(path string, opts Opts) (interface{}, error) {
 		return nil, err
 	}
 
-	return loader.Eval(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.Eval(path, LoaderOpts{opts.JsonnetOpts, opts.Name, opts.AdditionalJPathRules})
 }
 
 // DetectLoader detects whether the environment is inline or static and picks
@@ -188,7 +205,8 @@ type Loader interface {
 
 type LoaderOpts struct {
 	JsonnetOpts
-	Name string
+	Name                 string
+	AdditionalJPathRules []tkrc.AdditionalJPath
 }
 
 type LoadResult struct {

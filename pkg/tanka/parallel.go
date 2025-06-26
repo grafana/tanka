@@ -2,12 +2,14 @@ package tanka
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/grafana/tanka/internal/tkrc"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/pkg/errors"
@@ -69,6 +71,14 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 		rootDir, err := jpath.FindRoot(path)
 		if err != nil {
 			return nil, errors.Wrap(err, "finding root")
+		}
+		// Try to load the tkrc file if it exists
+		tkrcConfig, err := tkrc.Load(filepath.Join(rootDir, "tkrc.yaml"))
+		if err != nil && !os.IsNotExist(err) {
+			return nil, fmt.Errorf("failed to load tkrc.yaml: %w", err)
+		}
+		if tkrcConfig != nil {
+			o.AdditionalJPathRules = tkrcConfig.AdditionalJPaths
 		}
 		jobsCh <- parallelJob{
 			path: filepath.Join(rootDir, path),
