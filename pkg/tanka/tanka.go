@@ -9,6 +9,7 @@ import (
 
 	"github.com/Masterminds/semver"
 
+	"github.com/grafana/tanka/internal/tkrc"
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/process"
 )
@@ -25,6 +26,10 @@ type Opts struct {
 
 	// Name is used to extract a single environment from multiple environments
 	Name string
+
+	// AdditionalJPathRules are injected through the tkrc file and allow for
+	// dynamic lib/vendor folders
+	AdditionalJPathRules []tkrc.AdditionalJPath
 }
 
 // defaultDevVersion is the placeholder version used when no actual semver is

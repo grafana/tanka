@@ -2,11 +2,14 @@ package tanka
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/grafana/tanka/internal/tkrc"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/pkg/errors"
@@ -57,11 +60,25 @@ func parallelLoadEnvironments(envs []*v1alpha1.Environment, opts parallelOpts) (
 		// to Tanka workflow thus being able to handle such cases
 		o.JsonnetOpts = o.JsonnetOpts.Clone()
 
+		if strings.Contains(env.Metadata.Name, "dev") {
+			// Also inject the dev environment into the possible import paths
+			// with higher priority than root/vendor:
+			o.JsonnetOpts.ImportPaths = append(o.JsonnetOpts.ImportPaths, "shared-vendors/dev/vendor")
+		}
+
 		o.Name = env.Metadata.Name
 		path := env.Metadata.Namespace
 		rootDir, err := jpath.FindRoot(path)
 		if err != nil {
 			return nil, errors.Wrap(err, "finding root")
+		}
+		// Try to load the tkrc file if it exists
+		tkrcConfig, err := tkrc.Load(filepath.Join(rootDir, "tkrc.yaml"))
+		if err != nil && !os.IsNotExist(err) {
+			return nil, fmt.Errorf("failed to load tkrc.yaml: %w", err)
+		}
+		if tkrcConfig != nil {
+			o.AdditionalJPathRules = tkrcConfig.AdditionalJPaths
 		}
 		jobsCh <- parallelJob{
 			path: filepath.Join(rootDir, path),
