@@ -11,6 +11,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
@@ -19,7 +20,6 @@ import (
 	"github.com/grafana/tanka/dagger/internal/dagger"
 	"github.com/grafana/tanka/dagger/internal/querybuilder"
 	"github.com/grafana/tanka/dagger/internal/telemetry"
-	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 var dag = dagger.Connect()

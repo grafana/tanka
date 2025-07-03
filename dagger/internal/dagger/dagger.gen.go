@@ -50,10 +50,34 @@ func assertNotNil(argName string, value any) {
 
 type DaggerObject = querybuilder.GraphQLMarshaller
 
+type gqlExtendedError struct {
+	inner *gqlerror.Error
+}
+
+// Same as telemetry.ExtendedError, but without the dependency, to simplify
+// client generation.
+type extendedError interface {
+	error
+	Extensions() map[string]any
+}
+
+func (e gqlExtendedError) Unwrap() error {
+	return e.inner
+}
+
+var _ extendedError = gqlExtendedError{}
+
+func (e gqlExtendedError) Error() string {
+	return e.inner.Message
+}
+
+func (e gqlExtendedError) Extensions() map[string]any {
+	return e.inner.Extensions
+}
+
 // getCustomError parses a GraphQL error into a more specific error type.
 func getCustomError(err error) error {
 	var gqlErr *gqlerror.Error
-
 	if !errors.As(err, &gqlErr) {
 		return nil
 	}
@@ -62,12 +86,12 @@ func getCustomError(err error) error {
 
 	typ, ok := ext["_type"].(string)
 	if !ok {
-		return nil
+		return gqlExtendedError{gqlErr}
 	}
 
 	if typ == "EXEC_ERROR" {
 		e := &ExecError{
-			original: err,
+			original: gqlErr,
 		}
 		if code, ok := ext["exitCode"].(float64); ok {
 			e.ExitCode = int(code)
@@ -88,20 +112,26 @@ func getCustomError(err error) error {
 		return e
 	}
 
-	return nil
+	return gqlExtendedError{gqlErr}
 }
 
 // ExecError is an API error from an exec operation.
 type ExecError struct {
-	original error
+	original *gqlerror.Error
 	Cmd      []string
 	ExitCode int
 	Stdout   string
 	Stderr   string
 }
 
+var _ extendedError = (*ExecError)(nil)
+
 func (e *ExecError) Error() string {
 	return e.Message()
+}
+
+func (e *ExecError) Extensions() map[string]any {
+	return e.original.Extensions
 }
 
 func (e *ExecError) Message() string {
@@ -117,6 +147,9 @@ type BindingID string
 
 // The `CacheVolumeID` scalar type represents an identifier for an object of type CacheVolume.
 type CacheVolumeID string
+
+// The `CloudID` scalar type represents an identifier for an object of type Cloud.
+type CloudID string
 
 // The `ContainerID` scalar type represents an identifier for an object of type Container.
 type ContainerID string
@@ -297,6 +330,15 @@ func (r *Binding) AsCacheVolume() *CacheVolume {
 	q := r.query.Select("asCacheVolume")
 
 	return &CacheVolume{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type Cloud
+func (r *Binding) AsCloud() *Cloud {
+	q := r.query.Select("asCloud")
+
+	return &Cloud{
 		query: q,
 	}
 }
@@ -601,6 +643,82 @@ func (r *CacheVolume) UnmarshalJSON(bs []byte) error {
 	}
 	*r = *dag.LoadCacheVolumeFromID(CacheVolumeID(id))
 	return nil
+}
+
+// Dagger Cloud configuration and state
+type Cloud struct {
+	query *querybuilder.Selection
+
+	id       *CloudID
+	traceURL *string
+}
+
+func (r *Cloud) WithGraphQLQuery(q *querybuilder.Selection) *Cloud {
+	return &Cloud{
+		query: q,
+	}
+}
+
+// A unique identifier for this Cloud.
+func (r *Cloud) ID(ctx context.Context) (CloudID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response CloudID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *Cloud) XXX_GraphQLType() string {
+	return "Cloud"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *Cloud) XXX_GraphQLIDType() string {
+	return "CloudID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *Cloud) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *Cloud) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *Cloud) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadCloudFromID(CloudID(id))
+	return nil
+}
+
+// The trace URL for the current session
+func (r *Cloud) TraceURL(ctx context.Context) (string, error) {
+	if r.traceURL != nil {
+		return *r.traceURL, nil
+	}
+	q := r.query.Select("traceURL")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 // An OCI-compatible container, also known as a Docker container.
@@ -1338,12 +1456,12 @@ func (r *Container) Terminal(opts ...ContainerTerminalOpts) *Container {
 
 // ContainerUpOpts contains options for Container.Up
 type ContainerUpOpts struct {
+	// Bind each tunnel port to a random port on the host.
+	Random bool
 	// List of frontend/backend port mappings to forward.
 	//
 	// Frontend is the port accepting traffic on the host, backend is the service port.
 	Ports []PortForward
-	// Bind each tunnel port to a random port on the host.
-	Random bool
 	// Command to run instead of the container's default command (e.g., ["go", "run", "main.go"]).
 	//
 	// If empty, the container's default command is used.
@@ -1371,13 +1489,13 @@ func (r *Container) Up(ctx context.Context, opts ...ContainerUpOpts) error {
 	}
 	q := r.query.Select("up")
 	for i := len(opts) - 1; i >= 0; i-- {
-		// `ports` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Ports) {
-			q = q.Arg("ports", opts[i].Ports)
-		}
 		// `random` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Random) {
 			q = q.Arg("random", opts[i].Random)
+		}
+		// `ports` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Ports) {
+			q = q.Arg("ports", opts[i].Ports)
 		}
 		// `args` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Args) {
@@ -2036,7 +2154,7 @@ func (r *Container) WithSecretVariable(name string, secret *Secret) *Container {
 	}
 }
 
-// Establish a runtime dependency on a from a container to a network service.
+// Establish a runtime dependency from a container to a network service.
 //
 // The service will be started automatically when needed and detached when it is no longer needed, executing the default command if none is set.
 //
@@ -2048,6 +2166,29 @@ func (r *Container) WithServiceBinding(alias string, service *Service) *Containe
 	q := r.query.Select("withServiceBinding")
 	q = q.Arg("alias", alias)
 	q = q.Arg("service", service)
+
+	return &Container{
+		query: q,
+	}
+}
+
+// ContainerWithSymlinkOpts contains options for Container.WithSymlink
+type ContainerWithSymlinkOpts struct {
+	// Replace "${VAR}" or "$VAR" in the value of path according to the current environment variables defined in the container (e.g. "/$VAR/foo.txt").
+	Expand bool
+}
+
+// Return a snapshot with a symlink
+func (r *Container) WithSymlink(target string, linkName string, opts ...ContainerWithSymlinkOpts) *Container {
+	q := r.query.Select("withSymlink")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `expand` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Expand) {
+			q = q.Arg("expand", opts[i].Expand)
+		}
+	}
+	q = q.Arg("target", target)
+	q = q.Arg("linkName", linkName)
 
 	return &Container{
 		query: q,
@@ -2612,16 +2753,16 @@ func (r *Directory) Directory(path string) *Directory {
 
 // DirectoryDockerBuildOpts contains options for Directory.DockerBuild
 type DirectoryDockerBuildOpts struct {
-	// The platform to build.
-	Platform Platform
 	// Path to the Dockerfile to use (e.g., "frontend.Dockerfile").
 	//
 	// Default: "Dockerfile"
 	Dockerfile string
-	// Target build stage to build.
-	Target string
+	// The platform to build.
+	Platform Platform
 	// Build arguments to use in the build.
 	BuildArgs []BuildArg
+	// Target build stage to build.
+	Target string
 	// Secrets to pass to the build.
 	//
 	// They will be mounted at /run/secrets/[secret-name].
@@ -2636,21 +2777,21 @@ type DirectoryDockerBuildOpts struct {
 func (r *Directory) DockerBuild(opts ...DirectoryDockerBuildOpts) *Container {
 	q := r.query.Select("dockerBuild")
 	for i := len(opts) - 1; i >= 0; i-- {
-		// `platform` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Platform) {
-			q = q.Arg("platform", opts[i].Platform)
-		}
 		// `dockerfile` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Dockerfile) {
 			q = q.Arg("dockerfile", opts[i].Dockerfile)
 		}
-		// `target` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Target) {
-			q = q.Arg("target", opts[i].Target)
+		// `platform` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Platform) {
+			q = q.Arg("platform", opts[i].Platform)
 		}
 		// `buildArgs` optional argument
 		if !querybuilder.IsZeroValue(opts[i].BuildArgs) {
 			q = q.Arg("buildArgs", opts[i].BuildArgs)
+		}
+		// `target` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Target) {
+			q = q.Arg("target", opts[i].Target)
 		}
 		// `secrets` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Secrets) {
@@ -2840,20 +2981,24 @@ func (r *Directory) Sync(ctx context.Context) (*Directory, error) {
 
 // DirectoryTerminalOpts contains options for Directory.Terminal
 type DirectoryTerminalOpts struct {
+	// If set, override the default container used for the terminal.
+	Container *Container
 	// If set, override the container's default terminal command and invoke these command arguments instead.
 	Cmd []string
 	// Provides Dagger access to the executed command.
 	ExperimentalPrivilegedNesting bool
 	// Execute the command with all root capabilities. This is similar to running a command with "sudo" or executing "docker run" with the "--privileged" flag. Containerization does not provide any security guarantees when using this option. It should only be used when absolutely necessary and only with trusted commands.
 	InsecureRootCapabilities bool
-	// If set, override the default container used for the terminal.
-	Container *Container
 }
 
 // Opens an interactive terminal in new container with this directory mounted inside.
 func (r *Directory) Terminal(opts ...DirectoryTerminalOpts) *Directory {
 	q := r.query.Select("terminal")
 	for i := len(opts) - 1; i >= 0; i-- {
+		// `container` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Container) {
+			q = q.Arg("container", opts[i].Container)
+		}
 		// `cmd` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Cmd) {
 			q = q.Arg("cmd", opts[i].Cmd)
@@ -2865,10 +3010,6 @@ func (r *Directory) Terminal(opts ...DirectoryTerminalOpts) *Directory {
 		// `insecureRootCapabilities` optional argument
 		if !querybuilder.IsZeroValue(opts[i].InsecureRootCapabilities) {
 			q = q.Arg("insecureRootCapabilities", opts[i].InsecureRootCapabilities)
-		}
-		// `container` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Container) {
-			q = q.Arg("container", opts[i].Container)
 		}
 	}
 
@@ -3003,6 +3144,17 @@ func (r *Directory) WithNewFile(path string, contents string, opts ...DirectoryW
 	}
 }
 
+// Return a snapshot with a symlink
+func (r *Directory) WithSymlink(target string, linkName string) *Directory {
+	q := r.query.Select("withSymlink")
+	q = q.Arg("target", target)
+	q = q.Arg("linkName", linkName)
+
+	return &Directory{
+		query: q,
+	}
+}
+
 // Retrieves this directory with all file/dir timestamps set to the given time.
 func (r *Directory) WithTimestamps(timestamp int) *Directory {
 	q := r.query.Select("withTimestamps")
@@ -3121,6 +3273,39 @@ func (r *EnumTypeDef) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+// The members of the enum.
+func (r *EnumTypeDef) Members(ctx context.Context) ([]EnumValueTypeDef, error) {
+	q := r.query.Select("members")
+
+	q = q.Select("id")
+
+	type members struct {
+		Id EnumValueTypeDefID
+	}
+
+	convert := func(fields []members) []EnumValueTypeDef {
+		out := []EnumValueTypeDef{}
+
+		for i := range fields {
+			val := EnumValueTypeDef{id: &fields[i].Id}
+			val.query = q.Root().Select("loadEnumValueTypeDefFromID").Arg("id", fields[i].Id)
+			out = append(out, val)
+		}
+
+		return out
+	}
+	var response []members
+
+	q = q.Bind(&response)
+
+	err := q.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert(response), nil
+}
+
 // The name of the enum.
 func (r *EnumTypeDef) Name(ctx context.Context) (string, error) {
 	if r.name != nil {
@@ -3156,7 +3341,7 @@ func (r *EnumTypeDef) SourceModuleName(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// The values of the enum.
+// Deprecated: use members instead
 func (r *EnumTypeDef) Values(ctx context.Context) ([]EnumValueTypeDef, error) {
 	q := r.query.Select("values")
 
@@ -3196,6 +3381,7 @@ type EnumValueTypeDef struct {
 	description *string
 	id          *EnumValueTypeDefID
 	name        *string
+	value       *string
 }
 
 func (r *EnumValueTypeDef) WithGraphQLQuery(q *querybuilder.Selection) *EnumValueTypeDef {
@@ -3204,7 +3390,7 @@ func (r *EnumValueTypeDef) WithGraphQLQuery(q *querybuilder.Selection) *EnumValu
 	}
 }
 
-// A doc string for the enum value, if any.
+// A doc string for the enum member, if any.
 func (r *EnumValueTypeDef) Description(ctx context.Context) (string, error) {
 	if r.description != nil {
 		return *r.description, nil
@@ -3266,7 +3452,7 @@ func (r *EnumValueTypeDef) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
-// The name of the enum value.
+// The name of the enum member.
 func (r *EnumValueTypeDef) Name(ctx context.Context) (string, error) {
 	if r.name != nil {
 		return *r.name, nil
@@ -3279,13 +3465,26 @@ func (r *EnumValueTypeDef) Name(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// The location of this enum value declaration.
+// The location of this enum member declaration.
 func (r *EnumValueTypeDef) SourceMap() *SourceMap {
 	q := r.query.Select("sourceMap")
 
 	return &SourceMap{
 		query: q,
 	}
+}
+
+// The value of the enum member
+func (r *EnumValueTypeDef) Value(ctx context.Context) (string, error) {
+	if r.value != nil {
+		return *r.value, nil
+	}
+	q := r.query.Select("value")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 type Env struct {
@@ -3459,6 +3658,30 @@ func (r *Env) WithCacheVolumeInput(name string, value *CacheVolume, description 
 // Declare a desired CacheVolume output to be assigned in the environment
 func (r *Env) WithCacheVolumeOutput(name string, description string) *Env {
 	q := r.query.Select("withCacheVolumeOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type Cloud in the environment
+func (r *Env) WithCloudInput(name string, value *Cloud, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withCloudInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired Cloud output to be assigned in the environment
+func (r *Env) WithCloudOutput(name string, description string) *Env {
+	q := r.query.Select("withCloudOutput")
 	q = q.Arg("name", name)
 	q = q.Arg("description", description)
 
@@ -4602,7 +4825,7 @@ type FunctionWithArgOpts struct {
 	DefaultPath string
 	// Patterns to ignore when loading the contextual argument value.
 	Ignore []string
-
+	// The source map for the argument definition.
 	SourceMap *SourceMap
 }
 
@@ -5330,6 +5553,28 @@ func (r *GitRepository) Branch(name string) *GitRef {
 	}
 }
 
+// GitRepositoryBranchesOpts contains options for GitRepository.Branches
+type GitRepositoryBranchesOpts struct {
+	// Glob patterns (e.g., "refs/tags/v*").
+	Patterns []string
+}
+
+// branches that match any of the given glob patterns.
+func (r *GitRepository) Branches(ctx context.Context, opts ...GitRepositoryBranchesOpts) ([]string, error) {
+	q := r.query.Select("branches")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `patterns` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Patterns) {
+			q = q.Arg("patterns", opts[i].Patterns)
+		}
+	}
+
+	var response []string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
 // Returns details of a commit.
 func (r *GitRepository) Commit(id string) *GitRef {
 	q := r.query.Select("commit")
@@ -5441,6 +5686,8 @@ func (r *GitRepository) Tags(ctx context.Context, opts ...GitRepositoryTagsOpts)
 }
 
 // Header to authenticate the remote with.
+//
+// Deprecated: Use "httpAuthHeader" in the constructor instead.
 func (r *GitRepository) WithAuthHeader(header *Secret) *GitRepository {
 	assertNotNil("header", header)
 	q := r.query.Select("withAuthHeader")
@@ -5452,6 +5699,8 @@ func (r *GitRepository) WithAuthHeader(header *Secret) *GitRepository {
 }
 
 // Token to authenticate the remote with.
+//
+// Deprecated: Use "httpAuthToken" in the constructor instead.
 func (r *GitRepository) WithAuthToken(token *Secret) *GitRepository {
 	assertNotNil("token", token)
 	q := r.query.Select("withAuthToken")
@@ -6130,16 +6379,42 @@ func (r *LLM) WithoutDefaultSystemPrompt() *LLM {
 type LLMTokenUsage struct {
 	query *querybuilder.Selection
 
-	id           *LLMTokenUsageID
-	inputTokens  *int
-	outputTokens *int
-	totalTokens  *int
+	cachedTokenReads  *int
+	cachedTokenWrites *int
+	id                *LLMTokenUsageID
+	inputTokens       *int
+	outputTokens      *int
+	totalTokens       *int
 }
 
 func (r *LLMTokenUsage) WithGraphQLQuery(q *querybuilder.Selection) *LLMTokenUsage {
 	return &LLMTokenUsage{
 		query: q,
 	}
+}
+
+func (r *LLMTokenUsage) CachedTokenReads(ctx context.Context) (int, error) {
+	if r.cachedTokenReads != nil {
+		return *r.cachedTokenReads, nil
+	}
+	q := r.query.Select("cachedTokenReads")
+
+	var response int
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+func (r *LLMTokenUsage) CachedTokenWrites(ctx context.Context) (int, error) {
+	if r.cachedTokenWrites != nil {
+		return *r.cachedTokenWrites, nil
+	}
+	q := r.query.Select("cachedTokenWrites")
+
+	var response int
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 // A unique identifier for this LLMTokenUsage.
@@ -6647,14 +6922,26 @@ func (r *Module) SDK() *SDKConfig {
 	}
 }
 
+// ModuleServeOpts contains options for Module.Serve
+type ModuleServeOpts struct {
+	// Expose the dependencies of this module to the client
+	IncludeDependencies bool
+}
+
 // Serve a module's API in the current session.
 //
 // Note: this can only be called once per session. In the future, it could return a stream or service to remove the side effect.
-func (r *Module) Serve(ctx context.Context) error {
+func (r *Module) Serve(ctx context.Context, opts ...ModuleServeOpts) error {
 	if r.serve != nil {
 		return nil
 	}
 	q := r.query.Select("serve")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `includeDependencies` optional argument
+		if !querybuilder.IsZeroValue(opts[i].IncludeDependencies) {
+			q = q.Arg("includeDependencies", opts[i].IncludeDependencies)
+		}
+	}
 
 	return q.Execute(ctx)
 }
@@ -6728,7 +7015,6 @@ func (r *Module) WithObject(object *TypeDef) *Module {
 type ModuleConfigClient struct {
 	query *querybuilder.Selection
 
-	dev       *bool
 	directory *string
 	generator *string
 	id        *ModuleConfigClientID
@@ -6738,19 +7024,6 @@ func (r *ModuleConfigClient) WithGraphQLQuery(q *querybuilder.Selection) *Module
 	return &ModuleConfigClient{
 		query: q,
 	}
-}
-
-// If true, generate the client in developer mode.
-func (r *ModuleConfigClient) Dev(ctx context.Context) (bool, error) {
-	if r.dev != nil {
-		return *r.dev, nil
-	}
-	q := r.query.Select("dev")
-
-	var response bool
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
 }
 
 // The directory the client is generated in.
@@ -7276,21 +7549,9 @@ func (r *ModuleSource) Version(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// ModuleSourceWithClientOpts contains options for ModuleSource.WithClient
-type ModuleSourceWithClientOpts struct {
-	// Generate in developer mode
-	Dev bool
-}
-
 // Update the module source with a new client to generate.
-func (r *ModuleSource) WithClient(generator string, outputDir string, opts ...ModuleSourceWithClientOpts) *ModuleSource {
+func (r *ModuleSource) WithClient(generator string, outputDir string) *ModuleSource {
 	q := r.query.Select("withClient")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `dev` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Dev) {
-			q = q.Arg("dev", opts[i].Dev)
-		}
-	}
 	q = q.Arg("generator", generator)
 	q = q.Arg("outputDir", outputDir)
 
@@ -7702,23 +7963,21 @@ func (r *Client) WithGraphQLQuery(q *querybuilder.Selection) *Client {
 	}
 }
 
-// CacheVolumeOpts contains options for Client.CacheVolume
-type CacheVolumeOpts struct {
-	Namespace string
-}
-
 // Constructs a cache volume for a given cache key.
-func (r *Client) CacheVolume(key string, opts ...CacheVolumeOpts) *CacheVolume {
+func (r *Client) CacheVolume(key string) *CacheVolume {
 	q := r.query.Select("cacheVolume")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `namespace` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Namespace) {
-			q = q.Arg("namespace", opts[i].Namespace)
-		}
-	}
 	q = q.Arg("key", key)
 
 	return &CacheVolume{
+		query: q,
+	}
+}
+
+// Dagger Cloud configuration and state
+func (r *Client) Cloud() *Cloud {
+	q := r.query.Select("cloud")
+
+	return &Cloud{
 		query: q,
 	}
 }
@@ -7857,6 +8116,31 @@ func (r *Client) Error(message string) *Error {
 	}
 }
 
+// FileOpts contains options for Client.File
+type FileOpts struct {
+	// Permissions of the new file. Example: 0600
+	//
+	// Default: 420
+	Permissions int
+}
+
+// Creates a file with the specified contents.
+func (r *Client) File(name string, contents string, opts ...FileOpts) *File {
+	q := r.query.Select("file")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `permissions` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Permissions) {
+			q = q.Arg("permissions", opts[i].Permissions)
+		}
+	}
+	q = q.Arg("name", name)
+	q = q.Arg("contents", contents)
+
+	return &File{
+		query: q,
+	}
+}
+
 // Creates a function.
 func (r *Client) Function(name string, returnType *TypeDef) *Function {
 	assertNotNil("returnType", returnType)
@@ -7886,12 +8170,18 @@ type GitOpts struct {
 	//
 	// Default: true
 	KeepGitDir bool
-	// A service which must be started before the repo is fetched.
-	ExperimentalServiceHost *Service
 	// Set SSH known hosts
 	SSHKnownHosts string
 	// Set SSH auth socket
 	SSHAuthSocket *Socket
+	// Username used to populate the password during basic HTTP Authorization
+	HTTPAuthUsername string
+	// Secret used to populate the password during basic HTTP Authorization
+	HTTPAuthToken *Secret
+	// Secret used to populate the Authorization HTTP header
+	HTTPAuthHeader *Secret
+	// A service which must be started before the repo is fetched.
+	ExperimentalServiceHost *Service
 }
 
 // Queries a Git repository.
@@ -7902,10 +8192,6 @@ func (r *Client) Git(url string, opts ...GitOpts) *GitRepository {
 		if !querybuilder.IsZeroValue(opts[i].KeepGitDir) {
 			q = q.Arg("keepGitDir", opts[i].KeepGitDir)
 		}
-		// `experimentalServiceHost` optional argument
-		if !querybuilder.IsZeroValue(opts[i].ExperimentalServiceHost) {
-			q = q.Arg("experimentalServiceHost", opts[i].ExperimentalServiceHost)
-		}
 		// `sshKnownHosts` optional argument
 		if !querybuilder.IsZeroValue(opts[i].SSHKnownHosts) {
 			q = q.Arg("sshKnownHosts", opts[i].SSHKnownHosts)
@@ -7913,6 +8199,22 @@ func (r *Client) Git(url string, opts ...GitOpts) *GitRepository {
 		// `sshAuthSocket` optional argument
 		if !querybuilder.IsZeroValue(opts[i].SSHAuthSocket) {
 			q = q.Arg("sshAuthSocket", opts[i].SSHAuthSocket)
+		}
+		// `httpAuthUsername` optional argument
+		if !querybuilder.IsZeroValue(opts[i].HTTPAuthUsername) {
+			q = q.Arg("httpAuthUsername", opts[i].HTTPAuthUsername)
+		}
+		// `httpAuthToken` optional argument
+		if !querybuilder.IsZeroValue(opts[i].HTTPAuthToken) {
+			q = q.Arg("httpAuthToken", opts[i].HTTPAuthToken)
+		}
+		// `httpAuthHeader` optional argument
+		if !querybuilder.IsZeroValue(opts[i].HTTPAuthHeader) {
+			q = q.Arg("httpAuthHeader", opts[i].HTTPAuthHeader)
+		}
+		// `experimentalServiceHost` optional argument
+		if !querybuilder.IsZeroValue(opts[i].ExperimentalServiceHost) {
+			q = q.Arg("experimentalServiceHost", opts[i].ExperimentalServiceHost)
 		}
 	}
 	q = q.Arg("url", url)
@@ -7924,6 +8226,12 @@ func (r *Client) Git(url string, opts ...GitOpts) *GitRepository {
 
 // HTTPOpts contains options for Client.HTTP
 type HTTPOpts struct {
+	// File name to use for the file. Defaults to the last part of the URL.
+	Name string
+	// Permissions to set on the file.
+	Permissions int
+	// Secret used to populate the Authorization HTTP header
+	AuthHeader *Secret
 	// A service which must be started before the URL is fetched.
 	ExperimentalServiceHost *Service
 }
@@ -7932,6 +8240,18 @@ type HTTPOpts struct {
 func (r *Client) HTTP(url string, opts ...HTTPOpts) *File {
 	q := r.query.Select("http")
 	for i := len(opts) - 1; i >= 0; i-- {
+		// `name` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Name) {
+			q = q.Arg("name", opts[i].Name)
+		}
+		// `permissions` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Permissions) {
+			q = q.Arg("permissions", opts[i].Permissions)
+		}
+		// `authHeader` optional argument
+		if !querybuilder.IsZeroValue(opts[i].AuthHeader) {
+			q = q.Arg("authHeader", opts[i].AuthHeader)
+		}
 		// `experimentalServiceHost` optional argument
 		if !querybuilder.IsZeroValue(opts[i].ExperimentalServiceHost) {
 			q = q.Arg("experimentalServiceHost", opts[i].ExperimentalServiceHost)
@@ -8019,6 +8339,16 @@ func (r *Client) LoadCacheVolumeFromID(id CacheVolumeID) *CacheVolume {
 	q = q.Arg("id", id)
 
 	return &CacheVolume{
+		query: q,
+	}
+}
+
+// Load a Cloud from its ID.
+func (r *Client) LoadCloudFromID(id CloudID) *Cloud {
+	q := r.query.Select("loadCloudFromID")
+	q = q.Arg("id", id)
+
+	return &Cloud{
 		query: q,
 	}
 }
@@ -8452,9 +8782,25 @@ func (r *Client) ModuleSource(refString string, opts ...ModuleSourceOpts) *Modul
 	}
 }
 
+// SecretOpts contains options for Client.Secret
+type SecretOpts struct {
+	// If set, the given string will be used as the cache key for this secret. This means that any secrets with the same cache key will be considered equivalent in terms of cache lookups, even if they have different URIs or plaintext values.
+	//
+	// For example, two secrets with the same cache key provided as secret env vars to other wise equivalent containers will result in the container withExecs hitting the cache for each other.
+	//
+	// If not set, the cache key for the secret will be derived from its plaintext value as looked up when the secret is constructed.
+	CacheKey string
+}
+
 // Creates a new secret.
-func (r *Client) Secret(uri string) *Secret {
+func (r *Client) Secret(uri string, opts ...SecretOpts) *Secret {
 	q := r.query.Select("secret")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `cacheKey` optional argument
+		if !querybuilder.IsZeroValue(opts[i].CacheKey) {
+			q = q.Arg("cacheKey", opts[i].CacheKey)
+		}
+	}
 	q = q.Arg("uri", uri)
 
 	return &Secret{
@@ -9477,6 +9823,40 @@ func (r *TypeDef) WithEnum(name string, opts ...TypeDefWithEnumOpts) *TypeDef {
 	}
 }
 
+// TypeDefWithEnumMemberOpts contains options for TypeDef.WithEnumMember
+type TypeDefWithEnumMemberOpts struct {
+	// The value of the member in the enum
+	Value string
+	// A doc string for the member, if any
+	Description string
+	// The source map for the enum member definition.
+	SourceMap *SourceMap
+}
+
+// Adds a static value for an Enum TypeDef, failing if the type is not an enum.
+func (r *TypeDef) WithEnumMember(name string, opts ...TypeDefWithEnumMemberOpts) *TypeDef {
+	q := r.query.Select("withEnumMember")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `value` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Value) {
+			q = q.Arg("value", opts[i].Value)
+		}
+		// `description` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Description) {
+			q = q.Arg("description", opts[i].Description)
+		}
+		// `sourceMap` optional argument
+		if !querybuilder.IsZeroValue(opts[i].SourceMap) {
+			q = q.Arg("sourceMap", opts[i].SourceMap)
+		}
+	}
+	q = q.Arg("name", name)
+
+	return &TypeDef{
+		query: q,
+	}
+}
+
 // TypeDefWithEnumValueOpts contains options for TypeDef.WithEnumValue
 type TypeDefWithEnumValueOpts struct {
 	// A doc string for the value, if any
@@ -9486,6 +9866,8 @@ type TypeDefWithEnumValueOpts struct {
 }
 
 // Adds a static value for an Enum TypeDef, failing if the type is not an enum.
+//
+// Deprecated: Use WithEnumMember instead
 func (r *TypeDef) WithEnumValue(value string, opts ...TypeDefWithEnumValueOpts) *TypeDef {
 	q := r.query.Select("withEnumValue")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -9659,15 +10041,54 @@ type CacheSharingMode string
 
 func (CacheSharingMode) IsEnum() {}
 
+func (v CacheSharingMode) Name() string {
+	switch v {
+	case CacheSharingModeShared:
+		return "SHARED"
+	case CacheSharingModePrivate:
+		return "PRIVATE"
+	case CacheSharingModeLocked:
+		return "LOCKED"
+	default:
+		return ""
+	}
+}
+
+func (v CacheSharingMode) Value() string {
+	return string(v)
+}
+
+func (v *CacheSharingMode) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Name())
+}
+
+func (v *CacheSharingMode) UnmarshalJSON(dt []byte) error {
+	var s string
+	if err := json.Unmarshal(dt, &s); err != nil {
+		return err
+	}
+	switch s {
+	case "LOCKED":
+		*v = CacheSharingModeLocked
+	case "PRIVATE":
+		*v = CacheSharingModePrivate
+	case "SHARED":
+		*v = CacheSharingModeShared
+	default:
+		return fmt.Errorf("unknown enum value %q", s)
+	}
+	return nil
+}
+
 const (
-	// Shares the cache volume amongst many build pipelines, but will serialize the writes
-	CacheSharingModeLocked CacheSharingMode = "LOCKED"
+	// Shares the cache volume amongst many build pipelines
+	CacheSharingModeShared CacheSharingMode = "SHARED"
 
 	// Keeps a cache volume for a single build pipeline
 	CacheSharingModePrivate CacheSharingMode = "PRIVATE"
 
-	// Shares the cache volume amongst many build pipelines
-	CacheSharingModeShared CacheSharingMode = "SHARED"
+	// Shares the cache volume amongst many build pipelines, but will serialize the writes
+	CacheSharingModeLocked CacheSharingMode = "LOCKED"
 )
 
 // Compression algorithm to use for image layers.
@@ -9675,14 +10096,60 @@ type ImageLayerCompression string
 
 func (ImageLayerCompression) IsEnum() {}
 
-const (
-	ImageLayerCompressionEstarGz ImageLayerCompression = "EStarGZ"
+func (v ImageLayerCompression) Name() string {
+	switch v {
+	case ImageLayerCompressionGzip:
+		return "Gzip"
+	case ImageLayerCompressionZstd:
+		return "Zstd"
+	case ImageLayerCompressionEstarGz:
+		return "EStarGZ"
+	case ImageLayerCompressionUncompressed:
+		return "Uncompressed"
+	default:
+		return ""
+	}
+}
 
+func (v ImageLayerCompression) Value() string {
+	return string(v)
+}
+
+func (v *ImageLayerCompression) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Name())
+}
+
+func (v *ImageLayerCompression) UnmarshalJSON(dt []byte) error {
+	var s string
+	if err := json.Unmarshal(dt, &s); err != nil {
+		return err
+	}
+	switch s {
+	case "EStarGZ":
+		*v = ImageLayerCompressionEstarGz
+	case "ESTARGZ":
+		*v = ImageLayerCompressionEstargz
+	case "Gzip":
+		*v = ImageLayerCompressionGzip
+	case "Uncompressed":
+		*v = ImageLayerCompressionUncompressed
+	case "Zstd":
+		*v = ImageLayerCompressionZstd
+	default:
+		return fmt.Errorf("unknown enum value %q", s)
+	}
+	return nil
+}
+
+const (
 	ImageLayerCompressionGzip ImageLayerCompression = "Gzip"
 
-	ImageLayerCompressionUncompressed ImageLayerCompression = "Uncompressed"
-
 	ImageLayerCompressionZstd ImageLayerCompression = "Zstd"
+
+	ImageLayerCompressionEstarGz ImageLayerCompression = "EStarGZ"
+	ImageLayerCompressionEstargz ImageLayerCompression = ImageLayerCompressionEstarGz
+
+	ImageLayerCompressionUncompressed ImageLayerCompression = "Uncompressed"
 )
 
 // Mediatypes to use in published or exported image metadata.
@@ -9690,10 +10157,51 @@ type ImageMediaTypes string
 
 func (ImageMediaTypes) IsEnum() {}
 
-const (
-	ImageMediaTypesDockerMediaTypes ImageMediaTypes = "DockerMediaTypes"
+func (v ImageMediaTypes) Name() string {
+	switch v {
+	case ImageMediaTypesOcimediaTypes:
+		return "OCIMediaTypes"
+	case ImageMediaTypesDockerMediaTypes:
+		return "DockerMediaTypes"
+	default:
+		return ""
+	}
+}
 
+func (v ImageMediaTypes) Value() string {
+	return string(v)
+}
+
+func (v *ImageMediaTypes) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Name())
+}
+
+func (v *ImageMediaTypes) UnmarshalJSON(dt []byte) error {
+	var s string
+	if err := json.Unmarshal(dt, &s); err != nil {
+		return err
+	}
+	switch s {
+	case "DOCKER":
+		*v = ImageMediaTypesDocker
+	case "DockerMediaTypes":
+		*v = ImageMediaTypesDockerMediaTypes
+	case "OCI":
+		*v = ImageMediaTypesOci
+	case "OCIMediaTypes":
+		*v = ImageMediaTypesOcimediaTypes
+	default:
+		return fmt.Errorf("unknown enum value %q", s)
+	}
+	return nil
+}
+
+const (
 	ImageMediaTypesOcimediaTypes ImageMediaTypes = "OCIMediaTypes"
+	ImageMediaTypesOci           ImageMediaTypes = ImageMediaTypesOcimediaTypes
+
+	ImageMediaTypesDockerMediaTypes ImageMediaTypes = "DockerMediaTypes"
+	ImageMediaTypesDocker           ImageMediaTypes = ImageMediaTypesDockerMediaTypes
 )
 
 // The kind of module source.
@@ -9701,18 +10209,101 @@ type ModuleSourceKind string
 
 func (ModuleSourceKind) IsEnum() {}
 
+func (v ModuleSourceKind) Name() string {
+	switch v {
+	case ModuleSourceKindLocalSource:
+		return "LOCAL_SOURCE"
+	case ModuleSourceKindGitSource:
+		return "GIT_SOURCE"
+	case ModuleSourceKindDirSource:
+		return "DIR_SOURCE"
+	default:
+		return ""
+	}
+}
+
+func (v ModuleSourceKind) Value() string {
+	return string(v)
+}
+
+func (v *ModuleSourceKind) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Name())
+}
+
+func (v *ModuleSourceKind) UnmarshalJSON(dt []byte) error {
+	var s string
+	if err := json.Unmarshal(dt, &s); err != nil {
+		return err
+	}
+	switch s {
+	case "DIR":
+		*v = ModuleSourceKindDir
+	case "DIR_SOURCE":
+		*v = ModuleSourceKindDirSource
+	case "GIT":
+		*v = ModuleSourceKindGit
+	case "GIT_SOURCE":
+		*v = ModuleSourceKindGitSource
+	case "LOCAL":
+		*v = ModuleSourceKindLocal
+	case "LOCAL_SOURCE":
+		*v = ModuleSourceKindLocalSource
+	default:
+		return fmt.Errorf("unknown enum value %q", s)
+	}
+	return nil
+}
+
 const (
-	ModuleSourceKindDirSource ModuleSourceKind = "DIR_SOURCE"
+	ModuleSourceKindLocalSource ModuleSourceKind = "LOCAL_SOURCE"
+	ModuleSourceKindLocal       ModuleSourceKind = ModuleSourceKindLocalSource
 
 	ModuleSourceKindGitSource ModuleSourceKind = "GIT_SOURCE"
+	ModuleSourceKindGit       ModuleSourceKind = ModuleSourceKindGitSource
 
-	ModuleSourceKindLocalSource ModuleSourceKind = "LOCAL_SOURCE"
+	ModuleSourceKindDirSource ModuleSourceKind = "DIR_SOURCE"
+	ModuleSourceKindDir       ModuleSourceKind = ModuleSourceKindDirSource
 )
 
 // Transport layer network protocol associated to a port.
 type NetworkProtocol string
 
 func (NetworkProtocol) IsEnum() {}
+
+func (v NetworkProtocol) Name() string {
+	switch v {
+	case NetworkProtocolTcp:
+		return "TCP"
+	case NetworkProtocolUdp:
+		return "UDP"
+	default:
+		return ""
+	}
+}
+
+func (v NetworkProtocol) Value() string {
+	return string(v)
+}
+
+func (v *NetworkProtocol) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Name())
+}
+
+func (v *NetworkProtocol) UnmarshalJSON(dt []byte) error {
+	var s string
+	if err := json.Unmarshal(dt, &s); err != nil {
+		return err
+	}
+	switch s {
+	case "TCP":
+		*v = NetworkProtocolTcp
+	case "UDP":
+		*v = NetworkProtocolUdp
+	default:
+		return fmt.Errorf("unknown enum value %q", s)
+	}
+	return nil
+}
 
 const (
 	NetworkProtocolTcp NetworkProtocol = "TCP"
@@ -9725,15 +10316,54 @@ type ReturnType string
 
 func (ReturnType) IsEnum() {}
 
+func (v ReturnType) Name() string {
+	switch v {
+	case ReturnTypeSuccess:
+		return "SUCCESS"
+	case ReturnTypeFailure:
+		return "FAILURE"
+	case ReturnTypeAny:
+		return "ANY"
+	default:
+		return ""
+	}
+}
+
+func (v ReturnType) Value() string {
+	return string(v)
+}
+
+func (v *ReturnType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Name())
+}
+
+func (v *ReturnType) UnmarshalJSON(dt []byte) error {
+	var s string
+	if err := json.Unmarshal(dt, &s); err != nil {
+		return err
+	}
+	switch s {
+	case "ANY":
+		*v = ReturnTypeAny
+	case "FAILURE":
+		*v = ReturnTypeFailure
+	case "SUCCESS":
+		*v = ReturnTypeSuccess
+	default:
+		return fmt.Errorf("unknown enum value %q", s)
+	}
+	return nil
+}
+
 const (
-	// Any execution (exit codes 0-127)
-	ReturnTypeAny ReturnType = "ANY"
+	// A successful execution (exit code 0)
+	ReturnTypeSuccess ReturnType = "SUCCESS"
 
 	// A failed execution (exit codes 1-127)
 	ReturnTypeFailure ReturnType = "FAILURE"
 
-	// A successful execution (exit code 0)
-	ReturnTypeSuccess ReturnType = "SUCCESS"
+	// Any execution (exit codes 0-127)
+	ReturnTypeAny ReturnType = "ANY"
 )
 
 // Distinguishes the different kinds of TypeDefs.
@@ -9741,49 +10371,174 @@ type TypeDefKind string
 
 func (TypeDefKind) IsEnum() {}
 
+func (v TypeDefKind) Name() string {
+	switch v {
+	case TypeDefKindStringKind:
+		return "STRING_KIND"
+	case TypeDefKindIntegerKind:
+		return "INTEGER_KIND"
+	case TypeDefKindFloatKind:
+		return "FLOAT_KIND"
+	case TypeDefKindBooleanKind:
+		return "BOOLEAN_KIND"
+	case TypeDefKindScalarKind:
+		return "SCALAR_KIND"
+	case TypeDefKindListKind:
+		return "LIST_KIND"
+	case TypeDefKindObjectKind:
+		return "OBJECT_KIND"
+	case TypeDefKindInterfaceKind:
+		return "INTERFACE_KIND"
+	case TypeDefKindInputKind:
+		return "INPUT_KIND"
+	case TypeDefKindVoidKind:
+		return "VOID_KIND"
+	case TypeDefKindEnumKind:
+		return "ENUM_KIND"
+	default:
+		return ""
+	}
+}
+
+func (v TypeDefKind) Value() string {
+	return string(v)
+}
+
+func (v *TypeDefKind) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Name())
+}
+
+func (v *TypeDefKind) UnmarshalJSON(dt []byte) error {
+	var s string
+	if err := json.Unmarshal(dt, &s); err != nil {
+		return err
+	}
+	switch s {
+	case "BOOLEAN":
+		*v = TypeDefKindBoolean
+	case "BOOLEAN_KIND":
+		*v = TypeDefKindBooleanKind
+	case "ENUM":
+		*v = TypeDefKindEnum
+	case "ENUM_KIND":
+		*v = TypeDefKindEnumKind
+	case "FLOAT":
+		*v = TypeDefKindFloat
+	case "FLOAT_KIND":
+		*v = TypeDefKindFloatKind
+	case "INPUT":
+		*v = TypeDefKindInput
+	case "INPUT_KIND":
+		*v = TypeDefKindInputKind
+	case "INTEGER":
+		*v = TypeDefKindInteger
+	case "INTEGER_KIND":
+		*v = TypeDefKindIntegerKind
+	case "INTERFACE":
+		*v = TypeDefKindInterface
+	case "INTERFACE_KIND":
+		*v = TypeDefKindInterfaceKind
+	case "LIST":
+		*v = TypeDefKindList
+	case "LIST_KIND":
+		*v = TypeDefKindListKind
+	case "OBJECT":
+		*v = TypeDefKindObject
+	case "OBJECT_KIND":
+		*v = TypeDefKindObjectKind
+	case "SCALAR":
+		*v = TypeDefKindScalar
+	case "SCALAR_KIND":
+		*v = TypeDefKindScalarKind
+	case "STRING":
+		*v = TypeDefKindString
+	case "STRING_KIND":
+		*v = TypeDefKindStringKind
+	case "VOID":
+		*v = TypeDefKindVoid
+	case "VOID_KIND":
+		*v = TypeDefKindVoidKind
+	default:
+		return fmt.Errorf("unknown enum value %q", s)
+	}
+	return nil
+}
+
 const (
-	// A boolean value.
-	TypeDefKindBooleanKind TypeDefKind = "BOOLEAN_KIND"
-
-	// A GraphQL enum type and its values
-	//
-	// Always paired with an EnumTypeDef.
-	TypeDefKindEnumKind TypeDefKind = "ENUM_KIND"
-
-	// A float value.
-	TypeDefKindFloatKind TypeDefKind = "FLOAT_KIND"
-
-	// A graphql input type, used only when representing the core API via TypeDefs.
-	TypeDefKindInputKind TypeDefKind = "INPUT_KIND"
+	// A string value.
+	TypeDefKindStringKind TypeDefKind = "STRING_KIND"
+	// A string value.
+	TypeDefKindString TypeDefKind = TypeDefKindStringKind
 
 	// An integer value.
 	TypeDefKindIntegerKind TypeDefKind = "INTEGER_KIND"
+	// An integer value.
+	TypeDefKindInteger TypeDefKind = TypeDefKindIntegerKind
 
-	// A named type of functions that can be matched+implemented by other objects+interfaces.
-	//
-	// Always paired with an InterfaceTypeDef.
-	TypeDefKindInterfaceKind TypeDefKind = "INTERFACE_KIND"
+	// A float value.
+	TypeDefKindFloatKind TypeDefKind = "FLOAT_KIND"
+	// A float value.
+	TypeDefKindFloat TypeDefKind = TypeDefKindFloatKind
 
-	// A list of values all having the same type.
-	//
-	// Always paired with a ListTypeDef.
-	TypeDefKindListKind TypeDefKind = "LIST_KIND"
-
-	// A named type defined in the GraphQL schema, with fields and functions.
-	//
-	// Always paired with an ObjectTypeDef.
-	TypeDefKindObjectKind TypeDefKind = "OBJECT_KIND"
+	// A boolean value.
+	TypeDefKindBooleanKind TypeDefKind = "BOOLEAN_KIND"
+	// A boolean value.
+	TypeDefKindBoolean TypeDefKind = TypeDefKindBooleanKind
 
 	// A scalar value of any basic kind.
 	TypeDefKindScalarKind TypeDefKind = "SCALAR_KIND"
+	// A scalar value of any basic kind.
+	TypeDefKindScalar TypeDefKind = TypeDefKindScalarKind
 
-	// A string value.
-	TypeDefKindStringKind TypeDefKind = "STRING_KIND"
+	// Always paired with a ListTypeDef.
+	//
+	// A list of values all having the same type.
+	TypeDefKindListKind TypeDefKind = "LIST_KIND"
+	// Always paired with a ListTypeDef.
+	//
+	// A list of values all having the same type.
+	TypeDefKindList TypeDefKind = TypeDefKindListKind
+
+	// Always paired with an ObjectTypeDef.
+	//
+	// A named type defined in the GraphQL schema, with fields and functions.
+	TypeDefKindObjectKind TypeDefKind = "OBJECT_KIND"
+	// Always paired with an ObjectTypeDef.
+	//
+	// A named type defined in the GraphQL schema, with fields and functions.
+	TypeDefKindObject TypeDefKind = TypeDefKindObjectKind
+
+	// Always paired with an InterfaceTypeDef.
+	//
+	// A named type of functions that can be matched+implemented by other objects+interfaces.
+	TypeDefKindInterfaceKind TypeDefKind = "INTERFACE_KIND"
+	// Always paired with an InterfaceTypeDef.
+	//
+	// A named type of functions that can be matched+implemented by other objects+interfaces.
+	TypeDefKindInterface TypeDefKind = TypeDefKindInterfaceKind
+
+	// A graphql input type, used only when representing the core API via TypeDefs.
+	TypeDefKindInputKind TypeDefKind = "INPUT_KIND"
+	// A graphql input type, used only when representing the core API via TypeDefs.
+	TypeDefKindInput TypeDefKind = TypeDefKindInputKind
 
 	// A special kind used to signify that no value is returned.
 	//
 	// This is used for functions that have no return value. The outer TypeDef specifying this Kind is always Optional, as the Void is never actually represented.
 	TypeDefKindVoidKind TypeDefKind = "VOID_KIND"
+	// A special kind used to signify that no value is returned.
+	//
+	// This is used for functions that have no return value. The outer TypeDef specifying this Kind is always Optional, as the Void is never actually represented.
+	TypeDefKindVoid TypeDefKind = TypeDefKindVoidKind
+
+	// A GraphQL enum type and its values
+	//
+	// Always paired with an EnumTypeDef.
+	TypeDefKindEnumKind TypeDefKind = "ENUM_KIND"
+	// A GraphQL enum type and its values
+	//
+	// Always paired with an EnumTypeDef.
+	TypeDefKindEnum TypeDefKind = TypeDefKindEnumKind
 )
 
 type Client struct {
