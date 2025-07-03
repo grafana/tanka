@@ -2,6 +2,24 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.33.1](https://github.com/grafana/tanka/compare/v0.33.0...v0.33.1) (2025-07-03)
+
+
+### 🏗️ Build System
+
+* **deps:** bump ncipollo/release-action from 1.16.0 to 1.18.0 ([#1496](https://github.com/grafana/tanka/issues/1496)) ([f7a0748](https://github.com/grafana/tanka/commit/f7a07480fcc76bad8171917f1483d5e0b1c0755e))
+* **deps:** bump renovatebot/github-action from 43.0.1 to 43.0.2 ([#1497](https://github.com/grafana/tanka/issues/1497)) ([b054a60](https://github.com/grafana/tanka/commit/b054a6098470e4670507bfd764e845e3b4b0e042))
+* **deps:** bump sigs.k8s.io/yaml ([d59463e](https://github.com/grafana/tanka/commit/d59463ee3a812f8a68404ebaeee32f2bb14e74d9))
+* **deps:** bump sigs.k8s.io/yaml from 1.4.0 to 1.5.0 ([#1500](https://github.com/grafana/tanka/issues/1500)) ([e6cf4e2](https://github.com/grafana/tanka/commit/e6cf4e20599f9007574d186016b72f6acb969b25))
+* **deps:** bump sigs.k8s.io/yaml from 1.4.0 to 1.5.0 in /acceptance-tests ([#1499](https://github.com/grafana/tanka/issues/1499)) ([d59463e](https://github.com/grafana/tanka/commit/d59463ee3a812f8a68404ebaeee32f2bb14e74d9))
+* **deps:** bump the dagger-dependencies group in /dagger with 11 updates ([#1498](https://github.com/grafana/tanka/issues/1498)) ([d09427e](https://github.com/grafana/tanka/commit/d09427e8468da85eb2338fb6021b31e9f0d61fbc))
+* **deps:** bump the docs-dependencies group in /docs with 5 updates ([#1495](https://github.com/grafana/tanka/issues/1495)) ([09946fd](https://github.com/grafana/tanka/commit/09946fd5c3dc4491d63530579801280a7c579220))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency kustomize to v5.7.0 ([#1493](https://github.com/grafana/tanka/issues/1493)) ([d1af250](https://github.com/grafana/tanka/commit/d1af25043d8b38d3c9cd002b6555d64ae889a371))
+
 ## [0.33.0](https://github.com/grafana/tanka/compare/v0.32.0...v0.33.0) (2025-06-25)
 
 
