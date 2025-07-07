@@ -57,6 +57,20 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
+	rootDir, err := jpath.FindRoot(path)
+	if err != nil {
+		return nil, errors.Wrap(err, "finding root")
+	}
+	// Try to load the tkrc file if it exists
+	var additionalJPathsRules []tkrc.AdditionalJPath
+	tkrcConfig, err := tkrc.Load(filepath.Join(rootDir, "tkrc.yaml"))
+	if err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("failed to load tkrc.yaml: %w", err)
+	}
+	if tkrcConfig != nil {
+		additionalJPathsRules = tkrcConfig.AdditionalJPaths
+	}
+
 	loader, err := DetectLoader(path, opts)
 	if err != nil {
 		return nil, err
@@ -64,12 +78,12 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 
 	// First, we need to take a peek at the environment so that we can extract
 	// the necessary labels for doing matching additional jpaths:
-	peeked, err := loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name, opts.AdditionalJPathRules})
+	peeked, err := loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name, additionalJPathsRules})
 	if err != nil {
 		return nil, err
 	}
 	additionalPaths := make([]jpath.WeightedJPath, 0, 10)
-	for _, rule := range opts.AdditionalJPathRules {
+	for _, rule := range additionalJPathsRules {
 		if rule.Matches(labels.Set(peeked.Metadata.Labels)) {
 			additionalPaths = append(additionalPaths, &rule)
 		}
