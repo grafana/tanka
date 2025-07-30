@@ -22,7 +22,6 @@ require (
 	github.com/thoas/go-funk v0.9.3
 	golang.org/x/term v0.33.0
 	golang.org/x/text v0.27.0
-	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.33.3
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
