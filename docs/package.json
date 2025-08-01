@@ -17,7 +17,7 @@
     "astro": "^5.12.4",
     "sharp": "^0.34.2",
     "tailwindcss": "^4.1.11",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
