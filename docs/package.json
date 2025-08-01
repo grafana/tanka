@@ -9,19 +9,19 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.4",
-    "@astrojs/starlight": "^0.35.1",
-    "@astrojs/starlight-tailwind": "^4.0.1",
-    "@fontsource-variable/inter": "^5.2.6",
-    "@tailwindcss/vite": "^4.1.11",
-    "astro": "^5.12.4",
-    "sharp": "^0.34.2",
-    "tailwindcss": "^4.1.11",
-    "typescript": "^5.9.2"
+    "@astrojs/check": "0.9.4",
+    "@astrojs/starlight": "0.35.1",
+    "@astrojs/starlight-tailwind": "4.0.1",
+    "@fontsource-variable/inter": "5.2.6",
+    "@tailwindcss/vite": "4.1.11",
+    "astro": "5.12.4",
+    "sharp": "0.34.3",
+    "tailwindcss": "4.1.11",
+    "typescript": "5.9.2"
   },
   "devDependencies": {
-    "@types/node": "^24.1.0",
-    "prettier": "^3.6.2"
+    "@types/node": "24.1.0",
+    "prettier": "3.6.2"
   },
   "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad"
 }
