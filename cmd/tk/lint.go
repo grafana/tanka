@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/go-clix/cli"
 	"github.com/gobwas/glob"
-	"github.com/posener/complete"
+	"github.com/posener/complete/v2"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 )
