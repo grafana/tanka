@@ -12,7 +12,7 @@ import (
 
 	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
-	"github.com/posener/complete"
+	"github.com/posener/complete/v2"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
