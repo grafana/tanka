@@ -38,3 +38,8 @@ sidebar:
 
 **Description**: Pager to use when displaying output. Only used if TANKA_PAGER is not set. Set to an empty string to disable paging.
 **Default**: `less --RAW-CONTROL-CHARS --quit-if-one-screen --no-init`
+
+## TANKA_DANGEROUS_ALLOW_REDIRECT
+
+**Description**: Allow redirection of the output of `tk show` to other commands when set to `true`, same as the `--dangerous-allow-redirect ` flag. Redirection of the output of `tk show` is discouraged and disabled by default. If you want to export `.yaml` files for use with other tools, try `tk export`.
+**Default**: `false`
