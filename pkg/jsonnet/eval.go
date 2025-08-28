@@ -105,10 +105,6 @@ func EvaluateFile(ctx context.Context, impl types.JsonnetImplementation, jsonnet
 // If cache options are given, a hash from the data will be computed and
 // the resulting string will be cached for future retrieval
 func Evaluate(ctx context.Context, path string, impl types.JsonnetImplementation, data string, opts Opts) (string, error) {
-	ctx, span := tracer.Start(ctx, "jsonnet.Evaluate")
-	defer span.End()
-	span.SetAttributes(telemetry.AttrPath(path))
-
 	evalFunc := func(evaluator types.JsonnetEvaluator) (string, error) {
 		return evaluator.EvaluateAnonymousSnippet(data)
 	}
