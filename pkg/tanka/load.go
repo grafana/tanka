@@ -66,6 +66,7 @@ func LoadEnvironment(ctx context.Context, path string, opts Opts) (*v1alpha1.Env
 	if err != nil {
 		return nil, err
 	}
+	span.SetAttributes(telemetry.AttrLoader(loader.Name()))
 
 	env, err := loader.Load(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 	if err != nil {
@@ -103,6 +104,7 @@ func Peek(ctx context.Context, path string, opts Opts) (*v1alpha1.Environment, e
 	if err != nil {
 		return nil, err
 	}
+	span.SetAttributes(telemetry.AttrLoader(loader.Name()))
 
 	return loader.Peek(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
@@ -111,13 +113,14 @@ func Peek(ctx context.Context, path string, opts Opts) (*v1alpha1.Environment, e
 // loaded. List can be used to deal with multiple inline environments, by first
 // listing them, choosing the right one and then only loading that one
 func List(ctx context.Context, path string, opts Opts) ([]*v1alpha1.Environment, error) {
-	ctx, span := tracer.Start(ctx, "tanka.Peek")
+	ctx, span := tracer.Start(ctx, "tanka.List")
 	defer span.End()
 	span.SetAttributes(telemetry.AttrPath(path))
 	loader, err := DetectLoader(path, opts)
 	if err != nil {
 		return nil, err
 	}
+	span.SetAttributes(telemetry.AttrLoader(loader.Name()))
 
 	return loader.List(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
@@ -159,6 +162,7 @@ func Eval(ctx context.Context, path string, opts Opts) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	span.SetAttributes(telemetry.AttrLoader(loader.Name()))
 
 	return loader.Eval(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
@@ -193,6 +197,9 @@ func DetectLoader(path string, opts Opts) (Loader, error) {
 
 // Loader is an abstraction over the process of loading Environments
 type Loader interface {
+	// Name of the loader
+	Name() string
+
 	// Load a single environment at path
 	Load(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error)
 

@@ -11,6 +11,10 @@ func AttrPath(v string) attribute.KeyValue {
 	return attribute.String("tanka.path", v)
 }
 
+func AttrLoader(v string) attribute.KeyValue {
+	return attribute.String("tanka.loader", v)
+}
+
 func AttrEnv(v *v1alpha1.Environment) []attribute.KeyValue {
 	return []attribute.KeyValue{
 		attribute.String("tanka.env.id", fmt.Sprintf("%s@%s", v.Metadata.Name, v.Spec.APIServer)),

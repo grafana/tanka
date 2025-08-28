@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
@@ -23,12 +22,11 @@ type InlineLoader struct {
 	jsonnetImpl types.JsonnetImplementation
 }
 
-func (i *InlineLoader) Load(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
-	ctx, span := tracer.Start(ctx, "inlineLoader.Load")
-	defer span.End()
-	span.SetAttributes(telemetry.AttrPath(path))
-	span.SetAttributes(OTELAttrFromLoaderOpts(&opts)...)
+func (i *InlineLoader) Name() string {
+	return "inline"
+}
 
+func (i *InlineLoader) Load(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
 	if opts.Name != "" {
 		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
 	}
@@ -36,17 +34,11 @@ func (i *InlineLoader) Load(ctx context.Context, path string, opts LoaderOpts) (
 }
 
 func (i *InlineLoader) Peek(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
-	ctx, span := tracer.Start(ctx, "inlineLoader.Peek")
-	defer span.End()
-	span.SetAttributes(telemetry.AttrPath(path))
-	span.SetAttributes(OTELAttrFromLoaderOpts(&opts)...)
-
 	opts.JsonnetOpts.EvalScript = MetadataEvalScript
 	if opts.Name != "" {
 		opts.JsonnetOpts.EvalScript = fmt.Sprintf(MetadataSingleEnvEvalScript, opts.Name)
 	}
 	env, err := i.load(ctx, path, opts)
-	telemetry.FailSpanWithError(span, err)
 	return env, err
 }
 
@@ -98,21 +90,14 @@ func (i *InlineLoader) load(ctx context.Context, path string, opts LoaderOpts) (
 }
 
 func (i *InlineLoader) List(ctx context.Context, path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
-	ctx, span := tracer.Start(ctx, "inlineLoader.List")
-	defer span.End()
-	span.SetAttributes(telemetry.AttrPath(path))
-	span.SetAttributes(OTELAttrFromLoaderOpts(&opts)...)
-
 	opts.JsonnetOpts.EvalScript = MetadataEvalScript
 	data, err := i.Eval(ctx, path, opts)
 	if err != nil {
-		telemetry.FailSpanWithError(span, err)
 		return nil, err
 	}
 
 	list, err := extractEnvs(data)
 	if err != nil {
-		telemetry.FailSpanWithError(span, err)
 		return nil, err
 	}
 
@@ -120,13 +105,11 @@ func (i *InlineLoader) List(ctx context.Context, path string, opts LoaderOpts) (
 	for _, raw := range list {
 		data, err := json.Marshal(raw)
 		if err != nil {
-			telemetry.FailSpanWithError(span, err)
 			return nil, err
 		}
 
 		env, err := inlineParse(path, data)
 		if err != nil {
-			telemetry.FailSpanWithError(span, err)
 			return nil, err
 		}
 
@@ -137,23 +120,16 @@ func (i *InlineLoader) List(ctx context.Context, path string, opts LoaderOpts) (
 }
 
 func (i *InlineLoader) Eval(ctx context.Context, path string, opts LoaderOpts) (interface{}, error) {
-	ctx, span := tracer.Start(ctx, "inlineLoader.Eval")
-	defer span.End()
-	span.SetAttributes(telemetry.AttrPath(path))
-	span.SetAttributes(OTELAttrFromLoaderOpts(&opts)...)
-
 	// Can't provide env as extVar, as we need to evaluate Jsonnet first to know it
 	opts.ExtCode.Set(environmentExtCode, `error "Using tk.env and std.extVar('tanka.dev/environment') is only supported for static environments. Directly access this data using standard Jsonnet instead."`)
 
 	raw, err := evalJsonnet(ctx, path, i.jsonnetImpl, opts.JsonnetOpts)
 	if err != nil {
-		telemetry.FailSpanWithError(span, err)
 		return nil, err
 	}
 
 	var data interface{}
 	if err := json.Unmarshal([]byte(raw), &data); err != nil {
-		telemetry.FailSpanWithError(span, err)
 		return nil, err
 	}
 
