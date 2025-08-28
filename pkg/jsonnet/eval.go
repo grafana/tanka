@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 
-	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -82,23 +81,14 @@ func (o Opts) Clone() Opts {
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
 func EvaluateFile(ctx context.Context, impl types.JsonnetImplementation, jsonnetFile string, opts Opts) (string, error) {
-	ctx, span := tracer.Start(ctx, "jsonnet.EvaluateFile")
-	defer span.End()
-	span.SetAttributes(telemetry.AttrPath(jsonnetFile))
-
 	evalFunc := func(evaluator types.JsonnetEvaluator) (string, error) {
 		return evaluator.EvaluateFile(jsonnetFile)
 	}
 	data, err := os.ReadFile(jsonnetFile)
 	if err != nil {
-		telemetry.FailSpanWithError(span, err)
 		return "", err
 	}
-	output, err := evaluateSnippet(impl, evalFunc, jsonnetFile, string(data), opts)
-	if err != nil {
-		telemetry.FailSpanWithError(span, err)
-	}
-	return output, err
+	return evaluateSnippet(impl, evalFunc, jsonnetFile, string(data), opts)
 }
 
 // Evaluate renders the given jsonnet into a string

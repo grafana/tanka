@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
@@ -63,6 +64,11 @@ type ExportEnvOpts struct {
 }
 
 func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
+	ctx, span := tracer.Start(ctx, "tanka.ExportEnvironments")
+	defer span.End()
+
+	span.SetAttributes(telemetry.AttrNumEnvs(len(envs)))
+
 	// Keep track of which file maps to which environment
 	fileToEnv := map[string]string{}
 
