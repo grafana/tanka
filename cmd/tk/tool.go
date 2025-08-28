@@ -161,7 +161,7 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 	}
 
 	root := cmd.Flags().String("root", ".", "root directory to search for environments")
-	cmd.Run = func(cctx *cli.Command, args []string) error {
+	cmd.Run = func(_ *cli.Command, args []string) error {
 		ctx, span := tracer.Start(ctx, "importersCmd")
 		defer span.End()
 

@@ -28,6 +28,8 @@ func initCmd(ctx context.Context) *cli.Command {
 	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
 	cmd.Run = func(_ *cli.Command, _ []string) error {
+		_, span := tracer.Start(ctx, "initCmd")
+		defer span.End()
 		failed := false
 
 		files, err := os.ReadDir(".")

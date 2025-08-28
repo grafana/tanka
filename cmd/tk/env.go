@@ -67,6 +67,8 @@ func envSetCmd(ctx context.Context) *cli.Command {
 	_ = cmd.Flags().MarkHidden("name")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		_, span := tracer.Start(ctx, "envSetCmd")
+		defer span.End()
 		if *name != "" {
 			return fmt.Errorf("it looks like you attempted to rename the environment using `--name`. However, this is not possible with Tanka, because the environments name is inferred from the directories name. To rename the environment, rename its directory instead")
 		}
@@ -132,6 +134,8 @@ func envAddCmd(ctx context.Context) *cli.Command {
 	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		_, span := tracer.Start(ctx, "envAddCmd")
+		defer span.End()
 		if cmd.Flags().Changed("server-from-context") {
 			server, err := client.IPFromContext(cfg.Spec.APIServer)
 			if err != nil {
@@ -209,6 +213,8 @@ func envRemoveCmd(ctx context.Context) *cli.Command {
 		Short:   "delete an environment",
 		Args:    generateWorkflowArgs(ctx),
 		Run: func(_ *cli.Command, args []string) error {
+			_, span := tracer.Start(ctx, "envRemoveCmd")
+			defer span.End()
 			for _, arg := range args {
 				path, err := filepath.Abs(arg)
 				if err != nil {

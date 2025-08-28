@@ -31,7 +31,7 @@ type cachedJsonnetFile struct {
 // It looks through imports transitively, so if a file is imported through a chain, it will still be reported.
 // If the given file is a main.jsonnet file, it will be returned as well.
 func FindImporterForFiles(ctx context.Context, root string, files []string) ([]string, error) {
-	ctx, span := tracer.Start(ctx, "jsonnet.FindImporterForFiles")
+	_, span := tracer.Start(ctx, "jsonnet.FindImporterForFiles")
 	defer span.End()
 
 	span.SetAttributes(attribute.StringSlice("tanka.files", files))

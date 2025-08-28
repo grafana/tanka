@@ -32,6 +32,8 @@ func fmtCmd(ctx context.Context) *cli.Command {
 	verbose := cmd.Flags().BoolP("verbose", "v", false, "print each checked file")
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		_, span := tracer.Start(ctx, "fmtCmd")
+		defer span.End()
 		if len(args) == 1 && args[0] == ArgStdin {
 			return fmtStdin(*test)
 		}

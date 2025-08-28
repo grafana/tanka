@@ -78,11 +78,15 @@ func main() {
 
 	// Run!
 	if err := rootCmd.Execute(); err != nil {
-		shutdownOtel(context.Background())
+		if err := shutdownOtel(context.Background()); err != nil {
+			fmt.Fprintln(os.Stderr, "OTEL shutdown error:", err)
+		}
 		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}
-	shutdownOtel(context.Background())
+	if err := shutdownOtel(context.Background()); err != nil {
+		fmt.Fprintln(os.Stderr, "OTEL shutdown error:", err)
+	}
 }
 
 func addCommandsWithLogLevelOption(rootCmd *cli.Command, cmds ...*cli.Command) {

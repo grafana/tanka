@@ -23,7 +23,7 @@ import (
 var importsRegexp = regexp.MustCompile(`import(str)?\s+['"]([^'"%()]+)['"]`)
 
 // TransitiveImports returns all recursive imports of an environment
-func TransitiveImports(ctx context.Context, dir string) ([]string, error) {
+func TransitiveImports(_ context.Context, dir string) ([]string, error) {
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err

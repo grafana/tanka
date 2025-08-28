@@ -80,7 +80,7 @@ func (o Opts) Clone() Opts {
 // EvaluateFile evaluates the Jsonnet code in the given file and returns the
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
-func EvaluateFile(ctx context.Context, impl types.JsonnetImplementation, jsonnetFile string, opts Opts) (string, error) {
+func EvaluateFile(_ context.Context, impl types.JsonnetImplementation, jsonnetFile string, opts Opts) (string, error) {
 	evalFunc := func(evaluator types.JsonnetEvaluator) (string, error) {
 		return evaluator.EvaluateFile(jsonnetFile)
 	}
@@ -94,7 +94,7 @@ func EvaluateFile(ctx context.Context, impl types.JsonnetImplementation, jsonnet
 // Evaluate renders the given jsonnet into a string
 // If cache options are given, a hash from the data will be computed and
 // the resulting string will be cached for future retrieval
-func Evaluate(ctx context.Context, path string, impl types.JsonnetImplementation, data string, opts Opts) (string, error) {
+func Evaluate(_ context.Context, path string, impl types.JsonnetImplementation, data string, opts Opts) (string, error) {
 	evalFunc := func(evaluator types.JsonnetEvaluator) (string, error) {
 		return evaluator.EvaluateAnonymousSnippet(data)
 	}

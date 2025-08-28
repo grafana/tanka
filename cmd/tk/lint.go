@@ -10,7 +10,7 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet"
 )
 
-func lintCmd(ctx context.Context) *cli.Command {
+func lintCmd(_ context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "lint <FILES|DIRECTORIES>",
 		Short: "lint Jsonnet code",

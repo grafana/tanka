@@ -35,7 +35,7 @@ func (s StaticLoader) Load(ctx context.Context, path string, opts LoaderOpts) (*
 	return config, nil
 }
 
-func (s StaticLoader) Peek(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+func (s StaticLoader) Peek(_ context.Context, path string, _ LoaderOpts) (*v1alpha1.Environment, error) {
 	config, err := parseStaticSpec(path)
 	if err != nil {
 		return nil, err
