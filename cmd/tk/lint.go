@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/go-clix/cli"
 	"github.com/gobwas/glob"
 	"github.com/posener/complete"
@@ -8,7 +10,7 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet"
 )
 
-func lintCmd() *cli.Command {
+func lintCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "lint <FILES|DIRECTORIES>",
 		Short: "lint Jsonnet code",

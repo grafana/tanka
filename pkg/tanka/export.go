@@ -2,6 +2,7 @@ package tanka
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -61,7 +62,7 @@ type ExportEnvOpts struct {
 	MergeDeletedEnvs []string
 }
 
-func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
+func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
 	// Keep track of which file maps to which environment
 	fileToEnv := map[string]string{}
 
@@ -87,7 +88,7 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 	}
 
 	// get all environments for paths
-	loadedEnvs, err := parallelLoadEnvironments(envs, parallelOpts{
+	loadedEnvs, err := parallelLoadEnvironments(ctx, envs, parallelOpts{
 		Opts:        opts.Opts,
 		Selector:    opts.Selector,
 		Parallelism: opts.Parallelism,
@@ -96,58 +97,64 @@ func ExportEnvironments(envs []*v1alpha1.Environment, to string, opts *ExportEnv
 		return err
 	}
 
-	for _, env := range loadedEnvs {
-		// get the manifests
-		loaded, err := LoadManifests(env, opts.Opts.Filters)
-		if err != nil {
-			return err
-		}
+	{
+		ctx, span := tracer.Start(ctx, "generateManifests")
+		defer span.End()
 
-		env := loaded.Env
-		res := loaded.Resources
-
-		// create raw manifest version of env for templating
-		env.Data = nil
-		raw, err := json.Marshal(env)
-		if err != nil {
-			return err
-		}
-		var menv manifest.Manifest
-		if err := json.Unmarshal(raw, &menv); err != nil {
-			return err
-		}
-
-		// create template
-		manifestTemplate, err := createTemplate(opts.Format, menv)
-		if err != nil {
-			return fmt.Errorf("parsing format: %s", err)
-		}
-
-		// write each to a file
-		for _, m := range res {
-			// apply template
-			name, err := applyTemplate(manifestTemplate, m)
+		// FINDING: Generating the export files takes some time. Perhaps we should parallelize this.
+		for _, env := range loadedEnvs {
+			// get the manifests
+			loaded, err := LoadManifests(ctx, env, opts.Opts.Filters)
 			if err != nil {
-				return fmt.Errorf("executing name template: %w", err)
+				return err
 			}
 
-			// Create all subfolders in path
-			relpath := name + "." + opts.Extension
-			path := filepath.Join(to, relpath)
+			env := loaded.Env
+			res := loaded.Resources
 
-			fileToEnv[relpath] = env.Metadata.Namespace
-
-			// Abort if already exists
-			if exists, err := fileExists(path); err != nil {
+			// create raw manifest version of env for templating
+			env.Data = nil
+			raw, err := json.Marshal(env)
+			if err != nil {
 				return err
-			} else if exists {
-				return fmt.Errorf("file '%s' already exists. Aborting", path)
+			}
+			var menv manifest.Manifest
+			if err := json.Unmarshal(raw, &menv); err != nil {
+				return err
 			}
 
-			// Write manifest
-			data := m.String()
-			if err := writeExportFile(path, []byte(data)); err != nil {
-				return err
+			// create template
+			manifestTemplate, err := createTemplate(opts.Format, menv)
+			if err != nil {
+				return fmt.Errorf("parsing format: %s", err)
+			}
+
+			// write each to a file
+			for _, m := range res {
+				// apply template
+				name, err := applyTemplate(manifestTemplate, m)
+				if err != nil {
+					return fmt.Errorf("executing name template: %w", err)
+				}
+
+				// Create all subfolders in path
+				relpath := name + "." + opts.Extension
+				path := filepath.Join(to, relpath)
+
+				fileToEnv[relpath] = env.Metadata.Namespace
+
+				// Abort if already exists
+				if exists, err := fileExists(path); err != nil {
+					return err
+				} else if exists {
+					return fmt.Errorf("file '%s' already exists. Aborting", path)
+				}
+
+				// Write manifest
+				data := m.String()
+				if err := writeExportFile(path, []byte(data)); err != nil {
+					return err
+				}
 			}
 		}
 	}

@@ -30,7 +30,7 @@ func TestEvalJsonnet(t *testing.T) {
 
 	// This will fail intermittently if TLAs are passed as positional
 	// parameters.
-	json, err := evalJsonnet("testdata/cases/withtlas", jsonnetImpl, opts)
+	json, err := evalJsonnet(t.Context(), "testdata/cases/withtlas", jsonnetImpl, opts)
 	assert.NoError(t, err)
 	assert.Equal(t, `"foovalue"`, strings.TrimSpace(json))
 }
@@ -46,7 +46,7 @@ func TestEvalJsonnetWithExpression(t *testing.T) {
 
 			// This will fail intermittently if TLAs are passed as positional
 			// parameters.
-			json, err := evalJsonnet("testdata/cases/object", jsonnetImpl, opts)
+			json, err := evalJsonnet(t.Context(), "testdata/cases/object", jsonnetImpl, opts)
 			assert.NoError(t, err)
 			assert.Equal(t, `"object"`, strings.TrimSpace(json))
 		})
@@ -59,7 +59,7 @@ func TestEvalWithOptionalTlas(t *testing.T) {
 	opts := jsonnet.Opts{
 		EvalScript: "main.metadata.name",
 	}
-	json, err := evalJsonnet("testdata/cases/with-optional-tlas/main.jsonnet", jsonnetImpl, opts)
+	json, err := evalJsonnet(t.Context(), "testdata/cases/with-optional-tlas/main.jsonnet", jsonnetImpl, opts)
 	assert.NoError(t, err)
 	assert.Equal(t, `"bar-baz"`, strings.TrimSpace(json))
 }
@@ -71,7 +71,7 @@ func TestEvalWithOptionalTlasSpecifiedArg2(t *testing.T) {
 		EvalScript: "main.metadata.name",
 		TLACode:    jsonnet.InjectedCode{"baz": "'changed'"},
 	}
-	json, err := evalJsonnet("testdata/cases/with-optional-tlas/main.jsonnet", jsonnetImpl, opts)
+	json, err := evalJsonnet(t.Context(), "testdata/cases/with-optional-tlas/main.jsonnet", jsonnetImpl, opts)
 	assert.NoError(t, err)
 	assert.Equal(t, `"bar-changed"`, strings.TrimSpace(json))
 }
@@ -82,7 +82,7 @@ func TestEvalFunctionWithNoTlas(t *testing.T) {
 	opts := jsonnet.Opts{
 		EvalScript: "main.metadata.name",
 	}
-	json, err := evalJsonnet("testdata/cases/function-with-zero-params/main.jsonnet", jsonnetImpl, opts)
+	json, err := evalJsonnet(t.Context(), "testdata/cases/function-with-zero-params/main.jsonnet", jsonnetImpl, opts)
 	assert.NoError(t, err)
 	assert.Equal(t, `"inline"`, strings.TrimSpace(json))
 }
@@ -94,7 +94,7 @@ func TestInvalidTlaArg(t *testing.T) {
 		EvalScript: "main",
 		TLACode:    jsonnet.InjectedCode{"foo": "'bar'"},
 	}
-	json, err := evalJsonnet("testdata/cases/function-with-zero-params/main.jsonnet", jsonnetImpl, opts)
+	json, err := evalJsonnet(t.Context(), "testdata/cases/function-with-zero-params/main.jsonnet", jsonnetImpl, opts)
 	assert.Contains(t, err.Error(), "function has no parameter foo")
 	assert.Equal(t, "", json)
 }
@@ -106,7 +106,7 @@ func TestTlaWithNonFunction(t *testing.T) {
 		EvalScript: "main",
 		TLACode:    jsonnet.InjectedCode{"foo": "'bar'"},
 	}
-	json, err := evalJsonnet("testdata/cases/withenv/main.jsonnet", jsonnetImpl, opts)
+	json, err := evalJsonnet(t.Context(), "testdata/cases/withenv/main.jsonnet", jsonnetImpl, opts)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, json)
 }

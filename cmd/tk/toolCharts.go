@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,7 +14,7 @@ import (
 
 const repoConfigFlagUsage = "specify a local helm repository config file to use instead of the repositories in the chartfile.yaml. For use with private repositories"
 
-func chartsCmd() *cli.Command {
+func chartsCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "charts",
 		Short: "Declarative vendoring of Helm Charts",

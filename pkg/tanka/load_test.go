@@ -147,7 +147,7 @@ func TestLoad(t *testing.T) {
 
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
-			l, err := Load(test.baseDir, Opts{})
+			l, err := Load(t.Context(), test.baseDir, Opts{})
 			require.NoError(t, err)
 
 			assert.Equal(t, test.expected, l.Resources)
@@ -158,24 +158,24 @@ func TestLoad(t *testing.T) {
 
 func TestLoadSelectEnvironment(t *testing.T) {
 	// No match
-	_, err := Load("./testdata/cases/multiple-inline-envs", Opts{Name: "no match"})
+	_, err := Load(t.Context(), "./testdata/cases/multiple-inline-envs", Opts{Name: "no match"})
 	assert.EqualError(t, err, "found no matching environments; run 'tk env list ./testdata/cases/multiple-inline-envs' to view available options")
 
 	// Empty options, match all environments
-	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{})
+	_, err = Load(t.Context(), "./testdata/cases/multiple-inline-envs", Opts{})
 	assert.EqualError(t, err, "found multiple Environments in \"./testdata/cases/multiple-inline-envs\". Use `--name` to select a single one: \n - project1-env1\n - project1-env2\n - project2-env1")
 
 	// Partial match two environments
-	_, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "env1"})
+	_, err = Load(t.Context(), "./testdata/cases/multiple-inline-envs", Opts{Name: "env1"})
 	assert.EqualError(t, err, "found multiple Environments in \"./testdata/cases/multiple-inline-envs\" matching \"env1\". Provide a more specific name that matches a single one: \n - project1-env1\n - project2-env1")
 
 	// Partial match
-	result, err := Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project2"})
+	result, err := Load(t.Context(), "./testdata/cases/multiple-inline-envs", Opts{Name: "project2"})
 	assert.NoError(t, err)
 	assert.Equal(t, "project2-env1", result.Env.Metadata.Name)
 
 	// Full match
-	result, err = Load("./testdata/cases/multiple-inline-envs", Opts{Name: "project1-env1"})
+	result, err = Load(t.Context(), "./testdata/cases/multiple-inline-envs", Opts{Name: "project1-env1"})
 	assert.NoError(t, err)
 	assert.Equal(t, "project1-env1", result.Env.Metadata.Name)
 }
@@ -190,16 +190,16 @@ func TestLoadEnvironmentFallbackToName(t *testing.T) {
 	defer func() { require.NoError(t, os.Chdir(cwd)) }()
 
 	// Partial match two environments
-	_, err = Load("env1", Opts{})
+	_, err = Load(t.Context(), "env1", Opts{})
 	assert.EqualError(t, err, "found multiple Environments in \".\" matching \"env1\". Provide a more specific name that matches a single one: \n - project1-env1\n - project2-env1")
 
 	// Partial match
-	result, err := Load("project2", Opts{})
+	result, err := Load(t.Context(), "project2", Opts{})
 	require.NoError(t, err)
 	assert.Equal(t, "project2-env1", result.Env.Metadata.Name)
 
 	// Full match
-	result, err = Load("project1-env1", Opts{})
+	result, err = Load(t.Context(), "project1-env1", Opts{})
 	require.NoError(t, err)
 	assert.Equal(t, "project1-env1", result.Env.Metadata.Name)
 }
@@ -207,13 +207,13 @@ func TestLoadEnvironmentFallbackToName(t *testing.T) {
 func TestLoadSelectEnvironmentFullMatchHasPriority(t *testing.T) {
 	// `base` matches both `base` and `base-and-more`
 	// However, the full match should win
-	result, err := Load("./testdata/cases/inline-name-conflict", Opts{Name: "base"})
+	result, err := Load(t.Context(), "./testdata/cases/inline-name-conflict", Opts{Name: "base"})
 	assert.NoError(t, err)
 	assert.Equal(t, "base", result.Env.Metadata.Name)
 }
 
 func TestLoadFailsWhenBothSpecAndInline(t *testing.T) {
-	_, err := Load("./testdata/cases/static-and-inline", Opts{Name: "inline"})
+	_, err := Load(t.Context(), "./testdata/cases/static-and-inline", Opts{Name: "inline"})
 	assert.EqualError(t, err, "found a tanka Environment resource. Check that you aren't using a spec.json and inline environments simultaneously")
 }
 

@@ -1,6 +1,7 @@
 package jsonnet
 
 import (
+	"context"
 	"os"
 	"regexp"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 
+	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -79,21 +81,34 @@ func (o Opts) Clone() Opts {
 // EvaluateFile evaluates the Jsonnet code in the given file and returns the
 // result in JSON form. It disregards opts.ImportPaths in favor of automatically
 // resolving these according to the specified file.
-func EvaluateFile(impl types.JsonnetImplementation, jsonnetFile string, opts Opts) (string, error) {
+func EvaluateFile(ctx context.Context, impl types.JsonnetImplementation, jsonnetFile string, opts Opts) (string, error) {
+	ctx, span := tracer.Start(ctx, "jsonnet.EvaluateFile")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrPath(jsonnetFile))
+
 	evalFunc := func(evaluator types.JsonnetEvaluator) (string, error) {
 		return evaluator.EvaluateFile(jsonnetFile)
 	}
 	data, err := os.ReadFile(jsonnetFile)
 	if err != nil {
+		telemetry.FailSpanWithError(span, err)
 		return "", err
 	}
-	return evaluateSnippet(impl, evalFunc, jsonnetFile, string(data), opts)
+	output, err := evaluateSnippet(impl, evalFunc, jsonnetFile, string(data), opts)
+	if err != nil {
+		telemetry.FailSpanWithError(span, err)
+	}
+	return output, err
 }
 
 // Evaluate renders the given jsonnet into a string
 // If cache options are given, a hash from the data will be computed and
 // the resulting string will be cached for future retrieval
-func Evaluate(path string, impl types.JsonnetImplementation, data string, opts Opts) (string, error) {
+func Evaluate(ctx context.Context, path string, impl types.JsonnetImplementation, data string, opts Opts) (string, error) {
+	ctx, span := tracer.Start(ctx, "jsonnet.Evaluate")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrPath(path))
+
 	evalFunc := func(evaluator types.JsonnetEvaluator) (string, error) {
 		return evaluator.EvaluateAnonymousSnippet(data)
 	}

@@ -21,7 +21,7 @@ type findImportersTestCase struct {
 }
 
 func (tc findImportersTestCase) run(t testing.TB) {
-	importers, err := FindImporterForFiles("testdata/findImporters", tc.files)
+	importers, err := FindImporterForFiles(t.Context(), "testdata/findImporters", tc.files)
 
 	if tc.expectedErr != nil {
 		require.EqualError(t, err, tc.expectedErr.Error())
@@ -248,7 +248,7 @@ func TestFindImportersForFiles(t *testing.T) {
 		if filepath.Base(file) != jpath.DefaultEntrypoint {
 			continue
 		}
-		_, err := EvaluateFile(jsonnetImpl, file, Opts{})
+		_, err := EvaluateFile(t.Context(), jsonnetImpl, file, Opts{})
 		require.NoError(t, err, "failed to eval %s", file)
 	}
 
@@ -299,7 +299,7 @@ testdata/findImporters/lib/lib1/subfolder/test.libsonnet: 0
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			count, err := CountImporters("testdata/findImporters", tc.dir, tc.recursive, tc.fileRegexp)
+			count, err := CountImporters(t.Context(), "testdata/findImporters", tc.dir, tc.recursive, tc.fileRegexp)
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, count)
 		})
@@ -319,7 +319,7 @@ func BenchmarkFindImporters(b *testing.B) {
 		importersCache = make(map[string][]string)
 		jsonnetFilesCache = make(map[string]map[string]*cachedJsonnetFile)
 		symlinkCache = make(map[string]string)
-		importers, err := FindImporterForFiles(tempDir, []string{filepath.Join(tempDir, "file10.libsonnet")})
+		importers, err := FindImporterForFiles(b.Context(), tempDir, []string{filepath.Join(tempDir, "file10.libsonnet")})
 
 		require.NoError(b, err)
 		require.Equal(b, expectedImporters, importers)

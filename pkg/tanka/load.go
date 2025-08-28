@@ -1,11 +1,13 @@
 package tanka
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/binary"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/goimpl"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
@@ -17,6 +19,7 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // environmentExtCode is the extCode ID `tk.env` uses underneath
@@ -25,13 +28,13 @@ const environmentExtCode = spec.APIGroup + "/environment"
 
 // Load loads the Environment at `path`. It automatically detects whether to
 // load inline or statically
-func Load(path string, opts Opts) (*LoadResult, error) {
-	env, err := LoadEnvironment(path, opts)
+func Load(ctx context.Context, path string, opts Opts) (*LoadResult, error) {
+	env, err := LoadEnvironment(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := LoadManifests(env, opts.Filters)
+	result, err := LoadManifests(ctx, env, opts.Filters)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +48,11 @@ func Load(path string, opts Opts) (*LoadResult, error) {
 	return result, nil
 }
 
-func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
+func LoadEnvironment(ctx context.Context, path string, opts Opts) (*v1alpha1.Environment, error) {
+	ctx, span := tracer.Start(ctx, "tanka.LoadEnvironment")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrPath(path), attribute.String("tanka.nameFilter", opts.Name))
+
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		log.Info().Msgf("Path %q does not exist, trying to use it as an environment name", path)
@@ -60,7 +67,7 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 		return nil, err
 	}
 
-	env, err := loader.Load(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	env, err := loader.Load(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +75,11 @@ func LoadEnvironment(path string, opts Opts) (*v1alpha1.Environment, error) {
 	return env, nil
 }
 
-func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
+func LoadManifests(ctx context.Context, env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
+	_, span := tracer.Start(ctx, "tanka.LoadManifests")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrEnv(env)...)
+
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}
@@ -83,25 +94,32 @@ func LoadManifests(env *v1alpha1.Environment, filters process.Matchers) (*LoadRe
 
 // Peek loads the metadata of the environment at path. To get resources as well,
 // use Load
-func Peek(path string, opts Opts) (*v1alpha1.Environment, error) {
+func Peek(ctx context.Context, path string, opts Opts) (*v1alpha1.Environment, error) {
+	ctx, span := tracer.Start(ctx, "tanka.Peek")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrPath(path))
+
 	loader, err := DetectLoader(path, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	return loader.Peek(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.Peek(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
 // List finds metadata of all environments at path that could possibly be
 // loaded. List can be used to deal with multiple inline environments, by first
 // listing them, choosing the right one and then only loading that one
-func List(path string, opts Opts) ([]*v1alpha1.Environment, error) {
+func List(ctx context.Context, path string, opts Opts) ([]*v1alpha1.Environment, error) {
+	ctx, span := tracer.Start(ctx, "tanka.Peek")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrPath(path))
 	loader, err := DetectLoader(path, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	return loader.List(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.List(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
 func getJsonnetImplementation(path string, opts Opts) (types.JsonnetImplementation, error) {
@@ -133,13 +151,16 @@ func getJsonnetImplementation(path string, opts Opts) (types.JsonnetImplementati
 }
 
 // Eval returns the raw evaluated Jsonnet
-func Eval(path string, opts Opts) (interface{}, error) {
+func Eval(ctx context.Context, path string, opts Opts) (interface{}, error) {
+	ctx, span := tracer.Start(ctx, "tanka.Eval")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrPath(path))
 	loader, err := DetectLoader(path, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	return loader.Eval(path, LoaderOpts{opts.JsonnetOpts, opts.Name})
+	return loader.Eval(ctx, path, LoaderOpts{opts.JsonnetOpts, opts.Name})
 }
 
 // DetectLoader detects whether the environment is inline or static and picks
@@ -173,22 +194,29 @@ func DetectLoader(path string, opts Opts) (Loader, error) {
 // Loader is an abstraction over the process of loading Environments
 type Loader interface {
 	// Load a single environment at path
-	Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error)
+	Load(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error)
 
 	// Peek only loads metadata and omits the actual resources
-	Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error)
+	Peek(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error)
 
 	// List returns metadata of all possible environments at path that can be
 	// loaded
-	List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error)
+	List(ctx context.Context, path string, opts LoaderOpts) ([]*v1alpha1.Environment, error)
 
 	// Eval returns the raw evaluated Jsonnet
-	Eval(path string, opts LoaderOpts) (interface{}, error)
+	Eval(ctx context.Context, path string, opts LoaderOpts) (interface{}, error)
 }
 
 type LoaderOpts struct {
 	JsonnetOpts
 	Name string
+}
+
+func OTELAttrFromLoaderOpts(opts *LoaderOpts) []attribute.KeyValue {
+	result := make([]attribute.KeyValue, 0, 2)
+	result = append(result, attribute.String("tanka.loader.options.name", opts.Name))
+	result = append(result, attribute.String("tanka.loader.options.cache_path", opts.CachePath))
+	return result
 }
 
 type LoadResult struct {

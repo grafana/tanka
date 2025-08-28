@@ -1,8 +1,10 @@
 package tanka
 
 import (
+	"context"
 	"encoding/json"
 
+	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet/implementations/types"
 	"github.com/grafana/tanka/pkg/spec"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -15,13 +17,18 @@ type StaticLoader struct {
 	jsonnetImpl types.JsonnetImplementation
 }
 
-func (s StaticLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
-	config, err := s.Peek(path, opts)
+func (s StaticLoader) Load(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+	ctx, span := tracer.Start(ctx, "staticLoader.Load")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrPath(path))
+	span.SetAttributes(OTELAttrFromLoaderOpts(&opts)...)
+
+	config, err := s.Peek(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := s.Eval(path, opts)
+	data, err := s.Eval(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +37,12 @@ func (s StaticLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment,
 	return config, nil
 }
 
-func (s StaticLoader) Peek(path string, _ LoaderOpts) (*v1alpha1.Environment, error) {
+func (s StaticLoader) Peek(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+	ctx, span := tracer.Start(ctx, "staticLoader.Peek")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrPath(path))
+	span.SetAttributes(OTELAttrFromLoaderOpts(&opts)...)
+
 	config, err := parseStaticSpec(path)
 	if err != nil {
 		return nil, err
@@ -39,8 +51,13 @@ func (s StaticLoader) Peek(path string, _ LoaderOpts) (*v1alpha1.Environment, er
 	return config, nil
 }
 
-func (s StaticLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
-	env, err := s.Peek(path, opts)
+func (s StaticLoader) List(ctx context.Context, path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
+	ctx, span := tracer.Start(ctx, "staticLoader.List")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrPath(path))
+	span.SetAttributes(OTELAttrFromLoaderOpts(&opts)...)
+
+	env, err := s.Peek(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -48,8 +65,13 @@ func (s StaticLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environmen
 	return []*v1alpha1.Environment{env}, nil
 }
 
-func (s *StaticLoader) Eval(path string, opts LoaderOpts) (interface{}, error) {
-	config, err := s.Peek(path, opts)
+func (s *StaticLoader) Eval(ctx context.Context, path string, opts LoaderOpts) (interface{}, error) {
+	ctx, span := tracer.Start(ctx, "staticLoader.Eval")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrPath(path))
+	span.SetAttributes(OTELAttrFromLoaderOpts(&opts)...)
+
+	config, err := s.Peek(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +82,7 @@ func (s *StaticLoader) Eval(path string, opts LoaderOpts) (interface{}, error) {
 	}
 	opts.ExtCode.Set(environmentExtCode, envCode)
 
-	raw, err := evalJsonnet(path, s.jsonnetImpl, opts.JsonnetOpts)
+	raw, err := evalJsonnet(ctx, path, s.jsonnetImpl, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}

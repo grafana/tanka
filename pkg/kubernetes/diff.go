@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Masterminds/semver"
@@ -12,7 +13,9 @@ import (
 )
 
 // Diff takes the desired state and returns the differences from the cluster
-func (k *Kubernetes) Diff(state manifest.List, opts DiffOpts) (*string, error) {
+func (k *Kubernetes) Diff(ctx context.Context, state manifest.List, opts DiffOpts) (*string, error) {
+	ctx, span := tracer.Start(ctx, "kubernetes.Diff")
+	span.End()
 	// prevent https://github.com/kubernetes/kubernetes/issues/89762 until fixed
 	if k.ctl.Info().ClientVersion.Equal(semver.MustParse("1.18.0")) {
 		return nil, fmt.Errorf(`you seem to be using kubectl 1.18.0, which contains an unfixed issue

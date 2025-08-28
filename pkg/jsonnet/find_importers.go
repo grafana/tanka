@@ -1,6 +1,7 @@
 package jsonnet
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,7 +9,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var (
@@ -27,9 +30,14 @@ type cachedJsonnetFile struct {
 // FindImporterForFiles finds the entrypoints (main.jsonnet files) that import the given files.
 // It looks through imports transitively, so if a file is imported through a chain, it will still be reported.
 // If the given file is a main.jsonnet file, it will be returned as well.
-func FindImporterForFiles(root string, files []string) ([]string, error) {
+func FindImporterForFiles(ctx context.Context, root string, files []string) ([]string, error) {
+	ctx, span := tracer.Start(ctx, "jsonnet.FindImporterForFiles")
+	defer span.End()
+
+	span.SetAttributes(attribute.StringSlice("tanka.files", files))
 	transitiveImporters, err := FindTransitiveImportersForFile(root, files)
 	if err != nil {
+		telemetry.FailSpanWithError(span, err)
 		return nil, err
 	}
 
@@ -97,10 +105,14 @@ func FindTransitiveImportersForFile(root string, files []string) ([]string, erro
 }
 
 // CountImporters lists all the files in the given directory and for each file counts the number of environments that import it.
-func CountImporters(root string, dir string, recursive bool, filenameRegexStr string) (string, error) {
+func CountImporters(ctx context.Context, root string, dir string, recursive bool, filenameRegexStr string) (string, error) {
+	ctx, span := tracer.Start(ctx, "jsonnet.CountImporters")
+	defer span.End()
 	root, err := filepath.Abs(root)
 	if err != nil {
-		return "", fmt.Errorf("resolving root: %w", err)
+		err = fmt.Errorf("resolving root: %w", err)
+		telemetry.FailSpanWithError(span, err)
+		return "", err
 	}
 
 	if filenameRegexStr == "" {
@@ -108,7 +120,9 @@ func CountImporters(root string, dir string, recursive bool, filenameRegexStr st
 	}
 	filenameRegexp, err := regexp.Compile(filenameRegexStr)
 	if err != nil {
-		return "", fmt.Errorf("compiling filename regex: %w", err)
+		err = fmt.Errorf("compiling filename regex: %w", err)
+		telemetry.FailSpanWithError(span, err)
+		return "", err
 	}
 	var files []string
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -141,14 +155,18 @@ func CountImporters(root string, dir string, recursive bool, filenameRegexStr st
 		return nil
 	})
 	if err != nil {
-		return "", fmt.Errorf("walking directory: %w", err)
+		err = fmt.Errorf("walking directory: %w", err)
+		telemetry.FailSpanWithError(span, err)
+		return "", err
 	}
 
 	importers := map[string]int{}
 	for _, file := range files {
-		importersList, err := FindImporterForFiles(root, []string{file})
+		importersList, err := FindImporterForFiles(ctx, root, []string{file})
 		if err != nil {
-			return "", fmt.Errorf("resolving imports: %w", err)
+			err = fmt.Errorf("resolving imports: %w", err)
+			telemetry.FailSpanWithError(span, err)
+			return "", err
 		}
 		importers[file] = len(importersList)
 	}

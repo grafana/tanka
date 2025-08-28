@@ -9,6 +9,7 @@ import (
 
 	"github.com/Masterminds/semver"
 
+	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/process"
 )
@@ -30,6 +31,8 @@ type Opts struct {
 // defaultDevVersion is the placeholder version used when no actual semver is
 // provided using ldflags
 const defaultDevVersion = "dev"
+
+var tracer = telemetry.Tracer("tanka")
 
 // CurrentVersion is the current version of the running Tanka code
 var CurrentVersion = defaultDevVersion

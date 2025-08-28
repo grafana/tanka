@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sort"
@@ -13,18 +14,18 @@ import (
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
-func statusCmd() *cli.Command {
+func statusCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "status <path>",
 		Short: "display an overview of the environment, including contents and metadata.",
-		Args:  workflowArgs,
+		Args:  generateWorkflowArgs(ctx),
 	}
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
-		status, err := tanka.Status(args[0], tanka.Opts{
+		status, err := tanka.Status(ctx, args[0], tanka.Opts{
 			JsonnetImplementation: vars.jsonnetImplementation,
 			JsonnetOpts:           getJsonnetOpts(),
 			Name:                  vars.name,
