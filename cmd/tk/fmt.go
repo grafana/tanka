@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -15,7 +16,7 @@ import (
 // ArgStdin is the "magic" argument for reading from stdin
 const ArgStdin = "-"
 
-func fmtCmd() *cli.Command {
+func fmtCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "fmt <FILES|DIRECTORIES>",
 		Short: "format Jsonnet code",
@@ -31,6 +32,8 @@ func fmtCmd() *cli.Command {
 	verbose := cmd.Flags().BoolP("verbose", "v", false, "print each checked file")
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		_, span := tracer.Start(ctx, "fmtCmd")
+		defer span.End()
 		if len(args) == 1 && args[0] == ArgStdin {
 			return fmtStdin(*test)
 		}

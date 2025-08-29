@@ -1,6 +1,7 @@
 package jsonnet
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
@@ -22,7 +23,7 @@ import (
 var importsRegexp = regexp.MustCompile(`import(str)?\s+['"]([^'"%()]+)['"]`)
 
 // TransitiveImports returns all recursive imports of an environment
-func TransitiveImports(dir string) ([]string, error) {
+func TransitiveImports(_ context.Context, dir string) ([]string, error) {
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err

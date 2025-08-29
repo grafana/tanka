@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -16,7 +17,7 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 )
 
-func toolCmd() *cli.Command {
+func toolCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Short: "handy utilities for working with jsonnet",
 		Use:   "tool [command]",
@@ -25,20 +26,20 @@ func toolCmd() *cli.Command {
 
 	addCommandsWithLogLevelOption(
 		cmd,
-		jpathCmd(),
-		importsCmd(),
-		importersCmd(),
-		importersCountCmd(),
-		chartsCmd(),
+		jpathCmd(ctx),
+		importsCmd(ctx),
+		importersCmd(ctx),
+		importersCountCmd(ctx),
+		chartsCmd(ctx),
 	)
 	return cmd
 }
 
-func jpathCmd() *cli.Command {
+func jpathCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Short: "export JSONNET_PATH for use with other jsonnet tools",
 		Use:   "jpath <file/dir>",
-		Args:  workflowArgs,
+		Args:  generateWorkflowArgs(ctx),
 	}
 
 	debug := cmd.Flags().BoolP("debug", "d", false, "show debug info")
@@ -73,16 +74,19 @@ func jpathCmd() *cli.Command {
 	return cmd
 }
 
-func importsCmd() *cli.Command {
+func importsCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "imports <path>",
 		Short: "list all transitive imports of an environment",
-		Args:  workflowArgs,
+		Args:  generateWorkflowArgs(ctx),
 	}
 
 	check := cmd.Flags().StringP("check", "c", "", "git commit hash to check against")
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		ctx, span := tracer.Start(ctx, "importsCmd")
+		defer span.End()
+
 		var modFiles []string
 		if *check != "" {
 			var err error
@@ -97,7 +101,7 @@ func importsCmd() *cli.Command {
 			return fmt.Errorf("loading environment: %s", err)
 		}
 
-		deps, err := jsonnet.TransitiveImports(path)
+		deps, err := jsonnet.TransitiveImports(ctx, path)
 		if err != nil {
 			return fmt.Errorf("resolving imports: %s", err)
 		}
@@ -136,7 +140,7 @@ func importsCmd() *cli.Command {
 	return cmd
 }
 
-func importersCmd() *cli.Command {
+func importersCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "importers <file> <file...> <deleted:file...>",
 		Short: "list all environments that either directly or transitively import the given files",
@@ -158,6 +162,9 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 
 	root := cmd.Flags().String("root", ".", "root directory to search for environments")
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		ctx, span := tracer.Start(ctx, "importersCmd")
+		defer span.End()
+
 		root, err := filepath.Abs(*root)
 		if err != nil {
 			return fmt.Errorf("resolving root: %w", err)
@@ -172,7 +179,7 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 			}
 		}
 
-		envs, err := jsonnet.FindImporterForFiles(root, args)
+		envs, err := jsonnet.FindImporterForFiles(ctx, root, args)
 		if err != nil {
 			return fmt.Errorf("resolving imports: %s", err)
 		}
@@ -185,7 +192,7 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 	return cmd
 }
 
-func importersCountCmd() *cli.Command {
+func importersCountCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "importers-count <dir>",
 		Short: "for each file in the given directory, list the number of environments that import it",
@@ -209,6 +216,8 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 	filenameRegex := cmd.Flags().String("filename-regex", "", "only count files that match the given regex. Matches only jsonnet files by default")
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		ctx, span := tracer.Start(ctx, "importersCountCmd")
+		defer span.End()
 		dir := args[0]
 
 		root, err := filepath.Abs(*root)
@@ -216,7 +225,7 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 			return fmt.Errorf("resolving root: %w", err)
 		}
 
-		result, err := jsonnet.CountImporters(root, dir, *recursive, *filenameRegex)
+		result, err := jsonnet.CountImporters(ctx, root, dir, *recursive, *filenameRegex)
 		if err != nil {
 			return fmt.Errorf("resolving imports: %s", err)
 		}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -69,11 +70,11 @@ func validateAutoApprove(autoApproveDeprecated bool, autoApproveString string) (
 	return result, nil
 }
 
-func applyCmd() *cli.Command {
+func applyCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "apply <path>",
 		Short: "apply the configuration to the cluster",
-		Args:  workflowArgs,
+		Args:  generateWorkflowArgs(ctx),
 		Predictors: complete.Flags{
 			"color":          colorValues,
 			"diff-strategy":  cli.PredictSet("native", "subset", "validate", "server", "none"),
@@ -96,6 +97,8 @@ func applyCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		ctx, span := tracer.Start(ctx, "applyCmd")
+		defer span.End()
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
 			return err
@@ -116,16 +119,16 @@ func applyCmd() *cli.Command {
 		opts.Name = vars.name
 		opts.JsonnetImplementation = vars.jsonnetImplementation
 
-		return tanka.Apply(args[0], opts)
+		return tanka.Apply(ctx, args[0], opts)
 	}
 	return cmd
 }
 
-func pruneCmd() *cli.Command {
+func pruneCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "prune <path>",
 		Short: "delete resources removed from Jsonnet",
-		Args:  workflowArgs,
+		Args:  generateWorkflowArgs(ctx),
 		Predictors: complete.Flags{
 			"color": colorValues,
 		},
@@ -142,6 +145,8 @@ func pruneCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		ctx, span := tracer.Start(ctx, "pruneCmd")
+		defer span.End()
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
 			return err
@@ -155,17 +160,17 @@ func pruneCmd() *cli.Command {
 
 		opts.JsonnetOpts = getJsonnetOpts()
 
-		return tanka.Prune(args[0], opts)
+		return tanka.Prune(ctx, args[0], opts)
 	}
 
 	return cmd
 }
 
-func deleteCmd() *cli.Command {
+func deleteCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "delete <path>",
 		Short: "delete the environment from cluster",
-		Args:  workflowArgs,
+		Args:  generateWorkflowArgs(ctx),
 		Predictors: complete.Flags{
 			"color": colorValues,
 		},
@@ -183,6 +188,8 @@ func deleteCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		ctx, span := tracer.Start(ctx, "deleteCmd")
+		defer span.End()
 		err := validateDryRun(opts.DryRun)
 		if err != nil {
 			return err
@@ -203,16 +210,16 @@ func deleteCmd() *cli.Command {
 		opts.Name = vars.name
 		opts.JsonnetImplementation = vars.jsonnetImplementation
 
-		return tanka.Delete(args[0], opts)
+		return tanka.Delete(ctx, args[0], opts)
 	}
 	return cmd
 }
 
-func diffCmd() *cli.Command {
+func diffCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "diff <path>",
 		Short: "differences between the configuration and the cluster",
-		Args:  workflowArgs,
+		Args:  generateWorkflowArgs(ctx),
 		Predictors: complete.Flags{
 			"color":         colorValues,
 			"diff-strategy": cli.PredictSet("native", "subset", "validate", "server"),
@@ -230,6 +237,8 @@ func diffCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		ctx, span := tracer.Start(ctx, "diffCmd")
+		defer span.End()
 		if err := setForceColor(&opts.DiffBaseOpts); err != nil {
 			return err
 		}
@@ -242,7 +251,7 @@ func diffCmd() *cli.Command {
 		opts.Name = vars.name
 		opts.JsonnetImplementation = vars.jsonnetImplementation
 
-		changes, err := tanka.Diff(args[0], opts)
+		changes, err := tanka.Diff(ctx, args[0], opts)
 		if err != nil {
 			return err
 		}
@@ -261,6 +270,7 @@ func diffCmd() *cli.Command {
 		if opts.ExitZero {
 			exitStatusDiff = ExitStatusClean
 		}
+		span.End()
 		os.Exit(exitStatusDiff)
 		return nil
 	}
@@ -268,11 +278,11 @@ func diffCmd() *cli.Command {
 	return cmd
 }
 
-func showCmd() *cli.Command {
+func showCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "show <path>",
 		Short: "jsonnet as yaml",
-		Args:  workflowArgs,
+		Args:  generateWorkflowArgs(ctx),
 	}
 
 	allowRedirectFlag := cmd.Flags().Bool("dangerous-allow-redirect", false, "allow redirecting output to a file or a pipe.")
@@ -281,6 +291,8 @@ func showCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		ctx, span := tracer.Start(ctx, "showCmd")
+		defer span.End()
 		allowRedirectEnv := os.Getenv("TANKA_DANGEROUS_ALLOW_REDIRECT") == "true"
 		allowRedirect := allowRedirectEnv || *allowRedirectFlag
 
@@ -300,7 +312,7 @@ to bypass this check.`)
 			return err
 		}
 
-		pretty, err := tanka.Show(args[0], tanka.Opts{
+		pretty, err := tanka.Show(ctx, args[0], tanka.Opts{
 			JsonnetOpts:           getJsonnetOpts(),
 			Filters:               filters,
 			Name:                  vars.name,

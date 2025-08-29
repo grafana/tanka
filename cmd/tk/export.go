@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -13,8 +14,8 @@ import (
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
-func exportCmd() *cli.Command {
-	args := workflowArgs
+func exportCmd(ctx context.Context) *cli.Command {
+	args := generateWorkflowArgs(ctx)
 	args.Validator = cli.ArgsMin(2)
 
 	cmd := &cli.Command{
@@ -49,6 +50,9 @@ func exportCmd() *cli.Command {
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		ctx, span := tracer.Start(ctx, "exportCmd")
+		defer span.End()
+
 		// Allocate a block of memory to alter GC behaviour. See https://github.com/golang/go/issues/23044
 		ballast := make([]byte, *ballastBytes)
 		defer runtime.KeepAlive(ballast)
@@ -89,7 +93,7 @@ func exportCmd() *cli.Command {
 		// find possible environments
 		if *recursive {
 			// get absolute path to Environment
-			envs, err := tanka.FindEnvsFromPaths(args[1:], tanka.FindOpts{Selector: opts.Selector, Parallelism: opts.Parallelism, JsonnetOpts: opts.Opts.JsonnetOpts})
+			envs, err := tanka.FindEnvsFromPaths(ctx, args[1:], tanka.FindOpts{Selector: opts.Selector, Parallelism: opts.Parallelism, JsonnetOpts: opts.Opts.JsonnetOpts})
 			if err != nil {
 				return err
 			}
@@ -106,7 +110,7 @@ func exportCmd() *cli.Command {
 			}
 
 			// validate environment
-			env, err := tanka.Peek(args[1], opts.Opts)
+			env, err := tanka.Peek(ctx, args[1], opts.Opts)
 			if err != nil {
 				switch err.(type) {
 				case tanka.ErrMultipleEnvs:
@@ -121,7 +125,7 @@ func exportCmd() *cli.Command {
 		}
 
 		// export them
-		return tanka.ExportEnvironments(exportEnvs, args[0], &opts)
+		return tanka.ExportEnvironments(ctx, exportEnvs, args[0], &opts)
 	}
 	return cmd
 }

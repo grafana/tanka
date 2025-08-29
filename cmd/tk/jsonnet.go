@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/go-clix/cli"
@@ -8,11 +9,11 @@ import (
 	"github.com/grafana/tanka/pkg/tanka"
 )
 
-func evalCmd() *cli.Command {
+func evalCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Short: "evaluate the jsonnet to json",
 		Use:   "eval <path>",
-		Args:  workflowArgs,
+		Args:  generateWorkflowArgs(ctx),
 	}
 
 	var jsonnetImplementation string
@@ -29,7 +30,7 @@ func evalCmd() *cli.Command {
 		if *evalPattern != "" {
 			jsonnetOpts.EvalScript = tanka.PatternEvalScript(*evalPattern)
 		}
-		raw, err := tanka.Eval(args[0], jsonnetOpts)
+		raw, err := tanka.Eval(ctx, args[0], jsonnetOpts)
 
 		if raw == nil && err != nil {
 			return err

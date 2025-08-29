@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/posener/complete"
 
+	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -21,7 +23,7 @@ import (
 	"github.com/grafana/tanka/pkg/term"
 )
 
-func envCmd() *cli.Command {
+func envCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "env [action]",
 		Short: "manipulate environments",
@@ -30,10 +32,10 @@ func envCmd() *cli.Command {
 
 	addCommandsWithLogLevelOption(
 		cmd,
-		envAddCmd(),
-		envSetCmd(),
-		envListCmd(),
-		envRemoveCmd(),
+		envAddCmd(ctx),
+		envSetCmd(ctx),
+		envListCmd(ctx),
+		envRemoveCmd(ctx),
 	)
 
 	return cmd
@@ -46,11 +48,11 @@ var kubectlContexts = cli.PredictFunc(
 	},
 )
 
-func envSetCmd() *cli.Command {
+func envSetCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "set <path>",
 		Short: "update properties of an environment",
-		Args:  workflowArgs,
+		Args:  generateWorkflowArgs(ctx),
 		Predictors: complete.Flags{
 			"server-from-context": kubectlContexts,
 		},
@@ -65,6 +67,8 @@ func envSetCmd() *cli.Command {
 	_ = cmd.Flags().MarkHidden("name")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		_, span := tracer.Start(ctx, "envSetCmd")
+		defer span.End()
 		if *name != "" {
 			return fmt.Errorf("it looks like you attempted to rename the environment using `--name`. However, this is not possible with Tanka, because the environments name is inferred from the directories name. To rename the environment, rename its directory instead")
 		}
@@ -82,7 +86,7 @@ func envSetCmd() *cli.Command {
 			tmp.Spec.APIServer = server
 		}
 
-		cfg, err := tanka.Peek(path, tanka.Opts{})
+		cfg, err := tanka.Peek(ctx, path, tanka.Opts{})
 		if err != nil {
 			return err
 		}
@@ -119,7 +123,7 @@ func envSetCmd() *cli.Command {
 	return cmd
 }
 
-func envAddCmd() *cli.Command {
+func envAddCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "add <path>",
 		Short: "create a new environment",
@@ -130,6 +134,8 @@ func envAddCmd() *cli.Command {
 	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
+		_, span := tracer.Start(ctx, "envAddCmd")
+		defer span.End()
 		if cmd.Flags().Changed("server-from-context") {
 			server, err := client.IPFromContext(cfg.Spec.APIServer)
 			if err != nil {
@@ -200,13 +206,15 @@ func addEnv(dir string, cfg *v1alpha1.Environment, inline bool) error {
 	return nil
 }
 
-func envRemoveCmd() *cli.Command {
+func envRemoveCmd(ctx context.Context) *cli.Command {
 	return &cli.Command{
 		Use:     "remove <path>",
 		Aliases: []string{"rm"},
 		Short:   "delete an environment",
-		Args:    workflowArgs,
+		Args:    generateWorkflowArgs(ctx),
 		Run: func(_ *cli.Command, args []string) error {
+			_, span := tracer.Start(ctx, "envRemoveCmd")
+			defer span.End()
 			for _, arg := range args {
 				path, err := filepath.Abs(arg)
 				if err != nil {
@@ -225,8 +233,8 @@ func envRemoveCmd() *cli.Command {
 	}
 }
 
-func envListCmd() *cli.Command {
-	args := workflowArgs
+func envListCmd(ctx context.Context) *cli.Command {
+	args := generateWorkflowArgs(ctx)
 	args.Validator = cli.ArgsRange(0, 1)
 
 	cmd := &cli.Command{
@@ -246,6 +254,9 @@ func envListCmd() *cli.Command {
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		ctx, span := tracer.Start(ctx, "envListCmd")
+		defer span.End()
+
 		var path string
 		var err error
 		if len(args) == 1 {
@@ -257,8 +268,9 @@ func envListCmd() *cli.Command {
 			}
 		}
 
-		envs, err := tanka.FindEnvs(path, tanka.FindOpts{JsonnetImplementation: jsonnetImplementation, Selector: getLabelSelector(), JsonnetOpts: getJsonnetOpts()})
+		envs, err := tanka.FindEnvs(ctx, path, tanka.FindOpts{JsonnetImplementation: jsonnetImplementation, Selector: getLabelSelector(), JsonnetOpts: getJsonnetOpts()})
 		if err != nil {
+			telemetry.FailSpanWithError(span, err)
 			return err
 		}
 		sort.SliceStable(envs, func(i, j int) bool { return envs[i].Metadata.Name < envs[j].Metadata.Name })
@@ -266,7 +278,9 @@ func envListCmd() *cli.Command {
 		if *useJSON {
 			j, err := json.Marshal(envs)
 			if err != nil {
-				return fmt.Errorf("formatting as json: %s", err)
+				err = fmt.Errorf("formatting as json: %s", err)
+				telemetry.FailSpanWithError(span, err)
+				return err
 			}
 			fmt.Println(string(j))
 			return nil

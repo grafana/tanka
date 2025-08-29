@@ -104,6 +104,10 @@ export default defineConfig({
               label: 'Server-Side Apply',
               link: '/server-side-apply',
             },
+            {
+              label: 'Telemetry',
+              link: '/telemetry',
+            },
           ],
         },
         {

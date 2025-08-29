@@ -50,7 +50,7 @@ func TestExportEnvironments(t *testing.T) {
 	defer func() { require.NoError(t, os.Chdir("..")) }()
 
 	// Find envs
-	envs, err := FindEnvs("test-export-envs", FindOpts{Selector: labels.Everything()})
+	envs, err := FindEnvs(t.Context(), "test-export-envs", FindOpts{Selector: labels.Everything()})
 	require.NoError(t, err)
 
 	// Export all envs
@@ -62,7 +62,7 @@ func TestExportEnvironments(t *testing.T) {
 		"deploymentName": "'initial-deployment'",
 		"serviceName":    "'initial-service'",
 	}
-	require.NoError(t, ExportEnvironments(envs, tempDir, opts))
+	require.NoError(t, ExportEnvironments(t.Context(), envs, tempDir, opts))
 	checkFiles(t, tempDir, []string{
 		filepath.Join(tempDir, "inline-namespace1", "my-configmap.yaml"),
 		filepath.Join(tempDir, "inline-namespace1", "my-deployment.yaml"),
@@ -86,11 +86,11 @@ func TestExportEnvironments(t *testing.T) {
 }`)
 
 	// Try to re-export
-	assert.EqualError(t, ExportEnvironments(envs, tempDir, opts), fmt.Sprintf("output dir `%s` not empty. Pass a different --merge-strategy to ignore this", tempDir))
+	assert.EqualError(t, ExportEnvironments(t.Context(), envs, tempDir, opts), fmt.Sprintf("output dir `%s` not empty. Pass a different --merge-strategy to ignore this", tempDir))
 
 	// Try to re-export with the --merge-strategy=fail-on-conflicts flag. Will still fail because Tanka will not overwrite manifests silently
 	opts.MergeStrategy = ExportMergeStrategyFailConflicts
-	assert.ErrorContains(t, ExportEnvironments(envs, tempDir, opts), "already exists. Aborting")
+	assert.ErrorContains(t, ExportEnvironments(t.Context(), envs, tempDir, opts), "already exists. Aborting")
 
 	// Re-export only one env with --merge-stategy=replace-envs flag
 	opts.Opts.ExtCode = jsonnet.InjectedCode{
@@ -98,9 +98,9 @@ func TestExportEnvironments(t *testing.T) {
 		"serviceName":    "'updated-service'",
 	}
 	opts.MergeStrategy = ExportMergeStrategyReplaceEnvs
-	staticEnv, err := FindEnvs("test-export-envs", FindOpts{Selector: labels.SelectorFromSet(labels.Set{"type": "static"})})
+	staticEnv, err := FindEnvs(t.Context(), "test-export-envs", FindOpts{Selector: labels.SelectorFromSet(labels.Set{"type": "static"})})
 	require.NoError(t, err)
-	require.NoError(t, ExportEnvironments(staticEnv, tempDir, opts))
+	require.NoError(t, ExportEnvironments(t.Context(), staticEnv, tempDir, opts))
 	checkFiles(t, tempDir, []string{
 		filepath.Join(tempDir, "inline-namespace1", "my-configmap.yaml"),
 		filepath.Join(tempDir, "inline-namespace1", "my-deployment.yaml"),
@@ -129,7 +129,7 @@ func TestExportEnvironments(t *testing.T) {
 		"serviceName":    "'updated-again-service'",
 	}
 	opts.MergeDeletedEnvs = []string{"test-export-envs/inline-envs/main.jsonnet"}
-	require.NoError(t, ExportEnvironments(staticEnv, tempDir, opts))
+	require.NoError(t, ExportEnvironments(t.Context(), staticEnv, tempDir, opts))
 	checkFiles(t, tempDir, []string{
 		filepath.Join(tempDir, "static", "updated-again-deployment.yaml"),
 		filepath.Join(tempDir, "static", "updated-again-service.yaml"),
@@ -149,7 +149,7 @@ func TestExportEnvironmentsBroken(t *testing.T) {
 	defer func() { require.NoError(t, os.Chdir("..")) }()
 
 	// Find envs
-	envs, err := FindEnvs("test-export-envs-broken", FindOpts{Selector: labels.Everything()})
+	envs, err := FindEnvs(t.Context(), "test-export-envs-broken", FindOpts{Selector: labels.Everything()})
 	require.NoError(t, err)
 
 	// Export all envs
@@ -159,7 +159,7 @@ func TestExportEnvironmentsBroken(t *testing.T) {
 	}
 
 	var schemaError *manifest.SchemaError
-	require.ErrorAs(t, ExportEnvironments(envs, tempDir, opts), &schemaError)
+	require.ErrorAs(t, ExportEnvironments(t.Context(), envs, tempDir, opts), &schemaError)
 }
 
 func BenchmarkExportEnvironmentsWithReplaceEnvs(b *testing.B) {
@@ -169,7 +169,7 @@ func BenchmarkExportEnvironmentsWithReplaceEnvs(b *testing.B) {
 	defer func() { require.NoError(b, os.Chdir("..")) }()
 
 	// Find envs
-	envs, err := FindEnvs("test-export-envs", FindOpts{Selector: labels.Everything()})
+	envs, err := FindEnvs(b.Context(), "test-export-envs", FindOpts{Selector: labels.Everything()})
 	require.NoError(b, err)
 
 	// Export all envs
@@ -183,12 +183,12 @@ func BenchmarkExportEnvironmentsWithReplaceEnvs(b *testing.B) {
 		"serviceName":    "'initial-service'",
 	}
 	// Export a first time so that the benchmark loops are identical
-	require.NoError(b, ExportEnvironments(envs, tempDir, opts))
+	require.NoError(b, ExportEnvironments(b.Context(), envs, tempDir, opts))
 
 	// On every loop, delete manifests from previous envs + reexport all envs
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		require.NoError(b, ExportEnvironments(envs, tempDir, opts), "failed on iteration %d", i)
+		require.NoError(b, ExportEnvironments(b.Context(), envs, tempDir, opts), "failed on iteration %d", i)
 	}
 }
 

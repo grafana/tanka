@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,7 +14,7 @@ import (
 
 const repoConfigFlagUsage = "specify a local helm repository config file to use instead of the repositories in the chartfile.yaml. For use with private repositories"
 
-func chartsCmd() *cli.Command {
+func chartsCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "charts",
 		Short: "Declarative vendoring of Helm Charts",
@@ -22,18 +23,18 @@ func chartsCmd() *cli.Command {
 
 	addCommandsWithLogLevelOption(
 		cmd,
-		chartsInitCmd(),
-		chartsAddCmd(),
-		chartsAddRepoCmd(),
-		chartsVendorCmd(),
-		chartsConfigCmd(),
-		chartsVersionCheckCmd(),
+		chartsInitCmd(ctx),
+		chartsAddCmd(ctx),
+		chartsAddRepoCmd(ctx),
+		chartsVendorCmd(ctx),
+		chartsConfigCmd(ctx),
+		chartsVersionCheckCmd(ctx),
 	)
 
 	return cmd
 }
 
-func chartsVendorCmd() *cli.Command {
+func chartsVendorCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "vendor",
 		Short: "Download Charts to a local folder",
@@ -42,6 +43,8 @@ func chartsVendorCmd() *cli.Command {
 	repoConfigPath := cmd.Flags().String("repository-config", "", repoConfigFlagUsage)
 
 	cmd.Run = func(_ *cli.Command, _ []string) error {
+		_, span := tracer.Start(ctx, "chartsVendorCmd")
+		defer span.End()
 		c, err := loadChartfile()
 		if err != nil {
 			return err
@@ -53,7 +56,7 @@ func chartsVendorCmd() *cli.Command {
 	return cmd
 }
 
-func chartsAddCmd() *cli.Command {
+func chartsAddCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "add [chart@version] [...]",
 		Short: "Adds Charts to the chartfile",
@@ -61,6 +64,8 @@ func chartsAddCmd() *cli.Command {
 	repoConfigPath := cmd.Flags().String("repository-config", "", repoConfigFlagUsage)
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		_, span := tracer.Start(ctx, "chartsVendorCmd")
+		defer span.End()
 		c, err := loadChartfile()
 		if err != nil {
 			return err
@@ -72,7 +77,7 @@ func chartsAddCmd() *cli.Command {
 	return cmd
 }
 
-func chartsAddRepoCmd() *cli.Command {
+func chartsAddRepoCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "add-repo [NAME] [URL]",
 		Short: "Adds a repository to the chartfile",
@@ -80,6 +85,8 @@ func chartsAddRepoCmd() *cli.Command {
 	}
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
+		_, span := tracer.Start(ctx, "chartsVendorCmd")
+		defer span.End()
 		c, err := loadChartfile()
 		if err != nil {
 			return err
@@ -94,13 +101,15 @@ func chartsAddRepoCmd() *cli.Command {
 	return cmd
 }
 
-func chartsConfigCmd() *cli.Command {
+func chartsConfigCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "config",
 		Short: "Displays the current manifest",
 	}
 
 	cmd.Run = func(_ *cli.Command, _ []string) error {
+		_, span := tracer.Start(ctx, "chartsVendorCmd")
+		defer span.End()
 		c, err := loadChartfile()
 		if err != nil {
 			return err
@@ -119,13 +128,15 @@ func chartsConfigCmd() *cli.Command {
 	return cmd
 }
 
-func chartsInitCmd() *cli.Command {
+func chartsInitCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "init",
 		Short: "Create a new Chartfile",
 	}
 
 	cmd.Run = func(_ *cli.Command, _ []string) error {
+		_, span := tracer.Start(ctx, "chartsVendorCmd")
+		defer span.End()
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
@@ -147,7 +158,7 @@ func chartsInitCmd() *cli.Command {
 	return cmd
 }
 
-func chartsVersionCheckCmd() *cli.Command {
+func chartsVersionCheckCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "version-check",
 		Short: "Check required charts for updated versions",
@@ -156,6 +167,8 @@ func chartsVersionCheckCmd() *cli.Command {
 	prettyPrint := cmd.Flags().Bool("pretty-print", false, "pretty print json output with indents")
 
 	cmd.Run = func(_ *cli.Command, _ []string) error {
+		_, span := tracer.Start(ctx, "chartsVendorCmd")
+		defer span.End()
 		c, err := loadChartfile()
 		if err != nil {
 			return err

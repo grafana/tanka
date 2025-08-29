@@ -15,7 +15,7 @@ func BenchmarkFindEnvsFromSinglePath(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		envs, err := FindEnvs(tempDir, FindOpts{})
+		envs, err := FindEnvs(b.Context(), tempDir, FindOpts{})
 		require.Len(b, envs, 200)
 		require.NoError(b, err)
 	}
@@ -27,7 +27,7 @@ func BenchmarkFindEnvsFromPaths(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		envs, err := FindEnvsFromPaths(envPaths, FindOpts{})
+		envs, err := FindEnvsFromPaths(b.Context(), envPaths, FindOpts{})
 		require.Len(b, envs, 200)
 		require.NoError(b, err)
 	}

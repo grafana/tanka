@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -21,25 +22,29 @@ type InlineLoader struct {
 	jsonnetImpl types.JsonnetImplementation
 }
 
-func (i *InlineLoader) Load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+func (i *InlineLoader) Name() string {
+	return "inline"
+}
+
+func (i *InlineLoader) Load(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
 	if opts.Name != "" {
 		opts.JsonnetOpts.EvalScript = fmt.Sprintf(SingleEnvEvalScript, opts.Name)
 	}
-	return i.load(path, opts)
+	return i.load(ctx, path, opts)
 }
 
-func (i *InlineLoader) Peek(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+func (i *InlineLoader) Peek(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
 	opts.JsonnetOpts.EvalScript = MetadataEvalScript
 	if opts.Name != "" {
 		opts.JsonnetOpts.EvalScript = fmt.Sprintf(MetadataSingleEnvEvalScript, opts.Name)
 	}
-	env, err := i.load(path, opts)
+	env, err := i.load(ctx, path, opts)
 	return env, err
 }
 
 // abstracted out as Peek and Load need different JsonnetOpts
-func (i *InlineLoader) load(path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
-	data, err := i.Eval(path, opts)
+func (i *InlineLoader) load(ctx context.Context, path string, opts LoaderOpts) (*v1alpha1.Environment, error) {
+	data, err := i.Eval(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -84,9 +89,9 @@ func (i *InlineLoader) load(path string, opts LoaderOpts) (*v1alpha1.Environment
 	return env, nil
 }
 
-func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
+func (i *InlineLoader) List(ctx context.Context, path string, opts LoaderOpts) ([]*v1alpha1.Environment, error) {
 	opts.JsonnetOpts.EvalScript = MetadataEvalScript
-	data, err := i.Eval(path, opts)
+	data, err := i.Eval(ctx, path, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -114,11 +119,11 @@ func (i *InlineLoader) List(path string, opts LoaderOpts) ([]*v1alpha1.Environme
 	return envs, nil
 }
 
-func (i *InlineLoader) Eval(path string, opts LoaderOpts) (interface{}, error) {
+func (i *InlineLoader) Eval(ctx context.Context, path string, opts LoaderOpts) (interface{}, error) {
 	// Can't provide env as extVar, as we need to evaluate Jsonnet first to know it
 	opts.ExtCode.Set(environmentExtCode, `error "Using tk.env and std.extVar('tanka.dev/environment') is only supported for static environments. Directly access this data using standard Jsonnet instead."`)
 
-	raw, err := evalJsonnet(path, i.jsonnetImpl, opts.JsonnetOpts)
+	raw, err := evalJsonnet(ctx, path, i.jsonnetImpl, opts.JsonnetOpts)
 	if err != nil {
 		return nil, err
 	}

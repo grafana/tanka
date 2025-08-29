@@ -1,6 +1,7 @@
 package tanka
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -17,9 +18,9 @@ type PruneOpts struct {
 
 // Prune deletes all resources from the cluster, that are no longer present in
 // Jsonnet. It uses the `tanka.dev/environment` label to identify those.
-func Prune(baseDir string, opts PruneOpts) error {
+func Prune(ctx context.Context, baseDir string, opts PruneOpts) error {
 	// parse jsonnet, init k8s client
-	p, err := Load(baseDir, opts.Opts)
+	p, err := Load(ctx, baseDir, opts.Opts)
 	if err != nil {
 		return err
 	}

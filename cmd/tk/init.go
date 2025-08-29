@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -15,7 +16,7 @@ import (
 const defaultK8sVersion = "1.29"
 
 // initCmd creates a new application
-func initCmd() *cli.Command {
+func initCmd(ctx context.Context) *cli.Command {
 	cmd := &cli.Command{
 		Use:   "init",
 		Short: "Create the directory structure",
@@ -27,6 +28,8 @@ func initCmd() *cli.Command {
 	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
 	cmd.Run = func(_ *cli.Command, _ []string) error {
+		_, span := tracer.Start(ctx, "initCmd")
+		defer span.End()
 		failed := false
 
 		files, err := os.ReadDir(".")

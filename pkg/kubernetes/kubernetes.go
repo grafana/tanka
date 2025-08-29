@@ -3,10 +3,13 @@ package kubernetes
 import (
 	"github.com/Masterminds/semver"
 
+	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
+
+var tracer = telemetry.Tracer("kubernetes")
 
 // Kubernetes exposes methods to work with the Kubernetes orchestrator
 type Kubernetes struct {

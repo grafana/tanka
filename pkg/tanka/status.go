@@ -1,6 +1,8 @@
 package tanka
 
 import (
+	"context"
+
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -16,8 +18,8 @@ type Info struct {
 }
 
 // Status returns information about the particular environment
-func Status(baseDir string, opts Opts) (*Info, error) {
-	r, err := Load(baseDir, opts)
+func Status(ctx context.Context, baseDir string, opts Opts) (*Info, error) {
+	r, err := Load(ctx, baseDir, opts)
 	if err != nil {
 		return nil, err
 	}
