@@ -7,7 +7,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/go-clix/cli"
-	"github.com/posener/complete"
+	"github.com/posener/complete/v2"
 
 	"github.com/grafana/tanka/pkg/process"
 	"github.com/grafana/tanka/pkg/tanka"
