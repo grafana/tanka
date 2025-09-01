@@ -118,6 +118,5 @@ func LoadEnvironmentCarrier() propagation.TextMapCarrier {
 	carrier.Set("baggage", os.Getenv("BAGGAGE"))
 	carrier.Set("traceparent", os.Getenv("TRACEPARENT"))
 	carrier.Set("tracestate", os.Getenv("TRACESTATE"))
-	fmt.Println(carrier)
 	return carrier
 }
