@@ -2,6 +2,20 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.34.1](https://github.com/grafana/tanka/compare/v0.34.0...v0.34.1) (2025-09-01)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update dependency astro to v5.13.5 ([#1600](https://github.com/grafana/tanka/issues/1600)) ([d3eb55e](https://github.com/grafana/tanka/commit/d3eb55e3a647e31f76a3db188edf201b2b696970))
+* **deps:** update module github.com/spf13/pflag to v1.0.8 ([#1603](https://github.com/grafana/tanka/issues/1603)) ([4a2314f](https://github.com/grafana/tanka/commit/4a2314ffdfe7a791e7f0c57c3c1ed15ff7d23fe9))
+* remove debug print of carrier in otel.go ([#1606](https://github.com/grafana/tanka/issues/1606)) ([4a6d929](https://github.com/grafana/tanka/commit/4a6d9295d229c6fdd79022102e6c0e6c9b2b2395))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dagger/dagger-for-github action to v8.1.0 ([#1601](https://github.com/grafana/tanka/issues/1601)) ([ad9a3d1](https://github.com/grafana/tanka/commit/ad9a3d1d075d0ff7e0b2c1dc512b493ec055f651))
+
 ## [0.34.0](https://github.com/grafana/tanka/compare/v0.33.0...v0.34.0) (2025-08-29)
 
 
