@@ -176,6 +176,12 @@ func manifestSingleEnv(ctx context.Context, work *v1alpha1.Environment, to strin
 	res := loaded.Resources
 
 	span.SetAttributes(attribute.Int("tanka.env.num_resources", len(res)))
+
+	// If there is no thing to process then we can skip the rest.
+	if len(res) == 0 {
+		return fileToEnv, nil
+	}
+
 	// create raw manifest version of env for templating
 	env.Data = nil
 	raw, err := json.Marshal(env)
