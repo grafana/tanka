@@ -76,11 +76,7 @@ func LoadEnvironment(ctx context.Context, path string, opts Opts) (*v1alpha1.Env
 	return env, nil
 }
 
-func LoadManifests(ctx context.Context, env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
-	_, span := tracer.Start(ctx, "tanka.LoadManifests")
-	defer span.End()
-	span.SetAttributes(telemetry.AttrEnv(env)...)
-
+func LoadManifests(_ context.Context, env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}

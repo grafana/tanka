@@ -10,11 +10,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/attribute"
+	"golang.org/x/sync/errgroup"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/internal/telemetry"
@@ -71,6 +74,7 @@ func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to st
 
 	// Keep track of which file maps to which environment
 	fileToEnv := map[string]string{}
+	fileToEnvLock := sync.Mutex{}
 
 	// dir must be empty
 	empty, err := dirEmpty(to)
@@ -93,79 +97,130 @@ func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to st
 		return fmt.Errorf("deleting previously exported manifests from deleted environments: %w", err)
 	}
 
+	parallelism := opts.Parallelism
+
+	if parallelism <= 0 {
+		parallelism = defaultParallelism
+	}
+
+	if parallelism > len(envs) {
+		parallelism = len(envs)
+	}
+
 	// get all environments for paths
 	loadedEnvs, err := parallelLoadEnvironments(ctx, envs, parallelOpts{
 		Opts:        opts.Opts,
 		Selector:    opts.Selector,
-		Parallelism: opts.Parallelism,
+		Parallelism: parallelism,
 	})
 	if err != nil {
 		return err
 	}
 
-	{
-		ctx, span := tracer.Start(ctx, "generateManifests")
-		defer span.End()
+	// Similar to the parallel loader, we're going to split all that up
+	// into multiple routines that handle manifest loading and writing
+	grp, ctx := errgroup.WithContext(ctx)
 
-		// FINDING: Generating the export files takes some time. Perhaps we should parallelize this.
-		for _, env := range loadedEnvs {
-			// get the manifests
-			loaded, err := LoadManifests(ctx, env, opts.Opts.Filters)
-			if err != nil {
-				return err
-			}
+	envsToManifest := make(chan *v1alpha1.Environment, parallelism)
 
-			env := loaded.Env
-			res := loaded.Resources
+	for range parallelism {
+		grp.Go(func() error {
+			ctx, span := tracer.Start(ctx, "manifestsGenerateWorker")
+			defer span.End()
 
-			// create raw manifest version of env for templating
-			env.Data = nil
-			raw, err := json.Marshal(env)
-			if err != nil {
-				return err
-			}
-			var menv manifest.Manifest
-			if err := json.Unmarshal(raw, &menv); err != nil {
-				return err
-			}
-
-			// create template
-			manifestTemplate, err := createTemplate(opts.Format, menv)
-			if err != nil {
-				return fmt.Errorf("parsing format: %s", err)
-			}
-
-			// write each to a file
-			for _, m := range res {
-				// apply template
-				name, err := applyTemplate(manifestTemplate, m)
+			for work := range envsToManifest {
+				localFileToEnv, err := manifestSingleEnv(ctx, work, to, opts)
 				if err != nil {
-					return fmt.Errorf("executing name template: %w", err)
-				}
-
-				// Create all subfolders in path
-				relpath := name + "." + opts.Extension
-				path := filepath.Join(to, relpath)
-
-				fileToEnv[relpath] = env.Metadata.Namespace
-
-				// Abort if already exists
-				if exists, err := fileExists(path); err != nil {
-					return err
-				} else if exists {
-					return fmt.Errorf("file '%s' already exists. Aborting", path)
-				}
-
-				// Write manifest
-				data := m.String()
-				if err := writeExportFile(path, []byte(data)); err != nil {
 					return err
 				}
+
+				fileToEnvLock.Lock()
+				for name, namespace := range localFileToEnv {
+					fileToEnv[name] = namespace
+				}
+				fileToEnvLock.Unlock()
+
 			}
+			return nil
+		})
+	}
+
+	grp.Go(func() error {
+		for _, env := range loadedEnvs {
+			envsToManifest <- env
 		}
+		close(envsToManifest)
+		return nil
+	})
+
+	if err := grp.Wait(); err != nil {
+		return err
 	}
 
 	return exportManifestFile(to, fileToEnv, nil)
+}
+
+func manifestSingleEnv(ctx context.Context, work *v1alpha1.Environment, to string, opts *ExportEnvOpts) (map[string]string, error) {
+	ctx, span := tracer.Start(ctx, "manifestSingleEnv")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrEnv(work)...)
+
+	fileToEnv := make(map[string]string)
+
+	loaded, err := LoadManifests(ctx, work, opts.Opts.Filters)
+	if err != nil {
+		return nil, err
+	}
+
+	env := loaded.Env
+	res := loaded.Resources
+
+	span.SetAttributes(attribute.Int("tanka.env.num_resources", len(res)))
+	// create raw manifest version of env for templating
+	env.Data = nil
+	raw, err := json.Marshal(env)
+	if err != nil {
+		return nil, err
+	}
+	var menv manifest.Manifest
+	if err := json.Unmarshal(raw, &menv); err != nil {
+		return nil, err
+	}
+
+	// create template
+	manifestTemplate, err := createTemplate(ctx, opts.Format, menv)
+	if err != nil {
+		return nil, fmt.Errorf("parsing format: %s", err)
+	}
+
+	// write each to a file
+	for _, m := range res {
+		// apply template
+		name, err := applyTemplate(ctx, manifestTemplate, m)
+		if err != nil {
+			return nil, fmt.Errorf("executing name template: %w", err)
+		}
+
+		// Create all subfolders in path
+		relpath := name + "." + opts.Extension
+		path := filepath.Join(to, relpath)
+
+		fileToEnv[relpath] = env.Metadata.Namespace
+
+		// Abort if already exists
+		if exists, err := fileExists(path); err != nil {
+			return nil, err
+		} else if exists {
+			return nil, fmt.Errorf("file '%s' already exists. Aborting", path)
+		}
+
+		// Write manifest
+		data := m.String()
+		if err := writeExportFile(path, []byte(data)); err != nil {
+			return nil, err
+		}
+	}
+	return fileToEnv, nil
 }
 
 func fileExists(name string) (bool, error) {
@@ -284,7 +339,7 @@ func writeExportFile(path string, data []byte) error {
 	return os.WriteFile(path, data, 0644)
 }
 
-func createTemplate(format string, env manifest.Manifest) (*template.Template, error) {
+func createTemplate(_ context.Context, format string, env manifest.Manifest) (*template.Template, error) {
 	// Replace all os.path separators in string with BelRune for creating subfolders
 	replaceFormat := replaceTmplText(format, string(os.PathSeparator), BelRune)
 
@@ -318,7 +373,7 @@ func replaceTmplText(s, oldString, newString string) string {
 	return strings.Join(parts, "")
 }
 
-func applyTemplate(template *template.Template, m manifest.Manifest) (path string, err error) {
+func applyTemplate(_ context.Context, template *template.Template, m manifest.Manifest) (path string, err error) {
 	buf := bytes.Buffer{}
 	if err := template.Execute(&buf, m); err != nil {
 		return "", err
