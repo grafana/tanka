@@ -72,10 +72,6 @@ func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to st
 
 	span.SetAttributes(telemetry.AttrNumEnvs(len(envs)))
 
-	// Keep track of which file maps to which environment
-	fileToEnv := map[string]string{}
-	fileToEnvLock := sync.Mutex{}
-
 	// dir must be empty
 	empty, err := dirEmpty(to)
 	if err != nil {
@@ -117,6 +113,21 @@ func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to st
 		return err
 	}
 
+	fileToEnv, err := manifestEnvironments(ctx, loadedEnvs, parallelism, to, opts)
+	if err != nil {
+		return err
+	}
+
+	return exportManifestFile(to, fileToEnv, nil)
+}
+
+func manifestEnvironments(ctx context.Context, loadedEnvs []*v1alpha1.Environment, parallelism int, to string, opts *ExportEnvOpts) (map[string]string, error) {
+	ctx, span := tracer.Start(ctx, "tanka.manifestEnvironments")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrNumEnvs(len(loadedEnvs)))
+	fileToEnv := map[string]string{}
+	fileToEnvLock := sync.Mutex{}
+
 	// Similar to the parallel loader, we're going to split all that up
 	// into multiple routines that handle manifest loading and writing
 	grp, ctx := errgroup.WithContext(ctx)
@@ -154,14 +165,14 @@ func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to st
 	})
 
 	if err := grp.Wait(); err != nil {
-		return err
+		return nil, err
 	}
 
-	return exportManifestFile(to, fileToEnv, nil)
+	return fileToEnv, nil
 }
 
 func manifestSingleEnv(ctx context.Context, work *v1alpha1.Environment, to string, opts *ExportEnvOpts) (map[string]string, error) {
-	ctx, span := tracer.Start(ctx, "manifestSingleEnv")
+	ctx, span := tracer.Start(ctx, "tanka.manifestSingleEnv")
 	defer span.End()
 	span.SetAttributes(telemetry.AttrEnv(work)...)
 
