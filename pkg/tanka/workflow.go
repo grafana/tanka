@@ -184,7 +184,7 @@ type DiffOpts struct {
 // NOTE: This function requires on `diff(1)` and `kubectl(1)`
 func Diff(ctx context.Context, baseDir string, opts DiffOpts) (*string, error) {
 	if opts.ListModifiedEnvs {
-		return ListChangedEnvironments(baseDir, opts)
+		return ListChangedEnvironments(ctx, baseDir, opts)
 	}
 
 	l, err := Load(ctx, baseDir, opts.Opts)
@@ -205,9 +205,9 @@ func Diff(ctx context.Context, baseDir string, opts DiffOpts) (*string, error) {
 }
 
 // ListChangedEnvironments performs a high-level check using kubectl dry-run to identify environments with changes
-func ListChangedEnvironments(baseDir string, opts DiffOpts) (*string, error) {
+func ListChangedEnvironments(ctx context.Context, baseDir string, opts DiffOpts) (*string, error) {
 	// Find all environments in the directory
-	envMetas, err := FindEnvs(baseDir, FindOpts{
+	envMetas, err := FindEnvs(ctx, baseDir, FindOpts{
 		JsonnetOpts:           opts.JsonnetOpts,
 		JsonnetImplementation: opts.JsonnetImplementation,
 		Parallelism:           8, // magic number for now
@@ -216,7 +216,7 @@ func ListChangedEnvironments(baseDir string, opts DiffOpts) (*string, error) {
 		return nil, err
 	}
 
-	changed := CheckEnvironmentsForChanges(envMetas, opts)
+	changed := CheckEnvironmentsForChanges(ctx, envMetas, opts)
 	if len(changed) == 0 {
 		return nil, nil
 	}
@@ -226,7 +226,7 @@ func ListChangedEnvironments(baseDir string, opts DiffOpts) (*string, error) {
 }
 
 // CheckEnvironmentsForChanges performs a high-level parallel check using kubectl diff --exit-code
-func CheckEnvironmentsForChanges(envs []*v1alpha1.Environment, opts DiffOpts) []string {
+func CheckEnvironmentsForChanges(ctx context.Context, envs []*v1alpha1.Environment, opts DiffOpts) []string {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var changed []string
@@ -241,7 +241,7 @@ func CheckEnvironmentsForChanges(envs []*v1alpha1.Environment, opts DiffOpts) []
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
-			if hasChanges, envName := checkSingleEnvironmentChanges(env, opts); hasChanges {
+			if hasChanges, envName := checkSingleEnvironmentChanges(ctx, env, opts); hasChanges {
 				mu.Lock()
 				changed = append(changed, envName)
 				mu.Unlock()
@@ -254,7 +254,7 @@ func CheckEnvironmentsForChanges(envs []*v1alpha1.Environment, opts DiffOpts) []
 }
 
 // checkSingleEnvironmentChanges uses kubectl diff to quickly check for changes
-func checkSingleEnvironmentChanges(env *v1alpha1.Environment, opts DiffOpts) (bool, string) {
+func checkSingleEnvironmentChanges(ctx context.Context, env *v1alpha1.Environment, opts DiffOpts) (bool, string) {
 	envName := env.Spec.Namespace
 	if env.Metadata.Name != "" {
 		envName = env.Metadata.Name
@@ -266,7 +266,7 @@ func checkSingleEnvironmentChanges(env *v1alpha1.Environment, opts DiffOpts) (bo
 
 	// Use the environment's path for loading
 	envPath := env.Metadata.Namespace
-	l, err := Load(envPath, tempOpts)
+	l, err := Load(ctx, envPath, tempOpts)
 	if err != nil {
 		log.Debug().Err(err).Str("env", envName).Msg("Failed to load environment, assuming no changes")
 		return false, envName
