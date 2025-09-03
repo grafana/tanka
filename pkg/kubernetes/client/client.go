@@ -19,6 +19,9 @@ type Client interface {
 	// result in `diff(1)` format
 	DiffServerSide(data manifest.List) (*string, error)
 
+	// DiffExitCode performs kubectl diff and returns true if there are changes, false if no changes
+	DiffExitCode(data manifest.List) (bool, error)
+
 	// Delete the specified object(s) from the cluster
 	Delete(namespace, apiVersion, kind, name string, opts DeleteOpts) error
 

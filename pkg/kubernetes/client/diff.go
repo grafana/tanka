@@ -37,6 +37,41 @@ func (k Kubectl) DiffClientSide(data manifest.List) (*string, error) {
 	return k.diff(data, false)
 }
 
+// DiffExitCode performs a kubectl diff and returns true if there are changes (exit code 1), false if no changes (exit code 0)
+func (k Kubectl) DiffExitCode(data manifest.List) (bool, error) {
+	fw := FilterWriter{filters: []*regexp.Regexp{regexp.MustCompile(`exit status \d`)}}
+
+	args := []string{"-f", "-"}
+	cmd := k.ctl("diff", args...)
+
+	// Discard all output - we only care about exit code
+	cmd.Stdout = &bytes.Buffer{}
+	cmd.Stderr = &fw
+	cmd.Stdin = strings.NewReader(data.String())
+
+	err := cmd.Run()
+	exitErr, ok := err.(exitError)
+	if !ok && err != nil {
+		return false, err
+	}
+
+	if !ok {
+		// exit code 0 - no changes
+		return false, nil
+	}
+
+	switch exitErr.ExitCode() {
+	case 0:
+		// no changes
+		return false, nil
+	case 1:
+		// changes found (this is what we want to detect)
+		return true, nil
+	default:
+		return false, err
+	}
+}
+
 func (k Kubectl) diff(data manifest.List, serverSide bool) (*string, error) {
 	fw := FilterWriter{filters: []*regexp.Regexp{regexp.MustCompile(`exit status \d`)}}
 
