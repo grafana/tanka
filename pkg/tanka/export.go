@@ -150,7 +150,6 @@ func manifestEnvironments(ctx context.Context, loadedEnvs []*v1alpha1.Environmen
 					fileToEnv[name] = namespace
 				}
 				fileToEnvLock.Unlock()
-
 			}
 			return nil
 		})
