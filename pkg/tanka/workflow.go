@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 
@@ -221,6 +222,8 @@ func ListChangedEnvironments(ctx context.Context, baseDir string, opts DiffOpts)
 		return nil, nil
 	}
 
+	sort.Strings(changed)
+
 	result := strings.Join(changed, "\n")
 	return &result, nil
 }
@@ -279,7 +282,7 @@ func checkSingleEnvironmentChanges(ctx context.Context, env *v1alpha1.Environmen
 	}
 	defer kube.Close()
 
-	// Use a simple existence check - apply with dry-run=server and check exit code
+	// Use a lightweight check via `kubectl diff --exit-code`
 	hasChanges, err := kube.HasChanges(l.Resources)
 	if err != nil {
 		log.Debug().Err(err).Str("env", envName).Msg("Failed to check changes, assuming changes exist")
