@@ -44,7 +44,6 @@ func (k Kubectl) DiffExitCode(data manifest.List) (bool, error) {
 	args := []string{"-f", "-"}
 	cmd := k.ctl("diff", args...)
 
-	// Discard all output - we only care about exit code
 	cmd.Stdout = &bytes.Buffer{}
 	cmd.Stderr = &fw
 	cmd.Stdin = strings.NewReader(data.String())
@@ -62,10 +61,8 @@ func (k Kubectl) DiffExitCode(data manifest.List) (bool, error) {
 
 	switch exitErr.ExitCode() {
 	case 0:
-		// no changes
 		return false, nil
 	case 1:
-		// changes found (this is what we want to detect)
 		return true, nil
 	default:
 		return false, err
