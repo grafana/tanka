@@ -10,6 +10,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
@@ -230,29 +231,27 @@ func ListChangedEnvironments(ctx context.Context, baseDir string, opts DiffOpts)
 
 // CheckEnvironmentsForChanges performs a high-level parallel check using kubectl diff --exit-code
 func CheckEnvironmentsForChanges(ctx context.Context, envs []*v1alpha1.Environment, opts DiffOpts) []string {
-	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var changed []string
 
-	// Use a semaphore to limit concurrency to avoid overwhelming kubectl/cluster
-	semaphore := make(chan struct{}, 4)
+	g, ctx := errgroup.WithContext(ctx)
+	g.SetLimit(4)
 
 	for _, env := range envs {
-		wg.Add(1)
-		go func(env *v1alpha1.Environment) {
-			defer wg.Done()
-			semaphore <- struct{}{}
-			defer func() { <-semaphore }()
-
-			if hasChanges, envName := checkSingleEnvironmentChanges(ctx, env, opts); hasChanges {
+		envLoop := env
+		g.Go(func() error {
+			if hasChanges, envName := checkSingleEnvironmentChanges(ctx, envLoop, opts); hasChanges {
 				mu.Lock()
 				changed = append(changed, envName)
 				mu.Unlock()
 			}
-		}(env)
+			return nil
+		})
 	}
 
-	wg.Wait()
+	if err := g.Wait(); err != nil {
+		log.Warn().Err(err).Msg("Failed to check environments for changes")
+	}
 	return changed
 }
 
@@ -271,13 +270,13 @@ func checkSingleEnvironmentChanges(ctx context.Context, env *v1alpha1.Environmen
 	envPath := env.Metadata.Namespace
 	l, err := Load(ctx, envPath, tempOpts)
 	if err != nil {
-		log.Debug().Err(err).Str("env", envName).Msg("Failed to load environment, assuming no changes")
+		log.Warn().Err(err).Str("env", envName).Msg("Failed to load environment, assuming no changes")
 		return false, envName
 	}
 
 	kube, err := l.Connect()
 	if err != nil {
-		log.Debug().Err(err).Str("env", envName).Msg("Failed to connect, assuming no changes")
+		log.Warn().Err(err).Str("env", envName).Msg("Failed to connect, assuming no changes")
 		return false, envName
 	}
 	defer kube.Close()
@@ -285,7 +284,7 @@ func checkSingleEnvironmentChanges(ctx context.Context, env *v1alpha1.Environmen
 	// Use a lightweight check via `kubectl diff --exit-code`
 	hasChanges, err := kube.HasChanges(l.Resources)
 	if err != nil {
-		log.Debug().Err(err).Str("env", envName).Msg("Failed to check changes, assuming changes exist")
+		log.Warn().Err(err).Str("env", envName).Msg("Failed to check changes, assuming changes exist")
 		return true, envName
 	}
 
