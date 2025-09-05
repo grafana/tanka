@@ -136,34 +136,50 @@ func manifestEnvironments(ctx context.Context, loadedEnvs []*v1alpha1.Environmen
 
 	for range parallelism {
 		grp.Go(func() error {
-			ctx, span := tracer.Start(ctx, "manifestsGenerateWorker")
+			ctx, span := tracer.Start(ctx, "tanka.manifestsGenerateWorker")
 			defer span.End()
 
-			for work := range envsToManifest {
-				localFileToEnv, err := manifestSingleEnv(ctx, work, to, opts)
-				if err != nil {
-					return err
-				}
+			for {
+				select {
+				case <-ctx.Done():
+					telemetry.FailSpanWithError(span, ctx.Err())
+					return ctx.Err()
+				case work, ok := <-envsToManifest:
+					if !ok {
+						// Channel is empty and closed
+						return nil
+					}
+					localFileToEnv, err := manifestSingleEnv(ctx, work, to, opts)
+					if err != nil {
+						telemetry.FailSpanWithError(span, err)
+						return err
+					}
 
-				fileToEnvLock.Lock()
-				for name, namespace := range localFileToEnv {
-					fileToEnv[name] = namespace
+					fileToEnvLock.Lock()
+					for name, namespace := range localFileToEnv {
+						fileToEnv[name] = namespace
+					}
+					fileToEnvLock.Unlock()
 				}
-				fileToEnvLock.Unlock()
 			}
-			return nil
 		})
 	}
 
 	grp.Go(func() error {
 		for _, env := range loadedEnvs {
-			envsToManifest <- env
+			select {
+			case <-ctx.Done():
+				close(envsToManifest)
+				return ctx.Err()
+			case envsToManifest <- env:
+			}
 		}
 		close(envsToManifest)
 		return nil
 	})
 
 	if err := grp.Wait(); err != nil {
+		telemetry.FailSpanWithError(span, err)
 		return nil, err
 	}
 
