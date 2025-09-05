@@ -1,8 +1,6 @@
 package telemetry
 
 import (
-	"fmt"
-
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -21,6 +19,7 @@ func AttrNumEnvs(v int) attribute.KeyValue {
 
 func AttrEnv(v *v1alpha1.Environment) []attribute.KeyValue {
 	return []attribute.KeyValue{
-		attribute.String("tanka.env.id", fmt.Sprintf("%s@%s", v.Metadata.Name, v.Spec.APIServer)),
+		attribute.String("tanka.env.name", v.Metadata.Name),
+		attribute.String("tanka.env.namespace", v.Spec.Namespace),
 	}
 }
