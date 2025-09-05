@@ -2,6 +2,40 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.35.0](https://github.com/grafana/tanka/compare/v0.34.1...v0.35.0) (2025-09-05)
+
+
+### 🎉 Features
+
+* **diff:** add `list-modified-envs` flag to `tk diff` command ([#1623](https://github.com/grafana/tanka/issues/1623)) ([5033f6c](https://github.com/grafana/tanka/commit/5033f6c7e8d888fe02f18605aa6d9b676f96ca7d))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update kubernetes packages to v0.34.0 ([#1597](https://github.com/grafana/tanka/issues/1597)) ([8a1fd9e](https://github.com/grafana/tanka/commit/8a1fd9eb461b14b4a39ff54b0a8b08fa628dfdc3))
+* **deps:** update module github.com/spf13/pflag to v1.0.10 ([#1621](https://github.com/grafana/tanka/issues/1621)) ([3315d12](https://github.com/grafana/tanka/commit/3315d12135f8f59e466d49f1f99fba8adcc0a68f))
+* **deps:** update module github.com/spf13/pflag to v1.0.9 ([#1607](https://github.com/grafana/tanka/issues/1607)) ([3392089](https://github.com/grafana/tanka/commit/33920893b12d14250c6389ab8776f7c9f3dd16db))
+
+
+### 🏗️ Build System
+
+* **deps:** bump golang from `f18a072` to `f18a072` ([#1591](https://github.com/grafana/tanka/issues/1591)) ([cb12362](https://github.com/grafana/tanka/commit/cb12362afd83571be2bc3aa046ef5a0ff99f8e4f))
+* **deps:** bump the dagger-dependencies group across 1 directory with 10 updates ([#1629](https://github.com/grafana/tanka/issues/1629)) ([c7bd964](https://github.com/grafana/tanka/commit/c7bd964427d36037dbb67a64ca1c3a4dc1ebbde9))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update actions/setup-go action to v6 ([#1630](https://github.com/grafana/tanka/issues/1630)) ([e968765](https://github.com/grafana/tanka/commit/e9687659156043d4afb7c5393e724beecd84cac1))
+* **deps:** update actions/setup-node action to v5 ([#1631](https://github.com/grafana/tanka/issues/1631)) ([88954e5](https://github.com/grafana/tanka/commit/88954e5208617e37cdbc504f06565e175a05307c))
+* **deps:** update dependency go to v1.25.1 ([#1624](https://github.com/grafana/tanka/issues/1624)) ([fcd0058](https://github.com/grafana/tanka/commit/fcd005807d059874dede9f3043adde3d4864e7a7))
+* **deps:** update golang docker tag to v1.25.1 ([#1625](https://github.com/grafana/tanka/issues/1625)) ([2e975e5](https://github.com/grafana/tanka/commit/2e975e56baed78c27a2beefd1bd2676a2284ce87))
+* **deps:** update golang:1.25.1 docker digest to 76a94c4 ([#1626](https://github.com/grafana/tanka/issues/1626)) ([465d6fe](https://github.com/grafana/tanka/commit/465d6fe7c73e9d545bdaf3285d4dd65d38011dc2))
+* **deps:** update ncipollo/release-action action to v1.19.1 ([#1611](https://github.com/grafana/tanka/issues/1611)) ([a6398d4](https://github.com/grafana/tanka/commit/a6398d491c50450f2a5a581eecf5ac4c6733e3c4))
+* **deps:** update ncipollo/release-action action to v1.20.0 ([#1620](https://github.com/grafana/tanka/issues/1620)) ([c5add51](https://github.com/grafana/tanka/commit/c5add510cb95d6b838ceb2912d14bf523e0a4d5a))
+* **deps:** update pnpm to v10.15.1 ([#1609](https://github.com/grafana/tanka/issues/1609)) ([22be047](https://github.com/grafana/tanka/commit/22be0471a4c495acf6aebfc07c6c8816efd5b270))
+* **deps:** update renovatebot/github-action action to v43.0.10 ([#1610](https://github.com/grafana/tanka/issues/1610)) ([9b8aae9](https://github.com/grafana/tanka/commit/9b8aae91e27c9a9e1796e41220bf1985c0979487))
+* update otel dependencies to 1.38 ([#1619](https://github.com/grafana/tanka/issues/1619)) ([8bc7024](https://github.com/grafana/tanka/commit/8bc7024766171fd44cbeeb2878c31172d3e092db))
+
 ## [0.34.1](https://github.com/grafana/tanka/compare/v0.34.0...v0.34.1) (2025-09-01)
 
 
