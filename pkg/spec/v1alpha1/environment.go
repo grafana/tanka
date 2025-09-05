@@ -26,11 +26,11 @@ func New() *Environment {
 
 // Environment represents a set of resources in relation to its Kubernetes cluster
 type Environment struct {
-	APIVersion string      `json:"apiVersion"`
-	Kind       string      `json:"kind"`
-	Metadata   Metadata    `json:"metadata"`
-	Spec       Spec        `json:"spec"`
-	Data       interface{} `json:"data,omitempty"`
+	APIVersion string   `json:"apiVersion"`
+	Kind       string   `json:"kind"`
+	Metadata   Metadata `json:"metadata"`
+	Spec       Spec     `json:"spec"`
+	Data       any      `json:"data,omitempty"`
 }
 
 func (e Environment) NameLabel() (string, error) {
@@ -89,6 +89,13 @@ func (m Metadata) Has(label string) (exists bool) {
 // Get implements Get for labels.Labels interface
 func (m Metadata) Get(label string) (value string) {
 	return m.Labels[label]
+}
+
+func (m Metadata) Lookup(label string) (value string, exists bool) {
+	if m.Has(label) {
+		return m.Get(label), true
+	}
+	return "", false
 }
 
 // Spec defines Kubernetes properties
