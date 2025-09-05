@@ -68,3 +68,47 @@ func (e *dummyExitError) Error() string {
 func (e *dummyExitError) ExitCode() int {
 	return e.exitCode
 }
+
+func TestDiffExitCodeMapping(t *testing.T) {
+	cases := []struct {
+		name      string
+		err       error
+		expect    bool
+		expectErr bool
+	}{
+		{name: "nilErrorNoChanges", err: nil, expect: false, expectErr: false},
+		{name: "exit0NoChanges", err: &dummyExitError{exitCode: 0}, expect: false, expectErr: false},
+		{name: "exit1HasChanges", err: &dummyExitError{exitCode: 1}, expect: true, expectErr: false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var got bool
+			var err error
+
+			if exitErr, ok := tc.err.(exitError); !ok {
+				if tc.err != nil {
+					err = tc.err
+				} else {
+					got = false
+				}
+			} else {
+				switch exitErr.ExitCode() {
+				case 0:
+					got = false
+				case 1:
+					got = true
+				default:
+					err = tc.err
+				}
+			}
+
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.expect, got)
+		})
+	}
+}

@@ -100,6 +100,12 @@ Please upgrade kubectl to at least version 1.18.1`)
 	return d, nil
 }
 
+// HasChanges performs a lightweight check to determine if there are any changes
+// between the desired state and cluster using kubectl diff --exit-code (no output)
+func (k *Kubernetes) HasChanges(state manifest.List) (bool, error) {
+	return k.ctl.DiffExitCode(state)
+}
+
 type separateOpts struct {
 	namespaces map[string]bool
 	resources  client.Resources

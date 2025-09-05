@@ -4,13 +4,18 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
+	"strings"
+	"sync"
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/grafana/tanka/pkg/kubernetes"
 	"github.com/grafana/tanka/pkg/kubernetes/client"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
+	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 	"github.com/grafana/tanka/pkg/term"
 )
 
@@ -170,6 +175,8 @@ type DiffOpts struct {
 	WithPrune bool
 	// Exit with 0 even when differences are found
 	ExitZero bool
+	// List all available environments and exit
+	ListModifiedEnvs bool
 }
 
 // Diff parses the environment at the given directory (a `baseDir`) and returns
@@ -178,6 +185,10 @@ type DiffOpts struct {
 // The cluster information is retrieved from the environments `spec.json`.
 // NOTE: This function requires on `diff(1)` and `kubectl(1)`
 func Diff(ctx context.Context, baseDir string, opts DiffOpts) (*string, error) {
+	if opts.ListModifiedEnvs {
+		return ListChangedEnvironments(ctx, baseDir, opts)
+	}
+
 	l, err := Load(ctx, baseDir, opts.Opts)
 	if err != nil {
 		return nil, err
@@ -193,6 +204,91 @@ func Diff(ctx context.Context, baseDir string, opts DiffOpts) (*string, error) {
 		Strategy:  opts.Strategy,
 		WithPrune: opts.WithPrune,
 	})
+}
+
+// ListChangedEnvironments performs a high-level check using kubectl dry-run to identify environments with changes
+func ListChangedEnvironments(ctx context.Context, baseDir string, opts DiffOpts) (*string, error) {
+	// Find all environments in the directory
+	envMetas, err := FindEnvs(ctx, baseDir, FindOpts{
+		JsonnetOpts:           opts.JsonnetOpts,
+		JsonnetImplementation: opts.JsonnetImplementation,
+		Parallelism:           8, // magic number for now
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	changed := CheckEnvironmentsForChanges(ctx, envMetas, opts)
+	if len(changed) == 0 {
+		return nil, nil
+	}
+
+	sort.Strings(changed)
+
+	result := strings.Join(changed, "\n")
+	return &result, nil
+}
+
+// CheckEnvironmentsForChanges performs a high-level parallel check using kubectl diff --exit-code
+func CheckEnvironmentsForChanges(ctx context.Context, envs []*v1alpha1.Environment, opts DiffOpts) []string {
+	var mu sync.Mutex
+	var changed []string
+
+	g, ctx := errgroup.WithContext(ctx)
+	g.SetLimit(4)
+
+	for _, env := range envs {
+		envLoop := env
+		g.Go(func() error {
+			if hasChanges, envName := checkSingleEnvironmentChanges(ctx, envLoop, opts); hasChanges {
+				mu.Lock()
+				changed = append(changed, envName)
+				mu.Unlock()
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		log.Warn().Err(err).Msg("Failed to check environments for changes")
+	}
+	return changed
+}
+
+// checkSingleEnvironmentChanges uses kubectl diff to quickly check for changes
+func checkSingleEnvironmentChanges(ctx context.Context, env *v1alpha1.Environment, opts DiffOpts) (bool, string) {
+	envName := env.Spec.Namespace
+	if env.Metadata.Name != "" {
+		envName = env.Metadata.Name
+	}
+
+	// Load only this single environment to get its resources
+	tempOpts := opts.Opts
+	tempOpts.Name = env.Metadata.Name
+
+	// Use the environment's path for loading
+	envPath := env.Metadata.Namespace
+	l, err := Load(ctx, envPath, tempOpts)
+	if err != nil {
+		log.Warn().Err(err).Str("env", envName).Msg("Failed to load environment, assuming no changes")
+		return false, envName
+	}
+
+	kube, err := l.Connect()
+	if err != nil {
+		log.Warn().Err(err).Str("env", envName).Msg("Failed to connect, assuming no changes")
+		return false, envName
+	}
+	defer kube.Close()
+
+	// Use a lightweight check via `kubectl diff --exit-code`
+	hasChanges, err := kube.HasChanges(l.Resources)
+	if err != nil {
+		log.Warn().Err(err).Str("env", envName).Msg("Failed to check changes, assuming changes exist")
+		return true, envName
+	}
+
+	return hasChanges, envName
 }
 
 // DeleteOpts specify additional properties for the Delete operation

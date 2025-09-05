@@ -232,6 +232,7 @@ func diffCmd(ctx context.Context) *cli.Command {
 	cmd.Flags().BoolVarP(&opts.Summarize, "summarize", "s", false, "print summary of the differences, not the actual contents")
 	cmd.Flags().BoolVarP(&opts.WithPrune, "with-prune", "p", false, "include objects deleted from the configuration in the differences")
 	cmd.Flags().BoolVarP(&opts.ExitZero, "exit-zero", "z", false, "Exit with 0 even when differences are found.")
+	cmd.Flags().BoolVar(&opts.ListModifiedEnvs, "list-modified-envs", false, "List environments with changes")
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
@@ -257,13 +258,27 @@ func diffCmd(ctx context.Context) *cli.Command {
 		}
 
 		if changes == nil {
-			fmt.Fprintln(os.Stderr, "No differences.")
+			if opts.ListModifiedEnvs {
+				fmt.Fprintln(os.Stderr, "No environments with changes.")
+			} else {
+				fmt.Fprintln(os.Stderr, "No differences.")
+			}
 			os.Exit(ExitStatusClean)
 		}
 
-		r := term.Colordiff(*changes)
-		if err := fPageln(r); err != nil {
-			return err
+		// For special modes, print output directly without color processing
+		if opts.ListModifiedEnvs {
+			fmt.Print(*changes)
+		} else {
+			r := term.Colordiff(*changes)
+			if err := fPageln(r); err != nil {
+				return err
+			}
+		}
+
+		// For --list-modified-envs, always exit with success code
+		if opts.ListModifiedEnvs {
+			os.Exit(ExitStatusClean)
 		}
 
 		exitStatusDiff := ExitStatusDiff
