@@ -132,7 +132,9 @@ func manifestEnvironments(ctx context.Context, loadedEnvs []*v1alpha1.Environmen
 	// into multiple routines that handle manifest loading and writing
 	grp, ctx := errgroup.WithContext(ctx)
 
-	envsToManifest := make(chan *v1alpha1.Environment, parallelism)
+	// Create a work channel that holds enough for all workers * 2 so that a
+	// worker doesn't have to wait unnecessarily:
+	envsToManifest := make(chan *v1alpha1.Environment, parallelism*2)
 
 	for range parallelism {
 		grp.Go(func() error {
