@@ -85,6 +85,11 @@
       schedule: "* 0-4 * * 1",
       matchPackageNames: ["ghcr.io/renovatebot/renovate"],
     },
+    {
+      // Do not update otel dependencies in the dagger module. These should only be updated together with Dagger
+      matchFileNames: ["dagger/go.mod", "dagger/go.sum"],
+      matchPackageNames: ["go.opentelemetry.io/**"],
+    },
   ],
   platformCommit: "enabled",
   rebaseWhen: "behind-base-branch",
