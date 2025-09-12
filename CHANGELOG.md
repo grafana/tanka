@@ -2,6 +2,14 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.35.1](https://github.com/grafana/tanka/compare/v0.35.0...v0.35.1) (2025-09-12)
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency helm to v3.19.0 ([#1654](https://github.com/grafana/tanka/issues/1654)) ([17d892c](https://github.com/grafana/tanka/commit/17d892c1e3e839637bc10ba079626c1a6d399b63))
+* **deps:** update golang:1.25.1 docker digest to bb979b2 ([#1652](https://github.com/grafana/tanka/issues/1652)) ([ea3e419](https://github.com/grafana/tanka/commit/ea3e419de023d101ba1da53034f753ae81090b89))
+
 ## [0.35.0](https://github.com/grafana/tanka/compare/v0.34.1...v0.35.0) (2025-09-10)
 
 
