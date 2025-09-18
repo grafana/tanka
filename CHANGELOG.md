@@ -2,6 +2,28 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.35.1](https://github.com/grafana/tanka/compare/v0.35.0...v0.35.1) (2025-09-18)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update dependency @astrojs/starlight to v0.35.3 ([#1660](https://github.com/grafana/tanka/issues/1660)) ([b0dea5a](https://github.com/grafana/tanka/commit/b0dea5a203ba844d70a52ff12da9624d3126debc))
+* **deps:** update dependency @fontsource-variable/inter to v5.2.7 ([#1661](https://github.com/grafana/tanka/issues/1661)) ([c0d9de7](https://github.com/grafana/tanka/commit/c0d9de74bd0decf631cf298c7cc6a87a26fdd5a3))
+* **deps:** update module github.com/99designs/gqlgen to v0.17.79 ([#1665](https://github.com/grafana/tanka/issues/1665)) ([08baa68](https://github.com/grafana/tanka/commit/08baa6864e52819bfb52025a80385ef25535a7b2))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update actions/create-github-app-token action to v2.1.2 ([#1657](https://github.com/grafana/tanka/issues/1657)) ([4d5dda1](https://github.com/grafana/tanka/commit/4d5dda1316427f0bbb3c311ef56a33c51ef2525e))
+* **deps:** update actions/create-github-app-token action to v2.1.4 ([#1659](https://github.com/grafana/tanka/issues/1659)) ([dd22da0](https://github.com/grafana/tanka/commit/dd22da0c648e076ec86f23e177161c1657a533a3))
+* **deps:** update dependency @types/node to v24.3.3 ([#1658](https://github.com/grafana/tanka/issues/1658)) ([60cf820](https://github.com/grafana/tanka/commit/60cf82022f31d1333101fbaa92ae1ff409c0a625))
+* **deps:** update dependency @types/node to v24.4.0 ([#1662](https://github.com/grafana/tanka/issues/1662)) ([6b39143](https://github.com/grafana/tanka/commit/6b3914364af5f913a17bbaef6f048a7ab775ad67))
+* **deps:** update dependency helm to v3.19.0 ([#1654](https://github.com/grafana/tanka/issues/1654)) ([17d892c](https://github.com/grafana/tanka/commit/17d892c1e3e839637bc10ba079626c1a6d399b63))
+* **deps:** update golang:1.25.1 docker digest to 8305f5f ([#1655](https://github.com/grafana/tanka/issues/1655)) ([2145e7d](https://github.com/grafana/tanka/commit/2145e7da34a9eb043263edcfa9f61fa08bb37e50))
+* **deps:** update golang:1.25.1 docker digest to bb979b2 ([#1652](https://github.com/grafana/tanka/issues/1652)) ([ea3e419](https://github.com/grafana/tanka/commit/ea3e419de023d101ba1da53034f753ae81090b89))
+* **deps:** update pnpm to v10.16.1 ([#1656](https://github.com/grafana/tanka/issues/1656)) ([ee19fb7](https://github.com/grafana/tanka/commit/ee19fb76c07c4a57663a4954e4b74e6cdb18f02b))
+* **deps:** update renovatebot/github-action action to v43.0.12 ([#1664](https://github.com/grafana/tanka/issues/1664)) ([6a43f34](https://github.com/grafana/tanka/commit/6a43f34306dd60f803e6cf3596e8ac9ec7c487d9))
+
 ## [0.35.0](https://github.com/grafana/tanka/compare/v0.34.1...v0.35.0) (2025-09-10)
 
 
