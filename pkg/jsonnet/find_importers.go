@@ -295,7 +295,6 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 
 	// If the file is not a vendored or a lib file, we assume:
 	// - it is used in a Tanka environment
-	// - it will not be imported by any lib or vendor files
 	// - the environment base (closest main file in parent dirs) will be considered an importer
 	// - if no base is found, all main files in child dirs will be considered importers
 	rootVendor := filepath.Join(root, "vendor")
@@ -325,12 +324,6 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 
 	for jsonnetFilePath, jsonnetFileContent := range jsonnetFiles {
 		if len(jsonnetFileContent.Imports) == 0 {
-			continue
-		}
-
-		if !searchedFileIsLibOrVendored && isFileLibOrVendored(jsonnetFilePath) {
-			// Skip the file if it's a vendored or lib file and the searched file is an environment file
-			// Libs and vendored files cannot import environment files
 			continue
 		}
 

@@ -227,6 +227,27 @@ func findImportersTestCases(t testing.TB) []findImportersTestCase {
 				absPath(t, "testdata/findImporters/environments/import-other-main-file/env2/main.jsonnet"),
 			},
 		},
+		{
+			name: "lib file imports environment file",
+			files: []string{
+				"testdata/findImporters/environments/lib-imports-environment/config.jsonnet",
+			},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/lib-imports-environment/main.jsonnet"),
+				absPath(t, "testdata/findImporters/environments/uses-lib-that-imports-env/main.jsonnet"),
+			},
+		},
+		{
+			name: "complex transitive chain: env1 -> lib1 -> env2 -> lib3 -> env3",
+			files: []string{
+				"testdata/findImporters/environments/chain-env1/config.jsonnet",
+			},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/chain-env1/main.jsonnet"), // direct env importer
+				absPath(t, "testdata/findImporters/environments/chain-env2/main.jsonnet"), // via lib1
+				absPath(t, "testdata/findImporters/environments/chain-env3/main.jsonnet"), // via lib1->env2->lib3
+			},
+		},
 	}
 }
 
