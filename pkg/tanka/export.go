@@ -64,6 +64,8 @@ type ExportEnvOpts struct {
 	// Environments (main.jsonnet files) that have been deleted since the last export.
 	// This is used when using a merge strategy to delete the files of these deleted environments.
 	MergeDeletedEnvs []string
+	// Skip generating manifest.json file that tracks exported files
+	SkipManifest bool
 }
 
 func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
@@ -118,6 +120,9 @@ func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to st
 		return err
 	}
 
+	if opts.SkipManifest {
+		return nil
+	}
 	return exportManifestFile(to, fileToEnv, nil)
 }
 
