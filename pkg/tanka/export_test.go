@@ -192,6 +192,45 @@ func BenchmarkExportEnvironmentsWithReplaceEnvs(b *testing.B) {
 	}
 }
 
+func TestExportEnvironmentsSkipManifest(t *testing.T) {
+	tempDir := t.TempDir()
+	require.NoError(t, os.Chdir("testdata"))
+	defer func() { require.NoError(t, os.Chdir("..")) }()
+
+	// Find envs
+	envs, err := FindEnvs(t.Context(), "test-export-envs", FindOpts{Selector: labels.Everything()})
+	require.NoError(t, err)
+
+	// Export all envs with skip manifest flag
+	opts := &ExportEnvOpts{
+		Format:       "{{.metadata.namespace}}/{{.metadata.name}}",
+		Extension:    "yaml",
+		SkipManifest: true,
+	}
+	opts.Opts.ExtCode = jsonnet.InjectedCode{
+		"deploymentName": "'test-deployment'",
+		"serviceName":    "'test-service'",
+	}
+	require.NoError(t, ExportEnvironments(t.Context(), envs, tempDir, opts))
+	
+	// Check that all manifest files are created but manifest.json is NOT created
+	expectedFiles := []string{
+		filepath.Join(tempDir, "inline-namespace1", "my-configmap.yaml"),
+		filepath.Join(tempDir, "inline-namespace1", "my-deployment.yaml"),
+		filepath.Join(tempDir, "inline-namespace1", "my-service.yaml"),
+		filepath.Join(tempDir, "inline-namespace2", "my-deployment.yaml"),
+		filepath.Join(tempDir, "inline-namespace2", "my-service.yaml"),
+		filepath.Join(tempDir, "static", "test-deployment.yaml"),
+		filepath.Join(tempDir, "static", "test-service.yaml"),
+	}
+	checkFiles(t, tempDir, expectedFiles)
+	
+	// Explicitly verify manifest.json does not exist
+	manifestPath := filepath.Join(tempDir, "manifest.json")
+	_, err = os.Stat(manifestPath)
+	assert.True(t, os.IsNotExist(err), "manifest.json should not exist when SkipManifest is true")
+}
+
 func checkFiles(t testing.TB, dir string, files []string) {
 	t.Helper()
 
