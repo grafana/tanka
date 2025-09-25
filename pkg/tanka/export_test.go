@@ -212,7 +212,7 @@ func TestExportEnvironmentsSkipManifest(t *testing.T) {
 		"serviceName":    "'test-service'",
 	}
 	require.NoError(t, ExportEnvironments(t.Context(), envs, tempDir, opts))
-	
+
 	// Check that all manifest files are created but manifest.json is NOT created
 	expectedFiles := []string{
 		filepath.Join(tempDir, "inline-namespace1", "my-configmap.yaml"),
@@ -224,7 +224,7 @@ func TestExportEnvironmentsSkipManifest(t *testing.T) {
 		filepath.Join(tempDir, "static", "test-service.yaml"),
 	}
 	checkFiles(t, tempDir, expectedFiles)
-	
+
 	// Explicitly verify manifest.json does not exist
 	manifestPath := filepath.Join(tempDir, "manifest.json")
 	_, err = os.Stat(manifestPath)
