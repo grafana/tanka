@@ -85,13 +85,13 @@ func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to st
 
 	// delete files previously exported by the targeted envs.
 	if opts.MergeStrategy == ExportMergeStrategyReplaceEnvs {
-		if err := deletePreviouslyExportedManifestsFromTankaEnvs(to, envs); err != nil {
+		if err := deletePreviouslyExportedManifestsFromTankaEnvs(to, envs, opts.SkipManifest); err != nil {
 			return fmt.Errorf("deleting previously exported manifests: %w", err)
 		}
 	}
 
 	// delete files that were exported by environments that have been deleted since the last export.
-	if err := deletePreviouslyExportedManifests(to, opts.MergeDeletedEnvs); err != nil {
+	if err := deletePreviouslyExportedManifests(to, opts.MergeDeletedEnvs, opts.SkipManifest); err != nil {
 		return fmt.Errorf("deleting previously exported manifests from deleted environments: %w", err)
 	}
 
@@ -289,15 +289,15 @@ func dirEmpty(dir string) (bool, error) {
 	return false, err
 }
 
-func deletePreviouslyExportedManifestsFromTankaEnvs(path string, envs []*v1alpha1.Environment) error {
+func deletePreviouslyExportedManifestsFromTankaEnvs(path string, envs []*v1alpha1.Environment, skipManifest bool) error {
 	envNames := []string{}
 	for _, env := range envs {
 		envNames = append(envNames, env.Metadata.Namespace)
 	}
-	return deletePreviouslyExportedManifests(path, envNames)
+	return deletePreviouslyExportedManifests(path, envNames, skipManifest)
 }
 
-func deletePreviouslyExportedManifests(path string, tankaEnvNames []string) error {
+func deletePreviouslyExportedManifests(path string, tankaEnvNames []string, skipManifest bool) error {
 	if len(tankaEnvNames) == 0 {
 		return nil
 	}
@@ -326,13 +326,17 @@ func deletePreviouslyExportedManifests(path string, tankaEnvNames []string) erro
 	for exportedManifest, manifestEnv := range fileToEnvMap {
 		if _, ok := envNamesMap[manifestEnv]; ok {
 			deletedManifestKeys = append(deletedManifestKeys, exportedManifest)
-			if err := os.Remove(filepath.Join(path, exportedManifest)); err != nil {
+			if err := os.Remove(filepath.Join(path, exportedManifest)); err != nil && !os.IsNotExist(err) {
 				return err
 			}
 		}
 	}
 
-	return exportManifestFile(path, nil, deletedManifestKeys)
+	// Only update manifest.json if not skipping manifest processing
+	if !skipManifest {
+		return exportManifestFile(path, nil, deletedManifestKeys)
+	}
+	return nil
 }
 
 // exportManifestFile writes a manifest file that maps the exported files to their environment.
