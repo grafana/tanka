@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
-    "@astrojs/starlight": "^0.35.2",
+    "@astrojs/starlight": "^0.36.0",
     "@astrojs/starlight-tailwind": "^4.0.1",
     "@fontsource-variable/inter": "^5.2.6",
     "@tailwindcss/vite": "^4.1.13",
