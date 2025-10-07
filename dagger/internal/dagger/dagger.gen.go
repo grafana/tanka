@@ -142,11 +142,17 @@ func (e *ExecError) Unwrap() error {
 	return e.original
 }
 
+// The `AddressID` scalar type represents an identifier for an object of type Address.
+type AddressID string
+
 // The `BindingID` scalar type represents an identifier for an object of type Binding.
 type BindingID string
 
 // The `CacheVolumeID` scalar type represents an identifier for an object of type CacheVolume.
 type CacheVolumeID string
+
+// The `ChangesetID` scalar type represents an identifier for an object of type Changeset.
+type ChangesetID string
 
 // The `CloudID` scalar type represents an identifier for an object of type Cloud.
 type CloudID string
@@ -165,6 +171,9 @@ type EnumTypeDefID string
 
 // The `EnumValueTypeDefID` scalar type represents an identifier for an object of type EnumValueTypeDef.
 type EnumValueTypeDefID string
+
+// The `EnvFileID` scalar type represents an identifier for an object of type EnvFile.
+type EnvFileID string
 
 // The `EnvID` scalar type represents an identifier for an object of type Env.
 type EnvID string
@@ -214,6 +223,9 @@ type InterfaceTypeDefID string
 // An arbitrary JSON-encoded value.
 type JSON string
 
+// The `JSONValueID` scalar type represents an identifier for an object of type JSONValue.
+type JSONValueID string
+
 // The `K3SID` scalar type represents an identifier for an object of type K3S.
 type K3SID string
 
@@ -254,6 +266,12 @@ type SDKConfigID string
 
 // The `ScalarTypeDefID` scalar type represents an identifier for an object of type ScalarTypeDef.
 type ScalarTypeDefID string
+
+// The `SearchResultID` scalar type represents an identifier for an object of type SearchResult.
+type SearchResultID string
+
+// The `SearchSubmatchID` scalar type represents an identifier for an object of type SearchSubmatch.
+type SearchSubmatchID string
 
 // The `SecretID` scalar type represents an identifier for an object of type Secret.
 type SecretID string
@@ -308,6 +326,200 @@ type PortForward struct {
 	Protocol NetworkProtocol `json:"protocol,omitempty"`
 }
 
+// A standardized address to load containers, directories, secrets, and other object types. Address format depends on the type, and is validated at type selection.
+type Address struct {
+	query *querybuilder.Selection
+
+	id    *AddressID
+	value *string
+}
+
+func (r *Address) WithGraphQLQuery(q *querybuilder.Selection) *Address {
+	return &Address{
+		query: q,
+	}
+}
+
+// Load a container from the address.
+func (r *Address) Container() *Container {
+	q := r.query.Select("container")
+
+	return &Container{
+		query: q,
+	}
+}
+
+// AddressDirectoryOpts contains options for Address.Directory
+type AddressDirectoryOpts struct {
+	Exclude []string
+
+	Include []string
+
+	NoCache bool
+}
+
+// Load a directory from the address.
+func (r *Address) Directory(opts ...AddressDirectoryOpts) *Directory {
+	q := r.query.Select("directory")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `exclude` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Exclude) {
+			q = q.Arg("exclude", opts[i].Exclude)
+		}
+		// `include` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Include) {
+			q = q.Arg("include", opts[i].Include)
+		}
+		// `noCache` optional argument
+		if !querybuilder.IsZeroValue(opts[i].NoCache) {
+			q = q.Arg("noCache", opts[i].NoCache)
+		}
+	}
+
+	return &Directory{
+		query: q,
+	}
+}
+
+// AddressFileOpts contains options for Address.File
+type AddressFileOpts struct {
+	Exclude []string
+
+	Include []string
+
+	NoCache bool
+}
+
+// Load a file from the address.
+func (r *Address) File(opts ...AddressFileOpts) *File {
+	q := r.query.Select("file")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `exclude` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Exclude) {
+			q = q.Arg("exclude", opts[i].Exclude)
+		}
+		// `include` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Include) {
+			q = q.Arg("include", opts[i].Include)
+		}
+		// `noCache` optional argument
+		if !querybuilder.IsZeroValue(opts[i].NoCache) {
+			q = q.Arg("noCache", opts[i].NoCache)
+		}
+	}
+
+	return &File{
+		query: q,
+	}
+}
+
+// Load a git ref (branch, tag or commit) from the address.
+func (r *Address) GitRef() *GitRef {
+	q := r.query.Select("gitRef")
+
+	return &GitRef{
+		query: q,
+	}
+}
+
+// Load a git repository from the address.
+func (r *Address) GitRepository() *GitRepository {
+	q := r.query.Select("gitRepository")
+
+	return &GitRepository{
+		query: q,
+	}
+}
+
+// A unique identifier for this Address.
+func (r *Address) ID(ctx context.Context) (AddressID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response AddressID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *Address) XXX_GraphQLType() string {
+	return "Address"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *Address) XXX_GraphQLIDType() string {
+	return "AddressID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *Address) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *Address) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *Address) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadAddressFromID(AddressID(id))
+	return nil
+}
+
+// Load a secret from the address.
+func (r *Address) Secret() *Secret {
+	q := r.query.Select("secret")
+
+	return &Secret{
+		query: q,
+	}
+}
+
+// Load a service from the address.
+func (r *Address) Service() *Service {
+	q := r.query.Select("service")
+
+	return &Service{
+		query: q,
+	}
+}
+
+// Load a local socket from the address.
+func (r *Address) Socket() *Socket {
+	q := r.query.Select("socket")
+
+	return &Socket{
+		query: q,
+	}
+}
+
+// The address value
+func (r *Address) Value(ctx context.Context) (string, error) {
+	if r.value != nil {
+		return *r.value, nil
+	}
+	q := r.query.Select("value")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
 type Binding struct {
 	query *querybuilder.Selection
 
@@ -325,11 +537,29 @@ func (r *Binding) WithGraphQLQuery(q *querybuilder.Selection) *Binding {
 	}
 }
 
+// Retrieve the binding value, as type Address
+func (r *Binding) AsAddress() *Address {
+	q := r.query.Select("asAddress")
+
+	return &Address{
+		query: q,
+	}
+}
+
 // Retrieve the binding value, as type CacheVolume
 func (r *Binding) AsCacheVolume() *CacheVolume {
 	q := r.query.Select("asCacheVolume")
 
 	return &CacheVolume{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type Changeset
+func (r *Binding) AsChangeset() *Changeset {
+	q := r.query.Select("asChangeset")
+
+	return &Changeset{
 		query: q,
 	}
 }
@@ -370,6 +600,15 @@ func (r *Binding) AsEnv() *Env {
 	}
 }
 
+// Retrieve the binding value, as type EnvFile
+func (r *Binding) AsEnvFile() *EnvFile {
+	q := r.query.Select("asEnvFile")
+
+	return &EnvFile{
+		query: q,
+	}
+}
+
 // Retrieve the binding value, as type File
 func (r *Binding) AsFile() *File {
 	q := r.query.Select("asFile")
@@ -397,20 +636,20 @@ func (r *Binding) AsGitRepository() *GitRepository {
 	}
 }
 
+// Retrieve the binding value, as type JSONValue
+func (r *Binding) AsJSONValue() *JSONValue {
+	q := r.query.Select("asJSONValue")
+
+	return &JSONValue{
+		query: q,
+	}
+}
+
 // Retrieve the binding value, as type K3S
 func (r *Binding) AsK3S() *K3S {
 	q := r.query.Select("asK3S")
 
 	return &K3S{
-		query: q,
-	}
-}
-
-// Retrieve the binding value, as type LLM
-func (r *Binding) AsLLM() *LLM {
-	q := r.query.Select("asLLM")
-
-	return &LLM{
 		query: q,
 	}
 }
@@ -442,6 +681,24 @@ func (r *Binding) AsModuleSource() *ModuleSource {
 	}
 }
 
+// Retrieve the binding value, as type SearchResult
+func (r *Binding) AsSearchResult() *SearchResult {
+	q := r.query.Select("asSearchResult")
+
+	return &SearchResult{
+		query: q,
+	}
+}
+
+// Retrieve the binding value, as type SearchSubmatch
+func (r *Binding) AsSearchSubmatch() *SearchSubmatch {
+	q := r.query.Select("asSearchSubmatch")
+
+	return &SearchSubmatch{
+		query: q,
+	}
+}
+
 // Retrieve the binding value, as type Secret
 func (r *Binding) AsSecret() *Secret {
 	q := r.query.Select("asSecret")
@@ -469,7 +726,7 @@ func (r *Binding) AsSocket() *Socket {
 	}
 }
 
-// The binding's string value
+// Returns the binding's string value
 func (r *Binding) AsString(ctx context.Context) (string, error) {
 	if r.asString != nil {
 		return *r.asString, nil
@@ -482,7 +739,7 @@ func (r *Binding) AsString(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// The digest of the binding value
+// Returns the digest of the binding value
 func (r *Binding) Digest(ctx context.Context) (string, error) {
 	if r.digest != nil {
 		return *r.digest, nil
@@ -557,7 +814,7 @@ func (r *Binding) IsNull(ctx context.Context) (bool, error) {
 	return response, q.Execute(ctx)
 }
 
-// The binding name
+// Returns the binding name
 func (r *Binding) Name(ctx context.Context) (string, error) {
 	if r.name != nil {
 		return *r.name, nil
@@ -570,7 +827,7 @@ func (r *Binding) Name(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// The binding type
+// Returns the binding type
 func (r *Binding) TypeName(ctx context.Context) (string, error) {
 	if r.typeName != nil {
 		return *r.typeName, nil
@@ -643,6 +900,163 @@ func (r *CacheVolume) UnmarshalJSON(bs []byte) error {
 	}
 	*r = *dag.LoadCacheVolumeFromID(CacheVolumeID(id))
 	return nil
+}
+
+// A comparison between two directories representing changes that can be applied.
+type Changeset struct {
+	query *querybuilder.Selection
+
+	export *string
+	id     *ChangesetID
+	sync   *ChangesetID
+}
+
+func (r *Changeset) WithGraphQLQuery(q *querybuilder.Selection) *Changeset {
+	return &Changeset{
+		query: q,
+	}
+}
+
+// Files and directories that were added in the newer directory.
+func (r *Changeset) AddedPaths(ctx context.Context) ([]string, error) {
+	q := r.query.Select("addedPaths")
+
+	var response []string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The newer/upper snapshot.
+func (r *Changeset) After() *Directory {
+	q := r.query.Select("after")
+
+	return &Directory{
+		query: q,
+	}
+}
+
+// Return a Git-compatible patch of the changes
+func (r *Changeset) AsPatch() *File {
+	q := r.query.Select("asPatch")
+
+	return &File{
+		query: q,
+	}
+}
+
+// The older/lower snapshot to compare against.
+func (r *Changeset) Before() *Directory {
+	q := r.query.Select("before")
+
+	return &Directory{
+		query: q,
+	}
+}
+
+// Applies the diff represented by this changeset to a path on the host.
+func (r *Changeset) Export(ctx context.Context, path string) (string, error) {
+	if r.export != nil {
+		return *r.export, nil
+	}
+	q := r.query.Select("export")
+	q = q.Arg("path", path)
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// A unique identifier for this Changeset.
+func (r *Changeset) ID(ctx context.Context) (ChangesetID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response ChangesetID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *Changeset) XXX_GraphQLType() string {
+	return "Changeset"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *Changeset) XXX_GraphQLIDType() string {
+	return "ChangesetID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *Changeset) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *Changeset) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *Changeset) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadChangesetFromID(ChangesetID(id))
+	return nil
+}
+
+// Return a snapshot containing only the created and modified files
+func (r *Changeset) Layer() *Directory {
+	q := r.query.Select("layer")
+
+	return &Directory{
+		query: q,
+	}
+}
+
+// Files and directories that existed before and were updated in the newer directory.
+func (r *Changeset) ModifiedPaths(ctx context.Context) ([]string, error) {
+	q := r.query.Select("modifiedPaths")
+
+	var response []string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// Files and directories that were removed. Directories are indicated by a trailing slash, and their child paths are not included.
+func (r *Changeset) RemovedPaths(ctx context.Context) ([]string, error) {
+	q := r.query.Select("removedPaths")
+
+	var response []string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// Force evaluation in the engine.
+func (r *Changeset) Sync(ctx context.Context) (*Changeset, error) {
+	q := r.query.Select("sync")
+
+	var id ChangesetID
+	if err := q.Bind(&id).Execute(ctx); err != nil {
+		return nil, err
+	}
+	return &Changeset{
+		query: q.Root().Select("loadChangesetFromID").Arg("id", id),
+	}, nil
 }
 
 // Dagger Cloud configuration and state
@@ -725,20 +1139,23 @@ func (r *Cloud) TraceURL(ctx context.Context) (string, error) {
 type Container struct {
 	query *querybuilder.Selection
 
-	envVariable *string
-	exitCode    *int
-	export      *string
-	id          *ContainerID
-	imageRef    *string
-	label       *string
-	platform    *Platform
-	publish     *string
-	stderr      *string
-	stdout      *string
-	sync        *ContainerID
-	up          *Void
-	user        *string
-	workdir     *string
+	combinedOutput *string
+	envVariable    *string
+	exists         *bool
+	exitCode       *int
+	export         *string
+	exportImage    *Void
+	id             *ContainerID
+	imageRef       *string
+	label          *string
+	platform       *Platform
+	publish        *string
+	stderr         *string
+	stdout         *string
+	sync           *ContainerID
+	up             *Void
+	user           *string
+	workdir        *string
 }
 type WithContainerFunc func(r *Container) *Container
 
@@ -853,59 +1270,19 @@ func (r *Container) AsTarball(opts ...ContainerAsTarballOpts) *File {
 	}
 }
 
-// ContainerBuildOpts contains options for Container.Build
-type ContainerBuildOpts struct {
-	// Path to the Dockerfile to use.
-	//
-	// Default: "Dockerfile"
-	Dockerfile string
-	// Target build stage to build.
-	Target string
-	// Additional build arguments.
-	BuildArgs []BuildArg
-	// Secrets to pass to the build.
-	//
-	// They will be mounted at /run/secrets/[secret-name] in the build container
-	//
-	// They can be accessed in the Dockerfile using the "secret" mount type and mount path /run/secrets/[secret-name], e.g. RUN --mount=type=secret,id=my-secret curl [http://example.com?token=$(cat /run/secrets/my-secret)](http://example.com?token=$(cat /run/secrets/my-secret))
-	Secrets []*Secret
-	// If set, skip the automatic init process injected into containers created by RUN statements.
-	//
-	// This should only be used if the user requires that their exec processes be the pid 1 process in the container. Otherwise it may result in unexpected behavior.
-	NoInit bool
-}
-
-// Initializes this container from a Dockerfile build.
-func (r *Container) Build(context *Directory, opts ...ContainerBuildOpts) *Container {
-	assertNotNil("context", context)
-	q := r.query.Select("build")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `dockerfile` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Dockerfile) {
-			q = q.Arg("dockerfile", opts[i].Dockerfile)
-		}
-		// `target` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Target) {
-			q = q.Arg("target", opts[i].Target)
-		}
-		// `buildArgs` optional argument
-		if !querybuilder.IsZeroValue(opts[i].BuildArgs) {
-			q = q.Arg("buildArgs", opts[i].BuildArgs)
-		}
-		// `secrets` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Secrets) {
-			q = q.Arg("secrets", opts[i].Secrets)
-		}
-		// `noInit` optional argument
-		if !querybuilder.IsZeroValue(opts[i].NoInit) {
-			q = q.Arg("noInit", opts[i].NoInit)
-		}
+// The combined buffered standard output and standard error stream of the last executed command
+//
+// Returns an error if no command was executed
+func (r *Container) CombinedOutput(ctx context.Context) (string, error) {
+	if r.combinedOutput != nil {
+		return *r.combinedOutput, nil
 	}
-	q = q.Arg("context", context)
+	q := r.query.Select("combinedOutput")
 
-	return &Container{
-		query: q,
-	}
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 // Return the container's default arguments.
@@ -997,6 +1374,38 @@ func (r *Container) EnvVariables(ctx context.Context) ([]EnvVariable, error) {
 	}
 
 	return convert(response), nil
+}
+
+// ContainerExistsOpts contains options for Container.Exists
+type ContainerExistsOpts struct {
+	// If specified, also validate the type of file (e.g. "REGULAR_TYPE", "DIRECTORY_TYPE", or "SYMLINK_TYPE").
+	ExpectedType ExistsType
+	// If specified, do not follow symlinks.
+	DoNotFollowSymlinks bool
+}
+
+// check if a file or directory exists
+func (r *Container) Exists(ctx context.Context, path string, opts ...ContainerExistsOpts) (bool, error) {
+	if r.exists != nil {
+		return *r.exists, nil
+	}
+	q := r.query.Select("exists")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `expectedType` optional argument
+		if !querybuilder.IsZeroValue(opts[i].ExpectedType) {
+			q = q.Arg("expectedType", opts[i].ExpectedType)
+		}
+		// `doNotFollowSymlinks` optional argument
+		if !querybuilder.IsZeroValue(opts[i].DoNotFollowSymlinks) {
+			q = q.Arg("doNotFollowSymlinks", opts[i].DoNotFollowSymlinks)
+		}
+	}
+	q = q.Arg("path", path)
+
+	var response bool
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 // The exit code of the last executed command
@@ -1093,6 +1502,49 @@ func (r *Container) Export(ctx context.Context, path string, opts ...ContainerEx
 
 	q = q.Bind(&response)
 	return response, q.Execute(ctx)
+}
+
+// ContainerExportImageOpts contains options for Container.ExportImage
+type ContainerExportImageOpts struct {
+	// Identifiers for other platform specific containers.
+	//
+	// Used for multi-platform image.
+	PlatformVariants []*Container
+	// Force each layer of the exported image to use the specified compression algorithm.
+	//
+	// If this is unset, then if a layer already has a compressed blob in the engine's cache, that will be used (this can result in a mix of compression algorithms for different layers). If this is unset and a layer has no compressed blob in the engine's cache, then it will be compressed using Gzip.
+	ForcedCompression ImageLayerCompression
+	// Use the specified media types for the exported image's layers.
+	//
+	// Defaults to OCI, which is largely compatible with most recent container runtimes, but Docker may be needed for older runtimes without OCI support.
+	//
+	// Default: OCIMediaTypes
+	MediaTypes ImageMediaTypes
+}
+
+// Exports the container as an image to the host's container image store.
+func (r *Container) ExportImage(ctx context.Context, name string, opts ...ContainerExportImageOpts) error {
+	if r.exportImage != nil {
+		return nil
+	}
+	q := r.query.Select("exportImage")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `platformVariants` optional argument
+		if !querybuilder.IsZeroValue(opts[i].PlatformVariants) {
+			q = q.Arg("platformVariants", opts[i].PlatformVariants)
+		}
+		// `forcedCompression` optional argument
+		if !querybuilder.IsZeroValue(opts[i].ForcedCompression) {
+			q = q.Arg("forcedCompression", opts[i].ForcedCompression)
+		}
+		// `mediaTypes` optional argument
+		if !querybuilder.IsZeroValue(opts[i].MediaTypes) {
+			q = q.Arg("mediaTypes", opts[i].MediaTypes)
+		}
+	}
+	q = q.Arg("name", name)
+
+	return q.Execute(ctx)
 }
 
 // Retrieves the list of exposed ports.
@@ -1605,8 +2057,8 @@ type ContainerWithDirectoryOpts struct {
 }
 
 // Return a new container snapshot, with a directory added to its filesystem
-func (r *Container) WithDirectory(path string, directory *Directory, opts ...ContainerWithDirectoryOpts) *Container {
-	assertNotNil("directory", directory)
+func (r *Container) WithDirectory(path string, source *Directory, opts ...ContainerWithDirectoryOpts) *Container {
+	assertNotNil("source", source)
 	q := r.query.Select("withDirectory")
 	for i := len(opts) - 1; i >= 0; i-- {
 		// `exclude` optional argument
@@ -1627,7 +2079,7 @@ func (r *Container) WithDirectory(path string, directory *Directory, opts ...Con
 		}
 	}
 	q = q.Arg("path", path)
-	q = q.Arg("directory", directory)
+	q = q.Arg("source", source)
 
 	return &Container{
 		query: q,
@@ -1685,9 +2137,11 @@ type ContainerWithExecOpts struct {
 	UseEntrypoint bool
 	// Content to write to the command's standard input. Example: "Hello world")
 	Stdin string
+	// Redirect the command's standard input from a file in the container. Example: "./stdin.txt"
+	RedirectStdin string
 	// Redirect the command's standard output to a file in the container. Example: "./stdout.txt"
 	RedirectStdout string
-	// Like redirectStdout, but for standard error
+	// Redirect the command's standard error to a file in the container. Example: "./stderr.txt"
 	RedirectStderr string
 	// Exit codes this command is allowed to exit with without error
 	//
@@ -1718,6 +2172,10 @@ func (r *Container) WithExec(args []string, opts ...ContainerWithExecOpts) *Cont
 		// `stdin` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Stdin) {
 			q = q.Arg("stdin", opts[i].Stdin)
+		}
+		// `redirectStdin` optional argument
+		if !querybuilder.IsZeroValue(opts[i].RedirectStdin) {
+			q = q.Arg("redirectStdin", opts[i].RedirectStdin)
 		}
 		// `redirectStdout` optional argument
 		if !querybuilder.IsZeroValue(opts[i].RedirectStdout) {
@@ -2638,7 +3096,9 @@ type Directory struct {
 	query *querybuilder.Selection
 
 	digest *string
+	exists *bool
 	export *string
+	findUp *string
 	id     *DirectoryID
 	name   *string
 	sync   *DirectoryID
@@ -2713,6 +3173,30 @@ func (r *Directory) AsModuleSource(opts ...DirectoryAsModuleSourceOpts) *ModuleS
 	}
 
 	return &ModuleSource{
+		query: q,
+	}
+}
+
+// Return the difference between this directory and another directory, typically an older snapshot.
+//
+// The difference is encoded as a changeset, which also tracks removed files, and can be applied to other directories.
+func (r *Directory) Changes(from *Directory) *Changeset {
+	assertNotNil("from", from)
+	q := r.query.Select("changes")
+	q = q.Arg("from", from)
+
+	return &Changeset{
+		query: q,
+	}
+}
+
+// Change the owner of the directory contents recursively.
+func (r *Directory) Chown(path string, owner string) *Directory {
+	q := r.query.Select("chown")
+	q = q.Arg("path", path)
+	q = q.Arg("owner", owner)
+
+	return &Directory{
 		query: q,
 	}
 }
@@ -2830,6 +3314,38 @@ func (r *Directory) Entries(ctx context.Context, opts ...DirectoryEntriesOpts) (
 	return response, q.Execute(ctx)
 }
 
+// DirectoryExistsOpts contains options for Directory.Exists
+type DirectoryExistsOpts struct {
+	// If specified, also validate the type of file (e.g. "REGULAR_TYPE", "DIRECTORY_TYPE", or "SYMLINK_TYPE").
+	ExpectedType ExistsType
+	// If specified, do not follow symlinks.
+	DoNotFollowSymlinks bool
+}
+
+// check if a file or directory exists
+func (r *Directory) Exists(ctx context.Context, path string, opts ...DirectoryExistsOpts) (bool, error) {
+	if r.exists != nil {
+		return *r.exists, nil
+	}
+	q := r.query.Select("exists")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `expectedType` optional argument
+		if !querybuilder.IsZeroValue(opts[i].ExpectedType) {
+			q = q.Arg("expectedType", opts[i].ExpectedType)
+		}
+		// `doNotFollowSymlinks` optional argument
+		if !querybuilder.IsZeroValue(opts[i].DoNotFollowSymlinks) {
+			q = q.Arg("doNotFollowSymlinks", opts[i].DoNotFollowSymlinks)
+		}
+	}
+	q = q.Arg("path", path)
+
+	var response bool
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
 // DirectoryExportOpts contains options for Directory.Export
 type DirectoryExportOpts struct {
 	// If true, then the host directory will be wiped clean before exporting so that it exactly matches the directory being exported; this means it will delete any files on the host that aren't in the exported dir. If false (the default), the contents of the directory will be merged with any existing contents of the host directory, leaving any existing files on the host that aren't in the exported directory alone.
@@ -2891,6 +3407,21 @@ func (r *Directory) Filter(opts ...DirectoryFilterOpts) *Directory {
 	return &Directory{
 		query: q,
 	}
+}
+
+// Search up the directory tree for a file or directory, and return its path. If no match, return null
+func (r *Directory) FindUp(ctx context.Context, name string, start string) (string, error) {
+	if r.findUp != nil {
+		return *r.findUp, nil
+	}
+	q := r.query.Select("findUp")
+	q = q.Arg("name", name)
+	q = q.Arg("start", start)
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 // Returns a list of files and directories that matche the given pattern.
@@ -2966,6 +3497,108 @@ func (r *Directory) Name(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
+// DirectorySearchOpts contains options for Directory.Search
+type DirectorySearchOpts struct {
+	// Directory or file paths to search
+	Paths []string
+	// Glob patterns to match (e.g., "*.md")
+	Globs []string
+	// Interpret the pattern as a literal string instead of a regular expression.
+	Literal bool
+	// Enable searching across multiple lines.
+	Multiline bool
+	// Allow the . pattern to match newlines in multiline mode.
+	Dotall bool
+	// Enable case-insensitive matching.
+	Insensitive bool
+	// Honor .gitignore, .ignore, and .rgignore files.
+	SkipIgnored bool
+	// Skip hidden files (files starting with .).
+	SkipHidden bool
+	// Only return matching files, not lines and content
+	FilesOnly bool
+	// Limit the number of results to return
+	Limit int
+}
+
+// Searches for content matching the given regular expression or literal string.
+//
+// Uses Rust regex syntax; escape literal ., [, ], {, }, | with backslashes.
+func (r *Directory) Search(ctx context.Context, pattern string, opts ...DirectorySearchOpts) ([]SearchResult, error) {
+	q := r.query.Select("search")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `paths` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Paths) {
+			q = q.Arg("paths", opts[i].Paths)
+		}
+		// `globs` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Globs) {
+			q = q.Arg("globs", opts[i].Globs)
+		}
+		// `literal` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Literal) {
+			q = q.Arg("literal", opts[i].Literal)
+		}
+		// `multiline` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Multiline) {
+			q = q.Arg("multiline", opts[i].Multiline)
+		}
+		// `dotall` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Dotall) {
+			q = q.Arg("dotall", opts[i].Dotall)
+		}
+		// `insensitive` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Insensitive) {
+			q = q.Arg("insensitive", opts[i].Insensitive)
+		}
+		// `skipIgnored` optional argument
+		if !querybuilder.IsZeroValue(opts[i].SkipIgnored) {
+			q = q.Arg("skipIgnored", opts[i].SkipIgnored)
+		}
+		// `skipHidden` optional argument
+		if !querybuilder.IsZeroValue(opts[i].SkipHidden) {
+			q = q.Arg("skipHidden", opts[i].SkipHidden)
+		}
+		// `filesOnly` optional argument
+		if !querybuilder.IsZeroValue(opts[i].FilesOnly) {
+			q = q.Arg("filesOnly", opts[i].FilesOnly)
+		}
+		// `limit` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Limit) {
+			q = q.Arg("limit", opts[i].Limit)
+		}
+	}
+	q = q.Arg("pattern", pattern)
+
+	q = q.Select("id")
+
+	type search struct {
+		Id SearchResultID
+	}
+
+	convert := func(fields []search) []SearchResult {
+		out := []SearchResult{}
+
+		for i := range fields {
+			val := SearchResult{id: &fields[i].Id}
+			val.query = q.Root().Select("loadSearchResultFromID").Arg("id", fields[i].Id)
+			out = append(out, val)
+		}
+
+		return out
+	}
+	var response []search
+
+	q = q.Bind(&response)
+
+	err := q.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert(response), nil
+}
+
 // Force evaluation in the engine.
 func (r *Directory) Sync(ctx context.Context) (*Directory, error) {
 	q := r.query.Select("sync")
@@ -3018,17 +3651,34 @@ func (r *Directory) Terminal(opts ...DirectoryTerminalOpts) *Directory {
 	}
 }
 
+// Return a directory with changes from another directory applied to it.
+func (r *Directory) WithChanges(changes *Changeset) *Directory {
+	assertNotNil("changes", changes)
+	q := r.query.Select("withChanges")
+	q = q.Arg("changes", changes)
+
+	return &Directory{
+		query: q,
+	}
+}
+
 // DirectoryWithDirectoryOpts contains options for Directory.WithDirectory
 type DirectoryWithDirectoryOpts struct {
 	// Exclude artifacts that match the given pattern (e.g., ["node_modules/", ".git*"]).
 	Exclude []string
 	// Include only artifacts that match the given pattern (e.g., ["app/", "package.*"]).
 	Include []string
+	// A user:group to set for the copied directory and its contents.
+	//
+	// The user and group must be an ID (1000:1000), not a name (foo:bar).
+	//
+	// If the group is omitted, it defaults to the same as the user.
+	Owner string
 }
 
 // Return a snapshot with a directory added
-func (r *Directory) WithDirectory(path string, directory *Directory, opts ...DirectoryWithDirectoryOpts) *Directory {
-	assertNotNil("directory", directory)
+func (r *Directory) WithDirectory(path string, source *Directory, opts ...DirectoryWithDirectoryOpts) *Directory {
+	assertNotNil("source", source)
 	q := r.query.Select("withDirectory")
 	for i := len(opts) - 1; i >= 0; i-- {
 		// `exclude` optional argument
@@ -3039,9 +3689,13 @@ func (r *Directory) WithDirectory(path string, directory *Directory, opts ...Dir
 		if !querybuilder.IsZeroValue(opts[i].Include) {
 			q = q.Arg("include", opts[i].Include)
 		}
+		// `owner` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Owner) {
+			q = q.Arg("owner", opts[i].Owner)
+		}
 	}
 	q = q.Arg("path", path)
-	q = q.Arg("directory", directory)
+	q = q.Arg("source", source)
 
 	return &Directory{
 		query: q,
@@ -3052,6 +3706,12 @@ func (r *Directory) WithDirectory(path string, directory *Directory, opts ...Dir
 type DirectoryWithFileOpts struct {
 	// Permission given to the copied file (e.g., 0600).
 	Permissions int
+	// A user:group to set for the copied directory and its contents.
+	//
+	// The user and group must be an ID (1000:1000), not a name (foo:bar).
+	//
+	// If the group is omitted, it defaults to the same as the user.
+	Owner string
 }
 
 // Retrieves this directory plus the contents of the given file copied to the given path.
@@ -3062,6 +3722,10 @@ func (r *Directory) WithFile(path string, source *File, opts ...DirectoryWithFil
 		// `permissions` optional argument
 		if !querybuilder.IsZeroValue(opts[i].Permissions) {
 			q = q.Arg("permissions", opts[i].Permissions)
+		}
+		// `owner` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Owner) {
+			q = q.Arg("owner", opts[i].Owner)
 		}
 	}
 	q = q.Arg("path", path)
@@ -3138,6 +3802,31 @@ func (r *Directory) WithNewFile(path string, contents string, opts ...DirectoryW
 	}
 	q = q.Arg("path", path)
 	q = q.Arg("contents", contents)
+
+	return &Directory{
+		query: q,
+	}
+}
+
+// Retrieves this directory with the given Git-compatible patch applied.
+//
+// Experimental: This API is highly experimental and may be removed or replaced entirely.
+func (r *Directory) WithPatch(patch string) *Directory {
+	q := r.query.Select("withPatch")
+	q = q.Arg("patch", patch)
+
+	return &Directory{
+		query: q,
+	}
+}
+
+// Retrieves this directory with the given Git-compatible patch file applied.
+//
+// Experimental: This API is highly experimental and may be removed or replaced entirely.
+func (r *Directory) WithPatchFile(patch *File) *Directory {
+	assertNotNil("patch", patch)
+	q := r.query.Select("withPatchFile")
+	q = q.Arg("patch", patch)
 
 	return &Directory{
 		query: q,
@@ -3556,7 +4245,7 @@ func (r *Env) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
-// retrieve an input value by name
+// Retrieves an input binding by name
 func (r *Env) Input(name string) *Binding {
 	q := r.query.Select("input")
 	q = q.Arg("name", name)
@@ -3566,7 +4255,7 @@ func (r *Env) Input(name string) *Binding {
 	}
 }
 
-// return all input values for the environment
+// Returns all input bindings provided to the environment
 func (r *Env) Inputs(ctx context.Context) ([]Binding, error) {
 	q := r.query.Select("inputs")
 
@@ -3599,7 +4288,7 @@ func (r *Env) Inputs(ctx context.Context) ([]Binding, error) {
 	return convert(response), nil
 }
 
-// retrieve an output value by name
+// Retrieves an output binding by name
 func (r *Env) Output(name string) *Binding {
 	q := r.query.Select("output")
 	q = q.Arg("name", name)
@@ -3609,7 +4298,7 @@ func (r *Env) Output(name string) *Binding {
 	}
 }
 
-// return all output values for the environment
+// Returns all declared output bindings for the environment
 func (r *Env) Outputs(ctx context.Context) ([]Binding, error) {
 	q := r.query.Select("outputs")
 
@@ -3642,6 +4331,30 @@ func (r *Env) Outputs(ctx context.Context) ([]Binding, error) {
 	return convert(response), nil
 }
 
+// Create or update a binding of type Address in the environment
+func (r *Env) WithAddressInput(name string, value *Address, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withAddressInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired Address output to be assigned in the environment
+func (r *Env) WithAddressOutput(name string, description string) *Env {
+	q := r.query.Select("withAddressOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
 // Create or update a binding of type CacheVolume in the environment
 func (r *Env) WithCacheVolumeInput(name string, value *CacheVolume, description string) *Env {
 	assertNotNil("value", value)
@@ -3658,6 +4371,30 @@ func (r *Env) WithCacheVolumeInput(name string, value *CacheVolume, description 
 // Declare a desired CacheVolume output to be assigned in the environment
 func (r *Env) WithCacheVolumeOutput(name string, description string) *Env {
 	q := r.query.Select("withCacheVolumeOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type Changeset in the environment
+func (r *Env) WithChangesetInput(name string, value *Changeset, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withChangesetInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired Changeset output to be assigned in the environment
+func (r *Env) WithChangesetOutput(name string, description string) *Env {
+	q := r.query.Select("withChangesetOutput")
 	q = q.Arg("name", name)
 	q = q.Arg("description", description)
 
@@ -3714,6 +4451,17 @@ func (r *Env) WithContainerOutput(name string, description string) *Env {
 	}
 }
 
+// Installs the current module into the environment, exposing its functions to the model
+//
+// Contextual path arguments will be populated using the environment's workspace.
+func (r *Env) WithCurrentModule() *Env {
+	q := r.query.Select("withCurrentModule")
+
+	return &Env{
+		query: q,
+	}
+}
+
 // Create or update a binding of type Directory in the environment
 func (r *Env) WithDirectoryInput(name string, value *Directory, description string) *Env {
 	assertNotNil("value", value)
@@ -3730,6 +4478,30 @@ func (r *Env) WithDirectoryInput(name string, value *Directory, description stri
 // Declare a desired Directory output to be assigned in the environment
 func (r *Env) WithDirectoryOutput(name string, description string) *Env {
 	q := r.query.Select("withDirectoryOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type EnvFile in the environment
+func (r *Env) WithEnvFileInput(name string, value *EnvFile, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withEnvFileInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired EnvFile output to be assigned in the environment
+func (r *Env) WithEnvFileOutput(name string, description string) *Env {
+	q := r.query.Select("withEnvFileOutput")
 	q = q.Arg("name", name)
 	q = q.Arg("description", description)
 
@@ -3834,6 +4606,30 @@ func (r *Env) WithGitRepositoryOutput(name string, description string) *Env {
 	}
 }
 
+// Create or update a binding of type JSONValue in the environment
+func (r *Env) WithJSONValueInput(name string, value *JSONValue, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withJSONValueInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired JSONValue output to be assigned in the environment
+func (r *Env) WithJSONValueOutput(name string, description string) *Env {
+	q := r.query.Select("withJSONValueOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
 // Create or update a binding of type K3S in the environment
 func (r *Env) WithK3SInput(name string, value *K3S, description string) *Env {
 	assertNotNil("value", value)
@@ -3858,24 +4654,13 @@ func (r *Env) WithK3SOutput(name string, description string) *Env {
 	}
 }
 
-// Create or update a binding of type LLM in the environment
-func (r *Env) WithLLMInput(name string, value *LLM, description string) *Env {
-	assertNotNil("value", value)
-	q := r.query.Select("withLLMInput")
-	q = q.Arg("name", name)
-	q = q.Arg("value", value)
-	q = q.Arg("description", description)
-
-	return &Env{
-		query: q,
-	}
-}
-
-// Declare a desired LLM output to be assigned in the environment
-func (r *Env) WithLLMOutput(name string, description string) *Env {
-	q := r.query.Select("withLLMOutput")
-	q = q.Arg("name", name)
-	q = q.Arg("description", description)
+// Installs a module into the environment, exposing its functions to the model
+//
+// Contextual path arguments will be populated using the environment's workspace.
+func (r *Env) WithModule(module *Module) *Env {
+	assertNotNil("module", module)
+	q := r.query.Select("withModule")
+	q = q.Arg("module", module)
 
 	return &Env{
 		query: q,
@@ -3946,6 +4731,54 @@ func (r *Env) WithModuleSourceInput(name string, value *ModuleSource, descriptio
 // Declare a desired ModuleSource output to be assigned in the environment
 func (r *Env) WithModuleSourceOutput(name string, description string) *Env {
 	q := r.query.Select("withModuleSourceOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type SearchResult in the environment
+func (r *Env) WithSearchResultInput(name string, value *SearchResult, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withSearchResultInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired SearchResult output to be assigned in the environment
+func (r *Env) WithSearchResultOutput(name string, description string) *Env {
+	q := r.query.Select("withSearchResultOutput")
+	q = q.Arg("name", name)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Create or update a binding of type SearchSubmatch in the environment
+func (r *Env) WithSearchSubmatchInput(name string, value *SearchSubmatch, description string) *Env {
+	assertNotNil("value", value)
+	q := r.query.Select("withSearchSubmatchInput")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+	q = q.Arg("description", description)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Declare a desired SearchSubmatch output to be assigned in the environment
+func (r *Env) WithSearchSubmatchOutput(name string, description string) *Env {
+	q := r.query.Select("withSearchSubmatchOutput")
 	q = q.Arg("name", name)
 	q = q.Arg("description", description)
 
@@ -4026,7 +4859,7 @@ func (r *Env) WithSocketOutput(name string, description string) *Env {
 	}
 }
 
-// Create or update an input value of type string
+// Provides a string input binding to the environment
 func (r *Env) WithStringInput(name string, value string, description string) *Env {
 	q := r.query.Select("withStringInput")
 	q = q.Arg("name", name)
@@ -4038,13 +4871,228 @@ func (r *Env) WithStringInput(name string, value string, description string) *En
 	}
 }
 
-// Create or update an input value of type string
+// Declares a desired string output binding
 func (r *Env) WithStringOutput(name string, description string) *Env {
 	q := r.query.Select("withStringOutput")
 	q = q.Arg("name", name)
 	q = q.Arg("description", description)
 
 	return &Env{
+		query: q,
+	}
+}
+
+// Returns a new environment with the provided workspace
+func (r *Env) WithWorkspace(workspace *Directory) *Env {
+	assertNotNil("workspace", workspace)
+	q := r.query.Select("withWorkspace")
+	q = q.Arg("workspace", workspace)
+
+	return &Env{
+		query: q,
+	}
+}
+
+// Returns a new environment without any outputs
+func (r *Env) WithoutOutputs() *Env {
+	q := r.query.Select("withoutOutputs")
+
+	return &Env{
+		query: q,
+	}
+}
+
+func (r *Env) Workspace() *Directory {
+	q := r.query.Select("workspace")
+
+	return &Directory{
+		query: q,
+	}
+}
+
+// A collection of environment variables.
+type EnvFile struct {
+	query *querybuilder.Selection
+
+	exists *bool
+	get    *string
+	id     *EnvFileID
+}
+type WithEnvFileFunc func(r *EnvFile) *EnvFile
+
+// With calls the provided function with current EnvFile.
+//
+// This is useful for reusability and readability by not breaking the calling chain.
+func (r *EnvFile) With(f WithEnvFileFunc) *EnvFile {
+	return f(r)
+}
+
+func (r *EnvFile) WithGraphQLQuery(q *querybuilder.Selection) *EnvFile {
+	return &EnvFile{
+		query: q,
+	}
+}
+
+// Return as a file
+func (r *EnvFile) AsFile() *File {
+	q := r.query.Select("asFile")
+
+	return &File{
+		query: q,
+	}
+}
+
+// Check if a variable exists
+func (r *EnvFile) Exists(ctx context.Context, name string) (bool, error) {
+	if r.exists != nil {
+		return *r.exists, nil
+	}
+	q := r.query.Select("exists")
+	q = q.Arg("name", name)
+
+	var response bool
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// EnvFileGetOpts contains options for EnvFile.Get
+type EnvFileGetOpts struct {
+	// Return the value exactly as written to the file. No quote removal or variable expansion
+	Raw bool
+}
+
+// Lookup a variable (last occurrence wins) and return its value, or an empty string
+func (r *EnvFile) Get(ctx context.Context, name string, opts ...EnvFileGetOpts) (string, error) {
+	if r.get != nil {
+		return *r.get, nil
+	}
+	q := r.query.Select("get")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `raw` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Raw) {
+			q = q.Arg("raw", opts[i].Raw)
+		}
+	}
+	q = q.Arg("name", name)
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// A unique identifier for this EnvFile.
+func (r *EnvFile) ID(ctx context.Context) (EnvFileID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response EnvFileID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *EnvFile) XXX_GraphQLType() string {
+	return "EnvFile"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *EnvFile) XXX_GraphQLIDType() string {
+	return "EnvFileID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *EnvFile) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *EnvFile) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *EnvFile) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadEnvFileFromID(EnvFileID(id))
+	return nil
+}
+
+// EnvFileVariablesOpts contains options for EnvFile.Variables
+type EnvFileVariablesOpts struct {
+	// Return values exactly as written to the file. No quote removal or variable expansion
+	Raw bool
+}
+
+// Return all variables
+func (r *EnvFile) Variables(ctx context.Context, opts ...EnvFileVariablesOpts) ([]EnvVariable, error) {
+	q := r.query.Select("variables")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `raw` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Raw) {
+			q = q.Arg("raw", opts[i].Raw)
+		}
+	}
+
+	q = q.Select("id")
+
+	type variables struct {
+		Id EnvVariableID
+	}
+
+	convert := func(fields []variables) []EnvVariable {
+		out := []EnvVariable{}
+
+		for i := range fields {
+			val := EnvVariable{id: &fields[i].Id}
+			val.query = q.Root().Select("loadEnvVariableFromID").Arg("id", fields[i].Id)
+			out = append(out, val)
+		}
+
+		return out
+	}
+	var response []variables
+
+	q = q.Bind(&response)
+
+	err := q.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert(response), nil
+}
+
+// Add a variable
+func (r *EnvFile) WithVariable(name string, value string) *EnvFile {
+	q := r.query.Select("withVariable")
+	q = q.Arg("name", name)
+	q = q.Arg("value", value)
+
+	return &EnvFile{
+		query: q,
+	}
+}
+
+// Remove all occurrences of the named variable
+func (r *EnvFile) WithoutVariable(name string) *EnvFile {
+	q := r.query.Select("withoutVariable")
+	q = q.Arg("name", name)
+
+	return &EnvFile{
 		query: q,
 	}
 }
@@ -4492,12 +5540,61 @@ func (r *File) WithGraphQLQuery(q *querybuilder.Selection) *File {
 	}
 }
 
+// FileAsEnvFileOpts contains options for File.AsEnvFile
+type FileAsEnvFileOpts struct {
+	// Replace "${VAR}" or "$VAR" with the value of other vars
+	Expand bool
+}
+
+// Parse as an env file
+func (r *File) AsEnvFile(opts ...FileAsEnvFileOpts) *EnvFile {
+	q := r.query.Select("asEnvFile")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `expand` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Expand) {
+			q = q.Arg("expand", opts[i].Expand)
+		}
+	}
+
+	return &EnvFile{
+		query: q,
+	}
+}
+
+// Change the owner of the file recursively.
+func (r *File) Chown(owner string) *File {
+	q := r.query.Select("chown")
+	q = q.Arg("owner", owner)
+
+	return &File{
+		query: q,
+	}
+}
+
+// FileContentsOpts contains options for File.Contents
+type FileContentsOpts struct {
+	// Start reading after this line
+	OffsetLines int
+	// Maximum number of lines to read
+	LimitLines int
+}
+
 // Retrieves the contents of the file.
-func (r *File) Contents(ctx context.Context) (string, error) {
+func (r *File) Contents(ctx context.Context, opts ...FileContentsOpts) (string, error) {
 	if r.contents != nil {
 		return *r.contents, nil
 	}
 	q := r.query.Select("contents")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `offsetLines` optional argument
+		if !querybuilder.IsZeroValue(opts[i].OffsetLines) {
+			q = q.Arg("offsetLines", opts[i].OffsetLines)
+		}
+		// `limitLines` optional argument
+		if !querybuilder.IsZeroValue(opts[i].LimitLines) {
+			q = q.Arg("limitLines", opts[i].LimitLines)
+		}
+	}
 
 	var response string
 
@@ -4618,6 +5715,108 @@ func (r *File) Name(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
+// FileSearchOpts contains options for File.Search
+type FileSearchOpts struct {
+	// Interpret the pattern as a literal string instead of a regular expression.
+	Literal bool
+	// Enable searching across multiple lines.
+	Multiline bool
+	// Allow the . pattern to match newlines in multiline mode.
+	Dotall bool
+	// Enable case-insensitive matching.
+	Insensitive bool
+	// Honor .gitignore, .ignore, and .rgignore files.
+	SkipIgnored bool
+	// Skip hidden files (files starting with .).
+	SkipHidden bool
+	// Only return matching files, not lines and content
+	FilesOnly bool
+	// Limit the number of results to return
+	Limit int
+
+	Paths []string
+
+	Globs []string
+}
+
+// Searches for content matching the given regular expression or literal string.
+//
+// Uses Rust regex syntax; escape literal ., [, ], {, }, | with backslashes.
+func (r *File) Search(ctx context.Context, pattern string, opts ...FileSearchOpts) ([]SearchResult, error) {
+	q := r.query.Select("search")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `literal` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Literal) {
+			q = q.Arg("literal", opts[i].Literal)
+		}
+		// `multiline` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Multiline) {
+			q = q.Arg("multiline", opts[i].Multiline)
+		}
+		// `dotall` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Dotall) {
+			q = q.Arg("dotall", opts[i].Dotall)
+		}
+		// `insensitive` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Insensitive) {
+			q = q.Arg("insensitive", opts[i].Insensitive)
+		}
+		// `skipIgnored` optional argument
+		if !querybuilder.IsZeroValue(opts[i].SkipIgnored) {
+			q = q.Arg("skipIgnored", opts[i].SkipIgnored)
+		}
+		// `skipHidden` optional argument
+		if !querybuilder.IsZeroValue(opts[i].SkipHidden) {
+			q = q.Arg("skipHidden", opts[i].SkipHidden)
+		}
+		// `filesOnly` optional argument
+		if !querybuilder.IsZeroValue(opts[i].FilesOnly) {
+			q = q.Arg("filesOnly", opts[i].FilesOnly)
+		}
+		// `limit` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Limit) {
+			q = q.Arg("limit", opts[i].Limit)
+		}
+		// `paths` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Paths) {
+			q = q.Arg("paths", opts[i].Paths)
+		}
+		// `globs` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Globs) {
+			q = q.Arg("globs", opts[i].Globs)
+		}
+	}
+	q = q.Arg("pattern", pattern)
+
+	q = q.Select("id")
+
+	type search struct {
+		Id SearchResultID
+	}
+
+	convert := func(fields []search) []SearchResult {
+		out := []SearchResult{}
+
+		for i := range fields {
+			val := SearchResult{id: &fields[i].Id}
+			val.query = q.Root().Select("loadSearchResultFromID").Arg("id", fields[i].Id)
+			out = append(out, val)
+		}
+
+		return out
+	}
+	var response []search
+
+	q = q.Bind(&response)
+
+	err := q.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert(response), nil
+}
+
 // Retrieves the size of the file, in bytes.
 func (r *File) Size(ctx context.Context) (int, error) {
 	if r.size != nil {
@@ -4648,6 +5847,43 @@ func (r *File) Sync(ctx context.Context) (*File, error) {
 func (r *File) WithName(name string) *File {
 	q := r.query.Select("withName")
 	q = q.Arg("name", name)
+
+	return &File{
+		query: q,
+	}
+}
+
+// FileWithReplacedOpts contains options for File.WithReplaced
+type FileWithReplacedOpts struct {
+	// Replace all occurrences of the pattern.
+	All bool
+	// Replace the first match starting from the specified line.
+	FirstFrom int
+}
+
+// Retrieves the file with content replaced with the given text.
+//
+// If 'all' is true, all occurrences of the pattern will be replaced.
+//
+// If 'firstAfter' is specified, only the first match starting at the specified line will be replaced.
+//
+// If neither are specified, and there are multiple matches for the pattern, this will error.
+//
+// If there are no matches for the pattern, this will error.
+func (r *File) WithReplaced(search string, replacement string, opts ...FileWithReplacedOpts) *File {
+	q := r.query.Select("withReplaced")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `all` optional argument
+		if !querybuilder.IsZeroValue(opts[i].All) {
+			q = q.Arg("all", opts[i].All)
+		}
+		// `firstFrom` optional argument
+		if !querybuilder.IsZeroValue(opts[i].FirstFrom) {
+			q = q.Arg("firstFrom", opts[i].FirstFrom)
+		}
+	}
+	q = q.Arg("search", search)
+	q = q.Arg("replacement", replacement)
 
 	return &File{
 		query: q,
@@ -5411,6 +6647,14 @@ type GitRef struct {
 	id     *GitRefID
 	ref    *string
 }
+type WithGitRefFunc func(r *GitRef) *GitRef
+
+// With calls the provided function with current GitRef.
+//
+// This is useful for reusability and readability by not breaking the calling chain.
+func (r *GitRef) With(f WithGitRefFunc) *GitRef {
+	return f(r)
+}
 
 func (r *GitRef) WithGraphQLQuery(q *querybuilder.Selection) *GitRef {
 	return &GitRef{
@@ -5429,6 +6673,17 @@ func (r *GitRef) Commit(ctx context.Context) (string, error) {
 
 	q = q.Bind(&response)
 	return response, q.Execute(ctx)
+}
+
+// Find the best common ancestor between this ref and another ref.
+func (r *GitRef) CommonAncestor(other *GitRef) *GitRef {
+	assertNotNil("other", other)
+	q := r.query.Select("commonAncestor")
+	q = q.Arg("other", other)
+
+	return &GitRef{
+		query: q,
+	}
 }
 
 // A unique identifier for this GitRef.
@@ -5526,15 +6781,8 @@ func (r *GitRef) Tree(opts ...GitRefTreeOpts) *Directory {
 type GitRepository struct {
 	query *querybuilder.Selection
 
-	id *GitRepositoryID
-}
-type WithGitRepositoryFunc func(r *GitRepository) *GitRepository
-
-// With calls the provided function with current GitRepository.
-//
-// This is useful for reusability and readability by not breaking the calling chain.
-func (r *GitRepository) With(f WithGitRepositoryFunc) *GitRepository {
-	return f(r)
+	id  *GitRepositoryID
+	url *string
 }
 
 func (r *GitRepository) WithGraphQLQuery(q *querybuilder.Selection) *GitRepository {
@@ -5643,6 +6891,15 @@ func (r *GitRepository) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+// Returns details for the latest semver tag.
+func (r *GitRepository) LatestVersion() *GitRef {
+	q := r.query.Select("latestVersion")
+
+	return &GitRef{
+		query: q,
+	}
+}
+
 // Returns details of a ref.
 func (r *GitRepository) Ref(name string) *GitRef {
 	q := r.query.Select("ref")
@@ -5685,30 +6942,17 @@ func (r *GitRepository) Tags(ctx context.Context, opts ...GitRepositoryTagsOpts)
 	return response, q.Execute(ctx)
 }
 
-// Header to authenticate the remote with.
-//
-// Deprecated: Use "httpAuthHeader" in the constructor instead.
-func (r *GitRepository) WithAuthHeader(header *Secret) *GitRepository {
-	assertNotNil("header", header)
-	q := r.query.Select("withAuthHeader")
-	q = q.Arg("header", header)
-
-	return &GitRepository{
-		query: q,
+// The URL of the git repository.
+func (r *GitRepository) URL(ctx context.Context) (string, error) {
+	if r.url != nil {
+		return *r.url, nil
 	}
-}
+	q := r.query.Select("url")
 
-// Token to authenticate the remote with.
-//
-// Deprecated: Use "httpAuthToken" in the constructor instead.
-func (r *GitRepository) WithAuthToken(token *Secret) *GitRepository {
-	assertNotNil("token", token)
-	q := r.query.Select("withAuthToken")
-	q = q.Arg("token", token)
+	var response string
 
-	return &GitRepository{
-		query: q,
-	}
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 // A graphql input type, which is essentially just a group of named args.
@@ -5969,7 +7213,257 @@ func (r *InterfaceTypeDef) SourceModuleName(ctx context.Context) (string, error)
 	return response, q.Execute(ctx)
 }
 
-type K3S struct {
+type JSONValue struct {
+	query *querybuilder.Selection
+
+	asBoolean *bool
+	asInteger *int
+	asString  *string
+	contents  *JSON
+	id        *JSONValueID
+}
+type WithJSONValueFunc func(r *JSONValue) *JSONValue
+
+// With calls the provided function with current JSONValue.
+//
+// This is useful for reusability and readability by not breaking the calling chain.
+func (r *JSONValue) With(f WithJSONValueFunc) *JSONValue {
+	return f(r)
+}
+
+func (r *JSONValue) WithGraphQLQuery(q *querybuilder.Selection) *JSONValue {
+	return &JSONValue{
+		query: q,
+	}
+}
+
+// Decode an array from json
+func (r *JSONValue) AsArray(ctx context.Context) ([]JSONValue, error) {
+	q := r.query.Select("asArray")
+
+	q = q.Select("id")
+
+	type asArray struct {
+		Id JSONValueID
+	}
+
+	convert := func(fields []asArray) []JSONValue {
+		out := []JSONValue{}
+
+		for i := range fields {
+			val := JSONValue{id: &fields[i].Id}
+			val.query = q.Root().Select("loadJSONValueFromID").Arg("id", fields[i].Id)
+			out = append(out, val)
+		}
+
+		return out
+	}
+	var response []asArray
+
+	q = q.Bind(&response)
+
+	err := q.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert(response), nil
+}
+
+// Decode a boolean from json
+func (r *JSONValue) AsBoolean(ctx context.Context) (bool, error) {
+	if r.asBoolean != nil {
+		return *r.asBoolean, nil
+	}
+	q := r.query.Select("asBoolean")
+
+	var response bool
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// Decode an integer from json
+func (r *JSONValue) AsInteger(ctx context.Context) (int, error) {
+	if r.asInteger != nil {
+		return *r.asInteger, nil
+	}
+	q := r.query.Select("asInteger")
+
+	var response int
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// Decode a string from json
+func (r *JSONValue) AsString(ctx context.Context) (string, error) {
+	if r.asString != nil {
+		return *r.asString, nil
+	}
+	q := r.query.Select("asString")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// JSONValueContentsOpts contains options for JSONValue.Contents
+type JSONValueContentsOpts struct {
+	// Pretty-print
+	Pretty bool
+	// Optional line prefix
+	//
+	// Default: "  "
+	Indent string
+}
+
+// Return the value encoded as json
+func (r *JSONValue) Contents(ctx context.Context, opts ...JSONValueContentsOpts) (JSON, error) {
+	if r.contents != nil {
+		return *r.contents, nil
+	}
+	q := r.query.Select("contents")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `pretty` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Pretty) {
+			q = q.Arg("pretty", opts[i].Pretty)
+		}
+		// `indent` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Indent) {
+			q = q.Arg("indent", opts[i].Indent)
+		}
+	}
+
+	var response JSON
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// Lookup the field at the given path, and return its value.
+func (r *JSONValue) Field(path []string) *JSONValue {
+	q := r.query.Select("field")
+	q = q.Arg("path", path)
+
+	return &JSONValue{
+		query: q,
+	}
+}
+
+// List fields of the encoded object
+func (r *JSONValue) Fields(ctx context.Context) ([]string, error) {
+	q := r.query.Select("fields")
+
+	var response []string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// A unique identifier for this JSONValue.
+func (r *JSONValue) ID(ctx context.Context) (JSONValueID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response JSONValueID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *JSONValue) XXX_GraphQLType() string {
+	return "JSONValue"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *JSONValue) XXX_GraphQLIDType() string {
+	return "JSONValueID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *JSONValue) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *JSONValue) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *JSONValue) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadJSONValueFromID(JSONValueID(id))
+	return nil
+}
+
+// Encode a boolean to json
+func (r *JSONValue) NewBoolean(value bool) *JSONValue {
+	q := r.query.Select("newBoolean")
+	q = q.Arg("value", value)
+
+	return &JSONValue{
+		query: q,
+	}
+}
+
+// Encode an integer to json
+func (r *JSONValue) NewInteger(value int) *JSONValue {
+	q := r.query.Select("newInteger")
+	q = q.Arg("value", value)
+
+	return &JSONValue{
+		query: q,
+	}
+}
+
+// Encode a string to json
+func (r *JSONValue) NewString(value string) *JSONValue {
+	q := r.query.Select("newString")
+	q = q.Arg("value", value)
+
+	return &JSONValue{
+		query: q,
+	}
+}
+
+// Return a new json value, decoded from the given content
+func (r *JSONValue) WithContents(contents JSON) *JSONValue {
+	q := r.query.Select("withContents")
+	q = q.Arg("contents", contents)
+
+	return &JSONValue{
+		query: q,
+	}
+}
+
+// Set a new field at the given path
+func (r *JSONValue) WithField(path []string, value *JSONValue) *JSONValue {
+	assertNotNil("value", value)
+	q := r.query.Select("withField")
+	q = q.Arg("path", path)
+	q = q.Arg("value", value)
+
+	return &JSONValue{
+		query: q,
+	}
+}
+
+type K3S struct { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L41)
 	query *querybuilder.Selection
 
 	id *K3SID
@@ -5991,11 +7485,11 @@ func (r *K3S) WithGraphQLQuery(q *querybuilder.Selection) *K3S {
 
 // K3SConfigOpts contains options for K3S.Config
 type K3SConfigOpts struct {
-	Local bool
+	Local bool // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L114)
 }
 
 // returns the config file for the k3s cluster
-func (r *K3S) Config(opts ...K3SConfigOpts) *File {
+func (r *K3S) Config(opts ...K3SConfigOpts) *File { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L111)
 	q := r.query.Select("config")
 	for i := len(opts) - 1; i >= 0; i-- {
 		// `local` optional argument
@@ -6009,7 +7503,7 @@ func (r *K3S) Config(opts ...K3SConfigOpts) *File {
 	}
 }
 
-func (r *K3S) Container() *Container {
+func (r *K3S) Container() *Container { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L48)
 	q := r.query.Select("container")
 
 	return &Container{
@@ -6067,7 +7561,7 @@ func (r *K3S) UnmarshalJSON(bs []byte) error {
 }
 
 // runs k9s on the target k3s cluster
-func (r *K3S) Kns() *Container {
+func (r *K3S) Kns() *Container { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L147)
 	q := r.query.Select("kns")
 
 	return &Container{
@@ -6076,7 +7570,7 @@ func (r *K3S) Kns() *Container {
 }
 
 // runs kubectl on the target k3s cluster
-func (r *K3S) Kubectl(args string) *Container {
+func (r *K3S) Kubectl(args string) *Container { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L135)
 	q := r.query.Select("kubectl")
 	q = q.Arg("args", args)
 
@@ -6086,7 +7580,7 @@ func (r *K3S) Kubectl(args string) *Container {
 }
 
 // Returns a newly initialized kind cluster
-func (r *K3S) Server() *Service {
+func (r *K3S) Server() *Service { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L92)
 	q := r.query.Select("server")
 
 	return &Service{
@@ -6095,7 +7589,7 @@ func (r *K3S) Server() *Service {
 }
 
 // Returns a newly initialized kind cluster
-func (r *K3S) WithContainer(c *Container) *K3S {
+func (r *K3S) WithContainer(c *Container) *K3S { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L105)
 	assertNotNil("c", c)
 	q := r.query.Select("withContainer")
 	q = q.Arg("c", c)
@@ -6108,11 +7602,13 @@ func (r *K3S) WithContainer(c *Container) *K3S {
 type LLM struct {
 	query *querybuilder.Selection
 
+	hasPrompt   *bool
 	historyJSON *JSON
 	id          *LLMID
 	lastReply   *string
 	model       *string
 	provider    *string
+	step        *LLMID
 	sync        *LLMID
 	tools       *string
 }
@@ -6158,6 +7654,19 @@ func (r *LLM) Env() *Env {
 	return &Env{
 		query: q,
 	}
+}
+
+// Indicates whether there are any queued prompts or tool results to send to the model
+func (r *LLM) HasPrompt(ctx context.Context) (bool, error) {
+	if r.hasPrompt != nil {
+		return *r.hasPrompt, nil
+	}
+	q := r.query.Select("hasPrompt")
+
+	var response bool
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
 }
 
 // return the llm message history
@@ -6245,7 +7754,7 @@ func (r *LLM) LastReply(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
-// synchronize LLM state
+// Submit the queued prompt, evaluate any tool calls, queue their results, and keep going until the model ends its turn
 func (r *LLM) Loop() *LLM {
 	q := r.query.Select("loop")
 
@@ -6278,6 +7787,19 @@ func (r *LLM) Provider(ctx context.Context) (string, error) {
 
 	q = q.Bind(&response)
 	return response, q.Execute(ctx)
+}
+
+// Submit the queued prompt or tool call results, evaluate any tool calls, and queue their results
+func (r *LLM) Step(ctx context.Context) (*LLM, error) {
+	q := r.query.Select("step")
+
+	var id LLMID
+	if err := q.Bind(&id).Execute(ctx); err != nil {
+		return nil, err
+	}
+	return &LLM{
+		query: q.Root().Select("loadLLMFromID").Arg("id", id),
+	}, nil
 }
 
 // synchronize LLM state
@@ -6315,11 +7837,34 @@ func (r *LLM) Tools(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
+// Return a new LLM with the specified function no longer exposed as a tool
+func (r *LLM) WithBlockedFunction(typeName string, function string) *LLM {
+	q := r.query.Select("withBlockedFunction")
+	q = q.Arg("typeName", typeName)
+	q = q.Arg("function", function)
+
+	return &LLM{
+		query: q,
+	}
+}
+
 // allow the LLM to interact with an environment via MCP
 func (r *LLM) WithEnv(env *Env) *LLM {
 	assertNotNil("env", env)
 	q := r.query.Select("withEnv")
 	q = q.Arg("env", env)
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// Add an external MCP server to the LLM
+func (r *LLM) WithMCPServer(name string, service *Service) *LLM {
+	assertNotNil("service", service)
+	q := r.query.Select("withMCPServer")
+	q = q.Arg("name", name)
+	q = q.Arg("service", service)
 
 	return &LLM{
 		query: q,
@@ -6351,6 +7896,15 @@ func (r *LLM) WithPromptFile(file *File) *LLM {
 	assertNotNil("file", file)
 	q := r.query.Select("withPromptFile")
 	q = q.Arg("file", file)
+
+	return &LLM{
+		query: q,
+	}
+}
+
+// Use a static set of tools for method calls, e.g. for MCP clients that do not support dynamic tool registration
+func (r *LLM) WithStaticTools() *LLM {
+	q := r.query.Select("withStaticTools")
 
 	return &LLM{
 		query: q,
@@ -7163,6 +8717,15 @@ func (r *ModuleSource) AsString(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
+// The blueprint referenced by the module source.
+func (r *ModuleSource) Blueprint() *ModuleSource {
+	q := r.query.Select("blueprint")
+
+	return &ModuleSource{
+		query: q,
+	}
+}
+
 // The ref to clone the root of the git repo from. Only valid for git sources.
 func (r *ModuleSource) CloneRef(ctx context.Context) (string, error) {
 	if r.cloneRef != nil {
@@ -7549,6 +9112,17 @@ func (r *ModuleSource) Version(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
+// Set a blueprint for the module source.
+func (r *ModuleSource) WithBlueprint(blueprint *ModuleSource) *ModuleSource {
+	assertNotNil("blueprint", blueprint)
+	q := r.query.Select("withBlueprint")
+	q = q.Arg("blueprint", blueprint)
+
+	return &ModuleSource{
+		query: q,
+	}
+}
+
 // Update the module source with a new client to generate.
 func (r *ModuleSource) WithClient(generator string, outputDir string) *ModuleSource {
 	q := r.query.Select("withClient")
@@ -7620,10 +9194,38 @@ func (r *ModuleSource) WithSourceSubpath(path string) *ModuleSource {
 	}
 }
 
+// Update the blueprint module to the latest version.
+func (r *ModuleSource) WithUpdateBlueprint() *ModuleSource {
+	q := r.query.Select("withUpdateBlueprint")
+
+	return &ModuleSource{
+		query: q,
+	}
+}
+
 // Update one or more module dependencies.
 func (r *ModuleSource) WithUpdateDependencies(dependencies []string) *ModuleSource {
 	q := r.query.Select("withUpdateDependencies")
 	q = q.Arg("dependencies", dependencies)
+
+	return &ModuleSource{
+		query: q,
+	}
+}
+
+// Update one or more clients.
+func (r *ModuleSource) WithUpdatedClients(clients []string) *ModuleSource {
+	q := r.query.Select("withUpdatedClients")
+	q = q.Arg("clients", clients)
+
+	return &ModuleSource{
+		query: q,
+	}
+}
+
+// Remove the current blueprint from the module source.
+func (r *ModuleSource) WithoutBlueprint() *ModuleSource {
+	q := r.query.Select("withoutBlueprint")
 
 	return &ModuleSource{
 		query: q,
@@ -7963,6 +9565,16 @@ func (r *Client) WithGraphQLQuery(q *querybuilder.Selection) *Client {
 	}
 }
 
+// initialize an address to load directories, containers, secrets or other object types.
+func (r *Client) Address(value string) *Address {
+	q := r.query.Select("address")
+	q = q.Arg("value", value)
+
+	return &Address{
+		query: q,
+	}
+}
+
 // Constructs a cache volume for a given cache key.
 func (r *Client) CacheVolume(key string) *CacheVolume {
 	q := r.query.Select("cacheVolume")
@@ -8001,6 +9613,21 @@ func (r *Client) Container(opts ...ContainerOpts) *Container {
 	}
 
 	return &Container{
+		query: q,
+	}
+}
+
+// Returns the current environment
+//
+// When called from a function invoked via an LLM tool call, this will be the LLM's current environment, including any modifications made through calling tools. Env values returned by functions become the new environment for subsequent calls, and Changeset values returned by functions are applied to the environment's workspace.
+//
+// When called from a module function outside of an LLM, this returns an Env with the current module installed, and with the current module's source directory as its workspace.
+//
+// Experimental: Programmatic env access is speculative and might be replaced.
+func (r *Client) CurrentEnv() *Env {
+	q := r.query.Select("currentEnv")
+
+	return &Env{
 		query: q,
 	}
 }
@@ -8085,7 +9712,7 @@ type EnvOpts struct {
 	Writable bool
 }
 
-// Initialize a new environment
+// Initializes a new environment
 //
 // Experimental: Environments are not yet stabilized
 func (r *Client) Env(opts ...EnvOpts) *Env {
@@ -8102,6 +9729,27 @@ func (r *Client) Env(opts ...EnvOpts) *Env {
 	}
 
 	return &Env{
+		query: q,
+	}
+}
+
+// EnvFileOpts contains options for Client.EnvFile
+type EnvFileOpts struct {
+	// Replace "${VAR}" or "$VAR" with the value of other vars
+	Expand bool
+}
+
+// Initialize an environment file
+func (r *Client) EnvFile(opts ...EnvFileOpts) *EnvFile {
+	q := r.query.Select("envFile")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `expand` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Expand) {
+			q = q.Arg("expand", opts[i].Expand)
+		}
+	}
+
+	return &EnvFile{
 		query: q,
 	}
 }
@@ -8264,18 +9912,27 @@ func (r *Client) HTTP(url string, opts ...HTTPOpts) *File {
 	}
 }
 
+// Initialize a JSON value
+func (r *Client) JSON() *JSONValue {
+	q := r.query.Select("json")
+
+	return &JSONValue{
+		query: q,
+	}
+}
+
 // K3SOpts contains options for Client.K3S
 type K3SOpts struct {
 
 	// Default: "rancher/k3s:latest"
-	Image string
+	Image string // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L55)
 	//
 	// keeps the state of the cluster (not recommended).
 	//
-	KeepState bool
+	KeepState bool // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L60)
 }
 
-func (r *Client) K3S(name string, opts ...K3SOpts) *K3S {
+func (r *Client) K3S(name string, opts ...K3SOpts) *K3S { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L51)
 	q := r.query.Select("k3S")
 	for i := len(opts) - 1; i >= 0; i-- {
 		// `image` optional argument
@@ -8323,6 +9980,16 @@ func (r *Client) LLM(opts ...LLMOpts) *LLM {
 	}
 }
 
+// Load a Address from its ID.
+func (r *Client) LoadAddressFromID(id AddressID) *Address {
+	q := r.query.Select("loadAddressFromID")
+	q = q.Arg("id", id)
+
+	return &Address{
+		query: q,
+	}
+}
+
 // Load a Binding from its ID.
 func (r *Client) LoadBindingFromID(id BindingID) *Binding {
 	q := r.query.Select("loadBindingFromID")
@@ -8339,6 +10006,16 @@ func (r *Client) LoadCacheVolumeFromID(id CacheVolumeID) *CacheVolume {
 	q = q.Arg("id", id)
 
 	return &CacheVolume{
+		query: q,
+	}
+}
+
+// Load a Changeset from its ID.
+func (r *Client) LoadChangesetFromID(id ChangesetID) *Changeset {
+	q := r.query.Select("loadChangesetFromID")
+	q = q.Arg("id", id)
+
+	return &Changeset{
 		query: q,
 	}
 }
@@ -8399,6 +10076,16 @@ func (r *Client) LoadEnumValueTypeDefFromID(id EnumValueTypeDefID) *EnumValueTyp
 	q = q.Arg("id", id)
 
 	return &EnumValueTypeDef{
+		query: q,
+	}
+}
+
+// Load a EnvFile from its ID.
+func (r *Client) LoadEnvFileFromID(id EnvFileID) *EnvFile {
+	q := r.query.Select("loadEnvFileFromID")
+	q = q.Arg("id", id)
+
+	return &EnvFile{
 		query: q,
 	}
 }
@@ -8553,6 +10240,16 @@ func (r *Client) LoadInterfaceTypeDefFromID(id InterfaceTypeDefID) *InterfaceTyp
 	}
 }
 
+// Load a JSONValue from its ID.
+func (r *Client) LoadJSONValueFromID(id JSONValueID) *JSONValue {
+	q := r.query.Select("loadJSONValueFromID")
+	q = q.Arg("id", id)
+
+	return &JSONValue{
+		query: q,
+	}
+}
+
 // Load a K3S from its ID.
 func (r *Client) LoadK3SFromID(id K3SID) *K3S {
 	q := r.query.Select("loadK3SFromID")
@@ -8669,6 +10366,26 @@ func (r *Client) LoadScalarTypeDefFromID(id ScalarTypeDefID) *ScalarTypeDef {
 	q = q.Arg("id", id)
 
 	return &ScalarTypeDef{
+		query: q,
+	}
+}
+
+// Load a SearchResult from its ID.
+func (r *Client) LoadSearchResultFromID(id SearchResultID) *SearchResult {
+	q := r.query.Select("loadSearchResultFromID")
+	q = q.Arg("id", id)
+
+	return &SearchResult{
+		query: q,
+	}
+}
+
+// Load a SearchSubmatch from its ID.
+func (r *Client) LoadSearchSubmatchFromID(id SearchSubmatchID) *SearchSubmatch {
+	q := r.query.Select("loadSearchSubmatchFromID")
+	q = q.Arg("id", id)
+
+	return &SearchSubmatch{
 		query: q,
 	}
 }
@@ -9032,6 +10749,259 @@ func (r *ScalarTypeDef) SourceModuleName(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
+type SearchResult struct {
+	query *querybuilder.Selection
+
+	absoluteOffset *int
+	filePath       *string
+	id             *SearchResultID
+	lineNumber     *int
+	matchedLines   *string
+}
+
+func (r *SearchResult) WithGraphQLQuery(q *querybuilder.Selection) *SearchResult {
+	return &SearchResult{
+		query: q,
+	}
+}
+
+// The byte offset of this line within the file.
+func (r *SearchResult) AbsoluteOffset(ctx context.Context) (int, error) {
+	if r.absoluteOffset != nil {
+		return *r.absoluteOffset, nil
+	}
+	q := r.query.Select("absoluteOffset")
+
+	var response int
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The path to the file that matched.
+func (r *SearchResult) FilePath(ctx context.Context) (string, error) {
+	if r.filePath != nil {
+		return *r.filePath, nil
+	}
+	q := r.query.Select("filePath")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// A unique identifier for this SearchResult.
+func (r *SearchResult) ID(ctx context.Context) (SearchResultID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response SearchResultID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *SearchResult) XXX_GraphQLType() string {
+	return "SearchResult"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *SearchResult) XXX_GraphQLIDType() string {
+	return "SearchResultID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *SearchResult) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *SearchResult) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *SearchResult) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadSearchResultFromID(SearchResultID(id))
+	return nil
+}
+
+// The first line that matched.
+func (r *SearchResult) LineNumber(ctx context.Context) (int, error) {
+	if r.lineNumber != nil {
+		return *r.lineNumber, nil
+	}
+	q := r.query.Select("lineNumber")
+
+	var response int
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The line content that matched.
+func (r *SearchResult) MatchedLines(ctx context.Context) (string, error) {
+	if r.matchedLines != nil {
+		return *r.matchedLines, nil
+	}
+	q := r.query.Select("matchedLines")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// Sub-match positions and content within the matched lines.
+func (r *SearchResult) Submatches(ctx context.Context) ([]SearchSubmatch, error) {
+	q := r.query.Select("submatches")
+
+	q = q.Select("id")
+
+	type submatches struct {
+		Id SearchSubmatchID
+	}
+
+	convert := func(fields []submatches) []SearchSubmatch {
+		out := []SearchSubmatch{}
+
+		for i := range fields {
+			val := SearchSubmatch{id: &fields[i].Id}
+			val.query = q.Root().Select("loadSearchSubmatchFromID").Arg("id", fields[i].Id)
+			out = append(out, val)
+		}
+
+		return out
+	}
+	var response []submatches
+
+	q = q.Bind(&response)
+
+	err := q.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return convert(response), nil
+}
+
+type SearchSubmatch struct {
+	query *querybuilder.Selection
+
+	end   *int
+	id    *SearchSubmatchID
+	start *int
+	text  *string
+}
+
+func (r *SearchSubmatch) WithGraphQLQuery(q *querybuilder.Selection) *SearchSubmatch {
+	return &SearchSubmatch{
+		query: q,
+	}
+}
+
+// The match's end offset within the matched lines.
+func (r *SearchSubmatch) End(ctx context.Context) (int, error) {
+	if r.end != nil {
+		return *r.end, nil
+	}
+	q := r.query.Select("end")
+
+	var response int
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// A unique identifier for this SearchSubmatch.
+func (r *SearchSubmatch) ID(ctx context.Context) (SearchSubmatchID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response SearchSubmatchID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *SearchSubmatch) XXX_GraphQLType() string {
+	return "SearchSubmatch"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *SearchSubmatch) XXX_GraphQLIDType() string {
+	return "SearchSubmatchID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *SearchSubmatch) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *SearchSubmatch) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(marshalCtx)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *SearchSubmatch) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadSearchSubmatchFromID(SearchSubmatchID(id))
+	return nil
+}
+
+// The match's start offset within the matched lines.
+func (r *SearchSubmatch) Start(ctx context.Context) (int, error) {
+	if r.start != nil {
+		return *r.start, nil
+	}
+	q := r.query.Select("start")
+
+	var response int
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The matched text.
+func (r *SearchSubmatch) Text(ctx context.Context) (string, error) {
+	if r.text != nil {
+		return *r.text, nil
+	}
+	q := r.query.Select("text")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
 // A reference to a secret value, which can be handled more safely than the value itself.
 type Secret struct {
 	query *querybuilder.Selection
@@ -9145,6 +11115,7 @@ type Service struct {
 	id       *ServiceID
 	start    *ServiceID
 	stop     *ServiceID
+	sync     *ServiceID
 	up       *Void
 }
 type WithServiceFunc func(r *Service) *Service
@@ -9332,6 +11303,38 @@ func (r *Service) Stop(ctx context.Context, opts ...ServiceStopOpts) (*Service, 
 	}, nil
 }
 
+// Forces evaluation of the pipeline in the engine.
+func (r *Service) Sync(ctx context.Context) (*Service, error) {
+	q := r.query.Select("sync")
+
+	var id ServiceID
+	if err := q.Bind(&id).Execute(ctx); err != nil {
+		return nil, err
+	}
+	return &Service{
+		query: q.Root().Select("loadServiceFromID").Arg("id", id),
+	}, nil
+}
+
+// ServiceTerminalOpts contains options for Service.Terminal
+type ServiceTerminalOpts struct {
+	Cmd []string
+}
+
+func (r *Service) Terminal(opts ...ServiceTerminalOpts) *Service {
+	q := r.query.Select("terminal")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `cmd` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Cmd) {
+			q = q.Arg("cmd", opts[i].Cmd)
+		}
+	}
+
+	return &Service{
+		query: q,
+	}
+}
+
 // ServiceUpOpts contains options for Service.Up
 type ServiceUpOpts struct {
 	// List of frontend/backend port mappings to forward.
@@ -9443,6 +11446,7 @@ type SourceMap struct {
 	id       *SourceMapID
 	line     *int
 	module   *string
+	url      *string
 }
 
 func (r *SourceMap) WithGraphQLQuery(q *querybuilder.Selection) *SourceMap {
@@ -9545,6 +11549,19 @@ func (r *SourceMap) Module(ctx context.Context) (string, error) {
 		return *r.module, nil
 	}
 	q := r.query.Select("module")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// The URL to the file, if any. This can be used to link to the source map in the browser.
+func (r *SourceMap) URL(ctx context.Context) (string, error) {
+	if r.url != nil {
+		return *r.url, nil
+	}
+	q := r.query.Select("url")
 
 	var response string
 
@@ -10059,7 +12076,14 @@ func (v CacheSharingMode) Value() string {
 }
 
 func (v *CacheSharingMode) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Name())
+	if *v == "" {
+		return []byte(`""`), nil
+	}
+	name := v.Name()
+	if name == "" {
+		return nil, fmt.Errorf("invalid enum value %q", *v)
+	}
+	return json.Marshal(name)
 }
 
 func (v *CacheSharingMode) UnmarshalJSON(dt []byte) error {
@@ -10068,6 +12092,8 @@ func (v *CacheSharingMode) UnmarshalJSON(dt []byte) error {
 		return err
 	}
 	switch s {
+	case "":
+		*v = ""
 	case "LOCKED":
 		*v = CacheSharingModeLocked
 	case "PRIVATE":
@@ -10075,7 +12101,7 @@ func (v *CacheSharingMode) UnmarshalJSON(dt []byte) error {
 	case "SHARED":
 		*v = CacheSharingModeShared
 	default:
-		return fmt.Errorf("unknown enum value %q", s)
+		return fmt.Errorf("invalid enum value %q", s)
 	}
 	return nil
 }
@@ -10089,6 +12115,70 @@ const (
 
 	// Shares the cache volume amongst many build pipelines, but will serialize the writes
 	CacheSharingModeLocked CacheSharingMode = "LOCKED"
+)
+
+// File type.
+type ExistsType string
+
+func (ExistsType) IsEnum() {}
+
+func (v ExistsType) Name() string {
+	switch v {
+	case ExistsTypeRegularType:
+		return "REGULAR_TYPE"
+	case ExistsTypeDirectoryType:
+		return "DIRECTORY_TYPE"
+	case ExistsTypeSymlinkType:
+		return "SYMLINK_TYPE"
+	default:
+		return ""
+	}
+}
+
+func (v ExistsType) Value() string {
+	return string(v)
+}
+
+func (v *ExistsType) MarshalJSON() ([]byte, error) {
+	if *v == "" {
+		return []byte(`""`), nil
+	}
+	name := v.Name()
+	if name == "" {
+		return nil, fmt.Errorf("invalid enum value %q", *v)
+	}
+	return json.Marshal(name)
+}
+
+func (v *ExistsType) UnmarshalJSON(dt []byte) error {
+	var s string
+	if err := json.Unmarshal(dt, &s); err != nil {
+		return err
+	}
+	switch s {
+	case "":
+		*v = ""
+	case "DIRECTORY_TYPE":
+		*v = ExistsTypeDirectoryType
+	case "REGULAR_TYPE":
+		*v = ExistsTypeRegularType
+	case "SYMLINK_TYPE":
+		*v = ExistsTypeSymlinkType
+	default:
+		return fmt.Errorf("invalid enum value %q", s)
+	}
+	return nil
+}
+
+const (
+	// Tests path is a regular file
+	ExistsTypeRegularType ExistsType = "REGULAR_TYPE"
+
+	// Tests path is a directory
+	ExistsTypeDirectoryType ExistsType = "DIRECTORY_TYPE"
+
+	// Tests path is a symlink
+	ExistsTypeSymlinkType ExistsType = "SYMLINK_TYPE"
 )
 
 // Compression algorithm to use for image layers.
@@ -10116,7 +12206,14 @@ func (v ImageLayerCompression) Value() string {
 }
 
 func (v *ImageLayerCompression) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Name())
+	if *v == "" {
+		return []byte(`""`), nil
+	}
+	name := v.Name()
+	if name == "" {
+		return nil, fmt.Errorf("invalid enum value %q", *v)
+	}
+	return json.Marshal(name)
 }
 
 func (v *ImageLayerCompression) UnmarshalJSON(dt []byte) error {
@@ -10125,6 +12222,8 @@ func (v *ImageLayerCompression) UnmarshalJSON(dt []byte) error {
 		return err
 	}
 	switch s {
+	case "":
+		*v = ""
 	case "EStarGZ":
 		*v = ImageLayerCompressionEstarGz
 	case "ESTARGZ":
@@ -10136,7 +12235,7 @@ func (v *ImageLayerCompression) UnmarshalJSON(dt []byte) error {
 	case "Zstd":
 		*v = ImageLayerCompressionZstd
 	default:
-		return fmt.Errorf("unknown enum value %q", s)
+		return fmt.Errorf("invalid enum value %q", s)
 	}
 	return nil
 }
@@ -10173,7 +12272,14 @@ func (v ImageMediaTypes) Value() string {
 }
 
 func (v *ImageMediaTypes) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Name())
+	if *v == "" {
+		return []byte(`""`), nil
+	}
+	name := v.Name()
+	if name == "" {
+		return nil, fmt.Errorf("invalid enum value %q", *v)
+	}
+	return json.Marshal(name)
 }
 
 func (v *ImageMediaTypes) UnmarshalJSON(dt []byte) error {
@@ -10182,6 +12288,8 @@ func (v *ImageMediaTypes) UnmarshalJSON(dt []byte) error {
 		return err
 	}
 	switch s {
+	case "":
+		*v = ""
 	case "DOCKER":
 		*v = ImageMediaTypesDocker
 	case "DockerMediaTypes":
@@ -10191,7 +12299,7 @@ func (v *ImageMediaTypes) UnmarshalJSON(dt []byte) error {
 	case "OCIMediaTypes":
 		*v = ImageMediaTypesOcimediaTypes
 	default:
-		return fmt.Errorf("unknown enum value %q", s)
+		return fmt.Errorf("invalid enum value %q", s)
 	}
 	return nil
 }
@@ -10227,7 +12335,14 @@ func (v ModuleSourceKind) Value() string {
 }
 
 func (v *ModuleSourceKind) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Name())
+	if *v == "" {
+		return []byte(`""`), nil
+	}
+	name := v.Name()
+	if name == "" {
+		return nil, fmt.Errorf("invalid enum value %q", *v)
+	}
+	return json.Marshal(name)
 }
 
 func (v *ModuleSourceKind) UnmarshalJSON(dt []byte) error {
@@ -10236,6 +12351,8 @@ func (v *ModuleSourceKind) UnmarshalJSON(dt []byte) error {
 		return err
 	}
 	switch s {
+	case "":
+		*v = ""
 	case "DIR":
 		*v = ModuleSourceKindDir
 	case "DIR_SOURCE":
@@ -10249,7 +12366,7 @@ func (v *ModuleSourceKind) UnmarshalJSON(dt []byte) error {
 	case "LOCAL_SOURCE":
 		*v = ModuleSourceKindLocalSource
 	default:
-		return fmt.Errorf("unknown enum value %q", s)
+		return fmt.Errorf("invalid enum value %q", s)
 	}
 	return nil
 }
@@ -10286,7 +12403,14 @@ func (v NetworkProtocol) Value() string {
 }
 
 func (v *NetworkProtocol) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Name())
+	if *v == "" {
+		return []byte(`""`), nil
+	}
+	name := v.Name()
+	if name == "" {
+		return nil, fmt.Errorf("invalid enum value %q", *v)
+	}
+	return json.Marshal(name)
 }
 
 func (v *NetworkProtocol) UnmarshalJSON(dt []byte) error {
@@ -10295,12 +12419,14 @@ func (v *NetworkProtocol) UnmarshalJSON(dt []byte) error {
 		return err
 	}
 	switch s {
+	case "":
+		*v = ""
 	case "TCP":
 		*v = NetworkProtocolTcp
 	case "UDP":
 		*v = NetworkProtocolUdp
 	default:
-		return fmt.Errorf("unknown enum value %q", s)
+		return fmt.Errorf("invalid enum value %q", s)
 	}
 	return nil
 }
@@ -10334,7 +12460,14 @@ func (v ReturnType) Value() string {
 }
 
 func (v *ReturnType) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Name())
+	if *v == "" {
+		return []byte(`""`), nil
+	}
+	name := v.Name()
+	if name == "" {
+		return nil, fmt.Errorf("invalid enum value %q", *v)
+	}
+	return json.Marshal(name)
 }
 
 func (v *ReturnType) UnmarshalJSON(dt []byte) error {
@@ -10343,6 +12476,8 @@ func (v *ReturnType) UnmarshalJSON(dt []byte) error {
 		return err
 	}
 	switch s {
+	case "":
+		*v = ""
 	case "ANY":
 		*v = ReturnTypeAny
 	case "FAILURE":
@@ -10350,7 +12485,7 @@ func (v *ReturnType) UnmarshalJSON(dt []byte) error {
 	case "SUCCESS":
 		*v = ReturnTypeSuccess
 	default:
-		return fmt.Errorf("unknown enum value %q", s)
+		return fmt.Errorf("invalid enum value %q", s)
 	}
 	return nil
 }
@@ -10405,7 +12540,14 @@ func (v TypeDefKind) Value() string {
 }
 
 func (v *TypeDefKind) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Name())
+	if *v == "" {
+		return []byte(`""`), nil
+	}
+	name := v.Name()
+	if name == "" {
+		return nil, fmt.Errorf("invalid enum value %q", *v)
+	}
+	return json.Marshal(name)
 }
 
 func (v *TypeDefKind) UnmarshalJSON(dt []byte) error {
@@ -10414,6 +12556,8 @@ func (v *TypeDefKind) UnmarshalJSON(dt []byte) error {
 		return err
 	}
 	switch s {
+	case "":
+		*v = ""
 	case "BOOLEAN":
 		*v = TypeDefKindBoolean
 	case "BOOLEAN_KIND":
@@ -10459,7 +12603,7 @@ func (v *TypeDefKind) UnmarshalJSON(dt []byte) error {
 	case "VOID_KIND":
 		*v = TypeDefKindVoidKind
 	default:
-		return fmt.Errorf("unknown enum value %q", s)
+		return fmt.Errorf("invalid enum value %q", s)
 	}
 	return nil
 }
