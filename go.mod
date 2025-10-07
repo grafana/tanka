@@ -14,7 +14,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-jsonnet v0.21.0
 	github.com/pkg/errors v0.9.1
-	github.com/posener/complete v1.2.3
+	github.com/posener/complete/v2 v2.1.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/objx v0.5.3
@@ -51,6 +51,8 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/posener/complete v1.2.3 // indirect
+	github.com/posener/script v1.2.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect

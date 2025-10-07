@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
-	"github.com/posener/complete"
+	"github.com/posener/complete/v2"
 
 	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
