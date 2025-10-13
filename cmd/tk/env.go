@@ -42,7 +42,7 @@ func envCmd(ctx context.Context) *cli.Command {
 }
 
 var kubectlContexts = cli.PredictFunc(
-	func(args complete.Args) []string {
+	func(_ complete.Args) []string {
 		c, _ := client.Contexts()
 		return c
 	},
