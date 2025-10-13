@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-clix/cli"
 	"github.com/gobwas/glob"
-	"github.com/posener/complete/v2"
 
 	"github.com/grafana/tanka/pkg/tanka"
 )
@@ -22,7 +21,7 @@ func fmtCmd(ctx context.Context) *cli.Command {
 		Short: "format Jsonnet code",
 		Args: cli.Args{
 			Validator: cli.ArgsMin(1),
-			Predictor: complete.PredictFiles("*.*sonnet"),
+			Predictor: predictFilesV1("*.*sonnet"),
 		},
 	}
 

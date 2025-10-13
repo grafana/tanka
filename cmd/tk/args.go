@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/go-clix/cli"
-	"github.com/posener/complete/v2"
+	"github.com/posener/complete"
 
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 	"github.com/grafana/tanka/pkg/tanka"
@@ -45,7 +45,7 @@ func generateWorkflowArgs(ctx context.Context) cli.Args {
 				return reldirs
 			}
 
-			return complete.PredictFiles("*").Predict(args)
+			return predictFilesV1("*").Predict(args)
 		}),
 	}
 	return workflowArgs

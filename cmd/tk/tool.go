@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/go-clix/cli"
-	"github.com/posener/complete/v2"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -156,7 +155,7 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 `,
 		Args: cli.Args{
 			Validator: cli.ArgsMin(1),
-			Predictor: complete.PredictFiles("*"),
+			Predictor: predictFilesV1("*"),
 		},
 	}
 
@@ -207,7 +206,7 @@ if the file is not a vendored (located at <tk-root>/vendor/) or a lib file (loca
 `,
 		Args: cli.Args{
 			Validator: cli.ArgsExact(1),
-			Predictor: complete.PredictDirs("*"),
+			Predictor: predictDirsV1("*"),
 		},
 	}
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-clix/cli"
 	"github.com/gobwas/glob"
-	"github.com/posener/complete/v2"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
 )
@@ -16,7 +15,7 @@ func lintCmd(_ context.Context) *cli.Command {
 		Short: "lint Jsonnet code",
 		Args: cli.Args{
 			Validator: cli.ArgsMin(1),
-			Predictor: complete.PredictFiles("*.*sonnet"),
+			Predictor: predictFilesV1("*.*sonnet"),
 		},
 	}
 

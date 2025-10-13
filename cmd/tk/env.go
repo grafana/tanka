@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
-	"github.com/posener/complete/v2"
+	"github.com/posener/complete"
 
 	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -42,7 +42,7 @@ func envCmd(ctx context.Context) *cli.Command {
 }
 
 var kubectlContexts = cli.PredictFunc(
-	func(complete.Args) []string {
+	func(args complete.Args) []string {
 		c, _ := client.Contexts()
 		return c
 	},
