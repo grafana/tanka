@@ -1,5 +1,5 @@
 # download kubectl
-FROM golang:1.25.1-alpine@sha256:b6ed3fd0452c0e9bcdef5597f29cc1418f61672e9d3a2f55bf02e7222c014abd AS kubectl
+FROM golang:1.25.2-alpine@sha256:06cdd34bd531b810650e47762c01e025eb9b1c7eadd191553b91c9f2d549fae8 AS kubectl
 ARG KUBECTL_VERSION=1.34.1
 RUN apk add --no-cache curl
 RUN export OS=$(go env GOOS) && \
@@ -8,7 +8,7 @@ RUN export OS=$(go env GOOS) && \
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
-FROM golang:1.25.1-alpine@sha256:b6ed3fd0452c0e9bcdef5597f29cc1418f61672e9d3a2f55bf02e7222c014abd AS jb
+FROM golang:1.25.2-alpine@sha256:06cdd34bd531b810650e47762c01e025eb9b1c7eadd191553b91c9f2d549fae8 AS jb
 WORKDIR /tmp
 RUN apk add --no-cache git make bash &&\
     git clone https://github.com/jsonnet-bundler/jsonnet-bundler &&\
@@ -17,7 +17,7 @@ RUN apk add --no-cache git make bash &&\
     make static &&\
     mv _output/jb /usr/local/bin/jb
 
-FROM golang:1.25.1-alpine@sha256:b6ed3fd0452c0e9bcdef5597f29cc1418f61672e9d3a2f55bf02e7222c014abd AS helm
+FROM golang:1.25.2-alpine@sha256:06cdd34bd531b810650e47762c01e025eb9b1c7eadd191553b91c9f2d549fae8 AS helm
 WORKDIR /tmp/helm
 ARG HELM_VERSION=3.19.0
 RUN apk add --no-cache jq curl
@@ -26,7 +26,7 @@ RUN export OS=$(go env GOOS) && \
     curl -SL "https://get.helm.sh/helm-v${HELM_VERSION}-${OS}-${ARCH}.tar.gz" > helm.tgz && \
     tar -xvf helm.tgz --strip-components=1
 
-FROM golang:1.25.1-alpine@sha256:b6ed3fd0452c0e9bcdef5597f29cc1418f61672e9d3a2f55bf02e7222c014abd AS kustomize
+FROM golang:1.25.2-alpine@sha256:06cdd34bd531b810650e47762c01e025eb9b1c7eadd191553b91c9f2d549fae8 AS kustomize
 WORKDIR /tmp/kustomize
 ARG KUSTOMIZE_VERSION=5.7.1
 RUN apk add --no-cache jq curl
