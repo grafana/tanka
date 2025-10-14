@@ -66,6 +66,8 @@ type ExportEnvOpts struct {
 	MergeDeletedEnvs []string
 	// Skip generating manifest.json file that tracks exported files
 	SkipManifest bool
+	// Only regenerate manifest.json from existing exported files without re-exporting
+	OnlyManifest bool
 }
 
 func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
@@ -73,6 +75,11 @@ func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to st
 	defer span.End()
 
 	span.SetAttributes(telemetry.AttrNumEnvs(len(envs)))
+
+	// If only regenerating manifest, use special path
+	if opts.OnlyManifest {
+		return regenerateManifestOnly(ctx, envs, to, opts)
+	}
 
 	// dir must be empty
 	empty, err := dirEmpty(to)
@@ -124,6 +131,156 @@ func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to st
 		return nil
 	}
 	return exportManifestFile(to, fileToEnv, nil)
+}
+
+// regenerateManifestOnly evaluates environments and generates manifest.json without writing YAML files
+func regenerateManifestOnly(ctx context.Context, envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
+	ctx, span := tracer.Start(ctx, "tanka.regenerateManifestOnly")
+	defer span.End()
+
+	span.SetAttributes(telemetry.AttrNumEnvs(len(envs)))
+
+	parallelism := opts.Parallelism
+	if parallelism <= 0 {
+		parallelism = defaultParallelism
+	}
+	if parallelism > len(envs) {
+		parallelism = len(envs)
+	}
+
+	// Load environments (evaluate jsonnet)
+	loadedEnvs, err := parallelLoadEnvironments(ctx, envs, parallelOpts{
+		Opts:        opts.Opts,
+		Selector:    opts.Selector,
+		Parallelism: parallelism,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Build file → environment mapping without writing files
+	fileToEnv, err := buildManifestMapping(ctx, loadedEnvs, parallelism, opts)
+	if err != nil {
+		return err
+	}
+
+	// Write only the manifest.json file
+	return exportManifestFile(to, fileToEnv, nil)
+}
+
+// buildManifestMapping evaluates environments and builds the file → environment mapping
+// without actually writing the manifest files
+func buildManifestMapping(ctx context.Context, loadedEnvs []*v1alpha1.Environment, parallelism int, opts *ExportEnvOpts) (map[string]string, error) {
+	ctx, span := tracer.Start(ctx, "tanka.buildManifestMapping")
+	defer span.End()
+
+	fileToEnv := map[string]string{}
+	fileToEnvLock := sync.Mutex{}
+
+	grp, ctx := errgroup.WithContext(ctx)
+	envsToProcess := make(chan *v1alpha1.Environment, parallelism*2)
+
+	for range parallelism {
+		grp.Go(func() error {
+			ctx, span := tracer.Start(ctx, "tanka.buildManifestMappingWorker")
+			defer span.End()
+
+			for {
+				select {
+				case <-ctx.Done():
+					telemetry.FailSpanWithError(span, ctx.Err())
+					return ctx.Err()
+				case work, ok := <-envsToProcess:
+					if !ok {
+						return nil
+					}
+					localFileToEnv, err := buildManifestMappingForEnv(ctx, work, opts)
+					if err != nil {
+						telemetry.FailSpanWithError(span, err)
+						return err
+					}
+
+					fileToEnvLock.Lock()
+					for name, namespace := range localFileToEnv {
+						fileToEnv[name] = namespace
+					}
+					fileToEnvLock.Unlock()
+				}
+			}
+		})
+	}
+
+	grp.Go(func() error {
+		for _, env := range loadedEnvs {
+			select {
+			case <-ctx.Done():
+				close(envsToProcess)
+				return ctx.Err()
+			case envsToProcess <- env:
+			}
+		}
+		close(envsToProcess)
+		return nil
+	})
+
+	if err := grp.Wait(); err != nil {
+		telemetry.FailSpanWithError(span, err)
+		return nil, err
+	}
+
+	return fileToEnv, nil
+}
+
+// buildManifestMappingForEnv processes a single environment and returns its file → environment mapping
+func buildManifestMappingForEnv(ctx context.Context, work *v1alpha1.Environment, opts *ExportEnvOpts) (map[string]string, error) {
+	ctx, span := tracer.Start(ctx, "tanka.buildManifestMappingForEnv")
+	defer span.End()
+	span.SetAttributes(telemetry.AttrEnv(work)...)
+
+	fileToEnv := make(map[string]string)
+
+	loaded, err := LoadManifests(ctx, work, opts.Opts.Filters)
+	if err != nil {
+		return nil, err
+	}
+
+	env := loaded.Env
+	res := loaded.Resources
+
+	span.SetAttributes(attribute.Int("tanka.env.num_resources", len(res)))
+
+	if len(res) == 0 {
+		return fileToEnv, nil
+	}
+
+	env.Data = nil
+	raw, err := json.Marshal(env)
+	if err != nil {
+		return nil, err
+	}
+	var menv manifest.Manifest
+	if err := json.Unmarshal(raw, &menv); err != nil {
+		return nil, err
+	}
+
+	// Create template
+	manifestTemplate, err := createTemplate(ctx, opts.Format, menv)
+	if err != nil {
+		return nil, fmt.Errorf("parsing format: %s", err)
+	}
+
+	// Build mapping for each resource (without writing files)
+	for _, m := range res {
+		name, err := applyTemplate(ctx, manifestTemplate, m)
+		if err != nil {
+			return nil, fmt.Errorf("executing name template: %w", err)
+		}
+
+		relpath := name + "." + opts.Extension
+		fileToEnv[relpath] = env.Metadata.Namespace
+	}
+
+	return fileToEnv, nil
 }
 
 func manifestEnvironments(ctx context.Context, loadedEnvs []*v1alpha1.Environment, parallelism int, to string, opts *ExportEnvOpts) (map[string]string, error) {
