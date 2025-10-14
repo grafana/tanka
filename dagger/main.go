@@ -18,10 +18,9 @@ func (m *Tanka) Build(
 	rootDir *dagger.Directory,
 ) *dagger.Container {
 	buildArgs := make([]dagger.BuildArg, 0, 2)
-	return dag.Container().
-		Build(rootDir, dagger.ContainerBuildOpts{
-			BuildArgs: buildArgs,
-		})
+	return rootDir.DockerBuild(dagger.DirectoryDockerBuildOpts{
+		BuildArgs: buildArgs,
+	})
 }
 
 func (m *Tanka) GetGoVersion(ctx context.Context, file *dagger.File) (string, error) {

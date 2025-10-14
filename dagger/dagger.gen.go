@@ -14,7 +14,7 @@ import (
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/grafana/tanka/dagger/internal/dagger"
@@ -246,14 +246,14 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					WithFunction(
 						dag.Function("GetGoVersion",
 							dag.TypeDef().WithKind(dagger.TypeDefKindStringKind)).
-							WithSourceMap(dag.SourceMap("main.go", 27, 1)).
-							WithArg("file", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 27, 51)})).
+							WithSourceMap(dag.SourceMap("main.go", 26, 1)).
+							WithArg("file", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 26, 51)})).
 					WithFunction(
 						dag.Function("AcceptanceTests",
 							dag.TypeDef().WithKind(dagger.TypeDefKindStringKind)).
-							WithSourceMap(dag.SourceMap("main.go", 43, 1)).
-							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 43, 54)}).
-							WithArg("acceptanceTestsDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 43, 81)}))), nil
+							WithSourceMap(dag.SourceMap("main.go", 42, 1)).
+							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 42, 54)}).
+							WithArg("acceptanceTestsDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 42, 81)}))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}
