@@ -11,12 +11,13 @@ export default defineConfig({
   trailingSlash: 'always',
   integrations: [
     starlight({
-      head: [
+      head: (isLocalPreview || process.env.PATH_PREFIX) ? [] : [
         // We need to set the base tag because Starlight doesn't add one by default.
-        // This is sensible given that when serving a docs webiste from a subdirectory the assumption is that there's
+        // This is sensible given that when serving a docs website from a subdirectory the assumption is that there's
         // "another" website you may want to be able to link to.
         // However, in our case, we use the base path only for PR previews and the actual website is always served from the root.
         // This will make sure that links in markdown files work correctly both in PR previews and the prod website.
+        // Also, setting the base path effectively broke #anchor links on subpages, since this meta is not varied per page.
         {
           tag: 'base',
           attrs: {
