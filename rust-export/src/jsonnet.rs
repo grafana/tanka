@@ -14,7 +14,7 @@ use crate::manifest::Manifest;
 
 // Script to extract environment metadata without evaluating the data field
 // This is much faster when we only need environment metadata (e.g., for listing)
-const METADATA_EVAL_SCRIPT: &str = r#"
+pub const METADATA_EVAL_SCRIPT: &str = r#"
 local noDataEnv(object) =
   std.prune(
     if std.isObject(object)
@@ -46,7 +46,7 @@ noDataEnv(main)
 
 // Script to load a single environment by name with full data
 // %s will be replaced with the environment name
-const SINGLE_ENV_EVAL_SCRIPT: &str = r#"
+pub const SINGLE_ENV_EVAL_SCRIPT: &str = r#"
 local singleEnv(object) =
   if std.isObject(object)
   then
@@ -216,7 +216,7 @@ impl SharedEvaluatorPool {
 }
 
 // Helper function to compute import paths for a file
-fn compute_import_paths(path: &Path) -> Vec<PathBuf> {
+pub fn compute_import_paths(path: &Path) -> Vec<PathBuf> {
     let mut import_paths = Vec::new();
 
     // Start from the file's directory and walk up to find lib/ and vendor/
@@ -652,7 +652,7 @@ fn extract_manifests_from_value(value: &Value) -> Result<Vec<Manifest>> {
 
 // Recursively search for Environment objects in a JSON value
 // This mimics Tanka's MetadataEvalScript behavior
-fn find_environments_recursive(value: &Value) -> Result<Vec<Environment>> {
+pub fn find_environments_recursive(value: &Value) -> Result<Vec<Environment>> {
     let mut environments = Vec::new();
 
     match value {

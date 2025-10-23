@@ -1,0 +1,11 @@
+{
+  "apiVersion": "tanka.dev/v1alpha1",
+  "kind": "Environment",
+  "metadata": {
+    "name": "withspec"
+  },
+  "spec": {
+    "apiServer": "https://localhost",
+    "namespace": "withspec"
+  }
+}
