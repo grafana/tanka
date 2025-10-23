@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use log::{info, warn};
 use rayon::prelude::*;
+use rayon::ThreadPool;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
@@ -9,7 +10,9 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 use crate::environment::LoadedEnvironment;
-use crate::jsonnet::{load_environment, load_manifests, list_environments};
+use crate::jsonnet::{
+    list_environments, load_environment, load_environment_by_name, load_manifests,
+};
 use crate::template::TemplateEngine;
 
 const MANIFEST_FILE: &str = "manifest.json";
@@ -36,7 +39,8 @@ pub struct ExportOptions {
     pub selector: Option<String>,
 }
 
-pub async fn export_environments(
+pub fn export_environments(
+    pool: &ThreadPool,
     output_dir: PathBuf,
     paths: Vec<PathBuf>,
     recursive: bool,
@@ -53,7 +57,7 @@ pub async fn export_environments(
 
     // Find environments
     let environments = if recursive {
-        find_environments_recursive(&paths, &opts)?
+        find_environments_recursive(pool, &paths, &opts)?
     } else {
         if paths.len() > 1 {
             return Err(anyhow!(
@@ -67,19 +71,30 @@ pub async fn export_environments(
 
     // Delete previously exported manifests if using replace strategy
     if matches!(opts.merge_strategy, ExportMergeStrategy::ReplaceEnvs) {
-        delete_previously_exported_manifests_from_envs(&output_dir, &environments, opts.skip_manifest)?;
+        delete_previously_exported_manifests_from_envs(
+            &output_dir,
+            &environments,
+            opts.skip_manifest,
+        )?;
     }
 
     // Delete manifests from deleted environments
     if !opts.merge_deleted_envs.is_empty() {
-        delete_previously_exported_manifests(&output_dir, &opts.merge_deleted_envs, opts.skip_manifest)?;
+        delete_previously_exported_manifests(
+            &output_dir,
+            &opts.merge_deleted_envs,
+            opts.skip_manifest,
+        )?;
     }
 
-    // Export environments in parallel
-    let file_to_env: HashMap<String, String> = environments
-        .par_iter()
-        .map(|env| export_single_environment(env, &output_dir, &opts))
-        .collect::<Result<Vec<_>>>()?
+    // Export environments in parallel using the thread pool
+    let file_to_env: HashMap<String, String> = pool
+        .install(|| {
+            environments
+                .par_iter()
+                .map(|env| export_single_environment(env, &output_dir, &opts))
+                .collect::<Result<Vec<_>>>()
+        })?
         .into_iter()
         .flatten()
         .collect();
@@ -89,13 +104,20 @@ pub async fn export_environments(
         export_manifest_file(&output_dir, &file_to_env, &[])?;
     }
 
-    info!("Successfully exported {} environment(s)", environments.len());
+    info!(
+        "Successfully exported {} environment(s)",
+        environments.len()
+    );
     Ok(())
 }
 
-fn find_environments_recursive(paths: &[PathBuf], opts: &ExportOptions) -> Result<Vec<LoadedEnvironment>> {
-    let mut environments = Vec::new();
-
+fn find_environments_recursive(
+    pool: &ThreadPool,
+    paths: &[PathBuf],
+    opts: &ExportOptions,
+) -> Result<Vec<LoadedEnvironment>> {
+    // Collect all main.jsonnet files first
+    let mut main_jsonnet_files = Vec::new();
     for path in paths {
         for entry in WalkDir::new(path)
             .follow_links(true)
@@ -103,32 +125,45 @@ fn find_environments_recursive(paths: &[PathBuf], opts: &ExportOptions) -> Resul
             .filter_map(|e| e.ok())
         {
             if entry.file_name() == "main.jsonnet" {
-                // Use list_environments which can handle files with multiple environments
-                match list_environments(entry.path()) {
-                    Ok(envs) => {
-                        for env in envs {
-                            // Filter by name if specified
-                            if let Some(ref name) = opts.name {
-                                if let Some(ref env_name) = env.environment.metadata.name {
-                                    if env_name != name {
-                                        continue;
-                                    }
-                                } else {
-                                    continue;
-                                }
-                            }
-
-                            // TODO: Filter by selector if specified
-                            environments.push(env);
-                        }
-                    }
-                    Err(e) => {
-                        warn!("Failed to load environment at {:?}: {}", entry.path(), e);
-                    }
-                }
+                main_jsonnet_files.push(entry.path().to_path_buf());
             }
         }
     }
+
+    // Load environments in parallel using the thread pool
+    let environments: Vec<LoadedEnvironment> = pool.install(|| {
+        main_jsonnet_files
+            .par_iter()
+            .filter_map(|path| {
+                match list_environments(path) {
+                    Ok(envs) => {
+                        let filtered_envs: Vec<LoadedEnvironment> = envs
+                            .into_iter()
+                            .filter(|env| {
+                                // Filter by name if specified
+                                if let Some(ref name) = opts.name {
+                                    if let Some(ref env_name) = env.environment.metadata.name {
+                                        env_name == name
+                                    } else {
+                                        false
+                                    }
+                                } else {
+                                    true
+                                }
+                                // TODO: Filter by selector if specified
+                            })
+                            .collect();
+                        Some(filtered_envs)
+                    }
+                    Err(e) => {
+                        warn!("Failed to load environment at {:?}: {}", path, e);
+                        None
+                    }
+                }
+            })
+            .flatten()
+            .collect()
+    });
 
     Ok(environments)
 }
@@ -138,30 +173,47 @@ fn export_single_environment(
     output_dir: &Path,
     opts: &ExportOptions,
 ) -> Result<HashMap<String, String>> {
-    info!("Exporting environment: {:?}", env.path);
+    let env_name = env
+        .environment
+        .metadata
+        .name
+        .as_ref()
+        .ok_or_else(|| anyhow!("Environment has no name"))?;
 
-    let manifests = load_manifests(env)?;
-    
+    info!("Exporting environment: {}", env_name);
+
+    // Load environment with full data using filtered eval
+    let full_env = load_environment_by_name(&env.path, env_name)?;
+    let manifests = load_manifests(&full_env)?;
+
     if manifests.is_empty() {
-        info!("No manifests found in environment: {:?}", env.path);
+        info!("No manifests found in environment: {:?}", full_env.path);
         return Ok(HashMap::new());
     }
 
-    let template = TemplateEngine::new(&opts.format, &env.environment)?;
+    let template = TemplateEngine::new(&opts.format, &full_env.environment)?;
     let mut file_to_env = HashMap::new();
 
     for manifest in manifests {
-        let name = template.apply(&manifest, &env.environment)?;
+        let name = template.apply(&manifest, &full_env.environment)?;
         let relpath = format!("{}.{}", name, opts.extension);
         let path = output_dir.join(&relpath);
 
         // Check if file exists (for fail-on-conflicts mode)
         if path.exists() && matches!(opts.merge_strategy, ExportMergeStrategy::FailOnConflicts) {
-            return Err(anyhow!("file '{}' already exists. Aborting", path.display()));
+            return Err(anyhow!(
+                "file '{}' already exists. Aborting",
+                path.display()
+            ));
         }
 
         // Get environment namespace
-        let env_namespace = env.environment.metadata.namespace.as_deref().unwrap_or("default");
+        let env_namespace = full_env
+            .environment
+            .metadata
+            .namespace
+            .as_deref()
+            .unwrap_or("default");
         file_to_env.insert(relpath, env_namespace.to_string());
 
         // Write manifest
@@ -189,8 +241,7 @@ fn write_export_file(path: &Path, data: &[u8]) -> Result<()> {
             .with_context(|| format!("Failed to create directory: {:?}", parent))?;
     }
 
-    fs::write(path, data)
-        .with_context(|| format!("Failed to write file: {:?}", path))?;
+    fs::write(path, data).with_context(|| format!("Failed to write file: {:?}", path))?;
 
     Ok(())
 }
@@ -204,7 +255,7 @@ fn delete_previously_exported_manifests_from_envs(
         .iter()
         .filter_map(|e| e.environment.metadata.namespace.clone())
         .collect();
-    
+
     delete_previously_exported_manifests(path, &env_names, skip_manifest)
 }
 
@@ -217,10 +268,8 @@ fn delete_previously_exported_manifests(
         return Ok(());
     }
 
-    let env_names_set: HashMap<&str, ()> = tanka_env_names
-        .iter()
-        .map(|s| (s.as_str(), ()))
-        .collect();
+    let env_names_set: HashMap<&str, ()> =
+        tanka_env_names.iter().map(|s| (s.as_str(), ())).collect();
 
     let manifest_file_path = path.join(MANIFEST_FILE);
     let manifest_content = match fs::read_to_string(&manifest_file_path) {
@@ -235,8 +284,8 @@ fn delete_previously_exported_manifests(
         Err(e) => return Err(e.into()),
     };
 
-    let file_to_env_map: HashMap<String, String> = serde_json::from_str(&manifest_content)
-        .context("Failed to parse manifest file")?;
+    let file_to_env_map: HashMap<String, String> =
+        serde_json::from_str(&manifest_content).context("Failed to parse manifest file")?;
 
     let mut deleted_manifest_keys = Vec::new();
     for (exported_manifest, manifest_env) in &file_to_env_map {
@@ -269,11 +318,12 @@ fn export_manifest_file(
     }
 
     let manifest_file_path = path.join(MANIFEST_FILE);
-    let mut current_file_to_env_map: HashMap<String, String> = match fs::read_to_string(&manifest_file_path) {
-        Ok(content) => serde_json::from_str(&content)?,
-        Err(e) if e.kind() == ErrorKind::NotFound => HashMap::new(),
-        Err(e) => return Err(e.into()),
-    };
+    let mut current_file_to_env_map: HashMap<String, String> =
+        match fs::read_to_string(&manifest_file_path) {
+            Ok(content) => serde_json::from_str(&content)?,
+            Err(e) if e.kind() == ErrorKind::NotFound => HashMap::new(),
+            Err(e) => return Err(e.into()),
+        };
 
     // Merge new entries
     for (k, v) in new_file_to_env_map {
@@ -291,4 +341,3 @@ fn export_manifest_file(
 
     Ok(())
 }
-

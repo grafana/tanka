@@ -10,6 +10,69 @@ use std::path::{Path, PathBuf};
 use crate::environment::{Environment, LoadedEnvironment};
 use crate::manifest::Manifest;
 
+// Script to extract environment metadata without evaluating the data field
+// This is much faster when we only need environment metadata (e.g., for listing)
+const METADATA_EVAL_SCRIPT: &str = r#"
+local noDataEnv(object) =
+  std.prune(
+    if std.isObject(object)
+    then
+      if std.objectHas(object, 'apiVersion')
+         && std.objectHas(object, 'kind')
+      then
+        if object.kind == 'Environment'
+        then object { data:: {} }
+        else {}
+      else
+        std.mapWithKey(
+          function(key, obj)
+            noDataEnv(obj),
+          object
+        )
+    else if std.isArray(object)
+    then
+      std.map(
+        function(obj)
+          noDataEnv(obj),
+        object
+      )
+    else {}
+  );
+
+noDataEnv(main)
+"#;
+
+// Script to load a single environment by name with full data
+// %s will be replaced with the environment name
+const SINGLE_ENV_EVAL_SCRIPT: &str = r#"
+local singleEnv(object) =
+  if std.isObject(object)
+  then
+    if std.objectHas(object, 'apiVersion')
+       && std.objectHas(object, 'kind')
+    then
+      if object.kind == 'Environment'
+      && std.member(object.metadata.name, '%s')
+      then object
+      else {}
+    else
+      std.mapWithKey(
+        function(key, obj)
+          singleEnv(obj),
+        object
+      )
+  else if std.isArray(object)
+  then
+    std.map(
+      function(obj)
+        singleEnv(obj),
+      object
+    )
+  else {};
+
+singleEnv(main)
+"#;
+
 pub struct JsonnetEvaluator {
     state: State,
 }
@@ -72,6 +135,25 @@ impl JsonnetEvaluator {
         self.val_to_json(&val)
     }
 
+    pub fn eval_script(&self, path: &Path, script: &str) -> Result<Value> {
+        // Read the main file to set up imports
+        let main_path = path.to_string_lossy().to_string();
+
+        // Build a script that imports the main file and runs the eval script
+        let wrapped_script = format!(
+            "local main = import '{}'; {}",
+            main_path.replace('\\', "\\\\").replace('\'', "\\'"),
+            script
+        );
+
+        let val = self
+            .state
+            .evaluate_snippet("<eval_script>".to_string(), wrapped_script)
+            .map_err(|e| anyhow!("Failed to evaluate Jsonnet script for {:?}: {}", path, e))?;
+
+        self.val_to_json(&val)
+    }
+
     fn val_to_json(&self, val: &Val) -> Result<Value> {
         let json_format = JsonFormat::default();
         let mut json_str = String::new();
@@ -82,6 +164,184 @@ impl JsonnetEvaluator {
         serde_json::from_str(&json_str)
             .map_err(|e| anyhow!("Failed to parse manifested JSON: {}", e))
     }
+}
+
+// Load all environments from a file with their full data
+pub fn load_all_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
+    // Find the project root and common import directories
+    let mut import_paths = Vec::new();
+
+    // Start from the file's directory and walk up to find lib/ and vendor/
+    let start_dir = if path.is_dir() {
+        path.to_path_buf()
+    } else {
+        path.parent()
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| PathBuf::from("."))
+    };
+
+    let mut current = start_dir.clone();
+    loop {
+        // Check for lib/ directory
+        let lib_dir = current.join("lib");
+        if lib_dir.is_dir() && !import_paths.contains(&lib_dir) {
+            import_paths.push(lib_dir);
+        }
+
+        // Check for vendor/ directory
+        let vendor_dir = current.join("vendor");
+        if vendor_dir.is_dir() && !import_paths.contains(&vendor_dir) {
+            import_paths.push(vendor_dir);
+        }
+
+        // Check for jsonnetfile.json (indicates project root)
+        if current.join("jsonnetfile.json").exists()
+            || current.join("jsonnetfile.lock.json").exists()
+        {
+            // Found project root, add it too
+            if !import_paths.contains(&current) {
+                import_paths.push(current.clone());
+            }
+            break;
+        }
+
+        // Move up one directory
+        match current.parent() {
+            Some(parent) => current = parent.to_path_buf(),
+            None => break, // Reached filesystem root
+        }
+    }
+
+    // Add the file's own directory
+    if !import_paths.contains(&start_dir) {
+        import_paths.push(start_dir);
+    }
+
+    let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+
+    // Look for common Tanka files
+    let main_file = if path.is_dir() {
+        let main_jsonnet = path.join("main.jsonnet");
+        if main_jsonnet.exists() {
+            main_jsonnet
+        } else {
+            return Err(anyhow!("No main.jsonnet found in directory: {:?}", path));
+        }
+    } else {
+        path.to_path_buf()
+    };
+
+    // Evaluate with full data
+    let value = evaluator.eval_file(&main_file)?;
+
+    // Try to parse as a single environment first
+    if let Ok(environment) = serde_json::from_value::<Environment>(value.clone()) {
+        return Ok(vec![LoadedEnvironment {
+            path: main_file,
+            environment,
+        }]);
+    }
+
+    // Find all environments recursively in the structure
+    let environments = find_environments_recursive(&value)?;
+
+    if environments.is_empty() {
+        return Err(anyhow!("No Environment objects found in file"));
+    }
+
+    // Return all environments found
+    Ok(environments
+        .into_iter()
+        .map(|environment| LoadedEnvironment {
+            path: main_file.clone(),
+            environment,
+        })
+        .collect())
+}
+
+pub fn load_environment_by_name(path: &Path, name: &str) -> Result<LoadedEnvironment> {
+    // Find the project root and common import directories
+    let mut import_paths = Vec::new();
+
+    // Start from the file's directory and walk up to find lib/ and vendor/
+    let start_dir = if path.is_dir() {
+        path.to_path_buf()
+    } else {
+        path.parent()
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| PathBuf::from("."))
+    };
+
+    let mut current = start_dir.clone();
+    loop {
+        // Check for lib/ directory
+        let lib_dir = current.join("lib");
+        if lib_dir.is_dir() && !import_paths.contains(&lib_dir) {
+            import_paths.push(lib_dir);
+        }
+
+        // Check for vendor/ directory
+        let vendor_dir = current.join("vendor");
+        if vendor_dir.is_dir() && !import_paths.contains(&vendor_dir) {
+            import_paths.push(vendor_dir);
+        }
+
+        // Check for jsonnetfile.json (indicates project root)
+        if current.join("jsonnetfile.json").exists()
+            || current.join("jsonnetfile.lock.json").exists()
+        {
+            // Found project root, add it too
+            if !import_paths.contains(&current) {
+                import_paths.push(current.clone());
+            }
+            break;
+        }
+
+        // Move up one directory
+        match current.parent() {
+            Some(parent) => current = parent.to_path_buf(),
+            None => break, // Reached filesystem root
+        }
+    }
+
+    // Add the file's own directory
+    if !import_paths.contains(&start_dir) {
+        import_paths.push(start_dir);
+    }
+
+    let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+
+    // Look for common Tanka files
+    let main_file = if path.is_dir() {
+        let main_jsonnet = path.join("main.jsonnet");
+        if main_jsonnet.exists() {
+            main_jsonnet
+        } else {
+            return Err(anyhow!("No main.jsonnet found in directory: {:?}", path));
+        }
+    } else {
+        path.to_path_buf()
+    };
+
+    // Use SingleEnvEvalScript to load only this environment with its data
+    let script = SINGLE_ENV_EVAL_SCRIPT.replace("%s", name);
+    let value = evaluator.eval_script(&main_file, &script)?;
+
+    // Find environments recursively in the structure
+    let environments = find_environments_recursive(&value)?;
+
+    if let Some(env) = environments.into_iter().next() {
+        return Ok(LoadedEnvironment {
+            path: main_file,
+            environment: env,
+        });
+    }
+
+    Err(anyhow!(
+        "No environment named '{}' found in file {:?}",
+        name,
+        main_file
+    ))
 }
 
 pub fn load_environment(path: &Path) -> Result<LoadedEnvironment> {
@@ -243,7 +503,9 @@ pub fn list_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
         path.to_path_buf()
     };
 
-    let value = evaluator.eval_file(&main_file)?;
+    // Use metadata-only evaluation to avoid loading all manifest data
+    // This is much faster as it doesn't evaluate the .data field
+    let value = evaluator.eval_script(&main_file, METADATA_EVAL_SCRIPT)?;
 
     // Try to parse as a single environment first
     if let Ok(environment) = serde_json::from_value::<Environment>(value.clone()) {
