@@ -193,8 +193,8 @@ fn replace_in_template_text(template_str: &str, from: &str, to: &str) -> String 
             result.push(c);
             result.push(chars.next().unwrap());
             in_template = false;
-        } else if in_template && c.to_string() == from {
-            // Replace separator inside template
+        } else if !in_template && c.to_string() == from {
+            // Replace separator OUTSIDE template (literal path separators)
             result.push_str(to);
         } else {
             result.push(c);

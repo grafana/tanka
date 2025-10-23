@@ -1,13 +1,11 @@
 use anyhow::{anyhow, Context, Result};
-use gtmpl::funcs::println;
 use jrsonnet_evaluator::manifest::{JsonFormat, ManifestFormat};
 use jrsonnet_evaluator::trace::PathResolver;
-use jrsonnet_evaluator::{evaluate, FileImportResolver, State, Val};
+use jrsonnet_evaluator::{FileImportResolver, State, Val};
 use jrsonnet_stdlib::ContextInitializer;
 use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 
 use crate::environment::{Environment, LoadedEnvironment};
 use crate::manifest::Manifest;
@@ -86,10 +84,14 @@ impl JsonnetEvaluator {
     }
 
     pub fn new_with_paths(paths: Vec<PathBuf>) -> Result<Self> {
-        println!("creating import resolver with paths: {:?}", paths.clone());
+        let cwd = PathResolver::new_cwd_fallback();
+        println!(
+            "creating import resolver with paths: {:?} and cwd {:?}",
+            paths.clone(),
+            std::env::current_dir().unwrap().display()
+        );
         use log::debug;
 
-        debug!("Creating evaluator with {} import paths", paths.len());
         for path in &paths {
             debug!("  - {:?}", path);
         }
@@ -103,7 +105,7 @@ impl JsonnetEvaluator {
         let import_resolver = FileImportResolver::new(library_paths);
 
         // Create context initializer with standard library
-        let context_init = ContextInitializer::new(PathResolver::new_cwd_fallback());
+        let context_init = ContextInitializer::new(cwd);
 
         // Add Tanka native functions to the context
         crate::native::register_native_functions(&context_init);
@@ -139,13 +141,10 @@ impl JsonnetEvaluator {
     }
 
     pub fn eval_script(&self, path: &Path, script: &str) -> Result<Value> {
-        // Read the main file to set up imports
-        let main_path = path.to_string_lossy().to_string();
-
         // Build a script that imports the main file and runs the eval script
         let wrapped_script = format!(
             "local main = import '{}'; {}",
-            main_path.replace('\\', "\\\\").replace('\'', "\\'"),
+            entrypoint(path).unwrap().display(),
             script
         );
 
@@ -274,6 +273,37 @@ fn find_base(path: &Path, root: Option<&Path>) -> Option<PathBuf> {
     }
 
     None
+}
+
+/// Returns the name of the entrypoint file.
+/// It DOES NOT return an absolute path, only a plain name like "main.jsonnet"
+/// To obtain an absolute path, use entrypoint() instead.
+pub fn filename(path: &Path) -> Result<String> {
+    let metadata =
+        fs::metadata(path).with_context(|| format!("Failed to stat path: {:?}", path))?;
+
+    if metadata.is_dir() {
+        Ok("main.jsonnet".to_string())
+    } else {
+        path.file_name()
+            .and_then(|n| n.to_str())
+            .map(|s| s.to_string())
+            .ok_or_else(|| anyhow!("Failed to get filename from path: {:?}", path))
+    }
+}
+
+/// Returns the absolute path of the environment's entrypoint file (the
+/// one passed to jsonnet.EvaluateFile)
+pub fn entrypoint(path: &Path) -> Result<PathBuf> {
+    let root = find_root(path)
+        .ok_or_else(|| anyhow!("Unable to find project root (tkrc.yaml or jsonnetfile.json)"))?;
+
+    let base =
+        find_base(path, Some(&root)).ok_or_else(|| anyhow!("Unable to find base directory"))?;
+
+    let fname = filename(path)?;
+
+    Ok(base.join(fname))
 }
 
 // Load all environments from a file with their full data
@@ -506,8 +536,7 @@ pub fn list_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
     let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
 
     println!("Evaluating metadata script in {:?}", main_file);
-    let cwd = std::env::current_dir().unwrap();
-    let value = evaluator.eval_script(&cwd, METADATA_EVAL_SCRIPT)?;
+    let value = evaluator.eval_script(&main_file, METADATA_EVAL_SCRIPT)?;
 
     // Try to parse as a single environment first
     if let Ok(environment) = serde_json::from_value::<Environment>(value.clone()) {
@@ -541,7 +570,23 @@ pub fn load_manifests(env: &LoadedEnvironment) -> Result<Vec<Manifest>> {
         serde_json::to_value(&env.environment).context("Failed to serialize environment")?;
 
     // Extract manifests from the environment's data field
-    let manifests = extract_manifests_from_value(&env_json)?;
+    let mut manifests = extract_manifests_from_value(&env_json)?;
+
+    // Populate namespace from environment if not set on manifest
+    let env_namespace = &env.environment.spec.namespace;
+    for manifest in &mut manifests {
+        if let Some(metadata) = manifest.data.get_mut("metadata") {
+            if let Some(metadata_obj) = metadata.as_object_mut() {
+                // Only set namespace if it's not already present
+                if !metadata_obj.contains_key("namespace") {
+                    metadata_obj.insert(
+                        "namespace".to_string(),
+                        Value::String(env_namespace.clone()),
+                    );
+                }
+            }
+        }
+    }
 
     Ok(manifests)
 }
