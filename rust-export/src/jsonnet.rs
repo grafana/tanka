@@ -4,6 +4,8 @@ use jrsonnet_evaluator::trace::PathResolver;
 use jrsonnet_evaluator::{FileImportResolver, State, Val};
 use jrsonnet_stdlib::ContextInitializer;
 use serde_json::Value;
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -84,11 +86,11 @@ impl JsonnetEvaluator {
     }
 
     pub fn new_with_paths(paths: Vec<PathBuf>) -> Result<Self> {
-        use log::info;
+        use log::debug;
 
-        info!("Creating evaluator with {} import paths", paths.len());
+        debug!("Creating evaluator with {} import paths", paths.len());
         for path in &paths {
-            info!("  - {:?}", path);
+            debug!("  - {:?}", path);
         }
 
         // Create FileImportResolver with paths (as done in jrsonnet CLI)
@@ -166,9 +168,55 @@ impl JsonnetEvaluator {
     }
 }
 
-// Load all environments from a file with their full data
-pub fn load_all_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
-    // Find the project root and common import directories
+/// A cache for reusable JsonnetEvaluators using thread-local storage
+/// This allows reusing evaluators within the same thread without thread-safety issues
+pub struct SharedEvaluatorPool {
+    _marker: (),
+}
+
+thread_local! {
+    static EVALUATOR_CACHE: RefCell<HashMap<String, JsonnetEvaluator>> = RefCell::new(HashMap::new());
+}
+
+impl SharedEvaluatorPool {
+    /// Create a new shared evaluator pool
+    pub fn new(_pool_size: usize) -> Self {
+        use log::info;
+        info!("Creating thread-local evaluator cache");
+        SharedEvaluatorPool { _marker: () }
+    }
+
+    /// Use an evaluator with specific import paths, caching it for reuse
+    pub fn with_evaluator<F, R>(&self, import_paths: &[PathBuf], f: F) -> Result<R>
+    where
+        F: FnOnce(&JsonnetEvaluator) -> Result<R>,
+    {
+        // Create a cache key from the import paths
+        let cache_key = import_paths
+            .iter()
+            .map(|p| p.to_string_lossy())
+            .collect::<Vec<_>>()
+            .join(":");
+
+        EVALUATOR_CACHE.with(|cache| {
+            let mut cache = cache.borrow_mut();
+
+            // Get or create an evaluator for these import paths
+            if !cache.contains_key(&cache_key) {
+                use log::debug;
+                debug!("Creating new evaluator for import paths: {}", cache_key);
+                let evaluator = JsonnetEvaluator::new_with_paths(import_paths.to_vec())?;
+                cache.insert(cache_key.clone(), evaluator);
+            }
+
+            let evaluator = cache.get(&cache_key).unwrap();
+            f(evaluator)
+        })
+    }
+}
+
+// Helper function to compute import paths for a file
+fn compute_import_paths(path: &Path) -> Vec<PathBuf> {
     let mut import_paths = Vec::new();
 
     // Start from the file's directory and walk up to find lib/ and vendor/
@@ -217,7 +265,20 @@ pub fn load_all_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
         import_paths.push(start_dir);
     }
 
-    let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+    import_paths
+}
+
+// Load all environments from a file with their full data
+pub fn load_all_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
+    load_all_environments_with_pool(path, None)
+}
+
+// Load all environments with an optional evaluator pool for reuse
+pub fn load_all_environments_with_pool(
+    path: &Path,
+    pool: Option<&SharedEvaluatorPool>,
+) -> Result<Vec<LoadedEnvironment>> {
+    let import_paths = compute_import_paths(path);
 
     // Look for common Tanka files
     let main_file = if path.is_dir() {
@@ -231,8 +292,13 @@ pub fn load_all_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
         path.to_path_buf()
     };
 
-    // Evaluate with full data
-    let value = evaluator.eval_file(&main_file)?;
+    // Evaluate with full data using pool if available
+    let value = if let Some(pool) = pool {
+        pool.with_evaluator(&import_paths, |evaluator| evaluator.eval_file(&main_file))?
+    } else {
+        let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+        evaluator.eval_file(&main_file)?
+    };
 
     // Try to parse as a single environment first
     if let Ok(environment) = serde_json::from_value::<Environment>(value.clone()) {
@@ -260,56 +326,16 @@ pub fn load_all_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
 }
 
 pub fn load_environment_by_name(path: &Path, name: &str) -> Result<LoadedEnvironment> {
-    // Find the project root and common import directories
-    let mut import_paths = Vec::new();
+    load_environment_by_name_with_pool(path, name, None)
+}
 
-    // Start from the file's directory and walk up to find lib/ and vendor/
-    let start_dir = if path.is_dir() {
-        path.to_path_buf()
-    } else {
-        path.parent()
-            .map(|p| p.to_path_buf())
-            .unwrap_or_else(|| PathBuf::from("."))
-    };
-
-    let mut current = start_dir.clone();
-    loop {
-        // Check for lib/ directory
-        let lib_dir = current.join("lib");
-        if lib_dir.is_dir() && !import_paths.contains(&lib_dir) {
-            import_paths.push(lib_dir);
-        }
-
-        // Check for vendor/ directory
-        let vendor_dir = current.join("vendor");
-        if vendor_dir.is_dir() && !import_paths.contains(&vendor_dir) {
-            import_paths.push(vendor_dir);
-        }
-
-        // Check for jsonnetfile.json (indicates project root)
-        if current.join("jsonnetfile.json").exists()
-            || current.join("jsonnetfile.lock.json").exists()
-        {
-            // Found project root, add it too
-            if !import_paths.contains(&current) {
-                import_paths.push(current.clone());
-            }
-            break;
-        }
-
-        // Move up one directory
-        match current.parent() {
-            Some(parent) => current = parent.to_path_buf(),
-            None => break, // Reached filesystem root
-        }
-    }
-
-    // Add the file's own directory
-    if !import_paths.contains(&start_dir) {
-        import_paths.push(start_dir);
-    }
-
-    let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+// Load a specific environment by name with an optional evaluator pool
+pub fn load_environment_by_name_with_pool(
+    path: &Path,
+    name: &str,
+    pool: Option<&SharedEvaluatorPool>,
+) -> Result<LoadedEnvironment> {
+    let import_paths = compute_import_paths(path);
 
     // Look for common Tanka files
     let main_file = if path.is_dir() {
@@ -325,7 +351,14 @@ pub fn load_environment_by_name(path: &Path, name: &str) -> Result<LoadedEnviron
 
     // Use SingleEnvEvalScript to load only this environment with its data
     let script = SINGLE_ENV_EVAL_SCRIPT.replace("%s", name);
-    let value = evaluator.eval_script(&main_file, &script)?;
+    let value = if let Some(pool) = pool {
+        pool.with_evaluator(&import_paths, |evaluator| {
+            evaluator.eval_script(&main_file, &script)
+        })?
+    } else {
+        let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+        evaluator.eval_script(&main_file, &script)?
+    };
 
     // Find environments recursively in the structure
     let environments = find_environments_recursive(&value)?;
@@ -345,6 +378,14 @@ pub fn load_environment_by_name(path: &Path, name: &str) -> Result<LoadedEnviron
 }
 
 pub fn load_environment(path: &Path) -> Result<LoadedEnvironment> {
+    load_environment_with_pool(path, None)
+}
+
+// Load an environment with an optional evaluator pool
+pub fn load_environment_with_pool(
+    path: &Path,
+    pool: Option<&SharedEvaluatorPool>,
+) -> Result<LoadedEnvironment> {
     // Check if this is a static environment (has spec.json)
     let env_dir = if path.is_dir() {
         path
@@ -354,14 +395,21 @@ pub fn load_environment(path: &Path) -> Result<LoadedEnvironment> {
 
     let spec_file = env_dir.join("spec.json");
     if spec_file.exists() {
-        return load_static_environment(env_dir);
+        return load_static_environment_with_pool(env_dir, pool);
     }
 
     // Otherwise, load as inline environment
-    load_inline_environment(path)
+    load_inline_environment_with_pool(path, pool)
 }
 
 fn load_static_environment(path: &Path) -> Result<LoadedEnvironment> {
+    load_static_environment_with_pool(path, None)
+}
+
+fn load_static_environment_with_pool(
+    path: &Path,
+    pool: Option<&SharedEvaluatorPool>,
+) -> Result<LoadedEnvironment> {
     use log::debug;
 
     // Read spec.json
@@ -377,48 +425,7 @@ fn load_static_environment(path: &Path) -> Result<LoadedEnvironment> {
         environment.metadata.name
     );
 
-    // Find the project root and common import directories
-    let mut import_paths = Vec::new();
-    let start_dir = path.to_path_buf();
-
-    let mut current = start_dir.clone();
-    loop {
-        // Check for lib/ directory
-        let lib_dir = current.join("lib");
-        if lib_dir.is_dir() && !import_paths.contains(&lib_dir) {
-            import_paths.push(lib_dir);
-        }
-
-        // Check for vendor/ directory
-        let vendor_dir = current.join("vendor");
-        if vendor_dir.is_dir() && !import_paths.contains(&vendor_dir) {
-            import_paths.push(vendor_dir);
-        }
-
-        // Check for jsonnetfile.json (indicates project root)
-        if current.join("jsonnetfile.json").exists()
-            || current.join("jsonnetfile.lock.json").exists()
-        {
-            // Found project root, add it too
-            if !import_paths.contains(&current) {
-                import_paths.push(current.clone());
-            }
-            break;
-        }
-
-        // Move up one directory
-        match current.parent() {
-            Some(parent) => current = parent.to_path_buf(),
-            None => break, // Reached filesystem root
-        }
-    }
-
-    // Add the environment's own directory
-    if !import_paths.contains(&start_dir) {
-        import_paths.push(start_dir.clone());
-    }
-
-    let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+    let import_paths = compute_import_paths(path);
 
     // Look for main.jsonnet
     let main_file = path.join("main.jsonnet");
@@ -426,8 +433,13 @@ fn load_static_environment(path: &Path) -> Result<LoadedEnvironment> {
         return Err(anyhow!("No main.jsonnet found in directory: {:?}", path));
     }
 
-    // Evaluate jsonnet to get data
-    let value = evaluator.eval_file(&main_file)?;
+    // Evaluate jsonnet to get data using pool if available
+    let value = if let Some(pool) = pool {
+        pool.with_evaluator(&import_paths, |evaluator| evaluator.eval_file(&main_file))?
+    } else {
+        let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+        evaluator.eval_file(&main_file)?
+    };
     environment.data = Some(value);
 
     Ok(LoadedEnvironment {
@@ -437,56 +449,14 @@ fn load_static_environment(path: &Path) -> Result<LoadedEnvironment> {
 }
 
 fn load_inline_environment(path: &Path) -> Result<LoadedEnvironment> {
-    // Find the project root and common import directories
-    let mut import_paths = Vec::new();
+    load_inline_environment_with_pool(path, None)
+}
 
-    // Start from the file's directory and walk up to find lib/ and vendor/
-    let start_dir = if path.is_dir() {
-        path.to_path_buf()
-    } else {
-        path.parent()
-            .map(|p| p.to_path_buf())
-            .unwrap_or_else(|| PathBuf::from("."))
-    };
-
-    let mut current = start_dir.clone();
-    loop {
-        // Check for lib/ directory
-        let lib_dir = current.join("lib");
-        if lib_dir.is_dir() && !import_paths.contains(&lib_dir) {
-            import_paths.push(lib_dir);
-        }
-
-        // Check for vendor/ directory
-        let vendor_dir = current.join("vendor");
-        if vendor_dir.is_dir() && !import_paths.contains(&vendor_dir) {
-            import_paths.push(vendor_dir);
-        }
-
-        // Check for jsonnetfile.json (indicates project root)
-        if current.join("jsonnetfile.json").exists()
-            || current.join("jsonnetfile.lock.json").exists()
-        {
-            // Found project root, add it too
-            if !import_paths.contains(&current) {
-                import_paths.push(current.clone());
-            }
-            break;
-        }
-
-        // Move up one directory
-        match current.parent() {
-            Some(parent) => current = parent.to_path_buf(),
-            None => break, // Reached filesystem root
-        }
-    }
-
-    // Add the file's own directory
-    if !import_paths.contains(&start_dir) {
-        import_paths.push(start_dir);
-    }
-
-    let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+fn load_inline_environment_with_pool(
+    path: &Path,
+    pool: Option<&SharedEvaluatorPool>,
+) -> Result<LoadedEnvironment> {
+    let import_paths = compute_import_paths(path);
 
     // Look for common Tanka files
     let main_file = if path.is_dir() {
@@ -500,7 +470,12 @@ fn load_inline_environment(path: &Path) -> Result<LoadedEnvironment> {
         path.to_path_buf()
     };
 
-    let value = evaluator.eval_file(&main_file)?;
+    let value = if let Some(pool) = pool {
+        pool.with_evaluator(&import_paths, |evaluator| evaluator.eval_file(&main_file))?
+    } else {
+        let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+        evaluator.eval_file(&main_file)?
+    };
 
     // Try to parse as a single environment first
     if let Ok(environment) = serde_json::from_value::<Environment>(value.clone()) {
@@ -532,6 +507,14 @@ fn load_inline_environment(path: &Path) -> Result<LoadedEnvironment> {
 
 // List all environments in a file (for recursive discovery)
 pub fn list_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
+    list_environments_with_pool(path, None)
+}
+
+// List all environments with an optional evaluator pool
+pub fn list_environments_with_pool(
+    path: &Path,
+    pool: Option<&SharedEvaluatorPool>,
+) -> Result<Vec<LoadedEnvironment>> {
     // Check if this is a static environment (has spec.json)
     let env_dir = if path.is_dir() {
         path
@@ -554,56 +537,7 @@ pub fn list_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
         }]);
     }
 
-    // Find the project root and common import directories
-    let mut import_paths = Vec::new();
-
-    // Start from the file's directory and walk up to find lib/ and vendor/
-    let start_dir = if path.is_dir() {
-        path.to_path_buf()
-    } else {
-        path.parent()
-            .map(|p| p.to_path_buf())
-            .unwrap_or_else(|| PathBuf::from("."))
-    };
-
-    let mut current = start_dir.clone();
-    loop {
-        // Check for lib/ directory
-        let lib_dir = current.join("lib");
-        if lib_dir.is_dir() && !import_paths.contains(&lib_dir) {
-            import_paths.push(lib_dir);
-        }
-
-        // Check for vendor/ directory
-        let vendor_dir = current.join("vendor");
-        if vendor_dir.is_dir() && !import_paths.contains(&vendor_dir) {
-            import_paths.push(vendor_dir);
-        }
-
-        // Check for jsonnetfile.json (indicates project root)
-        if current.join("jsonnetfile.json").exists()
-            || current.join("jsonnetfile.lock.json").exists()
-        {
-            // Found project root, add it too
-            if !import_paths.contains(&current) {
-                import_paths.push(current.clone());
-            }
-            break;
-        }
-
-        // Move up one directory
-        match current.parent() {
-            Some(parent) => current = parent.to_path_buf(),
-            None => break, // Reached filesystem root
-        }
-    }
-
-    // Add the file's own directory
-    if !import_paths.contains(&start_dir) {
-        import_paths.push(start_dir);
-    }
-
-    let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+    let import_paths = compute_import_paths(path);
 
     // Look for common Tanka files
     let main_file = if path.is_dir() {
@@ -619,7 +553,14 @@ pub fn list_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
 
     // Use metadata-only evaluation to avoid loading all manifest data
     // This is much faster as it doesn't evaluate the .data field
-    let value = evaluator.eval_script(&main_file, METADATA_EVAL_SCRIPT)?;
+    let value = if let Some(pool) = pool {
+        pool.with_evaluator(&import_paths, |evaluator| {
+            evaluator.eval_script(&main_file, METADATA_EVAL_SCRIPT)
+        })?
+    } else {
+        let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+        evaluator.eval_script(&main_file, METADATA_EVAL_SCRIPT)?
+    };
 
     // Try to parse as a single environment first
     if let Ok(environment) = serde_json::from_value::<Environment>(value.clone()) {
