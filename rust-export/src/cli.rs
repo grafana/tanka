@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use clap::Parser;
 use regex::Regex;
 use std::path::PathBuf;
@@ -77,13 +77,6 @@ pub struct Cli {
 
 impl Cli {
     pub fn run(self) -> Result<()> {
-        // Create thread pool with specified parallelism
-        let parallelism = if self.parallel == 0 { 8 } else { self.parallel };
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(parallelism)
-            .build()
-            .context("Failed to create thread pool")?;
-
         // Validate arguments
         if !self.recursive && self.paths.len() > 1 {
             return Err(anyhow!(
@@ -121,6 +114,6 @@ impl Cli {
         };
 
         // Execute export
-        crate::export::export_environments(&pool, self.output_dir, self.paths, self.recursive, opts)
+        crate::export::export_environments(self.output_dir, self.paths, self.recursive, opts)
     }
 }

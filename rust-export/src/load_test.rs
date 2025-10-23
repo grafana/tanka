@@ -5,7 +5,7 @@ use std::path::PathBuf;
 #[test]
 fn test_load_static() {
     let base_dir = PathBuf::from("testdata/cases/withspecjson");
-    let loader = detect_loader(&base_dir, None).expect("Failed to detect loader");
+    let loader = detect_loader(&base_dir).expect("Failed to detect loader");
     assert_eq!(loader.name(), "static");
 
     let loaded = loader
@@ -14,8 +14,7 @@ fn test_load_static() {
 
     // Check environment metadata
     assert_eq!(
-        loaded.environment.api_version,
-        "tanka.dev/v1alpha1",
+        loaded.environment.api_version, "tanka.dev/v1alpha1",
         "API version mismatch"
     );
     assert_eq!(loaded.environment.kind, "Environment", "Kind mismatch");
@@ -49,7 +48,7 @@ fn test_load_static() {
 #[test]
 fn test_load_static_filename() {
     let base_dir = PathBuf::from("testdata/cases/withspecjson/main.jsonnet");
-    let loader = detect_loader(&base_dir, None).expect("Failed to detect loader");
+    let loader = detect_loader(&base_dir).expect("Failed to detect loader");
     assert_eq!(loader.name(), "static");
 
     let loaded = loader
@@ -58,8 +57,7 @@ fn test_load_static_filename() {
 
     // Check environment metadata
     assert_eq!(
-        loaded.environment.api_version,
-        "tanka.dev/v1alpha1",
+        loaded.environment.api_version, "tanka.dev/v1alpha1",
         "API version mismatch"
     );
     assert_eq!(loaded.environment.kind, "Environment", "Kind mismatch");
@@ -76,7 +74,7 @@ fn test_load_static_filename() {
 #[test]
 fn test_load_inline() {
     let base_dir = PathBuf::from("testdata/cases/withenv");
-    let loader = detect_loader(&base_dir, None).expect("Failed to detect loader");
+    let loader = detect_loader(&base_dir).expect("Failed to detect loader");
     assert_eq!(loader.name(), "inline");
 
     let loaded = loader
@@ -85,8 +83,7 @@ fn test_load_inline() {
 
     // Check environment metadata
     assert_eq!(
-        loaded.environment.api_version,
-        "tanka.dev/v1alpha1",
+        loaded.environment.api_version, "tanka.dev/v1alpha1",
         "API version mismatch"
     );
     assert_eq!(loaded.environment.kind, "Environment", "Kind mismatch");
@@ -120,7 +117,7 @@ fn test_load_inline() {
 #[test]
 fn test_load_inline_filename() {
     let base_dir = PathBuf::from("testdata/cases/withenv/main.jsonnet");
-    let loader = detect_loader(&base_dir, None).expect("Failed to detect loader");
+    let loader = detect_loader(&base_dir).expect("Failed to detect loader");
     assert_eq!(loader.name(), "inline");
 
     let loaded = loader
@@ -129,8 +126,7 @@ fn test_load_inline_filename() {
 
     // Check environment metadata
     assert_eq!(
-        loaded.environment.api_version,
-        "tanka.dev/v1alpha1",
+        loaded.environment.api_version, "tanka.dev/v1alpha1",
         "API version mismatch"
     );
     assert_eq!(loaded.environment.kind, "Environment", "Kind mismatch");
@@ -147,7 +143,7 @@ fn test_load_inline_filename() {
 #[test]
 fn test_peek_static() {
     let base_dir = PathBuf::from("testdata/cases/withspecjson");
-    let loader = detect_loader(&base_dir, None).expect("Failed to detect loader");
+    let loader = detect_loader(&base_dir).expect("Failed to detect loader");
 
     let env = loader
         .peek(&base_dir, &LoaderOpts::default())
@@ -161,7 +157,7 @@ fn test_peek_static() {
 #[test]
 fn test_peek_inline() {
     let base_dir = PathBuf::from("testdata/cases/withenv");
-    let loader = detect_loader(&base_dir, None).expect("Failed to detect loader");
+    let loader = detect_loader(&base_dir).expect("Failed to detect loader");
 
     let env = loader
         .peek(&base_dir, &LoaderOpts::default())
@@ -175,20 +171,24 @@ fn test_peek_inline() {
 #[test]
 fn test_list_static() {
     let base_dir = PathBuf::from("testdata/cases/withspecjson");
-    let loader = detect_loader(&base_dir, None).expect("Failed to detect loader");
+    let loader = detect_loader(&base_dir).expect("Failed to detect loader");
 
     let envs = loader
         .list(&base_dir, &LoaderOpts::default())
         .expect("Failed to list environments");
 
-    assert_eq!(envs.len(), 1, "Static should return exactly one environment");
+    assert_eq!(
+        envs.len(),
+        1,
+        "Static should return exactly one environment"
+    );
     assert_eq!(envs[0].metadata.name, Some("withspec".to_string()));
 }
 
 #[test]
 fn test_list_inline() {
     let base_dir = PathBuf::from("testdata/cases/withenv");
-    let loader = detect_loader(&base_dir, None).expect("Failed to detect loader");
+    let loader = detect_loader(&base_dir).expect("Failed to detect loader");
 
     let envs = loader
         .list(&base_dir, &LoaderOpts::default())
@@ -205,7 +205,7 @@ fn test_list_inline() {
 #[test]
 fn test_eval_static() {
     let base_dir = PathBuf::from("testdata/cases/withspecjson");
-    let loader = detect_loader(&base_dir, None).expect("Failed to detect loader");
+    let loader = detect_loader(&base_dir).expect("Failed to detect loader");
 
     let data = loader
         .eval(&base_dir, &LoaderOpts::default())
@@ -226,7 +226,7 @@ fn test_eval_static() {
 #[test]
 fn test_eval_inline() {
     let base_dir = PathBuf::from("testdata/cases/withenv");
-    let loader = detect_loader(&base_dir, None).expect("Failed to detect loader");
+    let loader = detect_loader(&base_dir).expect("Failed to detect loader");
 
     let data = loader
         .eval(&base_dir, &LoaderOpts::default())
@@ -237,4 +237,3 @@ fn test_eval_inline() {
     let obj = data.as_object().unwrap();
     assert_eq!(obj.get("kind").unwrap(), "Environment");
 }
-

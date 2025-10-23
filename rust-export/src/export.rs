@@ -1,7 +1,5 @@
 use anyhow::{anyhow, Context, Result};
 use log::{info, warn};
-use rayon::prelude::*;
-use rayon::ThreadPool;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
@@ -10,9 +8,7 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 use crate::environment::LoadedEnvironment;
-use crate::jsonnet::{
-    list_environments_with_pool, load_environment_with_pool, load_manifests, SharedEvaluatorPool,
-};
+use crate::jsonnet::{list_environments, load_environment, load_manifests};
 use crate::template::TemplateEngine;
 
 #[cfg(test)]
@@ -43,7 +39,6 @@ pub struct ExportOptions {
 }
 
 pub fn export_environments(
-    pool: &ThreadPool,
     output_dir: PathBuf,
     paths: Vec<PathBuf>,
     recursive: bool,
@@ -58,22 +53,18 @@ pub fn export_environments(
         ));
     }
 
-    // Create evaluator pool for reusing evaluators (thread-local caching)
-    let evaluator_pool = SharedEvaluatorPool::new(opts.parallelism);
+    println!("Finding environments in {:?}", paths);
 
     // Find environments
     let environments = if recursive {
-        find_environments_recursive(pool, &paths, &opts, &evaluator_pool)?
+        find_environments_recursive(&paths, &opts)?
     } else {
         if paths.len() > 1 {
             return Err(anyhow!(
                 "recursive flag is required when exporting multiple environments"
             ));
         }
-        vec![load_environment_with_pool(
-            &paths[0],
-            Some(&evaluator_pool),
-        )?]
+        vec![load_environment(&paths[0])?]
     };
 
     info!("Found {} environment(s)", environments.len());
@@ -96,31 +87,26 @@ pub fn export_environments(
         )?;
     }
 
-    // Export environments in parallel using the thread pool
-    let file_to_env: HashMap<String, String> = pool
-        .install(|| {
-            environments
-                .par_iter()
-                .filter_map(|env| {
-                    match export_single_environment(env, &output_dir, &opts, &evaluator_pool) {
-                        Ok(result) => Some(result),
-                        Err(e) => {
-                            let env_name = env
-                                .environment
-                                .metadata
-                                .name
-                                .as_deref()
-                                .unwrap_or("unknown");
-                            warn!("Failed to export environment '{}': {}", env_name, e);
-                            None
-                        }
-                    }
-                })
-                .collect::<Vec<_>>()
-        })
-        .into_iter()
-        .flatten()
-        .collect();
+    // Export environments sequentially to avoid potential concurrency issues
+    let mut file_to_env: HashMap<String, String> = HashMap::new();
+    for env in &environments {
+        match export_single_environment(env, &output_dir, &opts) {
+            Ok(result) => {
+                for (k, v) in result {
+                    file_to_env.insert(k, v);
+                }
+            }
+            Err(e) => {
+                let env_name = env
+                    .environment
+                    .metadata
+                    .name
+                    .as_deref()
+                    .unwrap_or("unknown");
+                warn!("Failed to export environment '{}': {}", env_name, e);
+            }
+        }
+    }
 
     // Write manifest file
     if !opts.skip_manifest {
@@ -135,10 +121,8 @@ pub fn export_environments(
 }
 
 fn find_environments_recursive(
-    pool: &ThreadPool,
     paths: &[PathBuf],
     opts: &ExportOptions,
-    evaluator_pool: &SharedEvaluatorPool,
 ) -> Result<Vec<LoadedEnvironment>> {
     // Collect all main.jsonnet files first
     let mut main_jsonnet_files = Vec::new();
@@ -154,40 +138,34 @@ fn find_environments_recursive(
         }
     }
 
-    // Load environments in parallel using the thread pool
-    let environments: Vec<LoadedEnvironment> = pool.install(|| {
-        main_jsonnet_files
-            .par_iter()
-            .filter_map(|path| {
-                match list_environments_with_pool(path, Some(evaluator_pool)) {
-                    Ok(envs) => {
-                        let filtered_envs: Vec<LoadedEnvironment> = envs
-                            .into_iter()
-                            .filter(|env| {
-                                // Filter by name if specified
-                                if let Some(ref name) = opts.name {
-                                    if let Some(ref env_name) = env.environment.metadata.name {
-                                        env_name == name
-                                    } else {
-                                        false
-                                    }
-                                } else {
-                                    true
-                                }
-                                // TODO: Filter by selector if specified
-                            })
-                            .collect();
-                        Some(filtered_envs)
-                    }
-                    Err(e) => {
-                        warn!("Failed to load environment at {:?}: {}", path, e);
-                        None
-                    }
-                }
-            })
-            .flatten()
-            .collect()
-    });
+    // Load environments sequentially to avoid potential concurrency issues
+    let mut environments: Vec<LoadedEnvironment> = Vec::new();
+    for path in &main_jsonnet_files {
+        match list_environments(path) {
+            Ok(envs) => {
+                let filtered_envs: Vec<LoadedEnvironment> = envs
+                    .into_iter()
+                    .filter(|env| {
+                        // Filter by name if specified
+                        if let Some(ref name) = opts.name {
+                            if let Some(ref env_name) = env.environment.metadata.name {
+                                env_name == name
+                            } else {
+                                false
+                            }
+                        } else {
+                            true
+                        }
+                        // TODO: Filter by selector if specified
+                    })
+                    .collect();
+                environments.extend(filtered_envs);
+            }
+            Err(e) => {
+                warn!("Failed to load environment at {:?}: {}", path, e);
+            }
+        }
+    }
 
     Ok(environments)
 }
@@ -196,7 +174,6 @@ fn export_single_environment(
     env: &LoadedEnvironment,
     output_dir: &Path,
     opts: &ExportOptions,
-    evaluator_pool: &SharedEvaluatorPool,
 ) -> Result<HashMap<String, String>> {
     let env_name = env
         .environment
@@ -215,7 +192,7 @@ fn export_single_environment(
     } else {
         &env.path
     };
-    let full_env = load_environment_with_pool(env_dir, Some(evaluator_pool))?;
+    let full_env = load_environment(env_dir)?;
     let manifests = load_manifests(&full_env)?;
 
     if manifests.is_empty() {

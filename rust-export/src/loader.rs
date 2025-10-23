@@ -4,8 +4,7 @@ use std::path::{Path, PathBuf};
 
 use crate::environment::{Environment, LoadedEnvironment};
 use crate::jsonnet::{
-    compute_import_paths, find_environments_recursive, JsonnetEvaluator, SharedEvaluatorPool,
-    SINGLE_ENV_EVAL_SCRIPT,
+    compute_import_paths, find_environments_recursive, JsonnetEvaluator, SINGLE_ENV_EVAL_SCRIPT,
 };
 use std::fs;
 
@@ -37,13 +36,11 @@ pub trait Loader {
 /// InlineLoader loads an environment that is specified inline from within Jsonnet.
 /// The Jsonnet output is expected to hold a tanka.dev/Environment type,
 /// Kubernetes resources are expected at the `data` key of this very type
-pub struct InlineLoader {
-    pool: Option<SharedEvaluatorPool>,
-}
+pub struct InlineLoader {}
 
 impl InlineLoader {
-    pub fn new(pool: Option<SharedEvaluatorPool>) -> Self {
-        InlineLoader { pool }
+    pub fn new() -> Self {
+        InlineLoader {}
     }
 
     fn load_impl(
@@ -66,21 +63,12 @@ impl InlineLoader {
             path.to_path_buf()
         };
 
-        let value = if let Some(pool) = &self.pool {
-            pool.with_evaluator(&import_paths, |evaluator| {
-                if let Some(script) = eval_script {
-                    evaluator.eval_script(&main_file, script)
-                } else {
-                    evaluator.eval_file(&main_file)
-                }
-            })?
+        // Create a new evaluator each time, just like jrsonnet CLI
+        let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+        let value = if let Some(script) = eval_script {
+            evaluator.eval_script(&main_file, script)?
         } else {
-            let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
-            if let Some(script) = eval_script {
-                evaluator.eval_script(&main_file, script)?
-            } else {
-                evaluator.eval_file(&main_file)?
-            }
+            evaluator.eval_file(&main_file)?
         };
 
         // Extract environments from the value
@@ -176,12 +164,9 @@ impl Loader for InlineLoader {
             path.to_path_buf()
         };
 
-        let value = if let Some(pool) = &self.pool {
-            pool.with_evaluator(&import_paths, |evaluator| evaluator.eval_file(&main_file))?
-        } else {
-            let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
-            evaluator.eval_file(&main_file)?
-        };
+        // Create a new evaluator each time, just like jrsonnet CLI
+        let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+        let value = evaluator.eval_file(&main_file)?;
 
         // Extract environments and strip their data
         let mut envs = extract_envs(&value)?;
@@ -200,24 +185,19 @@ impl Loader for InlineLoader {
             path.to_path_buf()
         };
 
-        if let Some(pool) = &self.pool {
-            pool.with_evaluator(&import_paths, |evaluator| evaluator.eval_file(&main_file))
-        } else {
-            let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
-            evaluator.eval_file(&main_file)
-        }
+        // Create a new evaluator each time, just like jrsonnet CLI
+        let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+        evaluator.eval_file(&main_file)
     }
 }
 
 /// StaticLoader loads an environment from a static file called `spec.json`.
 /// Jsonnet is evaluated as normal
-pub struct StaticLoader {
-    pool: Option<SharedEvaluatorPool>,
-}
+pub struct StaticLoader {}
 
 impl StaticLoader {
-    pub fn new(pool: Option<SharedEvaluatorPool>) -> Self {
-        StaticLoader { pool }
+    pub fn new() -> Self {
+        StaticLoader {}
     }
 
     fn parse_static_spec(path: &Path) -> Result<Environment> {
@@ -271,18 +251,15 @@ impl Loader for StaticLoader {
             return Err(anyhow!("No main.jsonnet found in directory: {:?}", path));
         }
 
-        if let Some(pool) = &self.pool {
-            pool.with_evaluator(&import_paths, |evaluator| evaluator.eval_file(&main_file))
-        } else {
-            let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
-            evaluator.eval_file(&main_file)
-        }
+        // Create a new evaluator each time, just like jrsonnet CLI
+        let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+        evaluator.eval_file(&main_file)
     }
 }
 
 /// DetectLoader detects whether the environment is inline or static and picks
 /// the appropriate loader
-pub fn detect_loader(path: &Path, pool: Option<SharedEvaluatorPool>) -> Result<Box<dyn Loader>> {
+pub fn detect_loader(path: &Path) -> Result<Box<dyn Loader>> {
     let env_dir = if path.is_dir() {
         path
     } else {
@@ -291,9 +268,9 @@ pub fn detect_loader(path: &Path, pool: Option<SharedEvaluatorPool>) -> Result<B
 
     let spec_file = env_dir.join("spec.json");
     if spec_file.exists() {
-        Ok(Box::new(StaticLoader::new(pool)))
+        Ok(Box::new(StaticLoader::new()))
     } else {
-        Ok(Box::new(InlineLoader::new(pool)))
+        Ok(Box::new(InlineLoader::new()))
     }
 }
 
@@ -316,7 +293,7 @@ mod tests {
     #[test]
     fn test_load_static() {
         let base_dir = PathBuf::from("testdata/test-export-envs/static-env");
-        let loader = StaticLoader::new(None);
+        let loader = StaticLoader::new();
 
         let result = loader.load(&base_dir, &LoaderOpts::default());
         assert!(
@@ -333,7 +310,7 @@ mod tests {
     #[test]
     fn test_load_inline() {
         let base_dir = PathBuf::from("testdata/test-export-envs/inline-envs");
-        let loader = InlineLoader::new(None);
+        let loader = InlineLoader::new();
 
         let opts = LoaderOpts {
             name: Some("inline-namespace1".to_string()),
@@ -357,7 +334,7 @@ mod tests {
     #[test]
     fn test_detect_loader_static() {
         let base_dir = PathBuf::from("testdata/test-export-envs/static-env");
-        let loader = detect_loader(&base_dir, None);
+        let loader = detect_loader(&base_dir);
         assert!(loader.is_ok());
         assert_eq!(loader.unwrap().name(), "static");
     }
@@ -365,7 +342,7 @@ mod tests {
     #[test]
     fn test_detect_loader_inline() {
         let base_dir = PathBuf::from("testdata/test-export-envs/inline-envs");
-        let loader = detect_loader(&base_dir, None);
+        let loader = detect_loader(&base_dir);
         assert!(loader.is_ok());
         assert_eq!(loader.unwrap().name(), "inline");
     }

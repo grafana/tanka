@@ -3,7 +3,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use rayon::ThreadPoolBuilder;
 use walkdir::WalkDir;
 
 use crate::export::{export_environments, ExportMergeStrategy, ExportOptions};
@@ -50,8 +49,6 @@ fn test_export_environments() -> Result<()> {
     std::env::set_current_dir(&testdata_dir)?;
 
     let result = (|| -> Result<()> {
-        let pool = ThreadPoolBuilder::new().num_threads(8).build()?;
-
         // Export all envs
         let paths = vec![PathBuf::from("test-export-envs")];
         let opts = ExportOptions {
@@ -68,7 +65,7 @@ fn test_export_environments() -> Result<()> {
             selector: None,
         };
 
-        export_environments(&pool, output_dir.clone(), paths, true, opts)?;
+        export_environments(output_dir.clone(), paths, true, opts)?;
 
         // Check exported files
         check_files(
@@ -150,7 +147,7 @@ fn test_export_environments() -> Result<()> {
             selector: None,
         };
 
-        let result = export_environments(&pool, output_dir.clone(), paths, true, opts);
+        let result = export_environments(output_dir.clone(), paths, true, opts);
         assert!(result.is_err(), "Should fail when directory is not empty");
         assert!(
             result.unwrap_err().to_string().contains("not empty"),
@@ -173,7 +170,7 @@ fn test_export_environments() -> Result<()> {
             selector: None,
         };
 
-        let result = export_environments(&pool, output_dir.clone(), paths, true, opts);
+        let result = export_environments(output_dir.clone(), paths, true, opts);
         assert!(result.is_err(), "Should fail on conflicts");
         assert!(
             result.unwrap_err().to_string().contains("already exists"),
@@ -196,7 +193,7 @@ fn test_export_environments() -> Result<()> {
             selector: None,
         };
 
-        export_environments(&pool, output_dir.clone(), paths, false, opts)?;
+        export_environments(output_dir.clone(), paths, false, opts)?;
 
         check_files(
             &output_dir,
@@ -237,7 +234,7 @@ fn test_export_environments() -> Result<()> {
             selector: None,
         };
 
-        export_environments(&pool, output_dir.clone(), paths, false, opts)?;
+        export_environments(output_dir.clone(), paths, false, opts)?;
 
         check_files(
             &output_dir,
@@ -285,8 +282,6 @@ fn test_export_environments_skip_manifest() -> Result<()> {
     std::env::set_current_dir(&testdata_dir)?;
 
     let result = (|| -> Result<()> {
-        let pool = ThreadPoolBuilder::new().num_threads(8).build()?;
-
         let paths = vec![PathBuf::from("test-export-envs")];
         let opts = ExportOptions {
             format: "{{.metadata.namespace}}/{{.metadata.name}}".to_string(),
@@ -302,7 +297,7 @@ fn test_export_environments_skip_manifest() -> Result<()> {
             selector: None,
         };
 
-        export_environments(&pool, output_dir.clone(), paths, true, opts)?;
+        export_environments(output_dir.clone(), paths, true, opts)?;
 
         // Check that manifest files exist but manifest.json does NOT exist
         check_files(

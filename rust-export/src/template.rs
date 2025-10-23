@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use gtmpl::{template, Context as GtmplContext, Func, Template, Value as GtmplValue};
+use gtmpl::Value as GtmplValue;
 use serde_json::Value as JsonValue;
 
 use crate::environment::Environment;
@@ -28,7 +28,6 @@ impl TemplateEngine {
 
     pub fn apply(&self, manifest: &Manifest, environment: &Environment) -> Result<String> {
         use gtmpl::{Context as GtmplContext, Template};
-        use std::collections::HashMap;
 
         // Convert manifest and environment to gtmpl values
         let mut manifest_json =
@@ -118,7 +117,7 @@ impl TemplateEngine {
             .map_err(|e| anyhow!("Failed to parse template: {}", e))?;
 
         // Create context from combined value
-        let mut context = GtmplContext::from(combined_value)
+        let context = GtmplContext::from(combined_value)
             .map_err(|e| anyhow!("Failed to create context: {}", e))?;
 
         // Try to render with lenient error handling
