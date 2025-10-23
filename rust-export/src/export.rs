@@ -92,16 +92,21 @@ pub fn export_environments(
         .install(|| {
             environments
                 .par_iter()
-                .filter_map(|env| {
-                    match export_single_environment(env, &output_dir, &opts) {
+                .filter_map(
+                    |env| match export_single_environment(env, &output_dir, &opts) {
                         Ok(result) => Some(result),
                         Err(e) => {
-                            let env_name = env.environment.metadata.name.as_deref().unwrap_or("unknown");
+                            let env_name = env
+                                .environment
+                                .metadata
+                                .name
+                                .as_deref()
+                                .unwrap_or("unknown");
                             warn!("Failed to export environment '{}': {}", env_name, e);
                             None
                         }
-                    }
-                })
+                    },
+                )
                 .collect::<Vec<_>>()
         })
         .into_iter()

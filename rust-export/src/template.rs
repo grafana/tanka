@@ -40,6 +40,13 @@ impl TemplateEngine {
         // Add default empty values for commonly used fields to prevent errors
         let common_label_fields = vec!["fluxExport", "fluxExportDir"];
 
+        // Ensure manifest has metadata field
+        if let Some(manifest_obj) = manifest_json.as_object_mut() {
+            if !manifest_obj.contains_key("metadata") {
+                return Err(anyhow!("manifest missing 'metadata' field"));
+            }
+        }
+
         // Add defaults to environment labels
         if let Some(env_obj) = env_json.as_object_mut() {
             if let Some(metadata) = env_obj.get_mut("metadata").and_then(|m| m.as_object_mut()) {
@@ -53,7 +60,7 @@ impl TemplateEngine {
             }
         }
 
-        // Add defaults to manifest labels
+        // Add defaults to manifest labels and namespace
         if let Some(manifest_obj) = manifest_json.as_object_mut() {
             if let Some(metadata) = manifest_obj
                 .get_mut("metadata")
@@ -73,6 +80,11 @@ impl TemplateEngine {
                             .or_insert(JsonValue::String("".to_string()));
                     }
                 }
+
+                // Ensure namespace field exists (even if empty) to prevent template errors
+                metadata
+                    .entry("namespace".to_string())
+                    .or_insert(JsonValue::String("".to_string()));
             }
         }
 
