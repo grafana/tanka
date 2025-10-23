@@ -173,56 +173,107 @@ impl JsonnetEvaluator {
 }
 
 // Helper function to compute import paths for a file
+// Matches the behavior of jpath.Resolve() in Go
 pub fn compute_import_paths(path: &Path) -> Vec<PathBuf> {
-    let mut import_paths = Vec::new();
+    use log::debug;
 
-    // Start from the file's directory and walk up to find lib/ and vendor/
+    // Find the root directory (containing tkrc.yaml or jsonnetfile.json)
+    let root = find_root(path);
+
+    // Find the base directory (containing main.jsonnet or the entrypoint file)
+    let base = find_base(path, root.as_deref());
+
+    let root = root.unwrap_or_else(|| {
+        // If no root found, use current directory
+        std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+    });
+
+    let base = base.unwrap_or_else(|| {
+        // If no base found, use the file's directory
+        if path.is_dir() {
+            path.to_path_buf()
+        } else {
+            path.parent()
+                .map(|p| p.to_path_buf())
+                .unwrap_or_else(|| PathBuf::from("."))
+        }
+    });
+
+    debug!("Root directory: {:?}", root);
+    debug!("Base directory: {:?}", base);
+
+    // Construct import paths in the same order as Go's jpath.Resolve:
+    // [root/vendor, base/vendor, root/lib, base]
+    vec![
+        root.join("vendor"),
+        base.join("vendor"),
+        root.join("lib"),
+        base,
+    ]
+}
+
+// Find the project root directory (containing tkrc.yaml or jsonnetfile.json)
+fn find_root(path: &Path) -> Option<PathBuf> {
     let start_dir = if path.is_dir() {
         path.to_path_buf()
     } else {
-        path.parent()
-            .map(|p| p.to_path_buf())
-            .unwrap_or_else(|| PathBuf::from("."))
+        path.parent()?.to_path_buf()
     };
 
-    let mut current = start_dir.clone();
+    let mut current = start_dir;
     loop {
-        // Check for lib/ directory
-        let lib_dir = current.join("lib");
-        if lib_dir.is_dir() && !import_paths.contains(&lib_dir) {
-            import_paths.push(lib_dir);
+        // Try tkrc.yaml first
+        if current.join("tkrc.yaml").exists() {
+            return Some(current);
         }
 
-        // Check for vendor/ directory
-        let vendor_dir = current.join("vendor");
-        if vendor_dir.is_dir() && !import_paths.contains(&vendor_dir) {
-            import_paths.push(vendor_dir);
+        // Otherwise use jsonnetfile.json
+        if current.join("jsonnetfile.json").exists() {
+            return Some(current);
         }
 
-        // Check for jsonnetfile.json (indicates project root)
-        if current.join("jsonnetfile.json").exists()
-            || current.join("jsonnetfile.lock.json").exists()
-        {
-            // Found project root, add it too
-            if !import_paths.contains(&current) {
-                import_paths.push(current.clone());
+        // Move up one directory
+        current = current.parent()?.to_path_buf();
+    }
+}
+
+// Find the base directory (containing main.jsonnet or the entrypoint file)
+fn find_base(path: &Path, root: Option<&Path>) -> Option<PathBuf> {
+    let start_dir = if path.is_dir() {
+        path.to_path_buf()
+    } else {
+        path.parent()?.to_path_buf()
+    };
+
+    // Determine the filename to look for
+    let filename = if path.is_dir() {
+        "main.jsonnet"
+    } else {
+        path.file_name()?.to_str()?
+    };
+
+    let mut current = start_dir;
+    loop {
+        // Check if this directory contains the entrypoint file
+        if current.join(filename).exists() {
+            return Some(current);
+        }
+
+        // Stop at root if provided
+        if let Some(root_path) = root {
+            if current == root_path {
+                break;
             }
-            break;
         }
 
         // Move up one directory
         match current.parent() {
             Some(parent) => current = parent.to_path_buf(),
-            None => break, // Reached filesystem root
+            None => break,
         }
     }
 
-    // Add the file's own directory
-    if !import_paths.contains(&start_dir) {
-        import_paths.push(start_dir);
-    }
-
-    import_paths
+    None
 }
 
 // Load all environments from a file with their full data
@@ -455,8 +506,8 @@ pub fn list_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
     let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
 
     println!("Evaluating metadata script in {:?}", main_file);
-
-    let value = evaluator.eval_script(&main_file, METADATA_EVAL_SCRIPT)?;
+    let cwd = std::env::current_dir().unwrap();
+    let value = evaluator.eval_script(&cwd, METADATA_EVAL_SCRIPT)?;
 
     // Try to parse as a single environment first
     if let Ok(environment) = serde_json::from_value::<Environment>(value.clone()) {
