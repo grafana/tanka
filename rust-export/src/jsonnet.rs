@@ -425,6 +425,11 @@ fn load_static_environment_with_pool(
         environment.metadata.name
     );
 
+    // Populate metadata.namespace from spec.namespace if not set
+    if environment.metadata.namespace.is_none() {
+        environment.metadata.namespace = Some(environment.spec.namespace.clone());
+    }
+
     let import_paths = compute_import_paths(path);
 
     // Look for main.jsonnet

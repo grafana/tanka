@@ -15,6 +15,9 @@ use crate::jsonnet::{
 };
 use crate::template::TemplateEngine;
 
+#[cfg(test)]
+mod export_test;
+
 const MANIFEST_FILE: &str = "manifest.json";
 
 #[derive(Debug, Clone)]
@@ -236,14 +239,15 @@ fn export_single_environment(
             ));
         }
 
-        // Get environment namespace
-        let env_namespace = full_env
-            .environment
-            .metadata
-            .namespace
-            .as_deref()
-            .unwrap_or("default");
-        file_to_env.insert(relpath, env_namespace.to_string());
+        // Get environment path relative to current directory
+        let cwd = std::env::current_dir()?;
+        let env_path_str = full_env
+            .path
+            .strip_prefix(&cwd)
+            .unwrap_or(&full_env.path)
+            .to_string_lossy()
+            .to_string();
+        file_to_env.insert(relpath, env_path_str);
 
         // Write manifest
         let yaml = manifest.to_yaml()?;
@@ -280,12 +284,19 @@ fn delete_previously_exported_manifests_from_envs(
     envs: &[LoadedEnvironment],
     skip_manifest: bool,
 ) -> Result<()> {
-    let env_names: Vec<String> = envs
+    let cwd = std::env::current_dir()?;
+    let env_paths: Vec<String> = envs
         .iter()
-        .filter_map(|e| e.environment.metadata.namespace.clone())
+        .map(|e| {
+            e.path
+                .strip_prefix(&cwd)
+                .unwrap_or(&e.path)
+                .to_string_lossy()
+                .to_string()
+        })
         .collect();
 
-    delete_previously_exported_manifests(path, &env_names, skip_manifest)
+    delete_previously_exported_manifests(path, &env_paths, skip_manifest)
 }
 
 fn delete_previously_exported_manifests(
