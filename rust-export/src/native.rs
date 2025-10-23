@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Context, Result};
 use jrsonnet_evaluator::{
     function::{builtin, CallLocation},
-    IStr, ObjValue, Result as JResult, Thunk, Val,
+    IStr, ObjValue, Result as JResult, Val,
 };
 use jrsonnet_stdlib::ContextInitializer;
 use log::debug;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::io::Write;
@@ -13,21 +13,57 @@ use std::process::{Command, Stdio};
 
 /// Register all Tanka native functions with the ContextInitializer
 pub fn register_native_functions(ctx_init: &ContextInitializer) {
-    // Create and register helmTemplate native function
-    let helm_func = builtin_helm_template::INST.into();
+    // Create and register all native functions
     ctx_init
         .settings_mut()
         .ext_natives
-        .insert("helmTemplate".into(), helm_func);
-}
+        .insert("helmTemplate".into(), builtin_helm_template::INST.into());
 
-const DEFAULT_NAME_FORMAT: &str = "{{ print .kind \"_\" .metadata.name | snakecase }}";
+    ctx_init
+        .settings_mut()
+        .ext_natives
+        .insert("parseJson".into(), builtin_parse_json::INST.into());
+
+    ctx_init
+        .settings_mut()
+        .ext_natives
+        .insert("parseYaml".into(), builtin_parse_yaml::INST.into());
+
+    ctx_init.settings_mut().ext_natives.insert(
+        "manifestJsonFromJson".into(),
+        builtin_manifest_json_from_json::INST.into(),
+    );
+
+    ctx_init.settings_mut().ext_natives.insert(
+        "manifestYamlFromJson".into(),
+        builtin_manifest_yaml_from_json::INST.into(),
+    );
+
+    ctx_init.settings_mut().ext_natives.insert(
+        "escapeStringRegex".into(),
+        builtin_escape_string_regex::INST.into(),
+    );
+
+    ctx_init
+        .settings_mut()
+        .ext_natives
+        .insert("regexMatch".into(), builtin_regex_match::INST.into());
+
+    ctx_init
+        .settings_mut()
+        .ext_natives
+        .insert("regexSubst".into(), builtin_regex_subst::INST.into());
+
+    ctx_init
+        .settings_mut()
+        .ext_natives
+        .insert("sha256".into(), builtin_sha256::INST.into());
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct HelmOpts {
     called_from: Option<String>,
-    name_format: Option<String>,
     values: Option<HashMap<String, JsonValue>>,
     api_versions: Option<Vec<String>>,
     #[serde(default = "default_true")]
@@ -141,10 +177,25 @@ fn execute_helm_template(name: &str, chart: &str, opts: &HelmOpts) -> Result<Vec
 
     debug!("Helm working directory: {:?}", working_dir);
 
+    // Resolve chart path relative to the caller's directory
+    // Strip leading slash if present to ensure relative path behavior
+    let chart_clean = chart.strip_prefix('/').unwrap_or(chart);
+    let chart_path = working_dir.join(chart_clean);
+
+    // Verify the chart exists
+    if !chart_path.exists() {
+        return Err(anyhow!(
+            "helmTemplate: Failed to find a chart at '{}'. See https://tanka.dev/helm#failed-to-find-chart",
+            chart_path.display()
+        ));
+    }
+
+    debug!("Resolved chart path: {:?}", chart_path);
+
     let mut args = vec![
         "template".to_string(),
         name.to_string(),
-        chart.to_string(),
+        chart_path.to_string_lossy().to_string(),
         "--values".to_string(),
         "-".to_string(), // Read values from stdin
     ];
@@ -176,15 +227,10 @@ fn execute_helm_template(name: &str, chart: &str, opts: &HelmOpts) -> Result<Vec
         args.push(format!("--namespace={}", namespace));
     }
 
-    debug!(
-        "Helm command: helm {} (in {:?})",
-        args.join(" "),
-        working_dir
-    );
+    debug!("Helm command: helm {}", args.join(" "));
 
     let mut cmd = Command::new("helm")
         .args(&args)
-        .current_dir(&working_dir)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -252,35 +298,6 @@ fn execute_helm_template(name: &str, chart: &str, opts: &HelmOpts) -> Result<Vec
     Ok(manifests)
 }
 
-fn manifests_to_map(manifests: &[JsonValue], _name_format: &str) -> Result<JsonValue> {
-    let mut result = serde_json::Map::new();
-
-    for manifest in manifests {
-        // For now, use a simple key format instead of full template processing
-        // TODO: Implement proper template processing with tera or similar based on name_format
-        let key = if let Some(obj) = manifest.as_object() {
-            let kind = obj
-                .get("kind")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown");
-            let name = obj
-                .get("metadata")
-                .and_then(|m| m.as_object())
-                .and_then(|m| m.get("name"))
-                .and_then(|n| n.as_str())
-                .unwrap_or("unknown");
-
-            format!("{}_{}", kind.to_lowercase(), name)
-        } else {
-            format!("manifest_{}", result.len())
-        };
-
-        result.insert(key, manifest.clone());
-    }
-
-    Ok(JsonValue::Object(result))
-}
-
 fn obj_to_json(obj: &ObjValue) -> JResult<JsonValue> {
     // Convert ObjValue to JSON
     // This is a simplified implementation
@@ -333,4 +350,129 @@ fn json_to_jsonnet_val(json: &JsonValue) -> JResult<Val> {
         .map_err(|e| ErrorKind::RuntimeError(format!("Failed to serialize JSON: {}", e).into()))?;
 
     builtin_parse_json(json_str.into())
+}
+
+/// parseJson native function
+#[builtin]
+pub fn builtin_parse_json(_loc: CallLocation, json: IStr) -> JResult<Val> {
+    use jrsonnet_stdlib::builtin_parse_json as parse;
+    parse(json)
+}
+
+/// parseYaml native function
+#[builtin]
+pub fn builtin_parse_yaml(_loc: CallLocation, yaml: IStr) -> JResult<Val> {
+    use jrsonnet_evaluator::error::ErrorKind;
+
+    let yaml_str = yaml.to_string();
+    let deserializer = serde_yaml::Deserializer::from_str(&yaml_str);
+    let mut results = Vec::new();
+
+    for document in deserializer {
+        let value: JsonValue = JsonValue::deserialize(document)
+            .map_err(|e| ErrorKind::RuntimeError(format!("Failed to parse YAML: {}", e).into()))?;
+        results.push(value);
+    }
+
+    // Convert Vec<JsonValue> to Val
+    let json_array = JsonValue::Array(results);
+    json_to_jsonnet_val(&json_array)
+}
+
+/// manifestJsonFromJson native function
+#[builtin]
+pub fn builtin_manifest_json_from_json(
+    _loc: CallLocation,
+    json: IStr,
+    indent: f64,
+) -> JResult<Val> {
+    use jrsonnet_evaluator::error::ErrorKind;
+
+    let json_str = json.to_string();
+    let indent_size = indent as usize;
+
+    // Parse and re-serialize with proper indentation
+    let value: JsonValue = serde_json::from_str(&json_str)
+        .map_err(|e| ErrorKind::RuntimeError(format!("Failed to parse JSON: {}", e).into()))?;
+
+    let mut output = Vec::new();
+    let indent_bytes = vec![b' '; indent_size];
+    let formatter = serde_json::ser::PrettyFormatter::with_indent(indent_bytes.as_slice());
+    let mut serializer = serde_json::Serializer::with_formatter(&mut output, formatter);
+    value
+        .serialize(&mut serializer)
+        .map_err(|e| ErrorKind::RuntimeError(format!("Failed to serialize JSON: {}", e).into()))?;
+
+    output.push(b'\n');
+    let result = String::from_utf8(output).map_err(|e| {
+        ErrorKind::RuntimeError(format!("Failed to convert to UTF-8: {}", e).into())
+    })?;
+
+    Ok(Val::Str(result.into()))
+}
+
+/// manifestYamlFromJson native function
+#[builtin]
+pub fn builtin_manifest_yaml_from_json(_loc: CallLocation, json: IStr) -> JResult<Val> {
+    use jrsonnet_evaluator::error::ErrorKind;
+
+    let json_str = json.to_string();
+
+    // Parse JSON
+    let value: JsonValue = serde_json::from_str(&json_str)
+        .map_err(|e| ErrorKind::RuntimeError(format!("Failed to parse JSON: {}", e).into()))?;
+
+    // Serialize as YAML
+    let yaml_str = serde_yaml::to_string(&value)
+        .map_err(|e| ErrorKind::RuntimeError(format!("Failed to serialize YAML: {}", e).into()))?;
+
+    Ok(Val::Str(yaml_str.into()))
+}
+
+/// escapeStringRegex native function
+#[builtin]
+pub fn builtin_escape_string_regex(_loc: CallLocation, s: IStr) -> JResult<Val> {
+    use regex::escape;
+    let escaped = escape(&s.to_string());
+    Ok(Val::Str(escaped.into()))
+}
+
+/// regexMatch native function
+#[builtin]
+pub fn builtin_regex_match(_loc: CallLocation, regex: IStr, string: IStr) -> JResult<Val> {
+    use jrsonnet_evaluator::error::ErrorKind;
+    use regex::Regex;
+
+    let re = Regex::new(&regex.to_string())
+        .map_err(|e| ErrorKind::RuntimeError(format!("Invalid regex: {}", e).into()))?;
+
+    Ok(Val::Bool(re.is_match(&string.to_string())))
+}
+
+/// regexSubst native function
+#[builtin]
+pub fn builtin_regex_subst(_loc: CallLocation, regex: IStr, src: IStr, repl: IStr) -> JResult<Val> {
+    use jrsonnet_evaluator::error::ErrorKind;
+    use regex::Regex;
+
+    let re = Regex::new(&regex.to_string())
+        .map_err(|e| ErrorKind::RuntimeError(format!("Invalid regex: {}", e).into()))?;
+
+    let result = re
+        .replace_all(&src.to_string(), repl.to_string().as_str())
+        .to_string();
+    Ok(Val::Str(result.into()))
+}
+
+/// sha256 native function
+#[builtin]
+pub fn builtin_sha256(_loc: CallLocation, s: IStr) -> JResult<Val> {
+    use sha2::{Digest, Sha256};
+
+    let mut hasher = Sha256::new();
+    hasher.update(s.to_string().as_bytes());
+    let result = hasher.finalize();
+    let hex_string = format!("{:x}", result);
+
+    Ok(Val::Str(hex_string.into()))
 }

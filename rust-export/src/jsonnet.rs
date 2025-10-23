@@ -345,6 +345,98 @@ pub fn load_environment_by_name(path: &Path, name: &str) -> Result<LoadedEnviron
 }
 
 pub fn load_environment(path: &Path) -> Result<LoadedEnvironment> {
+    // Check if this is a static environment (has spec.json)
+    let env_dir = if path.is_dir() {
+        path
+    } else {
+        path.parent().unwrap_or(path)
+    };
+
+    let spec_file = env_dir.join("spec.json");
+    if spec_file.exists() {
+        return load_static_environment(env_dir);
+    }
+
+    // Otherwise, load as inline environment
+    load_inline_environment(path)
+}
+
+fn load_static_environment(path: &Path) -> Result<LoadedEnvironment> {
+    use log::debug;
+
+    // Read spec.json
+    let spec_file = path.join("spec.json");
+    let spec_contents = fs::read_to_string(&spec_file)
+        .with_context(|| format!("Failed to read spec.json: {:?}", spec_file))?;
+
+    let mut environment: Environment = serde_json::from_str(&spec_contents)
+        .with_context(|| format!("Failed to parse spec.json: {:?}", spec_file))?;
+
+    debug!(
+        "Loaded static environment from spec.json: {:?}",
+        environment.metadata.name
+    );
+
+    // Find the project root and common import directories
+    let mut import_paths = Vec::new();
+    let start_dir = path.to_path_buf();
+
+    let mut current = start_dir.clone();
+    loop {
+        // Check for lib/ directory
+        let lib_dir = current.join("lib");
+        if lib_dir.is_dir() && !import_paths.contains(&lib_dir) {
+            import_paths.push(lib_dir);
+        }
+
+        // Check for vendor/ directory
+        let vendor_dir = current.join("vendor");
+        if vendor_dir.is_dir() && !import_paths.contains(&vendor_dir) {
+            import_paths.push(vendor_dir);
+        }
+
+        // Check for jsonnetfile.json (indicates project root)
+        if current.join("jsonnetfile.json").exists()
+            || current.join("jsonnetfile.lock.json").exists()
+        {
+            // Found project root, add it too
+            if !import_paths.contains(&current) {
+                import_paths.push(current.clone());
+            }
+            break;
+        }
+
+        // Move up one directory
+        match current.parent() {
+            Some(parent) => current = parent.to_path_buf(),
+            None => break, // Reached filesystem root
+        }
+    }
+
+    // Add the environment's own directory
+    if !import_paths.contains(&start_dir) {
+        import_paths.push(start_dir.clone());
+    }
+
+    let evaluator = JsonnetEvaluator::new_with_paths(import_paths)?;
+
+    // Look for main.jsonnet
+    let main_file = path.join("main.jsonnet");
+    if !main_file.exists() {
+        return Err(anyhow!("No main.jsonnet found in directory: {:?}", path));
+    }
+
+    // Evaluate jsonnet to get data
+    let value = evaluator.eval_file(&main_file)?;
+    environment.data = Some(value);
+
+    Ok(LoadedEnvironment {
+        path: main_file,
+        environment,
+    })
+}
+
+fn load_inline_environment(path: &Path) -> Result<LoadedEnvironment> {
     // Find the project root and common import directories
     let mut import_paths = Vec::new();
 
@@ -440,6 +532,28 @@ pub fn load_environment(path: &Path) -> Result<LoadedEnvironment> {
 
 // List all environments in a file (for recursive discovery)
 pub fn list_environments(path: &Path) -> Result<Vec<LoadedEnvironment>> {
+    // Check if this is a static environment (has spec.json)
+    let env_dir = if path.is_dir() {
+        path
+    } else {
+        path.parent().unwrap_or(path)
+    };
+
+    let spec_file = env_dir.join("spec.json");
+    if spec_file.exists() {
+        // For static environments, just load the metadata from spec.json
+        let spec_contents = fs::read_to_string(&spec_file)
+            .with_context(|| format!("Failed to read spec.json: {:?}", spec_file))?;
+
+        let environment: Environment = serde_json::from_str(&spec_contents)
+            .with_context(|| format!("Failed to parse spec.json: {:?}", spec_file))?;
+
+        return Ok(vec![LoadedEnvironment {
+            path: spec_file,
+            environment,
+        }]);
+    }
+
     // Find the project root and common import directories
     let mut import_paths = Vec::new();
 

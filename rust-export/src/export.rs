@@ -92,9 +92,18 @@ pub fn export_environments(
         .install(|| {
             environments
                 .par_iter()
-                .map(|env| export_single_environment(env, &output_dir, &opts))
-                .collect::<Result<Vec<_>>>()
-        })?
+                .filter_map(|env| {
+                    match export_single_environment(env, &output_dir, &opts) {
+                        Ok(result) => Some(result),
+                        Err(e) => {
+                            let env_name = env.environment.metadata.name.as_deref().unwrap_or("unknown");
+                            warn!("Failed to export environment '{}': {}", env_name, e);
+                            None
+                        }
+                    }
+                })
+                .collect::<Vec<_>>()
+        })
         .into_iter()
         .flatten()
         .collect();
@@ -182,8 +191,15 @@ fn export_single_environment(
 
     info!("Exporting environment: {}", env_name);
 
-    // Load environment with full data using filtered eval
-    let full_env = load_environment_by_name(&env.path, env_name)?;
+    // Reload the environment with full data
+    // For static environments (those with spec.json), we need to use the directory
+    // For inline environments, we use the file path
+    let env_dir = if env.path.ends_with("spec.json") {
+        env.path.parent().unwrap_or(&env.path)
+    } else {
+        &env.path
+    };
+    let full_env = load_environment(env_dir)?;
     let manifests = load_manifests(&full_env)?;
 
     if manifests.is_empty() {
