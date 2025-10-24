@@ -1,6 +1,6 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  branchPrefix: "grafanarenovatebot/",
+  extends: ["github>grafana/grafana-renovate-config//presets/base"],
   customDatasources: {
     "kubectl": {
       "defaultRegistryUrlTemplate": "https://cdn.dl.k8s.io/release/stable.txt",
@@ -58,10 +58,6 @@
   ],
   dependencyDashboard: false,
   enabledManagers: ["custom.regex"],
-  forkProcessing: "enabled",
-  globalExtends: [":pinDependencies", "config:best-practices"],
-  onboarding: false,
-  osvVulnerabilityAlerts: true,
   packageRules: [
     {
       labels: ["update-major"],
@@ -93,15 +89,7 @@
     {
       matchFileNames: ["docs/package.json", "docs/pnpm-lock.yaml"],
       groupName: "Docs",
-      groupSlug: "docs"
-    }
-  ],
-  platformCommit: true,
-  rebaseWhen: "behind-base-branch",
-  requireConfig: "optional",
-  vulnerabilityAlerts: {
-    automerge: true,
-    enabled: true,
-    labels: ["automerge-security-update"],
-  },
+      groupSlug: "docs",
+    },
+  ]
 }
