@@ -1,95 +1,128 @@
 {
-  $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: ["github>grafana/grafana-renovate-config//presets/base"],
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'github>grafana/grafana-renovate-config//presets/base',
+  ],
   customDatasources: {
-    "kubectl": {
-      "defaultRegistryUrlTemplate": "https://cdn.dl.k8s.io/release/stable.txt",
-      "format": "plain",
-      "transformTemplates": [
-          "{\"releases\": [releases . {\"version\": $substring(version, 1)}]}",
+    kubectl: {
+      defaultRegistryUrlTemplate: 'https://cdn.dl.k8s.io/release/stable.txt',
+      format: 'plain',
+      transformTemplates: [
+        '{"releases": [releases . {"version": $substring(version, 1)}]}',
       ],
     },
-    "helm": {
-      "defaultRegistryUrlTemplate": "https://api.github.com/repos/helm/helm/releases",
-      "format": "json",
-      "transformTemplates": [
-          "{\"releases\": [$.tag_name . {\"version\": $substring($, 1)}]}",
+    helm: {
+      defaultRegistryUrlTemplate: 'https://api.github.com/repos/helm/helm/releases',
+      format: 'json',
+      transformTemplates: [
+        '{"releases": [$.tag_name . {"version": $substring($, 1)}]}',
       ],
     },
-    "kustomize": {
-      "defaultRegistryUrlTemplate": "https://api.github.com/repos/kubernetes-sigs/kustomize/releases",
-      "format": "json",
-      "transformTemplates": [
-          "{\"releases\": [$$ [$match(tag_name, /kustomize.*/) and $not(draft) and $not(prerelease) ] . {\"version\": $substringAfter(tag_name, \"/v\")}]}",
+    kustomize: {
+      defaultRegistryUrlTemplate: 'https://api.github.com/repos/kubernetes-sigs/kustomize/releases',
+      format: 'json',
+      transformTemplates: [
+        '{"releases": [$$ [$match(tag_name, /kustomize.*/) and $not(draft) and $not(prerelease) ] . {"version": $substringAfter(tag_name, "/v")}]}',
       ],
     },
   },
-
   customManagers: [
     {
-      "customType": "regex",
-      "fileMatch": ["Dockerfile"],
-      "matchStrings": [
-          "ARG KUBECTL_VERSION=(?<currentValue>\\S+)",
+      customType: 'regex',
+      managerFilePatterns: [
+        '/Dockerfile/',
       ],
-      "datasourceTemplate": "custom.kubectl",
-      "depNameTemplate": "kubectl",
+      matchStrings: [
+        'ARG KUBECTL_VERSION=(?<currentValue>\\S+)',
+      ],
+      datasourceTemplate: 'custom.kubectl',
+      depNameTemplate: 'kubectl',
     },
     {
-      "customType": "regex",
-      "fileMatch": ["Dockerfile"],
-      "matchStrings": [
-          "ARG HELM_VERSION=(?<currentValue>\\S+)",
+      customType: 'regex',
+      managerFilePatterns: [
+        '/Dockerfile/',
       ],
-      "datasourceTemplate": "custom.helm",
-      "depNameTemplate": "helm",
-      "versioningTemplate": "semver",
+      matchStrings: [
+        'ARG HELM_VERSION=(?<currentValue>\\S+)',
+      ],
+      datasourceTemplate: 'custom.helm',
+      depNameTemplate: 'helm',
+      versioningTemplate: 'semver',
     },
     {
-      "customType": "regex",
-      "fileMatch": ["Dockerfile"],
-      "matchStrings": [
-          "ARG KUSTOMIZE_VERSION=(?<currentValue>\\S+)",
+      customType: 'regex',
+      managerFilePatterns: [
+        '/Dockerfile/',
       ],
-      "datasourceTemplate": "custom.kustomize",
-      "depNameTemplate": "kustomize",
-      "versioningTemplate": "semver",
+      matchStrings: [
+        'ARG KUSTOMIZE_VERSION=(?<currentValue>\\S+)',
+      ],
+      datasourceTemplate: 'custom.kustomize',
+      depNameTemplate: 'kustomize',
+      versioningTemplate: 'semver',
     },
   ],
   dependencyDashboard: false,
-  enabledManagers: ["custom.regex"],
+  enabledManagers: [
+    'custom.regex',
+  ],
   packageRules: [
     {
-      labels: ["update-major"],
-      matchUpdateTypes: ["major"],
+      labels: [
+        'update-major',
+      ],
+      matchUpdateTypes: [
+        'major',
+      ],
     },
     {
-      labels: ["update-minor"],
-      matchUpdateTypes: ["minor"],
+      labels: [
+        'update-minor',
+      ],
+      matchUpdateTypes: [
+        'minor',
+      ],
     },
     {
       automerge: true,
-      labels: ["automerge-patch"],
-      matchUpdateTypes: ["patch"],
+      labels: [
+        'automerge-patch',
+      ],
+      matchUpdateTypes: [
+        'patch',
+      ],
     },
     {
-      labels: ["update-digest"],
-      matchUpdateTypes: ["digest"],
+      labels: [
+        'update-digest',
+      ],
+      matchUpdateTypes: [
+        'digest',
+      ],
     },
     {
-      // Run the custom matcher on early Monday mornings (UTC)
-      schedule: "* 0-4 * * 1",
-      matchPackageNames: ["ghcr.io/renovatebot/renovate"],
+      schedule: '* 0-4 * * 1',
+      matchPackageNames: [
+        'ghcr.io/renovatebot/renovate',
+      ],
     },
     {
-      // Do not update otel dependencies in the dagger module. These should only be updated together with Dagger
-      matchFileNames: ["dagger/go.mod", "dagger/go.sum"],
-      matchPackageNames: ["go.opentelemetry.io/**"],
+      matchFileNames: [
+        'dagger/go.mod',
+        'dagger/go.sum',
+      ],
+      matchPackageNames: [
+        'go.opentelemetry.io/**',
+      ],
     },
     {
-      matchFileNames: ["docs/package.json", "docs/pnpm-lock.yaml"],
-      groupName: "Docs",
-      groupSlug: "docs",
+      matchFileNames: [
+        'docs/package.json',
+        'docs/pnpm-lock.yaml',
+      ],
+      groupName: 'Docs',
+      groupSlug: 'docs',
     },
-  ]
+  ],
 }
