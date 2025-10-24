@@ -90,8 +90,13 @@
       matchFileNames: ["dagger/go.mod", "dagger/go.sum"],
       matchPackageNames: ["go.opentelemetry.io/**"],
     },
+    {
+      matchFileNames: ["docs/package.json", "docs/pnpm-lock.yaml"],
+      groupName: "Docs",
+      groupSlug: "docs"
+    }
   ],
-  platformCommit: "enabled",
+  platformCommit: true,
   rebaseWhen: "behind-base-branch",
   requireConfig: "optional",
   vulnerabilityAlerts: {
