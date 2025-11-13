@@ -124,5 +124,11 @@
       groupName: 'Docs',
       groupSlug: 'docs',
     },
+    {
+      matchPackageNames: [
+        'helm',
+      ],
+      allowedVersions: '<4.0.0',
+    }
   ],
 }
