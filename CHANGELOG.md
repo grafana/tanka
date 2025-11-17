@@ -2,6 +2,27 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.36.1](https://github.com/grafana/tanka/compare/v0.36.0...v0.36.1) (2025-11-17)
+
+
+### 🐛 Bug Fixes
+
+* revert to yaml.v2 ([#1754](https://github.com/grafana/tanka/issues/1754)) ([6fdc4c4](https://github.com/grafana/tanka/commit/6fdc4c40931dbc12ee4ab1c1dd4abd260df6389d))
+
+
+### 🏗️ Build System
+
+* **deps:** bump astro from 5.14.6 to 5.15.6 in /docs ([#1752](https://github.com/grafana/tanka/issues/1752)) ([2e78341](https://github.com/grafana/tanka/commit/2e78341a2f15c863221a3a2ee49fdf2b05846287))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency helm to v3.19.1 ([#1744](https://github.com/grafana/tanka/issues/1744)) ([b8e6624](https://github.com/grafana/tanka/commit/b8e66248e49c817da8ee8efe1ba4ff28f49d782e))
+* **deps:** update dependency helm to v3.19.2 ([#1747](https://github.com/grafana/tanka/issues/1747)) ([8fd1e10](https://github.com/grafana/tanka/commit/8fd1e100cde642519cd0da0b73fae4489e07a0be))
+* **deps:** update dependency kubectl to v1.34.2 ([#1746](https://github.com/grafana/tanka/issues/1746)) ([0619fb5](https://github.com/grafana/tanka/commit/0619fb5167e8cd28c6c0e06d36e23656f4320a18))
+* **deps:** update dependency kustomize to v5.8.0 ([#1743](https://github.com/grafana/tanka/issues/1743)) ([0e20e62](https://github.com/grafana/tanka/commit/0e20e625a76b398b702c66af624d1154adc07f1f))
+* **renovate:** prevent updates to helm 4 ([#1751](https://github.com/grafana/tanka/issues/1751)) ([a0560d2](https://github.com/grafana/tanka/commit/a0560d2cd032369d54bca112c202ab176d2394fe))
+
 ## [0.36.0](https://github.com/grafana/tanka/compare/v0.35.0...v0.36.0) (2025-10-24)
 
 
