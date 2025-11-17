@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/grafana/tanka/pkg/jsonnet"
@@ -141,6 +142,12 @@ func TestExportEnvironments(t *testing.T) {
     "static/updated-again-deployment.yaml": "test-export-envs/static-env/main.jsonnet",
     "static/updated-again-service.yaml": "test-export-envs/static-env/main.jsonnet"
 }`)
+
+	// Finally make sure that the indentation is 2 spaces by looking at `metadata.name`
+	deploymentRawContent, err := os.ReadFile(filepath.Join(tempDir, "static", "updated-again-deployment.yaml"))
+	require.NoError(t, err)
+	deploymentContent := strings.Split(string(deploymentRawContent), "\n")
+	require.Contains(t, deploymentContent, "  name: updated-again-deployment", "file indentation is most likely no longer 2 spaces")
 }
 
 func TestExportEnvironmentsBroken(t *testing.T) {
