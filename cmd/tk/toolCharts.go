@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-clix/cli"
 	"github.com/grafana/tanka/pkg/helm"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 const repoConfigFlagUsage = "specify a local helm repository config file to use instead of the repositories in the chartfile.yaml. For use with private repositories"

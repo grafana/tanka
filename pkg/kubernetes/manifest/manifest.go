@@ -9,7 +9,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/pkg/errors"
 	"github.com/stretchr/objx"
-	yaml "gopkg.in/yaml.v3"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Manifest represents a Kubernetes API object. The fields `apiVersion` and
