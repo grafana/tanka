@@ -20,6 +20,6 @@ jobs:
   lint-pr-title:
     runs-on: ubuntu-24.04
     steps:
-      - uses: grafana/shared-workflows/actions/lint-pr-title@19d8fb5687bb386849f7f53673c5f429e6387cf5 # lint-pr-title/v1.2.0
+      - uses: grafana/shared-workflows/actions/lint-pr-title@5f4c48c03125ef179c36a821d5b801fc876e672c # lint-pr-title/v1.2.1
         env:
           GITHUB_TOKEN: ${{ github.token }}
