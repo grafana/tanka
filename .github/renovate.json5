@@ -63,9 +63,13 @@
       versioningTemplate: 'semver',
     },
   ],
-  dependencyDashboard: false,
+  dependencyDashboard: true,
   enabledManagers: [
     'custom.regex',
+    'dockerfile',
+    'github-actions',
+    'gomod',
+    'npm',
   ],
   packageRules: [
     {
