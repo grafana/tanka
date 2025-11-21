@@ -133,6 +133,12 @@
         'helm',
       ],
       allowedVersions: '<4.0.0',
-    }
+    },
+    {
+      matchPackageNames: [
+        'gopkg.in/yaml.v2',
+      ],
+      allowedVersions: '<3.0.0',
+    },
   ],
 }
