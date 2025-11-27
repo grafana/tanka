@@ -2,6 +2,13 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.36.3](https://github.com/grafana/tanka/compare/v0.36.2...v0.36.3) (2025-11-27)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update module github.com/99designs/gqlgen to v0.17.84 ([#1787](https://github.com/grafana/tanka/issues/1787)) ([b6f1468](https://github.com/grafana/tanka/commit/b6f1468287cdc1575f5ab0b2eb6cc5da9f9ec59c))
+
 ## [0.36.2](https://github.com/grafana/tanka/compare/v0.36.1...v0.36.2) (2025-11-24)
 
 
