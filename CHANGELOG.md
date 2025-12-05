@@ -2,6 +2,24 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.36.3](https://github.com/grafana/tanka/compare/v0.36.2...v0.36.3) (2025-12-05)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update docs ([#1792](https://github.com/grafana/tanka/issues/1792)) ([4663c10](https://github.com/grafana/tanka/commit/4663c1066b26dd9ef30c883051daa1fd4152a830))
+* **deps:** update module github.com/99designs/gqlgen to v0.17.84 ([#1787](https://github.com/grafana/tanka/issues/1787)) ([b6f1468](https://github.com/grafana/tanka/commit/b6f1468287cdc1575f5ab0b2eb6cc5da9f9ec59c))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update actions/checkout action to v6.0.1 ([#1794](https://github.com/grafana/tanka/issues/1794)) ([980945f](https://github.com/grafana/tanka/commit/980945f46fb7bc5283c0134b46e37001c624270b))
+* **deps:** update dependency go to v1.25.5 ([#1795](https://github.com/grafana/tanka/issues/1795)) ([7a34b74](https://github.com/grafana/tanka/commit/7a34b741b9deaf72f3ecf7b474ddb478fe39ba00))
+* **deps:** update dependency pnpm to v10.24.0 ([#1790](https://github.com/grafana/tanka/issues/1790)) ([4017ef2](https://github.com/grafana/tanka/commit/4017ef21718cdc14c1ecf97f3b13095b8c766bb7))
+* **deps:** update docker/metadata-action action to v5.10.0 ([#1789](https://github.com/grafana/tanka/issues/1789)) ([f154a89](https://github.com/grafana/tanka/commit/f154a8909d600efc5e204b0cb30a83ae786464b6))
+* **deps:** update docs ([#1793](https://github.com/grafana/tanka/issues/1793)) ([f9cdbaa](https://github.com/grafana/tanka/commit/f9cdbaa3c48ff2424e278fcfd656e70b1f8ae5ba))
+* **deps:** update golang docker tag to v1.25.5 ([#1796](https://github.com/grafana/tanka/issues/1796)) ([8f06510](https://github.com/grafana/tanka/commit/8f065105c10d1e8b1d7a91ed10bca153f9a062ae))
+
 ## [0.36.2](https://github.com/grafana/tanka/compare/v0.36.1...v0.36.2) (2025-11-24)
 
 
