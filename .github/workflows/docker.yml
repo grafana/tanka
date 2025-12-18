@@ -84,7 +84,7 @@ jobs:
 
       - name: Upload digest
         if: github.event_name == 'push'
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: ${{ steps.digest.outputs.artifact_name }}
           path: /tmp/digests/*
@@ -101,13 +101,13 @@ jobs:
       - build
     steps:
       - name: Download digests (linux/arm64)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: digests-ubuntu-24.04-arm
           path: /tmp/digests-linux-arm64
 
       - name: Download digests (linux/amd64)
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: digests-ubuntu-24.04
           path: /tmp/digests-linux-amd64
