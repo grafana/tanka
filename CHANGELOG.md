@@ -2,6 +2,20 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.36.4](https://github.com/grafana/tanka/compare/v0.36.3...v0.36.4) (2026-01-16)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update module github.com/99designs/gqlgen to v0.17.86 ([#1811](https://github.com/grafana/tanka/issues/1811)) ([fd13ef1](https://github.com/grafana/tanka/commit/fd13ef156c17584fc4e18c59d8dec9e51c4aea30))
+* **deps:** update module google.golang.org/grpc to v1.78.0 ([#1822](https://github.com/grafana/tanka/issues/1822)) ([4a48d1d](https://github.com/grafana/tanka/commit/4a48d1db2ddb92404108e7850d8654965f75dc3a))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update actions/setup-go action to v6.2.0 ([#1834](https://github.com/grafana/tanka/issues/1834)) ([075d075](https://github.com/grafana/tanka/commit/075d075297fd430875d85edb3877977b023f4927))
+* **deps:** update dependency astro to v5.16.9 ([#1832](https://github.com/grafana/tanka/issues/1832)) ([dea587b](https://github.com/grafana/tanka/commit/dea587b2b0eaec98d6c6e69a3dd8812ae0ac5ec8))
+
 ## [0.36.3](https://github.com/grafana/tanka/compare/v0.36.2...v0.36.3) (2026-01-14)
 
 
