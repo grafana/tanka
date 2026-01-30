@@ -250,7 +250,14 @@ requires:
     version: v0.27.3
 ```
 
-_Registry login is not supported yet._
+:::note
+If your registry requires login, you must run the appropriate login command before running `tk tool charts vendor`. For example, for public ECR registries:
+
+```bash
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+tk tool charts vendor
+```
+:::
 
 ## Troubleshooting
 
