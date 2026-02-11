@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	"github.com/go-clix/cli"
 
@@ -18,7 +19,7 @@ const defaultK8sVersion = "1.32"
 // Pinned commit of k8s-libsonnet that contains defaultK8sVersion.
 // This avoids failures when older versions are removed from main branch.
 // See https://github.com/grafana/tanka/issues/1863
-const k8sLibsonnetCommit = "55380470fb7979e6ce0c4316cb9c27a266caf298"
+const k8sLibsonnetCommitRef = "55380470fb7979e6ce0c4316cb9c27a266caf298"
 
 // initCmd creates a new application
 func initCmd(ctx context.Context) *cli.Command {
@@ -29,7 +30,7 @@ func initCmd(ctx context.Context) *cli.Command {
 	}
 
 	force := cmd.Flags().BoolP("force", "f", false, "ignore the working directory not being empty")
-	installK8s := cmd.Flags().String("k8s", defaultK8sVersion, "choose the version of k8s-libsonnet, set to false to skip")
+	installK8s := cmd.Flags().String("k8s", defaultK8sVersion, "choose the version of k8s-libsonnet, full package URI, or false to skip (e.g. \"1.32\", \"github.com/jsonnet-libs/k8s-libsonnet/1.32@main\")")
 	inline := cmd.Flags().BoolP("inline", "i", false, "create an inline environment")
 
 	cmd.Run = func(_ *cli.Command, _ []string) error {
@@ -94,6 +95,9 @@ func initCmd(ctx context.Context) *cli.Command {
 	return cmd
 }
 
+// The version can be:
+// - a full package URI (e.g. "github.com/jsonnet-libs/k8s-libsonnet/1.32@main")
+// - a version number (e.g. "1.32"): use default package with pinned commit
 func installK8sLib(version string) error {
 	jbBinary := "jb"
 	if env := os.Getenv("TANKA_JB_PATH"); env != "" {
@@ -104,13 +108,23 @@ func installK8sLib(version string) error {
 		return errors.New("jsonnet-bundler not found in $PATH. Follow https://tanka.dev/install#jsonnet-bundler for installation instructions")
 	}
 
+	k8sLibsonnetURI := version
+	if !strings.Contains(k8sLibsonnetURI, "/") {
+		// If it doesn't look like a full package URI, it's a version number.
+		k8sLibsonnetURI = "github.com/jsonnet-libs/k8s-libsonnet/" + version
+	}
+	importPathPrefix, _, ok := strings.Cut(k8sLibsonnetURI, "@")
+	if !ok {
+		k8sLibsonnetURI += "@" + k8sLibsonnetCommitRef
+	}
+
 	var initialPackages = []string{
-		"github.com/jsonnet-libs/k8s-libsonnet/" + version + "@" + k8sLibsonnetCommit,
+		k8sLibsonnetURI,
 		"github.com/grafana/jsonnet-libs/ksonnet-util",
 		"github.com/jsonnet-libs/docsonnet/doc-util", // install docsonnet to make `tk lint` work
 	}
 
-	if err := writeNewFile("lib/k.libsonnet", "import 'github.com/jsonnet-libs/k8s-libsonnet/"+version+"/main.libsonnet'\n"); err != nil {
+	if err := writeNewFile("lib/k.libsonnet", "import '"+importPathPrefix+"/main.libsonnet'\n"); err != nil {
 		return err
 	}
 
