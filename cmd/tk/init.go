@@ -13,7 +13,12 @@ import (
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
 )
 
-const defaultK8sVersion = "1.29"
+const defaultK8sVersion = "1.32"
+
+// Pinned commit of k8s-libsonnet that contains defaultK8sVersion.
+// This avoids failures when older versions are removed from main branch.
+// See https://github.com/grafana/tanka/issues/1863
+const k8sLibsonnetCommit = "55380470fb7979e6ce0c4316cb9c27a266caf298"
 
 // initCmd creates a new application
 func initCmd(ctx context.Context) *cli.Command {
@@ -100,7 +105,7 @@ func installK8sLib(version string) error {
 	}
 
 	var initialPackages = []string{
-		"github.com/jsonnet-libs/k8s-libsonnet/" + version + "@main",
+		"github.com/jsonnet-libs/k8s-libsonnet/" + version + "@" + k8sLibsonnetCommit,
 		"github.com/grafana/jsonnet-libs/ksonnet-util",
 		"github.com/jsonnet-libs/docsonnet/doc-util", // install docsonnet to make `tk lint` work
 	}
