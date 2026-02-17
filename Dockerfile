@@ -4,7 +4,7 @@ ARG KUBECTL_VERSION=1.34.2
 RUN apk add --no-cache curl
 RUN export OS=$(go env GOOS) && \
     export ARCH=$(go env GOARCH) &&\
-    curl -o /usr/local/bin/kubectl -L https://cdn.dl.k8s.io/release/v${KUBECTL_VERSION}/bin/${OS}/${ARCH}/kubectl &&\
+    curl -o /usr/local/bin/kubectl -L https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/${OS}/${ARCH}/kubectl &&\
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
