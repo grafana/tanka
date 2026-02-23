@@ -61,7 +61,7 @@ func RunREPL(ctx context.Context, a *Agent, out io.Writer) error {
 			fmt.Fprintln(out, "Goodbye!")
 			return nil
 		case "/clear":
-			a.Reset()
+			a.Reset(ctx)
 			fmt.Fprintln(out, "Conversation cleared.")
 			continue
 		case "/help":

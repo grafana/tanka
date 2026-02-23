@@ -1,191 +1,175 @@
 package agent
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
+	"iter"
+	"strings"
 
-	"github.com/grafana/tanka/pkg/agent/tools"
+	"github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go/option"
+	"google.golang.org/adk/model"
+	"google.golang.org/genai"
 )
 
-const anthropicAPIURL = "https://api.anthropic.com/v1/messages"
-const anthropicVersion = "2023-06-01"
-
-// AnthropicProvider calls the Anthropic Messages API directly over HTTP.
-type AnthropicProvider struct {
-	apiKey string
-	model  string
-	client *http.Client
+// AnthropicModel implements model.LLM against the Anthropic Messages API.
+type AnthropicModel struct {
+	client anthropic.Client
+	model  anthropic.Model
 }
 
-// NewAnthropicProvider creates a provider that uses the Anthropic API.
-func NewAnthropicProvider(apiKey, model string) *AnthropicProvider {
-	return &AnthropicProvider{
-		apiKey: apiKey,
-		model:  model,
-		client: &http.Client{},
+// NewAnthropicModel creates a model.LLM backed by the Anthropic API.
+func NewAnthropicModel(apiKey, modelID string) *AnthropicModel {
+	return &AnthropicModel{
+		client: anthropic.NewClient(option.WithAPIKey(apiKey)),
+		model:  anthropic.Model(modelID),
 	}
 }
 
-func (p *AnthropicProvider) Name() string { return ProviderAnthropic }
+func (m *AnthropicModel) Name() string { return ProviderAnthropic }
 
-// anthropicContentBlock is a single content block in an Anthropic message.
-type anthropicContentBlock struct {
-	Type      string          `json:"type"`
-	Text      string          `json:"text,omitempty"`
-	ID        string          `json:"id,omitempty"`
-	Name      string          `json:"name,omitempty"`
-	Input     json.RawMessage `json:"input,omitempty"`
-	ToolUseID string          `json:"tool_use_id,omitempty"`
-	Content   string          `json:"content,omitempty"`
-	IsError   bool            `json:"is_error,omitempty"`
+func (m *AnthropicModel) GenerateContent(ctx context.Context, req *model.LLMRequest, _ bool) iter.Seq2[*model.LLMResponse, error] {
+	return func(yield func(*model.LLMResponse, error) bool) {
+		resp, err := m.call(ctx, req)
+		yield(resp, err)
+	}
 }
 
-// anthropicMessage is a message in the Anthropic conversation format.
-type anthropicMessage struct {
-	Role    string                  `json:"role"`
-	Content []anthropicContentBlock `json:"content"`
-}
+func (m *AnthropicModel) call(ctx context.Context, req *model.LLMRequest) (*model.LLMResponse, error) {
+	// 1. Extract system prompt
+	var systemBlocks []anthropic.TextBlockParam
+	if req.Config != nil && req.Config.SystemInstruction != nil {
+		for _, part := range req.Config.SystemInstruction.Parts {
+			if part.Text != "" {
+				systemBlocks = append(systemBlocks, anthropic.TextBlockParam{Text: part.Text})
+			}
+		}
+	}
 
-// anthropicTool is a tool definition for the Anthropic API.
-type anthropicTool struct {
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	InputSchema json.RawMessage `json:"input_schema"`
-}
+	// 2. Convert conversation history
+	var msgs []anthropic.MessageParam
+	for _, content := range req.Contents {
+		var blocks []anthropic.ContentBlockParamUnion
+		for _, part := range content.Parts {
+			switch {
+			case part.Text != "":
+				blocks = append(blocks, anthropic.NewTextBlock(part.Text))
+			case part.FunctionCall != nil:
+				blocks = append(blocks, anthropic.NewToolUseBlock(part.FunctionCall.ID, part.FunctionCall.Args, part.FunctionCall.Name))
+			case part.FunctionResponse != nil:
+				respJSON, _ := json.Marshal(part.FunctionResponse.Response)
+				blocks = append(blocks, anthropic.NewToolResultBlock(part.FunctionResponse.ID, string(respJSON), false))
+			}
+		}
+		if len(blocks) == 0 {
+			continue
+		}
+		if content.Role == string(genai.RoleModel) {
+			msgs = append(msgs, anthropic.NewAssistantMessage(blocks...))
+		} else {
+			msgs = append(msgs, anthropic.NewUserMessage(blocks...))
+		}
+	}
 
-// anthropicRequest is the request body for the Anthropic Messages API.
-type anthropicRequest struct {
-	Model     string             `json:"model"`
-	MaxTokens int                `json:"max_tokens"`
-	System    string             `json:"system"`
-	Messages  []anthropicMessage `json:"messages"`
-	Tools     []anthropicTool    `json:"tools,omitempty"`
-}
-
-// anthropicResponse is the response from the Anthropic Messages API.
-type anthropicResponse struct {
-	ID         string                  `json:"id"`
-	Type       string                  `json:"type"`
-	Role       string                  `json:"role"`
-	Content    []anthropicContentBlock `json:"content"`
-	StopReason string                  `json:"stop_reason"`
-	Error      *struct {
-		Type    string `json:"type"`
-		Message string `json:"message"`
-	} `json:"error,omitempty"`
-}
-
-func (p *AnthropicProvider) Chat(ctx context.Context, systemPrompt string, messages []Message, toolDefs []tools.Tool) (*Message, error) {
-	// Convert messages to Anthropic format
-	anthropicMsgs := make([]anthropicMessage, 0, len(messages))
-	for _, msg := range messages {
-		blocks := make([]anthropicContentBlock, 0, len(msg.Content))
-		for _, c := range msg.Content {
-			switch c.Type {
-			case ContentTypeText:
-				blocks = append(blocks, anthropicContentBlock{
-					Type: "text",
-					Text: c.Text,
-				})
-			case ContentTypeToolUse:
-				blocks = append(blocks, anthropicContentBlock{
-					Type:  "tool_use",
-					ID:    c.ID,
-					Name:  c.Name,
-					Input: c.Input,
-				})
-			case ContentTypeToolResult:
-				blocks = append(blocks, anthropicContentBlock{
-					Type:      "tool_result",
-					ToolUseID: c.ToolUseID,
-					Content:   c.Text,
-					IsError:   c.IsError,
+	// 3. Convert tool declarations
+	var tools []anthropic.ToolUnionParam
+	if req.Config != nil {
+		for _, t := range req.Config.Tools {
+			for _, decl := range t.FunctionDeclarations {
+				inputSchema := anthropic.ToolInputSchemaParam{
+					Type: "object",
+				}
+				if decl.Parameters != nil {
+					if len(decl.Parameters.Properties) > 0 {
+						props := map[string]any{}
+						for k, v := range decl.Parameters.Properties {
+							props[k] = genaiSchemaToMap(v)
+						}
+						inputSchema.Properties = props
+					}
+					inputSchema.Required = decl.Parameters.Required
+				}
+				tools = append(tools, anthropic.ToolUnionParam{
+					OfTool: &anthropic.ToolParam{
+						Name:        decl.Name,
+						Description: anthropic.String(decl.Description),
+						InputSchema: inputSchema,
+					},
 				})
 			}
 		}
-		anthropicMsgs = append(anthropicMsgs, anthropicMessage{
-			Role:    string(msg.Role),
-			Content: blocks,
-		})
 	}
 
-	// Convert tool definitions
-	anthropicTools := make([]anthropicTool, 0, len(toolDefs))
-	for _, t := range toolDefs {
-		anthropicTools = append(anthropicTools, anthropicTool{
-			Name:        t.Name,
-			Description: t.Description,
-			InputSchema: t.Schema,
-		})
-	}
-
-	reqBody := anthropicRequest{
-		Model:     p.model,
+	// 4. Call the API
+	params := anthropic.MessageNewParams{
+		Model:     m.model,
 		MaxTokens: 8192,
-		System:    systemPrompt,
-		Messages:  anthropicMsgs,
-		Tools:     anthropicTools,
+		Messages:  msgs,
+		System:    systemBlocks,
+		Tools:     tools,
 	}
 
-	bodyBytes, err := json.Marshal(reqBody)
+	message, err := m.client.Messages.New(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("marshalling request: %w", err)
+		return nil, fmt.Errorf("calling anthropic API: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, anthropicAPIURL, bytes.NewReader(bodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("creating request: %w", err)
-	}
-	req.Header.Set("x-api-key", p.apiKey)
-	req.Header.Set("anthropic-version", anthropicVersion)
-	req.Header.Set("content-type", "application/json")
-
-	resp, err := p.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("calling Anthropic API: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("reading response: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		var errResp anthropicResponse
-		if json.Unmarshal(respBytes, &errResp) == nil && errResp.Error != nil {
-			return nil, fmt.Errorf("anthropic API error %d: %s: %s", resp.StatusCode, errResp.Error.Type, errResp.Error.Message)
-		}
-		return nil, fmt.Errorf("anthropic API returned HTTP %d: %s", resp.StatusCode, string(respBytes))
-	}
-
-	var apiResp anthropicResponse
-	if err := json.Unmarshal(respBytes, &apiResp); err != nil {
-		return nil, fmt.Errorf("parsing response: %w", err)
-	}
-
-	// Convert response to internal format
-	result := &Message{Role: RoleAssistant}
-	for _, block := range apiResp.Content {
+	// 5. Convert response to genai.Content
+	var parts []*genai.Part
+	for _, block := range message.Content {
 		switch block.Type {
 		case "text":
-			result.Content = append(result.Content, Content{
-				Type: ContentTypeText,
-				Text: block.Text,
-			})
+			if block.Text != "" {
+				parts = append(parts, genai.NewPartFromText(block.Text))
+			}
 		case "tool_use":
-			result.Content = append(result.Content, Content{
-				Type:  ContentTypeToolUse,
-				ID:    block.ID,
-				Name:  block.Name,
-				Input: block.Input,
-			})
+			var args map[string]any
+			_ = json.Unmarshal(block.Input, &args)
+			p := genai.NewPartFromFunctionCall(block.Name, args)
+			p.FunctionCall.ID = block.ID
+			parts = append(parts, p)
 		}
 	}
 
-	return result, nil
+	isFinal := message.StopReason != "tool_use"
+	return &model.LLMResponse{
+		Content: &genai.Content{
+			Role:  string(genai.RoleModel),
+			Parts: parts,
+		},
+		TurnComplete: isFinal,
+	}, nil
+}
+
+// genaiSchemaToMap converts a genai.Schema to a JSON Schema-compatible map.
+// Gemini uses uppercase type names (e.g. "OBJECT"); JSON Schema uses lowercase.
+func genaiSchemaToMap(s *genai.Schema) map[string]any {
+	if s == nil {
+		return map[string]any{"type": "object"}
+	}
+	m := map[string]any{}
+	if t := strings.ToLower(string(s.Type)); t != "" {
+		m["type"] = t
+	}
+	if s.Description != "" {
+		m["description"] = s.Description
+	}
+	if len(s.Properties) > 0 {
+		props := map[string]any{}
+		for k, v := range s.Properties {
+			props[k] = genaiSchemaToMap(v)
+		}
+		m["properties"] = props
+	}
+	if len(s.Required) > 0 {
+		m["required"] = s.Required
+	}
+	if s.Items != nil {
+		m["items"] = genaiSchemaToMap(s.Items)
+	}
+	if len(s.Enum) > 0 {
+		m["enum"] = s.Enum
+	}
+	return m
 }

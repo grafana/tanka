@@ -7,6 +7,14 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
+
+	"google.golang.org/adk/agent"
+	"google.golang.org/adk/agent/llmagent"
+	"google.golang.org/adk/model"
+	"google.golang.org/adk/runner"
+	"google.golang.org/adk/session"
+	"google.golang.org/genai"
 
 	"github.com/grafana/tanka/pkg/agent/tools"
 )
@@ -34,24 +42,59 @@ Tanka workflow reminders:
 - Prefer creating a new branch (git_branch_create) before making changes
 - Suggest a pull request (github_push + github_pr_create) when the work is complete`
 
-// Agent orchestrates the conversation loop between the user and the LLM,
-// dispatching tool calls and feeding results back into the conversation.
+const (
+	agentAppName = "tanka"
+	agentUserID  = "user"
+)
+
+// Agent orchestrates the conversation loop between the user and the LLM via
+// the ADK runner, dispatching tool calls and maintaining session history.
 type Agent struct {
-	provider Provider
-	allTools []tools.Tool
-	messages []Message
-	output   io.Writer
+	runner     *runner.Runner
+	sessionSvc session.Service
+	sessionID  string
+	output     io.Writer
 }
 
 // NewAgent creates an Agent with all tools registered for the given repository root.
-func NewAgent(provider Provider, repoRoot string) *Agent {
-	allTools := collectTools(repoRoot)
-	return &Agent{
-		provider: provider,
-		allTools: allTools,
-		messages: nil,
-		output:   os.Stdout,
+func NewAgent(ctx context.Context, llm model.LLM, repoRoot string) (*Agent, error) {
+	rawTools := collectTools(repoRoot)
+	adkTools, err := tools.ToADKTools(rawTools)
+	if err != nil {
+		return nil, fmt.Errorf("registering tools: %w", err)
 	}
+
+	ag, err := llmagent.New(llmagent.Config{
+		Name:        "tanka-agent",
+		Model:       llm,
+		Instruction: systemPrompt,
+		Tools:       adkTools,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating agent: %w", err)
+	}
+
+	sessionSvc := session.InMemoryService()
+
+	r, err := runner.New(runner.Config{
+		AppName:        agentAppName,
+		Agent:          ag,
+		SessionService: sessionSvc,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating runner: %w", err)
+	}
+
+	a := &Agent{
+		runner:     r,
+		sessionSvc: sessionSvc,
+		sessionID:  newSessionID(),
+		output:     os.Stdout,
+	}
+	if err := a.createSession(ctx); err != nil {
+		return nil, fmt.Errorf("creating session: %w", err)
+	}
+	return a, nil
 }
 
 // collectTools gathers all tool definitions for the given repository root.
@@ -65,109 +108,65 @@ func collectTools(repoRoot string) []tools.Tool {
 	return all
 }
 
-// Reset clears the conversation history for a fresh session.
-func (a *Agent) Reset() {
-	a.messages = nil
+// Reset clears the conversation history by starting a fresh session.
+func (a *Agent) Reset(ctx context.Context) {
+	a.sessionID = newSessionID()
+	_ = a.createSession(ctx)
 }
 
 // Run sends a user message and processes the full agent loop until the LLM
-// returns a final text response (no more tool calls).
-// Returns the final text response from the assistant.
+// returns a final text response. Returns the final text response.
 func (a *Agent) Run(ctx context.Context, userInput string) (string, error) {
-	// Append user message to history
-	a.messages = append(a.messages, TextMessage(RoleUser, userInput))
+	msg := genai.NewContentFromText(userInput, genai.RoleUser)
 
-	for {
-		// Call the LLM
-		response, err := a.provider.Chat(ctx, systemPrompt, a.messages, a.allTools)
+	var finalText strings.Builder
+	for event, err := range a.runner.Run(ctx, agentUserID, a.sessionID, msg, agent.RunConfig{}) {
 		if err != nil {
-			return "", fmt.Errorf("LLM error: %w", err)
+			return "", fmt.Errorf("agent error: %w", err)
+		}
+		if event.Content == nil {
+			continue
 		}
 
-		// Append assistant response to history
-		a.messages = append(a.messages, *response)
-
-		// Check if we have any tool calls to execute
-		toolCalls := filterContent(response.Content, ContentTypeToolUse)
-		if len(toolCalls) == 0 {
-			// No tool calls — return the final text response
-			return extractText(response.Content), nil
-		}
-
-		// Print any text that preceded the tool calls
-		if text := extractText(response.Content); text != "" {
-			fmt.Fprintf(a.output, "%s\n\n", text)
-		}
-
-		// Execute each tool call and collect results
-		toolResultContents := make([]Content, 0, len(toolCalls))
-		for _, tc := range toolCalls {
-			result, toolErr := a.executeTool(ctx, tc)
-			isError := toolErr != nil
-			resultText := result
-			if toolErr != nil {
-				resultText = fmt.Sprintf("Error: %s", toolErr.Error())
+		for _, part := range event.Content.Parts {
+			switch {
+			case part.FunctionCall != nil:
+				argsJSON, _ := json.Marshal(part.FunctionCall.Args)
+				fmt.Fprintf(a.output, "[tool: %s] %s\n", part.FunctionCall.Name, summarize(string(argsJSON), 120))
+			case part.FunctionResponse != nil:
+				if output, ok := part.FunctionResponse.Response["output"].(string); ok {
+					fmt.Fprintf(a.output, "[tool: %s] %s\n", part.FunctionResponse.Name, summarize(output, 120))
+				}
+			case part.Text != "":
+				if event.IsFinalResponse() {
+					finalText.WriteString(part.Text)
+				} else {
+					// Print text that precedes tool calls
+					fmt.Fprintf(a.output, "%s\n\n", part.Text)
+				}
 			}
-
-			fmt.Fprintf(a.output, "[tool: %s] %s\n", tc.Name, summarize(resultText, 120))
-
-			toolResultContents = append(toolResultContents, Content{
-				Type:      ContentTypeToolResult,
-				ToolUseID: tc.ID,
-				Name:      tc.Name,
-				Text:      resultText,
-				IsError:   isError,
-			})
 		}
-
-		// Feed all tool results back as a single user message
-		a.messages = append(a.messages, Message{
-			Role:    RoleUser,
-			Content: toolResultContents,
-		})
 	}
+
+	return finalText.String(), nil
 }
 
-// executeTool finds and runs the tool matching the given tool-use content block.
-func (a *Agent) executeTool(ctx context.Context, tc Content) (string, error) {
-	for _, t := range a.allTools {
-		if t.Name == tc.Name {
-			input := tc.Input
-			if len(input) == 0 {
-				input = []byte("{}")
-			}
-			return t.Execute(ctx, json.RawMessage(input))
-		}
-	}
-	return "", fmt.Errorf("unknown tool %q", tc.Name)
+func (a *Agent) createSession(ctx context.Context) error {
+	_, err := a.sessionSvc.Create(ctx, &session.CreateRequest{
+		AppName:   agentAppName,
+		UserID:    agentUserID,
+		SessionID: a.sessionID,
+	})
+	return err
 }
 
-// filterContent returns content blocks matching the given type.
-func filterContent(content []Content, ct ContentType) []Content {
-	var out []Content
-	for _, c := range content {
-		if c.Type == ct {
-			out = append(out, c)
-		}
-	}
-	return out
-}
-
-// extractText concatenates all text blocks in a content slice.
-func extractText(content []Content) string {
-	var parts []string
-	for _, c := range content {
-		if c.Type == ContentTypeText && c.Text != "" {
-			parts = append(parts, c.Text)
-		}
-	}
-	return strings.Join(parts, "\n")
+func newSessionID() string {
+	return fmt.Sprintf("s%d", time.Now().UnixNano())
 }
 
 // summarize truncates a string to maxLen characters for display purposes.
 func summarize(s string, maxLen int) string {
 	s = strings.TrimSpace(s)
-	// Replace newlines with spaces for single-line display
 	s = strings.ReplaceAll(s, "\n", " ")
 	if len(s) <= maxLen {
 		return s

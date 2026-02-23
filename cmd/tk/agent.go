@@ -90,12 +90,15 @@ REQUIREMENTS
 			return err
 		}
 
-		// 5. Construct the provider and agent
-		provider, err := agent.NewProvider(cfg)
+		// 5. Construct the model and agent
+		llm, err := agent.NewModel(ctx, cfg)
 		if err != nil {
-			return fmt.Errorf("initialising provider: %w", err)
+			return fmt.Errorf("initialising model: %w", err)
 		}
-		a := agent.NewAgent(provider, repoRoot)
+		a, err := agent.NewAgent(ctx, llm, repoRoot)
+		if err != nil {
+			return fmt.Errorf("initialising agent: %w", err)
+		}
 
 		// 6. Run in one-shot or REPL mode
 		if len(args) > 0 {
