@@ -1,10 +1,11 @@
-.PHONY: lint test static install uninstall cross acceptance-tests dagger-develop
+.PHONY: all lint test static install uninstall cross acceptance-tests dagger-develop
 GOPATH := $(shell go env GOPATH)
 VERSION := $(shell git describe --tags --dirty --always)
 BIN_DIR := $(GOPATH)/bin
 GOX := $(BIN_DIR)/gox
 GOLINTER := $(GOPATH)/bin/golangci-lint
 
+all: lint test static
 
 $(GOLINTER):
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.9.0

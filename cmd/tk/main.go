@@ -70,6 +70,12 @@ func main() {
 		toolCmd(ctx),
 	)
 
+	// AI agent command
+	addCommandsWithLogLevelOption(
+		rootCmd,
+		agentCmd(ctx),
+	)
+
 	// external commands prefixed with "tk-"
 	addCommandsWithLogLevelOption(
 		rootCmd,
