@@ -2,17 +2,17 @@ package agent
 
 import (
 	"fmt"
-	"sort"
+	"io"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/fatih/color"
+	"google.golang.org/adk/session"
 
 	"github.com/grafana/tanka/pkg/term"
 )
 
 var (
-	colorUser     = color.New(color.FgBlue, color.Bold)
 	colorToolCall = color.New(color.FgCyan, color.Bold)
 	colorToolResp = color.New(color.FgGreen, color.Bold)
 	colorDimGrey  = color.New(color.FgHiBlack)
@@ -25,29 +25,57 @@ var (
 			PaddingLeft(1)
 )
 
-// logUser prints the user message in blue bold.
-func (a *Agent) logUser(msg string) {
-	colorUser.Fprintf(a.output, "→ user: %s\n\n", msg)
+// verboseDisplay is the --verbose display. It prints every tool call and
+// response in full as they arrive, with colour-coded borders and diff colouring.
+type verboseDisplay struct {
+	out       io.Writer
+	finalText *strings.Builder
 }
 
-// logToolCall prints a cyan function-call line: ▶ name(k="v", k2=42)
-func (a *Agent) logToolCall(name string, args map[string]any) {
-	colorToolCall.Fprintf(a.output, "▶ %s%s\n", name, formatArgs(args))
-}
-
-// logToolResponse prints a green header and the full output in a left-bordered block.
-// Diff output is colourised; other output is printed in dim grey.
-func (a *Agent) logToolResponse(name string, response map[string]any) {
-	colorToolResp.Fprintf(a.output, "◀ %s\n", name)
-	if output, ok := response["output"].(string); ok {
-		var content string
-		if isDiff(output) {
-			content = term.Colordiff(output).String()
-		} else {
-			content = colorDimGrey.Sprint(output)
-		}
-		fmt.Fprintln(a.output, styleToolBorder.Render(content))
+func newVerboseDisplay(out io.Writer) *verboseDisplay {
+	return &verboseDisplay{
+		out:       out,
+		finalText: &strings.Builder{},
 	}
+}
+
+func (d *verboseDisplay) Event(event *session.Event) {
+	if event.Content == nil {
+		return
+	}
+	for _, part := range event.Content.Parts {
+		switch {
+		case part.FunctionCall != nil:
+			colorToolCall.Fprintf(d.out, "▶ %s%s\n", part.FunctionCall.Name, formatArgs(part.FunctionCall.Args))
+		case part.FunctionResponse != nil:
+			colorToolResp.Fprintf(d.out, "◀ %s\n", part.FunctionResponse.Name)
+
+			if output, ok := part.FunctionResponse.Response["output"].(string); ok {
+				var content string
+				if isDiff(output) {
+					content = term.Colordiff(output).String()
+				} else {
+					content = colorDimGrey.Sprint(output)
+				}
+				fmt.Fprintln(d.out, styleToolBorder.Render(content))
+			}
+
+		case part.Text != "":
+			if event.IsFinalResponse() {
+				d.finalText.WriteString(part.Text)
+			} else {
+				colorLLMText.Fprintln(d.out, part.Text)
+			}
+		}
+	}
+}
+
+func (d *verboseDisplay) Error(err error) {
+	color.New(color.FgRed, color.Bold).Fprintf(d.out, "Error: %s\n", err)
+}
+
+func (d *verboseDisplay) FinalText() string {
+	return d.finalText.String()
 }
 
 // isDiff returns true if s looks like a unified or git diff.
@@ -55,49 +83,4 @@ func isDiff(s string) bool {
 	return strings.HasPrefix(s, "diff ") ||
 		strings.HasPrefix(s, "---") ||
 		strings.Contains(s, "\n+++ ")
-}
-
-// logLLMText prints intermediate LLM text (before tool calls) in yellow.
-func (a *Agent) logLLMText(text string) {
-	colorLLMText.Fprintln(a.output, text)
-}
-
-// formatArgs returns a "(k="v", k2=42)" string with keys sorted for determinism.
-func formatArgs(args map[string]any) string {
-	if len(args) == 0 {
-		return "()"
-	}
-	keys := make([]string, 0, len(args))
-	for k := range args {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	var buf []byte
-	buf = append(buf, '(')
-	for i, k := range keys {
-		if i > 0 {
-			buf = append(buf, ',', ' ')
-		}
-		buf = append(buf, k...)
-		buf = append(buf, '=')
-		buf = append(buf, formatArgValue(args[k])...)
-	}
-	buf = append(buf, ')')
-	return string(buf)
-}
-
-// formatArgValue formats a single argument value: strings are quoted and
-// truncated at 80 chars; all other types use %v.
-func formatArgValue(v any) string {
-	switch s := v.(type) {
-	case string:
-		q := fmt.Sprintf("%q", s)
-		if len(q) > 82 { // 80 chars + two quotes
-			q = fmt.Sprintf("%q", s[:80]) + `..."`
-		}
-		return q
-	default:
-		return fmt.Sprintf("%v", v)
-	}
 }

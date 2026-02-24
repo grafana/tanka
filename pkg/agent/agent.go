@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/charmbracelet/glamour"
@@ -60,8 +59,8 @@ type Agent struct {
 	sessionSvc session.Service
 	sessionID  string
 	output     io.Writer
+	glamour    *glamour.TermRenderer // nil if not a TTY; used by renderMarkdown
 	verbose    bool
-	glamour    *glamour.TermRenderer // nil if init failed or not a TTY
 }
 
 // NewAgent creates an Agent with all tools registered for the given repository root.
@@ -149,54 +148,24 @@ func (a *Agent) Reset(ctx context.Context) error {
 // Run sends a user message and processes the full agent loop until the LLM
 // returns a final text response. Returns the final text response.
 func (a *Agent) Run(ctx context.Context, userInput string) (string, error) {
+	var display display
 	if a.verbose {
-		a.logUser(userInput)
+		display = newVerboseDisplay(a.output)
+	} else {
+		display = newPrettyDisplay(a.output, a.glamour != nil)
 	}
 
 	msg := genai.NewContentFromText(userInput, genai.RoleUser)
-
-	var finalText strings.Builder
 	for event, err := range a.runner.Run(ctx, agentUserID, a.sessionID, msg, agent.RunConfig{}) {
 		if err != nil {
-			return "", fmt.Errorf("agent error: %w", err)
-		}
-		if event.Content == nil {
-			continue
-		}
-
-		for _, part := range event.Content.Parts {
-			switch {
-			case part.FunctionCall != nil:
-				if a.verbose {
-					a.logToolCall(part.FunctionCall.Name, part.FunctionCall.Args)
-				} else {
-					argsJSON, _ := json.Marshal(part.FunctionCall.Args)
-					fmt.Fprintf(a.output, "[tool: %s] %s\n", part.FunctionCall.Name, summarize(string(argsJSON), 120))
-				}
-			case part.FunctionResponse != nil:
-				if a.verbose {
-					a.logToolResponse(part.FunctionResponse.Name, part.FunctionResponse.Response)
-				} else {
-					if output, ok := part.FunctionResponse.Response["output"].(string); ok {
-						fmt.Fprintf(a.output, "[tool: %s] %s\n", part.FunctionResponse.Name, summarize(output, 120))
-					}
-				}
-			case part.Text != "":
-				if event.IsFinalResponse() {
-					finalText.WriteString(part.Text)
-				} else {
-					if a.verbose {
-						a.logLLMText(part.Text)
-					} else {
-						// Print text that precedes tool calls
-						fmt.Fprintf(a.output, "%s\n\n", part.Text)
-					}
-				}
-			}
+			display.Error(err)
+			return display.FinalText(), err
+		} else {
+			display.Event(event)
 		}
 	}
 
-	return finalText.String(), nil
+	return display.FinalText(), nil
 }
 
 func (a *Agent) createSession(ctx context.Context) error {
@@ -262,14 +231,4 @@ func (a *Agent) PrintContext(ctx context.Context, out io.Writer) error {
 		fmt.Fprintln(out)
 	}
 	return nil
-}
-
-// summarize truncates a string to maxLen characters for display purposes.
-func summarize(s string, maxLen int) string {
-	s = strings.TrimSpace(s)
-	s = strings.ReplaceAll(s, "\n", " ")
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen] + "..."
 }

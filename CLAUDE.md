@@ -84,10 +84,6 @@ Configuration is in `.golangci.yml`. Active linters include: `copyloopvar`, `goc
 - Acceptance/e2e tests are in `acceptance-tests/` (separate Go module, run via Dagger)
 - CI runs `make lint`, `make test`, and `make cross` on every PR
 
-## Git Commits
-
-Do not add "Co-Authored-By" or any Claude attribution to commit messages.
-
 ## Repository Layout Notes
 
 - `acceptance-tests/` and `dagger/` are separate Go modules with their own `go.mod`
