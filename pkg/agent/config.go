@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/grafana/tanka/pkg/agent/models"
 )
 
 // Config holds the agent configuration loaded from file and environment variables.
@@ -21,16 +23,16 @@ type Config struct {
 
 // defaults by provider
 var providerDefaults = map[string]string{
-	ProviderGemini:    "gemini-2.0-flash",
-	ProviderAnthropic: "claude-opus-4-6",
-	ProviderOpenAI:    "gpt-4o",
+	models.ProviderGemini:    "gemini-2.0-flash",
+	models.ProviderAnthropic: "claude-opus-4-6",
+	models.ProviderOpenAI:    "gpt-4o",
 }
 
 // LoadConfig loads configuration from ~/.config/tanka/agent.yaml and overrides
 // with environment variables. Precedence: env vars > config file > defaults.
 func LoadConfig() (*Config, error) {
 	cfg := &Config{
-		Provider: ProviderGemini,
+		Provider: models.ProviderGemini,
 		Model:    "gemini-2.0-flash",
 	}
 
@@ -70,15 +72,15 @@ func LoadConfig() (*Config, error) {
 // Validate checks that the required API key is present for the selected provider.
 func (c *Config) Validate() error {
 	switch c.Provider {
-	case ProviderGemini:
+	case models.ProviderGemini:
 		if c.APIKey == "" && os.Getenv("GEMINI_API_KEY") == "" && os.Getenv("GOOGLE_API_KEY") == "" {
 			return fmt.Errorf("no API key found for provider %q: set GEMINI_API_KEY or GOOGLE_API_KEY environment variable", c.Provider)
 		}
-	case ProviderAnthropic:
+	case models.ProviderAnthropic:
 		if c.APIKey == "" && os.Getenv("ANTHROPIC_API_KEY") == "" {
 			return fmt.Errorf("no API key found for provider %q: set ANTHROPIC_API_KEY environment variable", c.Provider)
 		}
-	case ProviderOpenAI:
+	case models.ProviderOpenAI:
 		if c.APIKey == "" && os.Getenv("OPENAI_API_KEY") == "" {
 			return fmt.Errorf("no API key found for provider %q: set OPENAI_API_KEY environment variable", c.Provider)
 		}
@@ -94,14 +96,14 @@ func (c *Config) APIKeyForProvider() string {
 		return c.APIKey
 	}
 	switch c.Provider {
-	case ProviderGemini:
+	case models.ProviderGemini:
 		if k := os.Getenv("GEMINI_API_KEY"); k != "" {
 			return k
 		}
 		return os.Getenv("GOOGLE_API_KEY")
-	case ProviderAnthropic:
+	case models.ProviderAnthropic:
 		return os.Getenv("ANTHROPIC_API_KEY")
-	case ProviderOpenAI:
+	case models.ProviderOpenAI:
 		return os.Getenv("OPENAI_API_KEY")
 	}
 	return ""
