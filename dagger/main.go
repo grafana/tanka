@@ -39,7 +39,13 @@ func (m *Tanka) GetGoVersion(ctx context.Context, file *dagger.File) (string, er
 	return "", fmt.Errorf("no Go version found")
 }
 
-func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *dagger.Directory, acceptanceTestsDir *dagger.Directory) (string, error) {
+func (m *Tanka) AcceptanceTests(
+	ctx context.Context,
+	rootDir *dagger.Directory,
+	acceptanceTestsDir *dagger.Directory,
+	// +optional
+	anthropicApiKey *dagger.Secret,
+) (string, error) {
 	goVersion, err := m.GetGoVersion(ctx, rootDir.File("go.mod"))
 	if err != nil {
 		return "", err
@@ -57,7 +63,7 @@ func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *dagger.Directory, 
 
 	goCache := dag.CacheVolume("acceptance-tests-gomodules")
 
-	output, err := dag.Container().
+	c := dag.Container().
 		From(fmt.Sprintf("golang:%s-alpine", goVersion)).
 		WithExec([]string{"apk", "add", "--no-cache", "git"}).
 		WithMountedFile("/usr/bin/tk", buildContainer.File("/usr/local/bin/tk")).
@@ -71,7 +77,13 @@ func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *dagger.Directory, 
 		WithFile("/root/.kube/config", k3s.Config()).
 		WithWorkdir("/tests").
 		WithExec([]string{"sed", "-i", `s/https:.*:6443/https:\/\/kubernetes:6443/g`, "/root/.kube/config"}).
-		WithMountedCache("/go/pkg", goCache).
+		WithMountedCache("/go/pkg", goCache)
+
+	if anthropicApiKey != nil {
+		c = c.WithSecretVariable("ANTHROPIC_API_KEY", anthropicApiKey)
+	}
+
+	output, err := c.
 		WithExec([]string{"go", "test", "./...", "-v"}).
 		Stdout(ctx)
 	return output, err
