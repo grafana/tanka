@@ -55,10 +55,11 @@ type Agent struct {
 	sessionSvc session.Service
 	sessionID  string
 	output     io.Writer
+	verbose    bool
 }
 
 // NewAgent creates an Agent with all tools registered for the given repository root.
-func NewAgent(ctx context.Context, llm model.LLM, repoRoot string) (*Agent, error) {
+func NewAgent(ctx context.Context, llm model.LLM, repoRoot string, verbose bool) (*Agent, error) {
 	adkTools, err := collectTools(repoRoot)
 	if err != nil {
 		return nil, fmt.Errorf("registering tools: %w", err)
@@ -90,6 +91,7 @@ func NewAgent(ctx context.Context, llm model.LLM, repoRoot string) (*Agent, erro
 		sessionSvc: sessionSvc,
 		sessionID:  newSessionID(),
 		output:     os.Stdout,
+		verbose:    verbose,
 	}
 	if err := a.createSession(ctx); err != nil {
 		return nil, fmt.Errorf("creating session: %w", err)
@@ -117,14 +119,18 @@ func collectTools(repoRoot string) ([]adktool.Tool, error) {
 }
 
 // Reset clears the conversation history by starting a fresh session.
-func (a *Agent) Reset(ctx context.Context) {
+func (a *Agent) Reset(ctx context.Context) error {
 	a.sessionID = newSessionID()
-	_ = a.createSession(ctx)
+	return a.createSession(ctx)
 }
 
 // Run sends a user message and processes the full agent loop until the LLM
 // returns a final text response. Returns the final text response.
 func (a *Agent) Run(ctx context.Context, userInput string) (string, error) {
+	if a.verbose {
+		a.logUser(userInput)
+	}
+
 	msg := genai.NewContentFromText(userInput, genai.RoleUser)
 
 	var finalText strings.Builder
@@ -139,18 +145,30 @@ func (a *Agent) Run(ctx context.Context, userInput string) (string, error) {
 		for _, part := range event.Content.Parts {
 			switch {
 			case part.FunctionCall != nil:
-				argsJSON, _ := json.Marshal(part.FunctionCall.Args)
-				fmt.Fprintf(a.output, "[tool: %s] %s\n", part.FunctionCall.Name, summarize(string(argsJSON), 120))
+				if a.verbose {
+					a.logToolCall(part.FunctionCall.Name, part.FunctionCall.Args)
+				} else {
+					argsJSON, _ := json.Marshal(part.FunctionCall.Args)
+					fmt.Fprintf(a.output, "[tool: %s] %s\n", part.FunctionCall.Name, summarize(string(argsJSON), 120))
+				}
 			case part.FunctionResponse != nil:
-				if output, ok := part.FunctionResponse.Response["output"].(string); ok {
-					fmt.Fprintf(a.output, "[tool: %s] %s\n", part.FunctionResponse.Name, summarize(output, 120))
+				if a.verbose {
+					a.logToolResponse(part.FunctionResponse.Name, part.FunctionResponse.Response)
+				} else {
+					if output, ok := part.FunctionResponse.Response["output"].(string); ok {
+						fmt.Fprintf(a.output, "[tool: %s] %s\n", part.FunctionResponse.Name, summarize(output, 120))
+					}
 				}
 			case part.Text != "":
 				if event.IsFinalResponse() {
 					finalText.WriteString(part.Text)
 				} else {
-					// Print text that precedes tool calls
-					fmt.Fprintf(a.output, "%s\n\n", part.Text)
+					if a.verbose {
+						a.logLLMText(part.Text)
+					} else {
+						// Print text that precedes tool calls
+						fmt.Fprintf(a.output, "%s\n\n", part.Text)
+					}
 				}
 			}
 		}

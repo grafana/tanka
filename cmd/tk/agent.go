@@ -63,6 +63,8 @@ REQUIREMENTS
 		`Model identifier for the chosen provider.
     Overrides TANKA_AGENT_MODEL env var and ~/.config/tanka/agent.yaml.
     Examples: gemini-2.0-flash (default), claude-opus-4-6, gpt-4o`)
+	verboseFlag := cmd.Flags().BoolP("verbose", "v", false,
+		"Verbose output: show all LLM messages, tool calls, and full responses with color")
 
 	cmd.Run = func(cmd *cli.Command, args []string) error {
 		// 1. Verify we are inside a git repository and find the root
@@ -95,7 +97,7 @@ REQUIREMENTS
 		if err != nil {
 			return fmt.Errorf("initialising model: %w", err)
 		}
-		a, err := agent.NewAgent(ctx, llm, repoRoot)
+		a, err := agent.NewAgent(ctx, llm, repoRoot, *verboseFlag)
 		if err != nil {
 			return fmt.Errorf("initialising agent: %w", err)
 		}

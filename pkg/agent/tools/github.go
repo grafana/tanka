@@ -8,7 +8,8 @@ import (
 	"strings"
 
 	gogit "github.com/go-git/go-git/v5"
-	gogitconfig "github.com/go-git/go-git/v5/plumbing/transport/http"
+	gogitcfg "github.com/go-git/go-git/v5/config"
+	gogithttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/google/go-github/v67/github"
 	adktool "google.golang.org/adk/tool"
 	"google.golang.org/adk/tool/functiontool"
@@ -111,7 +112,10 @@ func (ght *GitHubTools) pushTool() (adktool.Tool, error) {
 			}
 			err = r.PushContext(ctx, &gogit.PushOptions{
 				RemoteName: "origin",
-				Auth: &gogitconfig.BasicAuth{
+				RefSpecs: []gogitcfg.RefSpec{
+					gogitcfg.RefSpec(fmt.Sprintf("refs/heads/%s:refs/heads/%s", params.Branch, params.Branch)),
+				},
+				Auth: &gogithttp.BasicAuth{
 					Username: "x-token",
 					Password: token,
 				},

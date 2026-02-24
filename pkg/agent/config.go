@@ -38,7 +38,11 @@ func LoadConfig() (*Config, error) {
 	home, err := os.UserHomeDir()
 	if err == nil {
 		configPath := filepath.Join(home, ".config", "tanka", "agent.yaml")
-		if data, readErr := os.ReadFile(configPath); readErr == nil {
+		data, readErr := os.ReadFile(configPath)
+		if readErr != nil && !os.IsNotExist(readErr) {
+			return nil, fmt.Errorf("reading config file %s: %w", configPath, readErr)
+		}
+		if readErr == nil {
 			if err := yaml.Unmarshal(data, cfg); err != nil {
 				return nil, fmt.Errorf("parsing config file %s: %w", configPath, err)
 			}

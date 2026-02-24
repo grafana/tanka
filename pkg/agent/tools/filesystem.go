@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -121,11 +122,21 @@ func (ft *FileTools) writeTool() (adktool.Tool, error) {
 		},
 		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
 			var params struct {
-				Path    string `json:"path"`
-				Content string `json:"content"`
+				Path string `json:"path"`
 			}
 			if err := bind(input, &params); err != nil {
 				return nil, err
+			}
+			var content string
+			switch v := input["content"].(type) {
+			case string:
+				content = v
+			default:
+				b, err := json.MarshalIndent(v, "", "  ")
+				if err != nil {
+					return nil, fmt.Errorf("serialising content as JSON: %w", err)
+				}
+				content = string(b)
 			}
 			fullPath, err := ft.safePath(params.Path)
 			if err != nil {
@@ -134,10 +145,10 @@ func (ft *FileTools) writeTool() (adktool.Tool, error) {
 			if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
 				return nil, fmt.Errorf("creating parent directories for %s: %w", params.Path, err)
 			}
-			if err := os.WriteFile(fullPath, []byte(params.Content), 0644); err != nil {
+			if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
 				return nil, fmt.Errorf("writing %s: %w", params.Path, err)
 			}
-			return map[string]any{"output": fmt.Sprintf("Successfully wrote %d bytes to %s", len(params.Content), params.Path)}, nil
+			return map[string]any{"output": fmt.Sprintf("Successfully wrote %d bytes to %s", len(content), params.Path)}, nil
 		})
 }
 
@@ -150,13 +161,16 @@ func (ft *FileTools) listTool() (adktool.Tool, error) {
 				"type": "object",
 				"properties": {
 					"glob_pattern": {"type": "string", "description": "Glob pattern to match files, relative to repository root"},
+					"glob": {"type": "string", "description": "Alias for glob_pattern — either may be used"},
 					"offset": {"type": "integer", "description": "Number of results to skip (default: 0)"},
 					"limit": {"type": "integer", "description": "Maximum number of results to return (default: 200)"}
-				},
-				"required": ["glob_pattern"]
+				}
 			}`),
 		},
 		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
+			if _, ok := input["glob_pattern"]; !ok {
+				input["glob_pattern"] = input["glob"]
+			}
 			var params struct {
 				GlobPattern string `json:"glob_pattern"`
 				Offset      int    `json:"offset"`
@@ -164,6 +178,9 @@ func (ft *FileTools) listTool() (adktool.Tool, error) {
 			}
 			if err := bind(input, &params); err != nil {
 				return nil, err
+			}
+			if params.GlobPattern == "" {
+				return nil, fmt.Errorf("glob_pattern (or glob) is required")
 			}
 			if params.Limit <= 0 {
 				params.Limit = 200
@@ -216,25 +233,37 @@ func (ft *FileTools) listTool() (adktool.Tool, error) {
 }
 
 // matchDoubleGlob handles ** patterns by checking if any suffix of the path
-// matches the pattern suffix after the **.
+// matches the pattern suffix after the **. It strips the path prefix component
+// by component until a match is found, so patterns like **/lib/*.jsonnet match
+// both top-level lib/ and nested foo/lib/ directories.
 func matchDoubleGlob(path, pattern string) bool {
 	if !strings.Contains(pattern, "**") {
 		return false
 	}
 	parts := strings.SplitN(pattern, "**", 2)
 	prefix := parts[0]
-	suffix := parts[1]
-	if suffix != "" && strings.HasPrefix(suffix, "/") {
-		suffix = suffix[1:]
-	}
+	suffix := strings.TrimPrefix(parts[1], "/")
+
 	if prefix != "" && !strings.HasPrefix(path, prefix) {
 		return false
 	}
 	if suffix == "" {
 		return true
 	}
-	matched, _ := filepath.Match(suffix, filepath.Base(path))
-	return matched
+	// Strip the fixed prefix and try matching the suffix against every
+	// tail of the remaining path components.
+	remaining := strings.TrimPrefix(path, prefix)
+	for remaining != "" {
+		if ok, _ := filepath.Match(suffix, remaining); ok {
+			return true
+		}
+		slash := strings.Index(remaining, "/")
+		if slash < 0 {
+			break
+		}
+		remaining = remaining[slash+1:]
+	}
+	return false
 }
 
 func (ft *FileTools) searchTool() (adktool.Tool, error) {

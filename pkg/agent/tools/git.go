@@ -8,6 +8,7 @@ import (
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/storer"
 	adktool "google.golang.org/adk/tool"
 	"google.golang.org/adk/tool/functiontool"
 )
@@ -83,7 +84,7 @@ func (gt *GitTools) logTool() (adktool.Tool, error) {
 			count := 0
 			err = iter.ForEach(func(c *object.Commit) error {
 				if count >= params.Limit {
-					return fmt.Errorf("stop")
+					return storer.ErrStop
 				}
 				fmt.Fprintf(&sb, "%s %s %s\n  %s\n",
 					c.Hash.String()[:8],
@@ -94,7 +95,7 @@ func (gt *GitTools) logTool() (adktool.Tool, error) {
 				count++
 				return nil
 			})
-			if err != nil && err.Error() != "stop" {
+			if err != nil && err != storer.ErrStop {
 				return nil, fmt.Errorf("iterating commits: %w", err)
 			}
 			if sb.Len() == 0 {

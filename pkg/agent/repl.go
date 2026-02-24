@@ -61,8 +61,11 @@ func RunREPL(ctx context.Context, a *Agent, out io.Writer) error {
 			fmt.Fprintln(out, "Goodbye!")
 			return nil
 		case "/clear":
-			a.Reset(ctx)
-			fmt.Fprintln(out, "Conversation cleared.")
+			if err := a.Reset(ctx); err != nil {
+				fmt.Fprintf(out, "Error resetting session: %s\n\n", err)
+			} else {
+				fmt.Fprintln(out, "Conversation cleared.")
+			}
 			continue
 		case "/help":
 			printHelp(out)

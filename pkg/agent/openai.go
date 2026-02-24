@@ -107,9 +107,10 @@ func (m *OpenAIModel) call(ctx context.Context, req *model.LLMRequest) (*model.L
 
 	// 4. Call the API
 	resp, err := m.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Model:    m.model,
-		Messages: msgs,
-		Tools:    tools,
+		Model:     m.model,
+		Messages:  msgs,
+		Tools:     tools,
+		MaxTokens: openai.Int(8192),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("calling OpenAI API: %w", err)
@@ -127,7 +128,9 @@ func (m *OpenAIModel) call(ctx context.Context, req *model.LLMRequest) (*model.L
 	}
 	for _, tc := range choice.Message.ToolCalls {
 		var args map[string]any
-		_ = json.Unmarshal([]byte(tc.Function.Arguments), &args)
+		if err := json.Unmarshal([]byte(tc.Function.Arguments), &args); err != nil {
+			args = map[string]any{"_error": fmt.Sprintf("failed to parse tool arguments: %v", err)}
+		}
 		p := genai.NewPartFromFunctionCall(tc.Function.Name, args)
 		p.FunctionCall.ID = tc.ID
 		parts = append(parts, p)

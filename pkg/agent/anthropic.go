@@ -125,7 +125,9 @@ func (m *AnthropicModel) call(ctx context.Context, req *model.LLMRequest) (*mode
 			}
 		case "tool_use":
 			var args map[string]any
-			_ = json.Unmarshal(block.Input, &args)
+			if err := json.Unmarshal(block.Input, &args); err != nil {
+				args = map[string]any{"_error": fmt.Sprintf("failed to parse tool arguments: %v", err)}
+			}
 			p := genai.NewPartFromFunctionCall(block.Name, args)
 			p.FunctionCall.ID = block.ID
 			parts = append(parts, p)

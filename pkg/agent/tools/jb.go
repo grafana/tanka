@@ -111,17 +111,23 @@ func (jt *JBTools) initTool() (adktool.Tool, error) {
 			InputSchema: mustSchema(`{
 				"type": "object",
 				"properties": {
-					"path": {"type": "string", "description": "Directory in which to create jsonnetfile.json (relative to repo root, use '.' for root)"}
-				},
-				"required": ["path"]
+					"path": {"type": "string", "description": "Directory in which to create jsonnetfile.json (relative to repo root, use '.' for root)"},
+					"directory": {"type": "string", "description": "Alias for path — either may be used"}
+				}
 			}`),
 		},
 		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
+			if _, ok := input["path"]; !ok {
+				input["path"] = input["directory"]
+			}
 			var params struct {
 				Path string `json:"path"`
 			}
 			if err := bind(input, &params); err != nil {
 				return nil, err
+			}
+			if params.Path == "" {
+				return nil, fmt.Errorf("path (or directory) is required")
 			}
 			dir, err := jt.absDir(params.Path)
 			if err != nil {
