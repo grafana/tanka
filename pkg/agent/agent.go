@@ -14,6 +14,7 @@ import (
 	"google.golang.org/adk/model"
 	"google.golang.org/adk/runner"
 	"google.golang.org/adk/session"
+	adktool "google.golang.org/adk/tool"
 	"google.golang.org/genai"
 
 	"github.com/grafana/tanka/pkg/agent/tools"
@@ -58,8 +59,7 @@ type Agent struct {
 
 // NewAgent creates an Agent with all tools registered for the given repository root.
 func NewAgent(ctx context.Context, llm model.LLM, repoRoot string) (*Agent, error) {
-	rawTools := collectTools(repoRoot)
-	adkTools, err := tools.ToADKTools(rawTools)
+	adkTools, err := collectTools(repoRoot)
 	if err != nil {
 		return nil, fmt.Errorf("registering tools: %w", err)
 	}
@@ -97,15 +97,23 @@ func NewAgent(ctx context.Context, llm model.LLM, repoRoot string) (*Agent, erro
 	return a, nil
 }
 
-// collectTools gathers all tool definitions for the given repository root.
-func collectTools(repoRoot string) []tools.Tool {
-	var all []tools.Tool
-	all = append(all, tools.NewFileTools(repoRoot)...)
-	all = append(all, tools.NewGitTools(repoRoot)...)
-	all = append(all, tools.NewGitHubTools(repoRoot)...)
-	all = append(all, tools.NewTankaTools(repoRoot)...)
-	all = append(all, tools.NewJBTools(repoRoot)...)
-	return all
+// collectTools gathers all ADK tools for the given repository root.
+func collectTools(repoRoot string) ([]adktool.Tool, error) {
+	var all []adktool.Tool
+	for _, fn := range []func(string) ([]adktool.Tool, error){
+		tools.NewFileTools,
+		tools.NewGitTools,
+		tools.NewGitHubTools,
+		tools.NewTankaTools,
+		tools.NewJBTools,
+	} {
+		ts, err := fn(repoRoot)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, ts...)
+	}
+	return all, nil
 }
 
 // Reset clears the conversation history by starting a fresh session.

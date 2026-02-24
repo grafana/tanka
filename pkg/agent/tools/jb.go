@@ -1,7 +1,6 @@
 package tools
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"github.com/jsonnet-bundler/jsonnet-bundler/pkg/jsonnetfile"
 	v1 "github.com/jsonnet-bundler/jsonnet-bundler/spec/v1"
 	"github.com/jsonnet-bundler/jsonnet-bundler/spec/v1/deps"
+	adktool "google.golang.org/adk/tool"
+	"google.golang.org/adk/tool/functiontool"
 )
 
 const vendorDir = "vendor"
@@ -24,14 +25,19 @@ type JBTools struct {
 }
 
 // NewJBTools creates jb tools anchored to the given repository root.
-func NewJBTools(repoRoot string) []Tool {
+func NewJBTools(repoRoot string) ([]adktool.Tool, error) {
 	jt := &JBTools{repoRoot: repoRoot}
-	return []Tool{
-		jt.initTool(),
-		jt.installTool(),
-		jt.updateTool(),
-		jt.listTool(),
+	var tools []adktool.Tool
+	for _, mk := range []func() (adktool.Tool, error){
+		jt.initTool, jt.installTool, jt.updateTool, jt.listTool,
+	} {
+		t, err := mk()
+		if err != nil {
+			return nil, err
+		}
+		tools = append(tools, t)
 	}
+	return tools, nil
 }
 
 // absDir resolves a relative path (or ".") to an absolute path within the repo.
@@ -40,7 +46,6 @@ func (jt *JBTools) absDir(relPath string) (string, error) {
 		return jt.repoRoot, nil
 	}
 	p := filepath.Join(jt.repoRoot, filepath.Clean(relPath))
-	// Ensure it's still inside the repo root
 	rel, err := filepath.Rel(jt.repoRoot, p)
 	if err != nil || strings.HasPrefix(rel, "..") {
 		return "", fmt.Errorf("path %q would escape the repository root", relPath)
@@ -58,8 +63,7 @@ func writeJSONFile(path string, v interface{}) error {
 	return os.WriteFile(path, b, 0644)
 }
 
-// writeChangedJSONFile only writes the file if its content differs from the
-// original bytes (same behaviour as jb's writeChangedJsonnetFile).
+// writeChangedJSONFile only writes the file if its content differs from the original.
 func writeChangedJSONFile(originalBytes []byte, modified *v1.JsonnetFile, path string) error {
 	orig, err := jsonnetfile.Unmarshal(originalBytes)
 	if err != nil {
@@ -99,135 +103,111 @@ func loadLockFile(dir string) (v1.JsonnetFile, []byte, error) {
 	return lf, b, nil
 }
 
-func (jt *JBTools) initTool() Tool {
-	return Tool{
-		Name:        "jb_init",
-		Description: "Initialise a new jsonnetfile.json in the given directory. Equivalent to 'jb init'. Fails if the file already exists.",
-		Schema: json.RawMessage(`{
-			"type": "object",
-			"properties": {
-				"path": {
-					"type": "string",
-					"description": "Directory in which to create jsonnetfile.json (relative to repo root, use '.' for root)"
-				}
-			},
-			"required": ["path"]
-		}`),
-		Execute: func(ctx context.Context, input json.RawMessage) (string, error) {
+func (jt *JBTools) initTool() (adktool.Tool, error) {
+	return functiontool.New(
+		functiontool.Config{
+			Name:        "jb_init",
+			Description: "Initialise a new jsonnetfile.json in the given directory. Equivalent to 'jb init'. Fails if the file already exists.",
+			InputSchema: mustSchema(`{
+				"type": "object",
+				"properties": {
+					"path": {"type": "string", "description": "Directory in which to create jsonnetfile.json (relative to repo root, use '.' for root)"}
+				},
+				"required": ["path"]
+			}`),
+		},
+		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
 			var params struct {
 				Path string `json:"path"`
 			}
-			if err := json.Unmarshal(input, &params); err != nil {
-				return "", fmt.Errorf("invalid parameters: %w", err)
+			if err := bind(input, &params); err != nil {
+				return nil, err
 			}
 			dir, err := jt.absDir(params.Path)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
-
 			jfPath := filepath.Join(dir, jsonnetfile.File)
 			exists, err := jsonnetfile.Exists(jfPath)
 			if err != nil {
-				return "", fmt.Errorf("checking for existing jsonnetfile: %w", err)
+				return nil, fmt.Errorf("checking for existing jsonnetfile: %w", err)
 			}
 			if exists {
-				return "", fmt.Errorf("jsonnetfile.json already exists at %s", params.Path)
+				return nil, fmt.Errorf("jsonnetfile.json already exists at %s", params.Path)
 			}
-
 			s := v1.New()
 			if err := writeJSONFile(jfPath, s); err != nil {
-				return "", fmt.Errorf("writing jsonnetfile.json: %w", err)
+				return nil, fmt.Errorf("writing jsonnetfile.json: %w", err)
 			}
-			return fmt.Sprintf("Initialised jsonnetfile.json in %s", params.Path), nil
-		},
-	}
+			return map[string]any{"output": fmt.Sprintf("Initialised jsonnetfile.json in %s", params.Path)}, nil
+		})
 }
 
-func (jt *JBTools) installTool() Tool {
-	return Tool{
-		Name:        "jb_install",
-		Description: "Install jsonnet dependencies. Without packages, installs everything listed in jsonnetfile.json (equivalent to 'jb install'). With packages, adds them and vendors them (equivalent to 'jb install github.com/org/repo/path@version'). Updates jsonnetfile.json and jsonnetfile.lock.json.",
-		Schema: json.RawMessage(`{
-			"type": "object",
-			"properties": {
-				"path": {
-					"type": "string",
-					"description": "Directory containing jsonnetfile.json (relative to repo root, use '.' for root)"
+func (jt *JBTools) installTool() (adktool.Tool, error) {
+	return functiontool.New(
+		functiontool.Config{
+			Name:        "jb_install",
+			Description: "Install jsonnet dependencies. Without packages, installs everything listed in jsonnetfile.json (equivalent to 'jb install'). With packages, adds them and vendors them (equivalent to 'jb install github.com/org/repo/path@version'). Updates jsonnetfile.json and jsonnetfile.lock.json.",
+			InputSchema: mustSchema(`{
+				"type": "object",
+				"properties": {
+					"path": {"type": "string", "description": "Directory containing jsonnetfile.json (relative to repo root, use '.' for root)"},
+					"packages": {"type": "array", "items": {"type": "string"}, "description": "Package URIs to install, e.g. ['github.com/grafana/jsonnet-libs/ksonnet-util@main']. Omit or leave empty to install from existing jsonnetfile.json."}
 				},
-				"packages": {
-					"type": "array",
-					"items": {"type": "string"},
-					"description": "Package URIs to install, e.g. ['github.com/grafana/jsonnet-libs/ksonnet-util@main']. Omit or leave empty to install from existing jsonnetfile.json."
-				}
-			},
-			"required": ["path"]
-		}`),
-		Execute: func(ctx context.Context, input json.RawMessage) (string, error) {
+				"required": ["path"]
+			}`),
+		},
+		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
 			var params struct {
 				Path     string   `json:"path"`
 				Packages []string `json:"packages"`
 			}
-			if err := json.Unmarshal(input, &params); err != nil {
-				return "", fmt.Errorf("invalid parameters: %w", err)
+			if err := bind(input, &params); err != nil {
+				return nil, err
 			}
 			dir, err := jt.absDir(params.Path)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
-
-			// Read jsonnetfile.json
 			jfPath := filepath.Join(dir, jsonnetfile.File)
 			jfBytes, err := os.ReadFile(jfPath)
 			if err != nil {
-				return "", fmt.Errorf("reading jsonnetfile.json (run jb_init first?): %w", err)
+				return nil, fmt.Errorf("reading jsonnetfile.json (run jb_init first?): %w", err)
 			}
 			jf, err := jsonnetfile.Unmarshal(jfBytes)
 			if err != nil {
-				return "", fmt.Errorf("parsing jsonnetfile.json: %w", err)
+				return nil, fmt.Errorf("parsing jsonnetfile.json: %w", err)
 			}
-
-			// Read lock file (missing is OK)
 			lf, lfBytes, err := loadLockFile(dir)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
-
-			// Ensure vendor/.tmp exists
 			if err := os.MkdirAll(filepath.Join(dir, vendorDir, ".tmp"), os.ModePerm); err != nil {
-				return "", fmt.Errorf("creating vendor directory: %w", err)
+				return nil, fmt.Errorf("creating vendor directory: %w", err)
 			}
-
-			// Add any newly specified packages to the manifest
 			for _, u := range params.Packages {
 				d := deps.Parse(dir, u)
 				if d == nil {
-					return "", fmt.Errorf("unable to parse package URI %q", u)
+					return nil, fmt.Errorf("unable to parse package URI %q", u)
 				}
 				existing, _ := jf.Dependencies.Get(d.Name())
 				if !reflect.DeepEqual(existing, *d) {
 					jf.Dependencies.Set(d.Name(), *d)
-					// Force re-download by removing any existing lock entry
 					lf.Dependencies.Delete(d.Name())
 				}
 			}
-
-			// Run the actual installation.
-			// ensureWithRecovery converts panics from the jb library into errors.
 			locked, err := ensureWithRecovery(jf, filepath.Join(dir, vendorDir), lf.Dependencies)
 			if err != nil {
-				return "", fmt.Errorf("installing packages: %w", err)
+				return nil, fmt.Errorf("installing packages: %w", err)
 			}
 			jbpkg.CleanLegacyName(jf.Dependencies)
-
-			// Write back updated files
 			if err := writeChangedJSONFile(jfBytes, &jf, jfPath); err != nil {
-				return "", fmt.Errorf("updating jsonnetfile.json: %w", err)
+				return nil, fmt.Errorf("updating jsonnetfile.json: %w", err)
 			}
 			updatedLock := v1.JsonnetFile{Dependencies: locked}
 			if err := writeChangedJSONFile(lfBytes, &updatedLock, filepath.Join(dir, jsonnetfile.LockFile)); err != nil {
-				return "", fmt.Errorf("updating jsonnetfile.lock.json: %w", err)
+				return nil, fmt.Errorf("updating jsonnetfile.lock.json: %w", err)
 			}
-
 			var sb strings.Builder
 			if len(params.Packages) > 0 {
 				fmt.Fprintf(&sb, "Installed %d new package(s) into %s/vendor:\n", len(params.Packages), params.Path)
@@ -241,126 +221,107 @@ func (jt *JBTools) installTool() Tool {
 				}
 				fmt.Fprintf(&sb, "Installed %d package(s) from jsonnetfile.json into %s/vendor", count, params.Path)
 			}
-			return sb.String(), nil
-		},
-	}
+			return map[string]any{"output": sb.String()}, nil
+		})
 }
 
-func (jt *JBTools) updateTool() Tool {
-	return Tool{
-		Name:        "jb_update",
-		Description: "Update jsonnet dependencies to their latest versions. Without packages, updates all dependencies (equivalent to 'jb update'). With packages, updates only those listed.",
-		Schema: json.RawMessage(`{
-			"type": "object",
-			"properties": {
-				"path": {
-					"type": "string",
-					"description": "Directory containing jsonnetfile.json (relative to repo root, use '.' for root)"
+func (jt *JBTools) updateTool() (adktool.Tool, error) {
+	return functiontool.New(
+		functiontool.Config{
+			Name:        "jb_update",
+			Description: "Update jsonnet dependencies to their latest versions. Without packages, updates all dependencies (equivalent to 'jb update'). With packages, updates only those listed.",
+			InputSchema: mustSchema(`{
+				"type": "object",
+				"properties": {
+					"path": {"type": "string", "description": "Directory containing jsonnetfile.json (relative to repo root, use '.' for root)"},
+					"packages": {"type": "array", "items": {"type": "string"}, "description": "Package URIs to update. Omit or leave empty to update all packages."}
 				},
-				"packages": {
-					"type": "array",
-					"items": {"type": "string"},
-					"description": "Package URIs to update. Omit or leave empty to update all packages."
-				}
-			},
-			"required": ["path"]
-		}`),
-		Execute: func(ctx context.Context, input json.RawMessage) (string, error) {
+				"required": ["path"]
+			}`),
+		},
+		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
 			var params struct {
 				Path     string   `json:"path"`
 				Packages []string `json:"packages"`
 			}
-			if err := json.Unmarshal(input, &params); err != nil {
-				return "", fmt.Errorf("invalid parameters: %w", err)
+			if err := bind(input, &params); err != nil {
+				return nil, err
 			}
 			dir, err := jt.absDir(params.Path)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
-
 			jf, err := jsonnetfile.Load(filepath.Join(dir, jsonnetfile.File))
 			if err != nil {
-				return "", fmt.Errorf("loading jsonnetfile.json: %w", err)
+				return nil, fmt.Errorf("loading jsonnetfile.json: %w", err)
 			}
 			lf, _, err := loadLockFile(dir)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
-
 			if err := os.MkdirAll(filepath.Join(dir, vendorDir, ".tmp"), os.ModePerm); err != nil {
-				return "", fmt.Errorf("creating vendor directory: %w", err)
+				return nil, fmt.Errorf("creating vendor directory: %w", err)
 			}
-
 			locks := lf.Dependencies
 			if len(params.Packages) == 0 {
-				// Update all: clear the lock
 				locks = deps.NewOrdered()
 			} else {
 				for _, u := range params.Packages {
 					d := deps.Parse(dir, u)
 					if d == nil {
-						return "", fmt.Errorf("unable to parse package URI %q", u)
+						return nil, fmt.Errorf("unable to parse package URI %q", u)
 					}
 					locks.Delete(d.Name())
 				}
 			}
-
 			newLocks, err := ensureWithRecovery(jf, filepath.Join(dir, vendorDir), locks)
 			if err != nil {
-				return "", fmt.Errorf("updating packages: %w", err)
+				return nil, fmt.Errorf("updating packages: %w", err)
 			}
-
 			updatedLock := v1.JsonnetFile{Dependencies: newLocks}
 			if err := writeJSONFile(filepath.Join(dir, jsonnetfile.LockFile), updatedLock); err != nil {
-				return "", fmt.Errorf("writing jsonnetfile.lock.json: %w", err)
+				return nil, fmt.Errorf("writing jsonnetfile.lock.json: %w", err)
 			}
-
 			if len(params.Packages) == 0 {
-				return fmt.Sprintf("Updated all packages in %s/vendor", params.Path), nil
+				return map[string]any{"output": fmt.Sprintf("Updated all packages in %s/vendor", params.Path)}, nil
 			}
-			return fmt.Sprintf("Updated %s in %s/vendor", strings.Join(params.Packages, ", "), params.Path), nil
-		},
-	}
+			return map[string]any{"output": fmt.Sprintf("Updated %s in %s/vendor", strings.Join(params.Packages, ", "), params.Path)}, nil
+		})
 }
 
-func (jt *JBTools) listTool() Tool {
-	return Tool{
-		Name:        "jb_list",
-		Description: "List the jsonnet dependencies declared in jsonnetfile.json, along with their locked versions from jsonnetfile.lock.json.",
-		Schema: json.RawMessage(`{
-			"type": "object",
-			"properties": {
-				"path": {
-					"type": "string",
-					"description": "Directory containing jsonnetfile.json (relative to repo root, use '.' for root)"
-				}
-			},
-			"required": ["path"]
-		}`),
-		Execute: func(ctx context.Context, input json.RawMessage) (string, error) {
+func (jt *JBTools) listTool() (adktool.Tool, error) {
+	return functiontool.New(
+		functiontool.Config{
+			Name:        "jb_list",
+			Description: "List the jsonnet dependencies declared in jsonnetfile.json, along with their locked versions from jsonnetfile.lock.json.",
+			InputSchema: mustSchema(`{
+				"type": "object",
+				"properties": {
+					"path": {"type": "string", "description": "Directory containing jsonnetfile.json (relative to repo root, use '.' for root)"}
+				},
+				"required": ["path"]
+			}`),
+		},
+		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
 			var params struct {
 				Path string `json:"path"`
 			}
-			if err := json.Unmarshal(input, &params); err != nil {
-				return "", fmt.Errorf("invalid parameters: %w", err)
+			if err := bind(input, &params); err != nil {
+				return nil, err
 			}
 			dir, err := jt.absDir(params.Path)
 			if err != nil {
-				return "", err
+				return nil, err
 			}
-
 			jf, err := jsonnetfile.Load(filepath.Join(dir, jsonnetfile.File))
 			if err != nil {
-				return "", fmt.Errorf("loading jsonnetfile.json: %w", err)
+				return nil, fmt.Errorf("loading jsonnetfile.json: %w", err)
 			}
-
-			lf, _, _ := loadLockFile(dir) // lock is optional
-
+			lf, _, _ := loadLockFile(dir)
 			keys := jf.Dependencies.Keys()
 			if len(keys) == 0 {
-				return "No dependencies in jsonnetfile.json", nil
+				return map[string]any{"output": "No dependencies in jsonnetfile.json"}, nil
 			}
-
 			var sb strings.Builder
 			fmt.Fprintf(&sb, "%d dependency(s) in %s:\n\n", len(keys), params.Path)
 			for _, k := range keys {
@@ -369,16 +330,12 @@ func (jt *JBTools) listTool() Tool {
 				if version == "" {
 					version = "(unspecified)"
 				}
-
-				// Check the locked version
 				lockedVersion := "(not locked)"
 				if l, ok := lf.Dependencies.Get(k); ok {
 					lockedVersion = l.Version
 				}
-
 				fmt.Fprintf(&sb, "  %s\n    declared: %s\n    locked:   %s\n", k, version, lockedVersion)
 			}
-			return sb.String(), nil
-		},
-	}
+			return map[string]any{"output": sb.String()}, nil
+		})
 }
