@@ -43,9 +43,8 @@ func (tt *TankaTools) findEnvironmentsTool() (adktool.Tool, error) {
 			InputSchema: mustSchema(`{
 				"type": "object",
 				"properties": {
-					"path": {"type": "string", "description": "Relative path to search from (use '.' for the entire repository)"}
-				},
-				"required": ["path"]
+					"path": {"type": "string", "description": "Relative path to search from (default: '.' — the entire repository)"}
+				}
 			}`),
 		},
 		func(ctx adktool.Context, input map[string]any) (map[string]any, error) {
@@ -55,8 +54,11 @@ func (tt *TankaTools) findEnvironmentsTool() (adktool.Tool, error) {
 			if err := bind(input, &params); err != nil {
 				return nil, err
 			}
+			if params.Path == "" {
+				params.Path = "."
+			}
 			searchPath := tt.repoRoot
-			if params.Path != "" && params.Path != "." {
+			if params.Path != "." {
 				searchPath = strings.TrimSuffix(tt.repoRoot, "/") + "/" + strings.TrimPrefix(params.Path, "/")
 			}
 			envs, err := tanka.FindEnvs(ctx, searchPath, tanka.FindOpts{})
@@ -93,14 +95,16 @@ func (tt *TankaTools) showTool() (adktool.Tool, error) {
 			InputSchema: mustSchema(`{
 				"type": "object",
 				"properties": {
-					"env_path": {"type": "string", "description": "Relative path to the Tanka environment directory (the one containing spec.json or main.jsonnet)"}
+					"env_path": {"type": "string", "description": "Relative path to the Tanka environment directory (the one containing spec.json or main.jsonnet)"},
+					"path": {"type": "string", "description": "Alias for env_path"},
+					"env": {"type": "string", "description": "Alias for env_path"}
 				},
 				"required": ["env_path"]
 			}`),
 		},
 		func(ctx adktool.Context, input map[string]any) (map[string]any, error) {
 			var params struct {
-				EnvPath string `json:"env_path"`
+				EnvPath string `json:"env_path" aliases:"path,env"`
 			}
 			if err := bind(input, &params); err != nil {
 				return nil, err

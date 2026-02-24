@@ -117,11 +117,8 @@ func (jt *JBTools) initTool() (adktool.Tool, error) {
 			}`),
 		},
 		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
-			if _, ok := input["path"]; !ok {
-				input["path"] = input["directory"]
-			}
 			var params struct {
-				Path string `json:"path"`
+				Path string `json:"path" aliases:"directory"`
 			}
 			if err := bind(input, &params); err != nil {
 				return nil, err

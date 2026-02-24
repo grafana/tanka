@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	adktool "google.golang.org/adk/tool"
@@ -162,17 +163,15 @@ func (ft *FileTools) listTool() (adktool.Tool, error) {
 				"properties": {
 					"glob_pattern": {"type": "string", "description": "Glob pattern to match files, relative to repository root"},
 					"glob": {"type": "string", "description": "Alias for glob_pattern — either may be used"},
+					"pattern": {"type": "string", "description": "Alias for glob_pattern — either may be used"},
 					"offset": {"type": "integer", "description": "Number of results to skip (default: 0)"},
-					"limit": {"type": "integer", "description": "Maximum number of results to return (default: 200)"}
+					"limit": {"type": "integer", "description": "Maximum number of results to return (default: 50)"}
 				}
 			}`),
 		},
 		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
-			if _, ok := input["glob_pattern"]; !ok {
-				input["glob_pattern"] = input["glob"]
-			}
 			var params struct {
-				GlobPattern string `json:"glob_pattern"`
+				GlobPattern string `json:"glob_pattern" aliases:"glob,pattern"`
 				Offset      int    `json:"offset"`
 				Limit       int    `json:"limit"`
 			}
@@ -183,9 +182,9 @@ func (ft *FileTools) listTool() (adktool.Tool, error) {
 				return nil, fmt.Errorf("glob_pattern (or glob) is required")
 			}
 			if params.Limit <= 0 {
-				params.Limit = 200
+				params.Limit = 50
 			}
-			var matches []string
+			var dirs, files []string
 			err := filepath.WalkDir(ft.repoRoot, func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
 					return nil
@@ -197,7 +196,7 @@ func (ft *FileTools) listTool() (adktool.Tool, error) {
 					return nil
 				}
 				rel, relErr := filepath.Rel(ft.repoRoot, path)
-				if relErr != nil {
+				if relErr != nil || rel == "." {
 					return nil
 				}
 				matched, matchErr := filepath.Match(params.GlobPattern, rel)
@@ -207,14 +206,21 @@ func (ft *FileTools) listTool() (adktool.Tool, error) {
 				if !matched {
 					matched = matchDoubleGlob(rel, params.GlobPattern)
 				}
-				if matched && !d.IsDir() {
-					matches = append(matches, rel)
+				if matched {
+					if d.IsDir() {
+						dirs = append(dirs, rel+"/")
+					} else {
+						files = append(files, rel)
+					}
 				}
 				return nil
 			})
 			if err != nil {
 				return nil, fmt.Errorf("listing files: %w", err)
 			}
+			sort.Slice(dirs, func(i, j int) bool { return len(dirs[i]) < len(dirs[j]) })
+			sort.Slice(files, func(i, j int) bool { return len(files[i]) < len(files[j]) })
+			matches := append(dirs, files...)
 			if len(matches) == 0 {
 				return map[string]any{"output": fmt.Sprintf("No files found matching %q", params.GlobPattern)}, nil
 			}

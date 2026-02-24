@@ -67,6 +67,11 @@ func RunREPL(ctx context.Context, a *Agent, out io.Writer) error {
 				fmt.Fprintln(out, "Conversation cleared.")
 			}
 			continue
+		case "/context":
+			if err := a.PrintContext(ctx, out); err != nil {
+				fmt.Fprintf(out, "Error: %s\n\n", err)
+			}
+			continue
 		case "/help":
 			printHelp(out)
 			continue
@@ -87,9 +92,10 @@ func RunREPL(ctx context.Context, a *Agent, out io.Writer) error {
 
 func printHelp(out io.Writer) {
 	fmt.Fprintln(out, `Available commands:
-  /clear   Reset the conversation (start a fresh session)
-  /exit    Exit the REPL (also: Ctrl+D)
-  /help    Show this help
+  /clear     Reset the conversation (start a fresh session)
+  /context   Dump the full raw session context (for debugging)
+  /exit      Exit the REPL (also: Ctrl+D)
+  /help      Show this help
 
 Keyboard shortcuts:
   Ctrl+C   Interrupt the current operation; stay in REPL

@@ -41,7 +41,10 @@ Tanka workflow reminders:
 - Always run tanka_find_environments to discover the repo structure before making changes
 - After making changes: validate jsonnet → git_diff → (optional) tanka_diff → git_add → git_commit
 - Prefer creating a new branch (git_branch_create) before making changes
-- Suggest a pull request (github_push + github_pr_create) when the work is complete`
+- Suggest a pull request (github_push + github_pr_create) when the work is complete
+- Use jb_install / jb_update to manage jsonnet dependencies — never use git_* tools
+  to clone or fetch packages manually
+- Use helm_dependency_build / helm_dependency_update to manage Helm chart dependencies`
 
 const (
 	agentAppName = "tanka"
@@ -108,6 +111,7 @@ func collectTools(repoRoot string) ([]adktool.Tool, error) {
 		tools.NewGitHubTools,
 		tools.NewTankaTools,
 		tools.NewJBTools,
+		tools.NewHelmTools,
 	} {
 		ts, err := fn(repoRoot)
 		if err != nil {
@@ -188,6 +192,58 @@ func (a *Agent) createSession(ctx context.Context) error {
 
 func newSessionID() string {
 	return fmt.Sprintf("s%d", time.Now().UnixNano())
+}
+
+// PrintContext dumps the full raw session history to out for debugging.
+func (a *Agent) PrintContext(ctx context.Context, out io.Writer) error {
+	resp, err := a.sessionSvc.Get(ctx, &session.GetRequest{
+		AppName:   agentAppName,
+		UserID:    agentUserID,
+		SessionID: a.sessionID,
+	})
+	if err != nil {
+		return fmt.Errorf("fetching session: %w", err)
+	}
+
+	events := resp.Session.Events()
+	fmt.Fprintf(out, "=== Session context: %d event(s) ===\n\n", events.Len())
+
+	i := 0
+	for event := range events.All() {
+		i++
+		fmt.Fprintf(out, "--- Event %d | author=%s", i, event.Author)
+		if event.Branch != "" {
+			fmt.Fprintf(out, " branch=%s", event.Branch)
+		}
+		fmt.Fprintln(out)
+
+		if event.ErrorMessage != "" {
+			fmt.Fprintf(out, "  ERROR: %s (code=%s)\n", event.ErrorMessage, event.ErrorCode)
+		}
+
+		if event.Content != nil {
+			fmt.Fprintf(out, "  role: %s\n", event.Content.Role)
+			for _, part := range event.Content.Parts {
+				switch {
+				case part.FunctionCall != nil:
+					argsJSON, _ := json.MarshalIndent(part.FunctionCall.Args, "    ", "  ")
+					fmt.Fprintf(out, "  [function_call] %s\n    %s\n", part.FunctionCall.Name, argsJSON)
+				case part.FunctionResponse != nil:
+					respJSON, _ := json.MarshalIndent(part.FunctionResponse.Response, "    ", "  ")
+					fmt.Fprintf(out, "  [function_response] %s\n    %s\n", part.FunctionResponse.Name, respJSON)
+				case part.Text != "":
+					fmt.Fprintf(out, "  [text] %s\n", part.Text)
+				}
+			}
+		}
+
+		if m := event.UsageMetadata; m != nil {
+			fmt.Fprintf(out, "  tokens: prompt=%d candidates=%d total=%d\n",
+				m.PromptTokenCount, m.CandidatesTokenCount, m.TotalTokenCount)
+		}
+		fmt.Fprintln(out)
+	}
+	return nil
 }
 
 // summarize truncates a string to maxLen characters for display purposes.
