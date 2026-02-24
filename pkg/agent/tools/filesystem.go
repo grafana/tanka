@@ -115,7 +115,7 @@ func (ft *FileTools) writeTool() (adktool.Tool, error) {
 				"type": "object",
 				"properties": {
 					"path": {"type": "string", "description": "Relative path to the file from the repository root"},
-					"content": {"type": "string", "description": "Content to write to the file"}
+					"content": {"description": "Content to write to the file. Pass a string for text files; pass a JSON object or array to have it serialised automatically."}
 				},
 				"required": ["path", "content"]
 			}`),
@@ -188,6 +188,12 @@ func (ft *FileTools) listTool() (adktool.Tool, error) {
 			var matches []string
 			err := filepath.WalkDir(ft.repoRoot, func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
+					return nil
+				}
+				if strings.HasPrefix(d.Name(), ".") && path != ft.repoRoot {
+					if d.IsDir() {
+						return fs.SkipDir
+					}
 					return nil
 				}
 				rel, relErr := filepath.Rel(ft.repoRoot, path)
