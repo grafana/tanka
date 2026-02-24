@@ -1,7 +1,9 @@
 package tools
 
 import (
+	"bytes"
 	"fmt"
+	"os/exec"
 	"strings"
 
 	gogit "github.com/go-git/go-git/v5"
@@ -12,7 +14,9 @@ import (
 	"google.golang.org/adk/tool/functiontool"
 )
 
-// GitTools provides read-only git repository operations using go-git (pure Go, no binary required).
+// GitTools provides read-only git repository operations.
+// git_log and git_show use go-git (pure Go, no binary required).
+// git_diff shells out to the git binary.
 type GitTools struct {
 	repoRoot string
 }
@@ -22,7 +26,7 @@ func NewGitTools(repoRoot string) ([]adktool.Tool, error) {
 	gt := &GitTools{repoRoot: repoRoot}
 	var tools []adktool.Tool
 	for _, mk := range []func() (adktool.Tool, error){
-		gt.logTool, gt.showTool,
+		gt.logTool, gt.showTool, gt.diffTool,
 	} {
 		t, err := mk()
 		if err != nil {
@@ -31,6 +35,19 @@ func NewGitTools(repoRoot string) ([]adktool.Tool, error) {
 		tools = append(tools, t)
 	}
 	return tools, nil
+}
+
+// runGit runs git with the given arguments inside the repo root.
+func (gt *GitTools) runGit(args ...string) (string, error) {
+	cmd := exec.Command("git", args...)
+	cmd.Dir = gt.repoRoot
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("git %s: %w\n%s", args[0], err, strings.TrimSpace(out.String()))
+	}
+	return strings.TrimSpace(out.String()), nil
 }
 
 func (gt *GitTools) openRepo() (*gogit.Repository, error) {
@@ -174,6 +191,58 @@ func (gt *GitTools) showTool() (adktool.Tool, error) {
 				sb.WriteString(patch.String())
 			}
 
+			return map[string]any{"output": sb.String()}, nil
+		})
+}
+
+func (gt *GitTools) diffTool() (adktool.Tool, error) {
+	return functiontool.New(
+		functiontool.Config{
+			Name: "git_diff",
+			Description: "Show uncommitted changes in the working directory (staged and unstaged) as a unified diff. " +
+				"Always call this at the end of each turn to show the user exactly what was changed.",
+			InputSchema: mustSchema(`{
+				"type": "object",
+				"properties": {
+					"path": {"type": "string", "description": "Limit the diff to this file or directory (relative to repo root). Omit for all changes."}
+				}
+			}`),
+		},
+		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
+			var params struct {
+				Path string `json:"path"`
+			}
+			if err := bind(input, &params); err != nil {
+				return nil, err
+			}
+
+			statusArgs := []string{"status", "--short"}
+			diffArgs := []string{"diff", "HEAD"}
+			if params.Path != "" {
+				statusArgs = append(statusArgs, "--", params.Path)
+				diffArgs = append(diffArgs, "--", params.Path)
+			}
+
+			statusOut, err := gt.runGit(statusArgs...)
+			if err != nil {
+				return nil, err
+			}
+			if statusOut == "" {
+				return map[string]any{"output": "No uncommitted changes."}, nil
+			}
+
+			diffOut, err := gt.runGit(diffArgs...)
+			if err != nil {
+				// No commits yet or HEAD doesn't exist — fall back to staged diff.
+				diffOut, _ = gt.runGit(append([]string{"diff", "--cached"}, diffArgs[2:]...)...)
+			}
+
+			var sb strings.Builder
+			sb.WriteString(statusOut)
+			if diffOut != "" {
+				sb.WriteString("\n\n")
+				sb.WriteString(diffOut)
+			}
 			return map[string]any{"output": sb.String()}, nil
 		})
 }

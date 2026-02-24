@@ -64,7 +64,7 @@ func (d *verboseDisplay) Event(event *session.Event) {
 			if event.IsFinalResponse() {
 				d.finalText.WriteString(part.Text)
 			} else {
-				colorLLMText.Fprintln(d.out, part.Text)
+				colorLLMText.Fprintln(d.out, strings.TrimSpace(part.Text))
 			}
 		}
 	}

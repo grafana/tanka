@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/muesli/reflow/wordwrap"
 	"google.golang.org/adk/session"
 )
 
@@ -49,6 +50,8 @@ func (d *prettyDisplay) run() {
 	ticker := time.NewTicker(250 * time.Millisecond)
 	defer ticker.Stop()
 
+	d.msg = "tanka-ring..."
+
 	for {
 		select {
 		case r, ok := <-d.ch:
@@ -78,7 +81,9 @@ func (d *prettyDisplay) run() {
 					if r.event.IsFinalResponse() {
 						d.finalText.WriteString(part.Text)
 					} else {
-						d.print("%s", part.Text)
+						d.clear()
+						wrapped := wordwrap.String(strings.TrimSpace("- "+part.Text), 80)
+						colorLLMText.Fprintln(d.out, wrapped)
 					}
 				}
 			}

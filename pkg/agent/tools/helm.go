@@ -82,7 +82,7 @@ func (ht *HelmTools) dependencyBuildTool() (adktool.Tool, error) {
 		},
 		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
 			var params struct {
-				Path string `json:"path"`
+				Path string `json:"path" aliases:"chart_dir"`
 			}
 			if err := bind(input, &params); err != nil {
 				return nil, err
