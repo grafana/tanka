@@ -2,7 +2,7 @@
 
 ## Overview
 
-`tk agent` is a conversational AI assistant for Tanka. Users working with Tanka spend a lot of time on repetitive configuration tasks — creating environments, instantiating Helm charts, updating job specs, scaling deployments. The agent acts as a senior SRE: it edits Jsonnet files, validates them, shows diffs, creates branches, and opens pull requests.
+`tk agent` is a conversational AI assistant for Tanka. Users working with Tanka spend a lot of time on repetitive configuration tasks — creating environments, instantiating Helm charts, updating job specs, scaling deployments. The agent acts as a senior SRE: it edits Jsonnet files, validates them, and shows diffs for human review and deployment.
 
 The agent deliberately never runs `tanka apply`. All cluster deploys remain human-controlled. This is the central design constraint.
 
@@ -33,18 +33,19 @@ pkg/agent/
   agent.go                   # ADK agent setup, system prompt, Run() loop
   config.go                  # Config loading: ~/.config/tanka/agent.yaml + env vars
   provider.go                # NewModel() factory: routes to Gemini/Anthropic/OpenAI
-  repl.go                    # Interactive REPL (chzyer/readline)
+  repl.go                    # Interactive REPL (chzyer/readline) with ASCII art banner
   oneshot.go                 # Single-request mode
+  verbose.go                 # Verbose logging: lipgloss borders, colordiff for diffs
   gemini.go                  # Gemini model (ADK native)
   anthropic.go               # Anthropic model (custom model.LLM adapter)
   openai.go                  # OpenAI model (custom model.LLM adapter)
   tools/
     tool.go                  # Shared helpers: mustSchema(), bind()
     filesystem.go            # Sandboxed file ops
-    git.go                   # Git repo operations (go-git)
-    github.go                # GitHub API (go-github)
+    git.go                   # Read-only git operations (go-git)
     tanka.go                 # Tanka + Jsonnet in-process ops
     jb.go                    # jsonnet-bundler dependency management
+    helm.go                  # Helm dependency management
 ```
 
 ### Request Flow
@@ -138,7 +139,6 @@ model: gemini-2.0-flash   # provider-specific model ID
 | `GEMINI_API_KEY` or `GOOGLE_API_KEY` | Gemini credentials |
 | `ANTHROPIC_API_KEY` | Anthropic credentials |
 | `OPENAI_API_KEY` | OpenAI credentials |
-| `GITHUB_TOKEN` | GitHub push + PR operations |
 
 **CLI flags** (take priority over everything):
 
@@ -183,29 +183,14 @@ All three read/list/search tools include an informational pagination header when
 
 The double-glob `**` pattern is handled by `matchDoubleGlob()` since Go's `filepath.Match` doesn't natively support it.
 
-### `git` — Repository operations (`tools/git.go`)
+### `git` — Read-only repository operations (`tools/git.go`)
 
-Uses `go-git` (pure Go; no `git` binary required). Author identity is read from git config; falls back to `Tanka Agent <tanka-agent@local>`.
+Uses `go-git` (pure Go; no `git` binary required). The git tools are intentionally read-only — the agent inspects history but does not stage, commit, or manage branches. Those actions remain the user's responsibility.
 
 | Tool | Parameters | Returns |
 |---|---|---|
 | `git_log` | `limit` (default 10) | Recent commit history |
-| `git_status` | — | Working tree status |
-| `git_diff` | — | Staged and unstaged changes summary |
-| `git_branch_create` | `name` | Creates branch from HEAD and checks it out |
-| `git_branch_checkout` | `name` | Switches to existing branch |
-| `git_add` | `paths []string` (use `["."]` for all) | Stages files |
-| `git_commit` | `message` | Creates commit, returns hash |
-
-### `github` — GitHub API (`tools/github.go`)
-
-Uses `go-github/v67`. Auth via `GITHUB_TOKEN`. Owner/repo are auto-detected from the `origin` remote URL (supports both HTTPS and SSH remotes).
-
-| Tool | Parameters | Returns |
-|---|---|---|
-| `github_push` | `branch` | Pushes branch to origin |
-| `github_pr_create` | `title`, `body`, `head_branch`, `base_branch` (default `main`) | PR URL and number |
-| `github_pr_list` | — | Open PRs |
+| `git_show` | `ref` (default `HEAD`; accepts hash, `HEAD~1`, branch name) | Full commit details: author, date, message, and unified diff of all changed files |
 
 ### `tanka` — Tanka + Jsonnet (`tools/tanka.go`)
 
@@ -249,18 +234,19 @@ Principles you always follow:
 - Minimal, reviewable changes: keep diffs small and easy for humans to review.
   Avoid reformatting unrelated code.
 - Always validate: after every file change, call tanka_validate_jsonnet on modified
-  files, run tanka_diff for each affected environment (if cluster is reachable), and
-  show the user the git diff and tanka diff before suggesting next steps.
+  files, run tanka_diff for each affected environment (if cluster is reachable), then
+  summarise the changes for the user before suggesting next steps.
 - You cannot and will not apply to any cluster. Your job is to prepare correct,
   validated configuration changes for human review and deployment.
+- You do not manage git: no staging, committing, or branch creation. That is the
+  user's responsibility. You may read history with git_log and git_show.
 
 Tanka workflow reminders:
 - Environments live in subdirectories (often environments/) and have a spec.json
 - Shared libraries live in lib/ or vendor/
 - Always run tanka_find_environments to discover the repo structure before making changes
-- After making changes: validate jsonnet → git_diff → (optional) tanka_diff → git_add → git_commit
-- Prefer creating a new branch (git_branch_create) before making changes
-- Suggest a pull request (github_push + github_pr_create) when the work is complete
+- After making changes: validate jsonnet → (optional) tanka_diff, then present a clear
+  summary of every file changed and what was changed, so the user can review and commit
 ```
 
 ---
@@ -285,8 +271,11 @@ Uses `chzyer/readline` for line editing, persistent history, and Ctrl+C handling
 - **History file:** `~/.config/tanka/agent_history`
 - **`/exit` or Ctrl+D:** exit cleanly
 - **`/clear`:** reset conversation (`Agent.Reset()` creates a new ADK session)
+- **`/context`:** dump the raw ADK session event log (commit hashes, token counts, full tool I/O) for debugging
 - **`/help`:** print available commands and keyboard shortcuts
 - **Ctrl+C:** cancels nothing, returns a fresh prompt (the ADK run loop is synchronous; true async interrupt would require goroutine + context cancellation)
+
+On startup the REPL prints an ASCII-art rendering of the Tanka logo in bright yellow (matching the brand's `#FACA10` gradient colour), followed by a one-line tagline.
 
 ### One-shot mode (`pkg/agent/oneshot.go`)
 
@@ -307,6 +296,19 @@ Calls `Agent.Run()` once, prints the final response, exits.
 - **`Text`** part — if it precedes tool calls, printed immediately; if it's the final response (`event.IsFinalResponse()`), accumulated and returned
 
 The `summarize()` helper strips newlines and truncates to a configurable length for tool call display.
+
+### Output rendering
+
+**Final LLM responses** are rendered as styled Markdown using `charmbracelet/glamour` (`glamour.WithAutoStyle()`, word-wrap disabled). A `*glamour.TermRenderer` is initialised in `NewAgent()` and stored on the struct; if initialisation fails the response is printed as plain text. Both `RunOneShot` and `RunREPL` pass the response through `Agent.renderMarkdown()`.
+
+**Verbose mode** (`-v` flag) is handled in `verbose.go`:
+
+- Tool call lines (`▶ name(args)`) are printed in bold cyan.
+- Tool response blocks are wrapped in a left-border style via `lipgloss.NormalBorder()` with a dim-grey (`color "240"`) foreground.
+- If the response output looks like a diff (starts with `diff `, `---`, or contains `\n+++ `), it is passed through `term.Colordiff()` before being wrapped in the border — producing coloured `+`/`-` lines.
+- Intermediate LLM text is printed in yellow.
+
+**`pkg/term/colordiff.go`** — the head-line regex was broadened from `^diff -u -N.*` to `^diff .*` so that `diff --git a/... b/...` headers are also rendered in bold blue.
 
 ---
 
@@ -338,14 +340,15 @@ The adapters translate:
 New dependencies added for this feature:
 
 ```
-google.golang.org/adk v0.5.0          # Agent framework (loop, session, tool dispatch)
-google.golang.org/genai               # Google GenAI SDK (shared types used by ADK)
+google.golang.org/adk v0.5.0           # Agent framework (loop, session, tool dispatch)
+google.golang.org/genai                # Google GenAI SDK (shared types used by ADK)
 github.com/anthropics/anthropic-sdk-go # Anthropic Messages API
-github.com/openai/openai-go           # OpenAI Chat Completions API
-github.com/go-git/go-git/v5           # Git operations (pure Go, no binary)
-github.com/google/go-github/v67       # GitHub REST API
-github.com/chzyer/readline            # REPL line editor with history
-gopkg.in/yaml.v3                      # Config file parsing
+github.com/openai/openai-go            # OpenAI Chat Completions API
+github.com/go-git/go-git/v5            # Git operations (pure Go, no binary)
+github.com/charmbracelet/glamour       # Markdown rendering for LLM responses
+github.com/charmbracelet/lipgloss      # Terminal styling for verbose tool blocks
+github.com/chzyer/readline             # REPL line editor with history
+gopkg.in/yaml.v3                       # Config file parsing
 ```
 
 Already present in the module (reused):
@@ -362,10 +365,11 @@ github.com/google/go-jsonnet               # Jsonnet linter (tanka_validate_json
 Encoded in the system prompt and tool descriptions. After every file change the agent should:
 
 1. Call `tanka_validate_jsonnet` on each modified `.jsonnet` / `.libsonnet` file
-2. Call `git_diff` to show file-level changes
-3. Call `tanka_find_environments` to identify affected environments
-4. Call `tanka_diff` for each affected environment (skippable if no cluster connectivity)
-5. Present results and wait for user review before proceeding to `git_add` + `git_commit`
+2. Call `tanka_find_environments` to identify affected environments
+3. Call `tanka_diff` for each affected environment (skippable if no cluster connectivity)
+4. Present a clear summary of every file changed and what was changed, so the user can review, stage, and commit themselves
+
+The agent does not call `git_add`, `git_commit`, or create branches. Those steps are entirely the user's responsibility.
 
 ---
 
@@ -374,5 +378,6 @@ Encoded in the system prompt and tool descriptions. After every file change the 
 - **`tanka_apply`** — by design; cluster deploys are human-controlled
 - **Streaming output** — ADK's `GenerateContent` receives `stream=false`; non-streaming is simpler and sufficient for a CLI tool
 - **Persistent session history** — ephemeral by design; each invocation starts fresh
-- **`git push` in git tools** — push is a GitHub operation requiring auth, so it lives in `github_push` with explicit `GITHUB_TOKEN` handling rather than being buried in git tools
-- **Worktree / stash / merge / rebase** — not needed for the prepare-and-PR workflow
+- **Git write operations** (`git_add`, `git_commit`, `git_branch_create`, `git_branch_checkout`, `git_status`, `git_diff`) — the agent prepares changes for human review; committing and branching are deliberately left to the user
+- **GitHub tools** (`github_push`, `github_pr_create`, `github_pr_list`) — removed; the agent's scope is local file editing and validation, not remote git or PR management
+- **Worktree / stash / merge / rebase** — not needed for the prepare-and-review workflow
