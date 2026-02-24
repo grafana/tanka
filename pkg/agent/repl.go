@@ -8,9 +8,28 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
+	"github.com/fatih/color"
 )
 
 const replPrompt = "❯ "
+
+// replBanner is an ASCII-art rendering of the Tanka logo: a container/bag shape
+// with a rectangular tab on the upper-left, the right side flaring slightly
+// outward at the top, and two horizontal bars below — matching the SVG icon.
+const replBanner = `
+             ::::::::::::                              
+             ::::::::::::                              
+          ..................                           
+          ::::::::::::::::::              .::::::.     
+          ::::::::::::::::::::::::::::::::::::::.      
+   .-------------------------------------------:       
+    :------------------------------------------        
+     -----------------------------------------         
+     :---------------------------------------:         
+      .......................................          
+                                                       
+       ========================================= 
+`
 
 // RunREPL starts an interactive REPL session with the agent.
 // Supports:
@@ -32,7 +51,8 @@ func RunREPL(ctx context.Context, a *Agent, out io.Writer) error {
 	}
 	defer rl.Close()
 
-	fmt.Fprintln(out, "Tanka Agent — type your request, /clear to reset, /exit or Ctrl+D to quit.")
+	color.New(color.FgHiYellow).Fprint(out, replBanner)
+	fmt.Fprintln(out, "Kubernetes config management with Jsonnet  •  /help for commands")
 	fmt.Fprintln(out)
 
 	for {
@@ -84,8 +104,7 @@ func RunREPL(ctx context.Context, a *Agent, out io.Writer) error {
 			continue
 		}
 		if response != "" {
-			fmt.Fprintln(out, response)
-			fmt.Fprintln(out)
+			fmt.Fprint(out, a.renderMarkdown(response))
 		}
 	}
 }

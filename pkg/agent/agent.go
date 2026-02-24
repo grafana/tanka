@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/glamour"
 	"google.golang.org/adk/agent"
 	"google.golang.org/adk/agent/llmagent"
 	"google.golang.org/adk/model"
@@ -30,18 +31,19 @@ Principles you always follow:
 - Minimal, reviewable changes: keep diffs small and easy for humans to review.
   Avoid reformatting unrelated code.
 - Always validate: after every file change, call tanka_validate_jsonnet on modified
-  files, run tanka_diff for each affected environment (if cluster is reachable), and
-  show the user the git diff and tanka diff before suggesting next steps.
+  files, run tanka_diff for each affected environment (if cluster is reachable), then
+  summarise the changes for the user before suggesting next steps.
 - You cannot and will not apply to any cluster. Your job is to prepare correct,
   validated configuration changes for human review and deployment.
+- You do not manage git: no staging, committing, or branch creation. That is the
+  user's responsibility. You may read history with git_log and git_show.
 
 Tanka workflow reminders:
 - Environments live in subdirectories (often environments/) and have a spec.json
 - Shared libraries live in lib/ or vendor/
 - Always run tanka_find_environments to discover the repo structure before making changes
-- After making changes: validate jsonnet → git_diff → (optional) tanka_diff → git_add → git_commit
-- Prefer creating a new branch (git_branch_create) before making changes
-- Suggest a pull request (github_push + github_pr_create) when the work is complete
+- After making changes: validate jsonnet → (optional) tanka_diff, then present a clear
+  summary of every file changed and what was changed, so the user can review and commit
 - Use jb_install / jb_update to manage jsonnet dependencies — never use git_* tools
   to clone or fetch packages manually
 - Use helm_dependency_build / helm_dependency_update to manage Helm chart dependencies`
@@ -59,6 +61,7 @@ type Agent struct {
 	sessionID  string
 	output     io.Writer
 	verbose    bool
+	glamour    *glamour.TermRenderer // nil if init failed or not a TTY
 }
 
 // NewAgent creates an Agent with all tools registered for the given repository root.
@@ -96,10 +99,26 @@ func NewAgent(ctx context.Context, llm model.LLM, repoRoot string, verbose bool)
 		output:     os.Stdout,
 		verbose:    verbose,
 	}
+	if gr, err := glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(0)); err == nil {
+		a.glamour = gr
+	}
 	if err := a.createSession(ctx); err != nil {
 		return nil, fmt.Errorf("creating session: %w", err)
 	}
 	return a, nil
+}
+
+// renderMarkdown renders text as styled markdown if a glamour renderer is available,
+// otherwise returns the text unchanged.
+func (a *Agent) renderMarkdown(text string) string {
+	if a.glamour == nil {
+		return text
+	}
+	out, err := a.glamour.Render(text)
+	if err != nil {
+		return text
+	}
+	return out
 }
 
 // collectTools gathers all ADK tools for the given repository root.
@@ -108,7 +127,6 @@ func collectTools(repoRoot string) ([]adktool.Tool, error) {
 	for _, fn := range []func(string) ([]adktool.Tool, error){
 		tools.NewFileTools,
 		tools.NewGitTools,
-		tools.NewGitHubTools,
 		tools.NewTankaTools,
 		tools.NewJBTools,
 		tools.NewHelmTools,

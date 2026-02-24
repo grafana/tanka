@@ -3,8 +3,12 @@ package agent
 import (
 	"fmt"
 	"sort"
+	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/fatih/color"
+
+	"github.com/grafana/tanka/pkg/term"
 )
 
 var (
@@ -13,6 +17,12 @@ var (
 	colorToolResp = color.New(color.FgGreen, color.Bold)
 	colorDimGrey  = color.New(color.FgHiBlack)
 	colorLLMText  = color.New(color.FgYellow)
+
+	styleToolBorder = lipgloss.NewStyle().
+			BorderLeft(true).
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color("240")).
+			PaddingLeft(1)
 )
 
 // logUser prints the user message in blue bold.
@@ -25,15 +35,26 @@ func (a *Agent) logToolCall(name string, args map[string]any) {
 	colorToolCall.Fprintf(a.output, "▶ %s%s\n", name, formatArgs(args))
 }
 
-// logToolResponse prints a green header and the full output indented in dim grey.
+// logToolResponse prints a green header and the full output in a left-bordered block.
+// Diff output is colourised; other output is printed in dim grey.
 func (a *Agent) logToolResponse(name string, response map[string]any) {
 	colorToolResp.Fprintf(a.output, "◀ %s\n", name)
 	if output, ok := response["output"].(string); ok {
-		for _, line := range splitLines(output) {
-			colorDimGrey.Fprintf(a.output, "  %s\n", line)
+		var content string
+		if isDiff(output) {
+			content = term.Colordiff(output).String()
+		} else {
+			content = colorDimGrey.Sprint(output)
 		}
+		fmt.Fprintln(a.output, styleToolBorder.Render(content))
 	}
-	fmt.Fprintln(a.output)
+}
+
+// isDiff returns true if s looks like a unified or git diff.
+func isDiff(s string) bool {
+	return strings.HasPrefix(s, "diff ") ||
+		strings.HasPrefix(s, "---") ||
+		strings.Contains(s, "\n+++ ")
 }
 
 // logLLMText prints intermediate LLM text (before tool calls) in yellow.
@@ -79,20 +100,4 @@ func formatArgValue(v any) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
-}
-
-// splitLines splits text into lines without importing strings in this file.
-func splitLines(s string) []string {
-	var lines []string
-	start := 0
-	for i := 0; i < len(s); i++ {
-		if s[i] == '\n' {
-			lines = append(lines, s[start:i])
-			start = i + 1
-		}
-	}
-	if start < len(s) {
-		lines = append(lines, s[start:])
-	}
-	return lines
 }

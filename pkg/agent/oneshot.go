@@ -13,6 +13,6 @@ func RunOneShot(ctx context.Context, a *Agent, query string, out io.Writer) erro
 	if err != nil {
 		return fmt.Errorf("agent error: %w", err)
 	}
-	fmt.Fprintln(out, response)
+	fmt.Fprint(out, a.renderMarkdown(response))
 	return nil
 }

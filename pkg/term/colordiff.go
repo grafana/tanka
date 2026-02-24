@@ -9,12 +9,12 @@ import (
 	"github.com/fatih/color"
 )
 
-// Colordiff colorizes unified diff output (diff -u -N)
+// Colordiff colorizes unified diff output (diff -u -N or diff --git)
 func Colordiff(d string) *bytes.Buffer {
 	exps := map[string]func(s string) bool{
 		"add":  regexp.MustCompile(`^\+.*`).MatchString,
 		"del":  regexp.MustCompile(`^\-.*`).MatchString,
-		"head": regexp.MustCompile(`^diff -u -N.*`).MatchString,
+		"head": regexp.MustCompile(`^diff .*`).MatchString,
 		"hid":  regexp.MustCompile(`^@.*`).MatchString,
 	}
 
