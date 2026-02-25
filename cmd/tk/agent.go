@@ -114,7 +114,9 @@ REQUIREMENTS
 			query := args[0]
 			tty := term.IsTerminal(int(os.Stdout.Fd()))
 			display := agent.NewDisplay(os.Stdout, tty, *verboseFlag)
-			return a.Run(ctx, query, display)
+			err := a.Run(ctx, query, display)
+			display.PrintFinalText()
+			return err
 		}
 
 		// REPL: tk agent (no arguments)

@@ -118,6 +118,7 @@ func RunREPL(ctx context.Context, a *Agent, out io.Writer, verbose bool) error {
 
 		display := NewDisplay(out, true, verbose)
 		err = a.Run(turnCtx, line, display)
+		display.PrintFinalText()
 		signal.Stop(sigCh)
 		cancelTurn()
 

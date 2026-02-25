@@ -25,13 +25,11 @@ type Display interface {
 }
 
 func NewDisplay(out io.Writer, tty bool, verbose bool) Display {
-	var display Display
 	if verbose {
-		display = NewVerboseDisplay(out)
+		return NewVerboseDisplay(out)
 	} else {
-		display = NewPrettyDisplay(out, tty)
+		return NewPrettyDisplay(out, tty)
 	}
-	return display
 }
 
 // formatArgs returns a "(k="v", k2=42)" string with keys sorted for determinism.
