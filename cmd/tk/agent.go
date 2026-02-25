@@ -7,8 +7,10 @@ import (
 
 	"github.com/go-clix/cli"
 	gogit "github.com/go-git/go-git/v5"
+	"golang.org/x/term"
 
 	"github.com/grafana/tanka/pkg/agent"
+	"github.com/grafana/tanka/pkg/agent/models"
 )
 
 func agentCmd(ctx context.Context) *cli.Command {
@@ -93,11 +95,15 @@ REQUIREMENTS
 		}
 
 		// 5. Construct the model and agent
-		llm, err := agent.NewModel(ctx, cfg)
+		llm, err := models.NewModel(ctx, &models.ModelConfig{
+			Provider: cfg.Provider,
+			Model:    cfg.Model,
+			APIKey:   cfg.APIKeyForProvider(),
+		})
 		if err != nil {
 			return fmt.Errorf("initialising model: %w", err)
 		}
-		a, err := agent.NewAgent(ctx, llm, repoRoot, *verboseFlag)
+		a, err := agent.NewAgent(ctx, llm, repoRoot)
 		if err != nil {
 			return fmt.Errorf("initialising agent: %w", err)
 		}
@@ -106,11 +112,13 @@ REQUIREMENTS
 		if len(args) > 0 {
 			// One-shot: tk agent "do something"
 			query := args[0]
-			return agent.RunOneShot(ctx, a, query, os.Stdout)
+			tty := term.IsTerminal(int(os.Stdout.Fd()))
+			display := agent.NewDisplay(os.Stdout, tty, *verboseFlag)
+			return a.Run(ctx, query, display)
 		}
 
 		// REPL: tk agent (no arguments)
-		return agent.RunREPL(ctx, a, os.Stdout)
+		return agent.RunREPL(ctx, a, os.Stdout, *verboseFlag)
 	}
 
 	return cmd

@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"strings"
-	"sync"
 
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
+	"golang.org/x/term"
 )
 
 const replPrompt = "❯ "
@@ -38,7 +39,10 @@ const replBanner = `
 //   - /exit or Ctrl+D: exit cleanly
 //   - /clear: reset the conversation (start fresh)
 //   - Ctrl+C: interrupt the current operation but stay in the REPL
-func RunREPL(ctx context.Context, a *Agent, out io.Writer) error {
+func RunREPL(ctx context.Context, a *Agent, out io.Writer, verbose bool) error {
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return fmt.Errorf("cannot repl, not a terminal")
+	}
 	rl, err := readline.NewEx(&readline.Config{
 		Prompt:          replPrompt,
 		HistoryFile:     historyFilePath(),
@@ -99,18 +103,23 @@ func RunREPL(ctx context.Context, a *Agent, out io.Writer) error {
 			continue
 		}
 
-		// Send to agent; allow ESC to cancel the current turn
+		// Send to agent; allow Ctrl+C to cancel the current turn
 		turnCtx, cancelTurn := context.WithCancel(ctx)
-		var wg sync.WaitGroup
-		wg.Add(1)
+
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, os.Interrupt)
 		go func() {
-			defer wg.Done()
-			watchForESC(turnCtx, cancelTurn)
+			select {
+			case <-sigCh:
+				cancelTurn()
+			case <-turnCtx.Done():
+			}
 		}()
 
-		response, err := a.Run(turnCtx, line)
+		display := NewDisplay(out, true, verbose)
+		err = a.Run(turnCtx, line, display)
+		signal.Stop(sigCh)
 		cancelTurn()
-		wg.Wait()
 
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
@@ -120,9 +129,6 @@ func RunREPL(ctx context.Context, a *Agent, out io.Writer) error {
 			}
 			fmt.Fprintf(out, "Error: %s\n\n", err)
 			continue
-		}
-		if response != "" {
-			fmt.Fprint(out, a.renderMarkdown(response))
 		}
 	}
 }
@@ -135,8 +141,7 @@ func printHelp(out io.Writer) {
   /help      Show this help
 
 Keyboard shortcuts:
-  ESC      Interrupt the current agent operation
-  Ctrl+C   Interrupt the current operation; stay in REPL
+  Ctrl+C   Cancel the current agent operation
   Ctrl+D   Exit
   Up/Down  Navigate history`)
 	fmt.Fprintln(out)

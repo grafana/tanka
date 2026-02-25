@@ -10,18 +10,28 @@ import (
 	"google.golang.org/adk/session"
 )
 
-// display handles all terminal output for a Run() turn.
+// Display handles all terminal output for a Run() turn.
 // Implementations receive the full event stream and are responsible for
 // collecting and returning the final LLM response text.
-type display interface {
+type Display interface {
 	// Event processes a single event from the ADK runner event stream.
 	Event(event *session.Event)
 	// Error displays a terminal error from the runner. The Run loop will call
 	// FinalText immediately after, so implementations must remain usable.
 	Error(err error)
-	// FinalText returns the accumulated final-response text. It must be called
+	// PrintFinalText prints the accumulated final-response text. It must be called
 	// exactly once, after all Event/Error calls are complete.
-	FinalText() string
+	PrintFinalText()
+}
+
+func NewDisplay(out io.Writer, tty bool, verbose bool) Display {
+	var display Display
+	if verbose {
+		display = NewVerboseDisplay(out)
+	} else {
+		display = NewPrettyDisplay(out, tty)
+	}
+	return display
 }
 
 // formatArgs returns a "(k="v", k2=42)" string with keys sorted for determinism.
@@ -63,19 +73,6 @@ func formatArgValue(v any) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
-}
-
-// renderMarkdown renders text as styled markdown if a glamour renderer is available,
-// otherwise returns the text unchanged.
-func (a *Agent) renderMarkdown(text string) string {
-	if a.glamour == nil {
-		return text
-	}
-	out, err := a.glamour.Render(text)
-	if err != nil {
-		return text
-	}
-	return out
 }
 
 // PrintContext dumps the full raw session history to out for debugging.

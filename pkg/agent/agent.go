@@ -3,11 +3,8 @@ package agent
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
 	"time"
 
-	"github.com/charmbracelet/glamour"
 	"google.golang.org/adk/agent"
 	"google.golang.org/adk/agent/llmagent"
 	"google.golang.org/adk/model"
@@ -46,6 +43,8 @@ Tanka workflow reminders:
   a clear summary of every file changed and what was changed, so the user can review and commit
 - Use jb_install / jb_update to manage jsonnet dependencies — never use git_* tools
   to clone or fetch packages manually
+- When installing with jb_install, always install packages (e.g. "github.com/jsonnet-libs/k8s-libsonnet/1.35@main"),
+  never individual files (e.g. "github.com/jsonnet-libs/k8s-libsonnet/1.30/main.libsonnet")
 - Use helm_dependency_build / helm_dependency_update to manage Helm chart dependencies`
 
 const (
@@ -59,13 +58,10 @@ type Agent struct {
 	runner     *runner.Runner
 	sessionSvc session.Service
 	sessionID  string
-	output     io.Writer
-	glamour    *glamour.TermRenderer // nil if not a TTY; used by renderMarkdown
-	verbose    bool
 }
 
 // NewAgent creates an Agent with all tools registered for the given repository root.
-func NewAgent(ctx context.Context, llm model.LLM, repoRoot string, verbose bool) (*Agent, error) {
+func NewAgent(ctx context.Context, llm model.LLM, repoRoot string) (*Agent, error) {
 	adkTools, err := collectTools(repoRoot)
 	if err != nil {
 		return nil, fmt.Errorf("registering tools: %w", err)
@@ -96,12 +92,8 @@ func NewAgent(ctx context.Context, llm model.LLM, repoRoot string, verbose bool)
 		runner:     r,
 		sessionSvc: sessionSvc,
 		sessionID:  newSessionID(),
-		output:     os.Stdout,
-		verbose:    verbose,
 	}
-	if gr, err := glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(0)); err == nil {
-		a.glamour = gr
-	}
+
 	if err := a.createSession(ctx); err != nil {
 		return nil, fmt.Errorf("creating session: %w", err)
 	}
@@ -135,25 +127,21 @@ func (a *Agent) Reset(ctx context.Context) error {
 
 // Run sends a user message and processes the full agent loop until the LLM
 // returns a final text response. Returns the final text response.
-func (a *Agent) Run(ctx context.Context, userInput string) (string, error) {
-	var display display
-	if a.verbose {
-		display = newVerboseDisplay(a.output)
-	} else {
-		display = newPrettyDisplay(a.output, a.glamour != nil)
-	}
-
+func (a *Agent) Run(ctx context.Context, userInput string, display Display) error {
 	msg := genai.NewContentFromText(userInput, genai.RoleUser)
+	var runErr error
 	for event, err := range a.runner.Run(ctx, agentUserID, a.sessionID, msg, agent.RunConfig{}) {
 		if err != nil {
 			display.Error(err)
-			return display.FinalText(), err
+			runErr = err
+			break
 		} else {
 			display.Event(event)
 		}
 	}
 
-	return display.FinalText(), nil
+	display.PrintFinalText()
+	return runErr
 }
 
 func (a *Agent) createSession(ctx context.Context) error {

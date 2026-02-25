@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/muesli/reflow/wordwrap"
 	"google.golang.org/adk/session"
 )
@@ -22,8 +23,11 @@ type result struct {
 // goroutine that animates a spinner on a single line while the agent works,
 // keeping the terminal uncluttered. FinalText shuts the goroutine down.
 type prettyDisplay struct {
-	out   io.Writer
-	tty   bool // true when output is a real TTY; enables ANSI escape sequences
+	out io.Writer
+
+	glamour *glamour.TermRenderer // nil if not a TTY; used by renderMarkdown
+	tty     bool                  // true when output is a real TTY; enables ANSI escape sequences
+
 	frame int
 	msg   string
 
@@ -32,10 +36,17 @@ type prettyDisplay struct {
 	finalText *strings.Builder
 }
 
-func newPrettyDisplay(out io.Writer, tty bool) *prettyDisplay {
+func NewPrettyDisplay(out io.Writer, tty bool) *prettyDisplay {
+	var gr *glamour.TermRenderer
+	if tty {
+		gr, _ = glamour.NewTermRenderer(glamour.WithAutoStyle(), glamour.WithWordWrap(0))
+	}
+
 	d := &prettyDisplay{
-		out:       out,
-		tty:       tty,
+		out:     out,
+		glamour: gr,
+		tty:     tty,
+
 		ch:        make(chan result),
 		finalText: &strings.Builder{},
 	}
@@ -82,7 +93,7 @@ func (d *prettyDisplay) run() {
 						d.finalText.WriteString(part.Text)
 					} else {
 						d.clear()
-						wrapped := wordwrap.String(strings.TrimSpace(part.Text), 80)
+						wrapped := wordwrap.String("- "+strings.TrimSpace(part.Text), 80)
 						colorLLMText.Fprintln(d.out, wrapped)
 					}
 				}
@@ -103,10 +114,20 @@ func (d *prettyDisplay) Error(err error) {
 
 // FinalText closes the event channel, waits for the background goroutine to
 // finish, then returns the accumulated final-response text.
-func (d *prettyDisplay) FinalText() string {
+func (d *prettyDisplay) PrintFinalText() {
 	close(d.ch)
 	d.wg.Wait()
-	return d.finalText.String()
+
+	finalText := d.finalText.String()
+	if d.glamour != nil {
+		var err error
+		finalText, err = d.glamour.Render(finalText)
+		if err != nil {
+			fmt.Fprintf(d.out, "Error rendering markdown: %s\n", err)
+		}
+	}
+
+	fmt.Fprintln(d.out, finalText)
 }
 
 // print formats the message, truncates to 120 chars (stripping newlines), and

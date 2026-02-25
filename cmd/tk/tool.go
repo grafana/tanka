@@ -113,10 +113,6 @@ func importsCmd(ctx context.Context) *cli.Command {
 		if modFiles != nil {
 			for _, m := range modFiles {
 				mod := filepath.Join(root, m)
-				if err != nil {
-					return err
-				}
-
 				for _, dep := range deps {
 					if mod == dep {
 						fmt.Printf("Rebuild required. File `%s` imports `%s`, which has been changed in `%s`.\n", args[0], dep, *check)
