@@ -171,14 +171,15 @@ func (tt *TankaTools) validateJsonnetTool() (adktool.Tool, error) {
 			InputSchema: mustSchema(`{
 				"type": "object",
 				"properties": {
-					"file_path": {"type": "string", "description": "Relative path to the .jsonnet or .libsonnet file to validate"}
+					"file_path": {"type": "string", "description": "Relative path to the .jsonnet or .libsonnet file to validate"},
+					"file": {"type": "string", "description": "Alias for file_path"}
 				},
 				"required": ["file_path"]
 			}`),
 		},
 		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
 			var params struct {
-				FilePath string `json:"file_path"`
+				FilePath string `json:"file_path" aliases:"file"`
 			}
 			if err := bind(input, &params); err != nil {
 				return nil, err

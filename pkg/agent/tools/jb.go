@@ -154,10 +154,9 @@ func (jt *JBTools) installTool() (adktool.Tool, error) {
 			InputSchema: mustSchema(`{
 				"type": "object",
 				"properties": {
-					"path": {"type": "string", "description": "Directory containing jsonnetfile.json (relative to repo root, use '.' for root)"},
+					"path": {"type": "string", "description": "Directory containing jsonnetfile.json (relative to repo root, use '.' for root)", "default": "."},
 					"packages": {"type": "array", "items": {"type": "string"}, "description": "Package URIs to install, e.g. ['github.com/grafana/jsonnet-libs/ksonnet-util@main']. Omit or leave empty to install from existing jsonnetfile.json."}
-				},
-				"required": ["path"]
+				}
 			}`),
 		},
 		func(_ adktool.Context, input map[string]any) (map[string]any, error) {
@@ -167,6 +166,9 @@ func (jt *JBTools) installTool() (adktool.Tool, error) {
 			}
 			if err := bind(input, &params); err != nil {
 				return nil, err
+			}
+			if params.Path == "" {
+				params.Path = "."
 			}
 			dir, err := jt.absDir(params.Path)
 			if err != nil {

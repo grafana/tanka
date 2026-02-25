@@ -2,10 +2,12 @@ package agent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
@@ -97,9 +99,25 @@ func RunREPL(ctx context.Context, a *Agent, out io.Writer) error {
 			continue
 		}
 
-		// Send to agent
-		response, err := a.Run(ctx, line)
+		// Send to agent; allow ESC to cancel the current turn
+		turnCtx, cancelTurn := context.WithCancel(ctx)
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			watchForESC(turnCtx, cancelTurn)
+		}()
+
+		response, err := a.Run(turnCtx, line)
+		cancelTurn()
+		wg.Wait()
+
 		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				fmt.Fprintln(out, "Interrupted.")
+				fmt.Fprintln(out)
+				continue
+			}
 			fmt.Fprintf(out, "Error: %s\n\n", err)
 			continue
 		}
@@ -117,6 +135,7 @@ func printHelp(out io.Writer) {
   /help      Show this help
 
 Keyboard shortcuts:
+  ESC      Interrupt the current agent operation
   Ctrl+C   Interrupt the current operation; stay in REPL
   Ctrl+D   Exit
   Up/Down  Navigate history`)

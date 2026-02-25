@@ -82,7 +82,7 @@ func (d *prettyDisplay) run() {
 						d.finalText.WriteString(part.Text)
 					} else {
 						d.clear()
-						wrapped := wordwrap.String(strings.TrimSpace("- "+part.Text), 80)
+						wrapped := wordwrap.String(strings.TrimSpace(part.Text), 80)
 						colorLLMText.Fprintln(d.out, wrapped)
 					}
 				}
