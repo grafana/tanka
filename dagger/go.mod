@@ -7,7 +7,7 @@ toolchain go1.26.0
 require (
 	github.com/99designs/gqlgen v0.17.86
 	github.com/Khan/genqlient v0.8.1
-	github.com/vektah/gqlparser/v2 v2.5.31
+	github.com/vektah/gqlparser/v2 v2.5.32
 	go.opentelemetry.io/otel v1.40.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.38.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.38.0
