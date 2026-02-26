@@ -25,6 +25,10 @@ func MakeRawVM(importPaths []string, extCode map[string]string, tlaCode map[stri
 		vm.NativeFunction(nf)
 	}
 
+	for _, nvf := range native.VMFuncs(vm) {
+		vm.NativeFunction(nvf)
+	}
+
 	if maxStack > 0 {
 		vm.MaxStack = maxStack
 	}
