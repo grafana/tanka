@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	jsonnet "github.com/google/go-jsonnet"
@@ -14,6 +17,7 @@ import (
 	"github.com/grafana/tanka/pkg/helm"
 	"github.com/grafana/tanka/pkg/kustomize"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -39,6 +43,14 @@ func Funcs() []*jsonnet.NativeFunction {
 
 		helm.NativeFunc(helm.ExecHelm{}),
 		kustomize.NativeFunc(kustomize.ExecKustomize{}),
+	}
+}
+
+// VMFuncs returns a slice of functions similar to Funcs but are passed the jsonnet VM
+// for in-line evaluation
+func VMFuncs(vm *jsonnet.VM) []*jsonnet.NativeFunction {
+	return []*jsonnet.NativeFunction{
+		importFiles(vm),
 	}
 }
 
@@ -175,6 +187,90 @@ func regexSubst() *jsonnet.NativeFunction {
 				return "", err
 			}
 			return r.ReplaceAllString(src, repl), nil
+		},
+	}
+}
+
+type importFilesOpts struct {
+	CalledFrom string   `json:"calledFrom"`
+	Exclude    []string `json:"exclude"`
+	Extension  string   `json:"extension"`
+}
+
+func parseImportOpts(data interface{}) (*importFilesOpts, error) {
+	c, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// default extension to `.libsonnet`
+	opts := importFilesOpts{
+		Extension: ".libsonnet",
+	}
+	if err := json.Unmarshal(c, &opts); err != nil {
+		return nil, err
+	}
+	if opts.CalledFrom == "" {
+		return nil, fmt.Errorf("importFiles: `opts.calledFrom` is unset or empty\nTanka needs this to find your directory.")
+	}
+	// Make sure calledFrom is inside the current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("importFiles: failed to get current working directory: %s", err)
+	}
+	calledFromAbs, err := filepath.Abs(opts.CalledFrom)
+	if err != nil {
+		return nil, fmt.Errorf("importFiles: failed to get absolute path to `opts.calledFrom`: %s", err)
+	}
+	if !strings.HasPrefix(calledFromAbs, cwd) {
+		return nil, fmt.Errorf("importFiles: `opts.calledFrom` must be a subdirectory of the current working directory: %s", cwd)
+	}
+	return &opts, nil
+}
+
+// importFiles imports and evaluates all matching jsonnet files in the given relative directory
+func importFiles(vm *jsonnet.VM) *jsonnet.NativeFunction {
+	return &jsonnet.NativeFunction{
+		Name:   "importFiles",
+		Params: ast.Identifiers{"directory", "opts"},
+		Func: func(data []interface{}) (interface{}, error) {
+			dir, ok := data[0].(string)
+			if !ok {
+				return nil, fmt.Errorf("first argument 'directory' must be of 'string' type, got '%T' instead", data[0])
+			}
+			opts, err := parseImportOpts(data[1])
+			if err != nil {
+				return nil, err
+			}
+			dirPath := filepath.Join(filepath.Dir(opts.CalledFrom), dir)
+			imports := make(map[string]interface{})
+			err = filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if info.IsDir() || !strings.HasSuffix(info.Name(), opts.Extension) {
+					return nil
+				}
+				if slices.Contains(opts.Exclude, info.Name()) {
+					return nil
+				}
+				log.Debug().Msgf("importFiles: parsing file %s", info.Name())
+				resultStr, err := vm.EvaluateFile(path)
+				if err != nil {
+					return fmt.Errorf("importFiles: failed to evaluate %s: %s", path, err)
+				}
+				var result interface{}
+				err = json.Unmarshal([]byte(resultStr), &result)
+				if err != nil {
+					return err
+				}
+				imports[info.Name()] = result
+				return nil
+			})
+			if err != nil {
+				return nil, err
+			}
+			return imports, nil
 		},
 	}
 }
