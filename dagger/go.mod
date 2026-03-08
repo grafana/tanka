@@ -2,7 +2,7 @@ module github.com/grafana/tanka/dagger
 
 go 1.25.0
 
-toolchain go1.26.0
+toolchain go1.26.1
 
 require (
 	github.com/99designs/gqlgen v0.17.87
