@@ -128,8 +128,8 @@ export default defineConfig({
               link: '/formatting',
             },
             {
-              label: 'Apply options',
-              link: '/apply',
+              label: 'tk apply',
+              link: '/reference/tk-apply',
             },
           ],
         },
