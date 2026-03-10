@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"text/tabwriter"
-
-	"k8s.io/utils/strings/slices"
 
 	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
