@@ -5,24 +5,24 @@
   ],
   customDatasources: {
     kubectl: {
-      defaultRegistryUrlTemplate: 'https://cdn.dl.k8s.io/release/stable.txt',
-      format: 'plain',
+      defaultRegistryUrlTemplate: 'https://api.github.com/repos/kubernetes/kubernetes/releases',
+      format: 'json',
       transformTemplates: [
-        '{"releases": [releases . {"version": $substring(version, 1)}]}',
+        '{"releases": [$$ [$not(draft) and $not(prerelease) ] . {"version": $substringAfter(tag_name, "v"), "releaseTimestamp": created_at}]}',
       ],
     },
     helm: {
       defaultRegistryUrlTemplate: 'https://api.github.com/repos/helm/helm/releases',
       format: 'json',
       transformTemplates: [
-        '{"releases": [$.tag_name . {"version": $substring($, 1)}]}',
+        '{"releases": [$.tag_name . {"version": $substring($, 1), "releaseTimestamp": created_at}]}',
       ],
     },
     kustomize: {
       defaultRegistryUrlTemplate: 'https://api.github.com/repos/kubernetes-sigs/kustomize/releases',
       format: 'json',
       transformTemplates: [
-        '{"releases": [$$ [$match(tag_name, /kustomize.*/) and $not(draft) and $not(prerelease) ] . {"version": $substringAfter(tag_name, "/v")}]}',
+        '{"releases": [$$ [$match(tag_name, /kustomize.*/) and $not(draft) and $not(prerelease) ] . {"version": $substringAfter(tag_name, "/v"), "releaseTimestamp": created_at}]}',
       ],
     },
   },
@@ -133,6 +133,13 @@
         'helm',
       ],
       allowedVersions: '<4.0.0',
+    },
+    {
+      matchPackageNames: [
+        'kubectl',
+      ],
+      // TODO: Update this once 1.34 is reaching EOL (Oct 2026)
+      allowedVersions: '<1.35.0',
     },
     {
       matchPackageNames: [
