@@ -28,7 +28,7 @@ RUN export OS=$(go env GOOS) && \
 
 FROM golang:1.26.1-alpine@sha256:2389ebfa5b7f43eeafbd6be0c3700cc46690ef842ad962f6c5bd6be49ed82039 AS kustomize
 WORKDIR /tmp/kustomize
-ARG KUSTOMIZE_VERSION=5.8.0
+ARG KUSTOMIZE_VERSION=5.8.1
 RUN apk add --no-cache jq curl
 RUN export OS=$(go env GOOS) &&\
     export ARCH=$(go env GOARCH) &&\
