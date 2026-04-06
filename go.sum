@@ -34,8 +34,8 @@ github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek
 github.com/golang/protobuf v1.5.4/go.mod h1:lnTiLA8Wa4RWRcIUkrtSVa5nRhsEGBg48fD6rSs7xps=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/google/go-jsonnet v0.21.0 h1:43Bk3K4zMRP/aAZm9Po2uSEjY6ALCkYUVIcz9HLGMvA=
-github.com/google/go-jsonnet v0.21.0/go.mod h1:tCGAu8cpUpEZcdGMmdOu37nh8bGgqubhI5v2iSk3KJQ=
+github.com/google/go-jsonnet v0.22.0 h1:o0bOAIE+9SIfRZ7FXQPuta0mHLLE0AwbY/L5GTH5CH8=
+github.com/google/go-jsonnet v0.22.0/go.mod h1:pLhKpu0/ODjL2Zev4y+CmCoHKAgONT1gSLQyriuYh9w=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.2 h1:8Tjv8EJ+pM1xP8mK6egEbD1OgnVTyacbefKhmbLhIhU=
