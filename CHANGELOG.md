@@ -2,6 +2,35 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.37.0](https://github.com/grafana/tanka/compare/v0.36.4...v0.37.0) (2026-04-09)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update module github.com/google/go-jsonnet to v0.22.0 ([#1947](https://github.com/grafana/tanka/issues/1947)) ([4eceff3](https://github.com/grafana/tanka/commit/4eceff3274979a4fbf75d023b266bf6864a0d021))
+* **deps:** update module google.golang.org/grpc to v1.80.0 ([#1956](https://github.com/grafana/tanka/issues/1956)) ([a78cc85](https://github.com/grafana/tanka/commit/a78cc8555806b7ee0dae2eb0f708b5d07bf6de2a))
+* **deps:** update otel to v1.43.0 ([#1972](https://github.com/grafana/tanka/issues/1972)) ([ed49852](https://github.com/grafana/tanka/commit/ed498522f3eaa8dc0e0dadc6ec6335334099751f))
+
+
+### 🔧 Miscellaneous Chores
+
+* bump to 0.37.0 ([#1963](https://github.com/grafana/tanka/issues/1963)) ([318d064](https://github.com/grafana/tanka/commit/318d0645df3b432653aa5a15a0ac7a158bb9c26c))
+* bump to 0.37.0 ([#1964](https://github.com/grafana/tanka/issues/1964)) ([d16a719](https://github.com/grafana/tanka/commit/d16a719bd21b5cef053c0df48621024e01f439f3))
+* **deps:** lock file maintenance ([#1941](https://github.com/grafana/tanka/issues/1941)) ([7ac7d1e](https://github.com/grafana/tanka/commit/7ac7d1ea07bab54379ba51d68409fba034340960))
+* **deps:** update dependency @types/node to v24.12.1 ([#1958](https://github.com/grafana/tanka/issues/1958)) ([26b98f8](https://github.com/grafana/tanka/commit/26b98f8e9901acdf6ffe9978c98b35592a1c953a))
+* **deps:** update dependency @types/node to v24.12.2 ([#1959](https://github.com/grafana/tanka/issues/1959)) ([a124e60](https://github.com/grafana/tanka/commit/a124e60b08b8ec59f4c115e10b2403434e588f0f))
+* **deps:** update dependency astro to v6.1.2 ([#1953](https://github.com/grafana/tanka/issues/1953)) ([257499e](https://github.com/grafana/tanka/commit/257499e4be50fbd350bebef0fdaa84274fa523c9))
+* **deps:** update dependency astro to v6.1.3 ([#1957](https://github.com/grafana/tanka/issues/1957)) ([a8147d8](https://github.com/grafana/tanka/commit/a8147d8834bb39e72c35072615c43f8e5cfdb9cd))
+* **deps:** update dependency kubectl to v1.34.6 ([#1954](https://github.com/grafana/tanka/issues/1954)) ([f20dbad](https://github.com/grafana/tanka/commit/f20dbad3af68dc8c33c7ea24a3f0c263893ec5e0))
+* **deps:** update dependency kustomize to v5.8.1 ([#1955](https://github.com/grafana/tanka/issues/1955)) ([ab94aae](https://github.com/grafana/tanka/commit/ab94aae131424b7b36d89196fad1908beeeede5a))
+* **deps:** update golang:1.26.1 docker digest to 42ebbf7 ([#1960](https://github.com/grafana/tanka/issues/1960)) ([571535f](https://github.com/grafana/tanka/commit/571535fc443c227608b6d37ffee6e99910e97b86))
+* **deps:** update golang:1.26.1 docker digest to 5e69504 ([#1961](https://github.com/grafana/tanka/issues/1961)) ([a0cb761](https://github.com/grafana/tanka/commit/a0cb7610f19a4ec6b2455d8d5ef22a3ec7e90d0b))
+* **deps:** update golang:1.26.1 docker digest to cd78d88 ([#1962](https://github.com/grafana/tanka/issues/1962)) ([f495788](https://github.com/grafana/tanka/commit/f4957889ee881932295467a0aabf86f084d4a063))
+* fix renovate datasources ([#1951](https://github.com/grafana/tanka/issues/1951)) ([5838247](https://github.com/grafana/tanka/commit/5838247579028e66cd080ffaa95a8797c2611b74))
+* group otel renovate updates ([#1969](https://github.com/grafana/tanka/issues/1969)) ([856cb79](https://github.com/grafana/tanka/commit/856cb7929ba9e55ced57d989e971280e7f67688d))
+* update otel dependencies ([#1973](https://github.com/grafana/tanka/issues/1973)) ([a586273](https://github.com/grafana/tanka/commit/a586273a9b89c10b0dbeef1750e0740aa929fc22))
+* update to Go 1.26.2 ([#1974](https://github.com/grafana/tanka/issues/1974)) ([1323162](https://github.com/grafana/tanka/commit/13231624d7239ecf6e73a6e75df23149cf029bee))
+
 ## [0.36.4](https://github.com/grafana/tanka/compare/v0.36.3...v0.36.4) (2026-03-31)
 
 
