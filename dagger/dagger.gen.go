@@ -5,21 +5,21 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"sort"
 
+	telemetry "github.com/dagger/otel-go"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/grafana/tanka/dagger/internal/dagger"
-	"github.com/grafana/tanka/dagger/internal/querybuilder"
-	"github.com/grafana/tanka/dagger/internal/telemetry"
+
+	"dagger.io/dagger/querybuilder"
 )
 
 var dag = dagger.Connect()
@@ -85,8 +85,7 @@ func main() {
 }
 
 func convertError(rerr error) *dagger.Error {
-	var gqlErr *gqlerror.Error
-	if errors.As(rerr, &gqlErr) {
+	if gqlErr := findSingleGQLError(rerr); gqlErr != nil {
 		dagErr := dag.Error(gqlErr.Message)
 		if gqlErr.Extensions != nil {
 			keys := make([]string, 0, len(gqlErr.Extensions))
@@ -107,6 +106,18 @@ func convertError(rerr error) *dagger.Error {
 	return dag.Error(rerr.Error())
 }
 
+func findSingleGQLError(rerr error) *gqlerror.Error {
+	switch x := rerr.(type) {
+	case *gqlerror.Error:
+		return x
+	case interface{ Unwrap() []error }:
+		return nil
+	case interface{ Unwrap() error }:
+		return findSingleGQLError(x.Unwrap())
+	default:
+		return nil
+	}
+}
 func dispatch(ctx context.Context) (rerr error) {
 	ctx = telemetry.InitEmbedded(ctx, resource.NewWithAttributes(
 		semconv.SchemaURL,
@@ -161,10 +172,6 @@ func dispatch(ctx context.Context) (rerr error) {
 
 	result, err := invoke(ctx, []byte(parentJson), parentName, fnName, inputArgs)
 	if err != nil {
-		var exec *dagger.ExecError
-		if errors.As(err, &exec) {
-			return exec.Unwrap()
-		}
 		return err
 	}
 	resultBytes, err := json.Marshal(result)
@@ -182,6 +189,27 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 	switch parentName {
 	case "Tanka":
 		switch fnName {
+		case "AcceptanceTests":
+			var parent Tanka
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var rootDir *dagger.Directory
+			if inputArgs["rootDir"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["rootDir"]), &rootDir)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg rootDir", err))
+				}
+			}
+			var acceptanceTestsDir *dagger.Directory
+			if inputArgs["acceptanceTestsDir"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["acceptanceTestsDir"]), &acceptanceTestsDir)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg acceptanceTestsDir", err))
+				}
+			}
+			return (*Tanka).AcceptanceTests(&parent, ctx, rootDir, acceptanceTestsDir)
 		case "Build":
 			var parent Tanka
 			err = json.Unmarshal(parentJSON, &parent)
@@ -210,50 +238,9 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				}
 			}
 			return (*Tanka).GetGoVersion(&parent, ctx, file)
-		case "AcceptanceTests":
-			var parent Tanka
-			err = json.Unmarshal(parentJSON, &parent)
-			if err != nil {
-				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
-			}
-			var rootDir *dagger.Directory
-			if inputArgs["rootDir"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["rootDir"]), &rootDir)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg rootDir", err))
-				}
-			}
-			var acceptanceTestsDir *dagger.Directory
-			if inputArgs["acceptanceTestsDir"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["acceptanceTestsDir"]), &acceptanceTestsDir)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg acceptanceTestsDir", err))
-				}
-			}
-			return (*Tanka).AcceptanceTests(&parent, ctx, rootDir, acceptanceTestsDir)
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
-	case "":
-		return dag.Module().
-			WithObject(
-				dag.TypeDef().WithObject("Tanka", dagger.TypeDefWithObjectOpts{SourceMap: dag.SourceMap("main.go", 13, 6)}).
-					WithFunction(
-						dag.Function("Build",
-							dag.TypeDef().WithObject("Container")).
-							WithSourceMap(dag.SourceMap("main.go", 15, 1)).
-							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 18, 2), Ignore: []string{"docs/**", "dagger/**", "dist/**", ".git/**", "examples/**"}})).
-					WithFunction(
-						dag.Function("GetGoVersion",
-							dag.TypeDef().WithKind(dagger.TypeDefKindStringKind)).
-							WithSourceMap(dag.SourceMap("main.go", 26, 1)).
-							WithArg("file", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 26, 51)})).
-					WithFunction(
-						dag.Function("AcceptanceTests",
-							dag.TypeDef().WithKind(dagger.TypeDefKindStringKind)).
-							WithSourceMap(dag.SourceMap("main.go", 42, 1)).
-							WithArg("rootDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 42, 54)}).
-							WithArg("acceptanceTestsDir", dag.TypeDef().WithObject("Directory"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 42, 81)}))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}
