@@ -11,6 +11,5 @@
       "pin": "28eea1fcf3b6ecb38a628186107760acd717442f"
     }
   ],
-  "source": "dagger",
-  "disableDefaultFunctionCaching": true
+  "source": "dagger"
 }
