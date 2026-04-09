@@ -112,6 +112,19 @@
       ],
     },
     {
+      groupName: 'otel',
+      groupSlug: 'otel',
+      matchFileNames: [
+        'go.mod',
+        'go.sum',
+      ],
+      matchPackageNames: [
+        'go.opentelemetry.io/**',
+      ],
+    },
+    {
+      groupName: 'dagger-otel',
+      groupSlug: 'dagger-otel',
       matchFileNames: [
         'dagger/go.mod',
         'dagger/go.sum',
