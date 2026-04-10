@@ -34,11 +34,31 @@ func generateTracerProvider(ctx context.Context, res *resource.Resource) (*sdktr
 }
 
 func hasOTELConfig(env []string) bool {
-	for _, envName := range env {
-		if strings.HasPrefix(envName, "OTEL_") {
+	envMap := make(map[string]string, len(env))
+	for _, e := range env {
+		if k, v, ok := strings.Cut(e, "="); ok {
+			envMap[k] = v
+		}
+	}
+
+	if v, ok := envMap["OTEL_SDK_DISABLED"]; ok && v == "true" {
+		return false
+	}
+	if v, ok := envMap["OTEL_TRACES_EXPORTER"]; ok && v == "none" {
+		return false
+	}
+
+	traceVars := []string{
+		"OTEL_EXPORTER_OTLP_ENDPOINT",
+		"OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+		"TRACEPARENT",
+	}
+	for _, k := range traceVars {
+		if _, ok := envMap[k]; ok {
 			return true
 		}
 	}
+
 	return false
 }
 
