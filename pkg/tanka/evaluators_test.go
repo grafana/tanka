@@ -110,3 +110,24 @@ func TestTlaWithNonFunction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, json)
 }
+
+func TestBuildEvalScript_WindowsPath(t *testing.T) {
+	got := buildEvalScript(`C:\Users\foo\bar\main.jsonnet`, "main", nil, false)
+
+	assert.Contains(t, got, `import 'C:/Users/foo/bar/main.jsonnet'`,
+		"entrypoint backslashes must be converted to forward slashes")
+}
+
+func TestBuildEvalScript_Function(t *testing.T) {
+	tlas := []string{"foo", "bar"}
+	got := buildEvalScript(`C:\proj\main.jsonnet`, "main", tlas, true)
+
+	assert.Contains(t, got, `function(foo, bar)`)
+	assert.Contains(t, got, `import 'C:/proj/main.jsonnet'`)
+	assert.Contains(t, got, `(foo=foo, bar=bar)`)
+}
+
+func TestBuildEvalScript_UnixPathUnchanged(t *testing.T) {
+	got := buildEvalScript(`/home/user/proj/main.jsonnet`, "main", nil, false)
+	assert.Contains(t, got, `import '/home/user/proj/main.jsonnet'`)
+}

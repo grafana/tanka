@@ -12,6 +12,38 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 )
 
+// normaliseImportPath replaces backslashes with forward slashes so Windows
+// paths (e.g. `C:\proj\main.jsonnet`) do not produce invalid escape sequences
+// when embedded in a jsonnet string literal. This is done unconditionally
+// rather than via filepath.ToSlash because the latter is host-OS dependent
+// and would be a no-op on non-Windows CI. See grafana/tanka#551.
+func normaliseImportPath(p string) string {
+	return strings.ReplaceAll(p, `\`, `/`)
+}
+
+// buildEvalScript constructs the jsonnet snippet that wraps the user's
+// EvalScript around an `import` of the entrypoint.
+func buildEvalScript(entrypoint, evalScript string, tlas []string, isFunction bool) string {
+	entrypoint = normaliseImportPath(entrypoint)
+	if isFunction {
+		tlaParams := strings.Join(tlas, ", ")
+		tlaArgs := make([]string, len(tlas))
+		for i, k := range tlas {
+			tlaArgs[i] = k + "=" + k
+		}
+		tlaArgsJoin := strings.Join(tlaArgs, ", ")
+		return fmt.Sprintf(`
+function(%s)
+  local main = (import '%s')(%s);
+  %s
+`, tlaParams, entrypoint, tlaArgsJoin, evalScript)
+	}
+	return fmt.Sprintf(`
+  local main = (import '%s');
+  %s
+`, entrypoint, evalScript)
+}
+
 // EvalJsonnet evaluates the jsonnet environment at the given file system path
 func evalJsonnet(ctx context.Context, path string, impl types.JsonnetImplementation, opts jsonnet.Opts) (raw string, err error) {
 	entrypoint, err := jpath.Entrypoint(path)
@@ -22,27 +54,16 @@ func evalJsonnet(ctx context.Context, path string, impl types.JsonnetImplementat
 	// evaluate Jsonnet
 	if opts.EvalScript != "" {
 		// Determine if the entrypoint is a function.
-		isFunction, err := jsonnet.Evaluate(ctx, path, impl, fmt.Sprintf("std.isFunction(import '%s')", entrypoint), opts)
+		isFunctionProbe := fmt.Sprintf("std.isFunction(import '%s')", normaliseImportPath(entrypoint))
+		isFunction, err := jsonnet.Evaluate(ctx, path, impl, isFunctionProbe, opts)
 		if err != nil {
 			return "", fmt.Errorf("evaluating jsonnet in path '%s': %w", path, err)
 		}
-		var tla []string
+		var tlas []string
 		for k := range opts.TLACode {
-			tla = append(tla, k+"="+k)
+			tlas = append(tlas, k)
 		}
-		evalScript := fmt.Sprintf(`
-  local main = (import '%s');
-  %s
-`, entrypoint, opts.EvalScript)
-
-		if isFunction == "true\n" {
-			tlaJoin := strings.Join(tla, ", ")
-			evalScript = fmt.Sprintf(`
-function(%s)
-  local main = (import '%s')(%s);
-  %s
-`, tlaJoin, entrypoint, tlaJoin, opts.EvalScript)
-		}
+		evalScript := buildEvalScript(entrypoint, opts.EvalScript, tlas, isFunction == "true\n")
 
 		raw, err = jsonnet.Evaluate(ctx, path, impl, evalScript, opts)
 		if err != nil {
