@@ -3,7 +3,6 @@ package tanka
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -13,13 +12,19 @@ import (
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
 )
 
+// normaliseImportPath replaces backslashes with forward slashes so Windows
+// paths (e.g. `C:\proj\main.jsonnet`) do not produce invalid escape sequences
+// when embedded in a jsonnet string literal. This is done unconditionally
+// rather than via filepath.ToSlash because the latter is host-OS dependent
+// and would be a no-op on non-Windows CI. See grafana/tanka#551.
+func normaliseImportPath(p string) string {
+	return strings.ReplaceAll(p, `\`, `/`)
+}
+
 // buildEvalScript constructs the jsonnet snippet that wraps the user's
-// EvalScript around an `import` of the entrypoint. The entrypoint is
-// normalised to forward slashes so Windows paths (e.g. `C:\proj\main.jsonnet`)
-// do not produce invalid jsonnet escape sequences when embedded in a
-// single-quoted string literal. See grafana/tanka#551.
+// EvalScript around an `import` of the entrypoint.
 func buildEvalScript(entrypoint, evalScript string, tlas []string, isFunction bool) string {
-	entrypoint = filepath.ToSlash(entrypoint)
+	entrypoint = normaliseImportPath(entrypoint)
 	if isFunction {
 		tlaParams := strings.Join(tlas, ", ")
 		tlaArgs := make([]string, len(tlas))
@@ -49,7 +54,7 @@ func evalJsonnet(ctx context.Context, path string, impl types.JsonnetImplementat
 	// evaluate Jsonnet
 	if opts.EvalScript != "" {
 		// Determine if the entrypoint is a function.
-		isFunctionProbe := fmt.Sprintf("std.isFunction(import '%s')", filepath.ToSlash(entrypoint))
+		isFunctionProbe := fmt.Sprintf("std.isFunction(import '%s')", normaliseImportPath(entrypoint))
 		isFunction, err := jsonnet.Evaluate(ctx, path, impl, isFunctionProbe, opts)
 		if err != nil {
 			return "", fmt.Errorf("evaluating jsonnet in path '%s': %w", path, err)
