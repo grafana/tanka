@@ -49,7 +49,15 @@ func (m *Tanka) AcceptanceTests(ctx context.Context, rootDir *dagger.Directory, 
 	k3s := dag.K3S("k3sdemo", dagger.K3SOpts{
 		Image: "rancher/k3s:v1.31.8-k3s1",
 	})
-	k3sSrv, err := k3s.Server().Start(ctx)
+	k3sSrv, err := k3s.Container().AsService(dagger.ContainerAsServiceOpts{
+		Args: []string{
+			"sh", "-c",
+			"k3s server --bind-address $(ip route | grep src | awk '{print $NF}') --disable traefik --disable metrics-server --egress-selector-mode=disabled --kubelet-arg=cpu-manager-policy=none --kubelet-arg=cgroup-driver=cgroupfs",
+		},
+		UseEntrypoint:         true,
+		InsecureRootCapabilities: true,
+		NoInit:                true,
+	}).Start(ctx)
 	if err != nil {
 		return "", err
 	}
