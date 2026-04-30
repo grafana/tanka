@@ -127,6 +127,10 @@ export default defineConfig({
               label: 'Formatting',
               link: '/formatting',
             },
+            {
+              label: 'tk apply',
+              link: '/reference/tk-apply',
+            },
           ],
         },
         {
