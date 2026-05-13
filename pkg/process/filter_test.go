@@ -9,10 +9,10 @@ import (
 
 func TestKindsFor(t *testing.T) {
 	cases := []struct {
-		name       string
-		exprs      []string
-		wantKinds  []string
-		wantOK     bool
+		name      string
+		exprs     []string
+		wantKinds []string
+		wantOK    bool
 	}{
 		{
 			name:      "no filters",
@@ -63,14 +63,14 @@ func TestKindsFor(t *testing.T) {
 			wantOK:    true,
 		},
 		{
-			name:  "kind with regex metachar — falls back to all",
-			exprs: []string{"(statefulset|deployment)/.*"},
+			name:      "kind with regex metachar — falls back to all",
+			exprs:     []string{"(statefulset|deployment)/.*"},
 			wantKinds: nil,
 			wantOK:    false,
 		},
 		{
-			name:  "wildcard kind — falls back to all",
-			exprs: []string{".*/.*"},
+			name:      "wildcard kind — falls back to all",
+			exprs:     []string{".*/.*"},
 			wantKinds: nil,
 			wantOK:    false,
 		},

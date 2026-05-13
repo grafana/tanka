@@ -42,7 +42,7 @@ func (f *fakeClient) DiffExitCode(data manifest.List) (bool, error)         { re
 func (f *fakeClient) Delete(namespace, apiVersion, kind, name string, opts client.DeleteOpts) error {
 	return nil
 }
-func (f *fakeClient) Namespaces() (map[string]bool, error)         { return nil, nil }
+func (f *fakeClient) Namespaces() (map[string]bool, error)           { return nil, nil }
 func (f *fakeClient) Namespace(ns string) (manifest.Manifest, error) { return nil, nil }
 func (f *fakeClient) Info() client.Info {
 	return client.Info{ClientVersion: semver.MustParse("1.22.0")}
