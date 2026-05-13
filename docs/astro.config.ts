@@ -39,23 +39,17 @@ export default defineConfig({
         {
           label: 'Tutorial',
           collapsed: true,
-          autogenerate: {
-            directory: 'tutorial',
-          },
+          items: [{ autogenerate: { directory: 'tutorial' } }],
         },
         {
           label: 'Writing Jsonnet',
           collapsed: true,
-          autogenerate: {
-            directory: 'jsonnet',
-          },
+          items: [{ autogenerate: { directory: 'jsonnet' } }],
         },
         {
           label: 'Libraries',
           collapsed: true,
-          autogenerate: {
-            directory: 'libraries',
-          },
+          items: [{ autogenerate: { directory: 'libraries' } }],
         },
         {
           label: 'Advanced features',
