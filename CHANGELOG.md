@@ -2,6 +2,27 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.37.2](https://github.com/grafana/tanka/compare/v0.37.1...v0.37.2) (2026-05-14)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update docs ([#2027](https://github.com/grafana/tanka/issues/2027)) ([d2bfcb1](https://github.com/grafana/tanka/commit/d2bfcb19ca4d991ce1faf4788699d7741459b408))
+* **deps:** update module dagger.io/dagger to v0.20.8 ([#2028](https://github.com/grafana/tanka/issues/2028)) ([5c7eac1](https://github.com/grafana/tanka/commit/5c7eac1af6c2ea312febb2570a6d1f6855ef0e4a))
+* **deps:** update module go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp to v1.43.0 [security] ([8b0998f](https://github.com/grafana/tanka/commit/8b0998f94d917c849c7d5fcbe0a552b96cf72285))
+* **deps:** update module golang.org/x/term to v0.43.0 ([#2034](https://github.com/grafana/tanka/issues/2034)) ([e96d41a](https://github.com/grafana/tanka/commit/e96d41a91d8e5e4ee5dea3a0b9242bf858cf0bdf))
+* **deps:** update module golang.org/x/text to v0.37.0 ([#2036](https://github.com/grafana/tanka/issues/2036)) ([dcf197d](https://github.com/grafana/tanka/commit/dcf197d89ef3b263b63c686dd0d8eaa4992a72be))
+* **deps:** update module google.golang.org/grpc to v1.81.0 ([#2016](https://github.com/grafana/tanka/issues/2016)) ([2f0ef8f](https://github.com/grafana/tanka/commit/2f0ef8fdeaf406dbd3870499f8da69714ecd977f))
+* **deps:** update module otlpmetrichttp to v1.43.0 [security] ([#1965](https://github.com/grafana/tanka/issues/1965)) ([8b0998f](https://github.com/grafana/tanka/commit/8b0998f94d917c849c7d5fcbe0a552b96cf72285))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency astro to v6.1.10 ([#2033](https://github.com/grafana/tanka/issues/2033)) ([e779cec](https://github.com/grafana/tanka/commit/e779cec2b7312d737c27573b8c59c4803f858c6e))
+* **deps:** update dependency astro to v6.3.1 ([#2035](https://github.com/grafana/tanka/issues/2035)) ([9395cfb](https://github.com/grafana/tanka/commit/9395cfb8de2bca27d76f68b80fad1e63e5acb27f))
+* **deps:** update dependency pnpm to v11 ([#2037](https://github.com/grafana/tanka/issues/2037)) ([cc7bc84](https://github.com/grafana/tanka/commit/cc7bc848e133421b56c523a132214b086848e060))
+* **deps:** update grafana/shared-workflows/lint-pr-title action to v1.2.2 ([#2024](https://github.com/grafana/tanka/issues/2024)) ([a4a82d1](https://github.com/grafana/tanka/commit/a4a82d1ef6f17822a1484a6d109931094a2867c0))
+
 ## [0.37.1](https://github.com/grafana/tanka/compare/v0.37.0...v0.37.1) (2026-05-13)
 
 
