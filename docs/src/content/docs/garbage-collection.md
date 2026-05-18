@@ -35,3 +35,30 @@ Once added, run a `tk apply`, make sure the label is actually added and confirm
 by typing `yes`.
 
 From now on, you can use `tk prune` to remove old resources from your cluster.
+
+## Filtering pruned resources
+
+By default `tk prune` considers every resource kind labeled with the
+environment. In large environments this can be expensive because it must list
+every resource type from the Kubernetes API.
+
+You can restrict pruning to a specific subset of resources using the `--target`
+(`-t`) flag, which accepts the same `kind/name` regex syntax as the other
+workflow commands:
+
+```bash
+# prune only orphaned StatefulSets
+tk prune -t 'statefulset/.*' .
+
+# prune only StatefulSets whose names start with "live-store"
+tk prune -t 'statefulset/live-store.*' .
+
+# prune everything except Deployments
+tk prune -t '!deployment/.*' .
+```
+
+When a literal kind name is given (no regex metacharacters in the kind
+position), Tanka restricts the Kubernetes API query to only that resource type,
+avoiding the cost of listing every other kind.
+
+See [Output filtering](/output-filtering) for the full filter syntax.

@@ -72,7 +72,7 @@ Please upgrade kubectl to at least version 1.18.1`)
 	orphaned := manifest.List{}
 	if opts.WithPrune {
 		// find orphaned resources
-		orphaned, err = k.Orphaned(state)
+		orphaned, err = k.Orphaned(state, OrphanedOpts{})
 		if err != nil {
 			return nil, err
 		}
