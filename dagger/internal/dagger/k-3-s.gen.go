@@ -6,11 +6,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"dagger.io/dagger/querybuilder"
+	"github.com/dagger/querybuilder"
 )
-
-// The `K3SID` scalar type represents an identifier for an object of type K3S.
-type K3SID string // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L41)
 
 // Retrieve the binding value, as type K3S
 func (r *Binding) AsK3S() *K3S { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L41)
@@ -48,7 +45,7 @@ func (r *Env) WithK3SOutput(name string, description string) *Env { // k3s (http
 type K3S struct { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L41)
 	query *querybuilder.Selection
 
-	id *K3SID
+	id *ID
 }
 type WithK3SFunc func(r *K3S) *K3S
 
@@ -94,13 +91,13 @@ func (r *K3S) Container() *Container { // k3s (https://github.com/marcosnils/dag
 }
 
 // A unique identifier for this K3S.
-func (r *K3S) ID(ctx context.Context) (K3SID, error) {
+func (r *K3S) ID(ctx context.Context) (ID, error) {
 	if r.id != nil {
 		return *r.id, nil
 	}
 	q := r.query.Select("id")
 
-	var response K3SID
+	var response ID
 
 	q = q.Bind(&response)
 	return response, q.Execute(ctx)
@@ -113,7 +110,7 @@ func (r *K3S) XXX_GraphQLType() string {
 
 // XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
 func (r *K3S) XXX_GraphQLIDType() string {
-	return "K3SID"
+	return "ID"
 }
 
 // XXX_GraphQLID is an internal function. It returns the underlying type ID
@@ -138,7 +135,7 @@ func (r *K3S) UnmarshalJSON(bs []byte) error {
 	if err != nil {
 		return err
 	}
-	*r = *dag.LoadK3SFromID(K3SID(id))
+	*r = K3S{query: selectNode(dag.query, id, "K3S")}
 	return nil
 }
 
@@ -181,6 +178,14 @@ func (r *K3S) WithContainer(c *Container) *K3S { // k3s (https://github.com/marc
 	}
 }
 
+// AsNode returns this K3S as a Node.
+// This is a local type conversion — no GraphQL call.
+func (r *K3S) AsNode() Node {
+	return &NodeClient{
+		query: r.query,
+	}
+}
+
 // K3SOpts contains options for Query.K3S
 type K3SOpts struct {
 
@@ -206,16 +211,6 @@ func (r *Query) K3S(name string, opts ...K3SOpts) *K3S { // k3s (https://github.
 		}
 	}
 	q = q.Arg("name", name)
-
-	return &K3S{
-		query: q,
-	}
-}
-
-// Load a K3S from its ID.
-func (r *Query) LoadK3SFromID(id K3SID) *K3S { // k3s (https://github.com/marcosnils/daggerverse/tree/28eea1fcf3b6ecb38a628186107760acd717442f/k3s/main.go#L41)
-	q := r.query.Select("loadK3SFromID")
-	q = q.Arg("id", id)
 
 	return &K3S{
 		query: q,
