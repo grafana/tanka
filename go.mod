@@ -1,6 +1,6 @@
 module github.com/grafana/tanka
 
-go 1.26.1
+go 1.26.4
 
 toolchain go1.26.3
 
