@@ -2,6 +2,31 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.37.3](https://github.com/grafana/tanka/compare/v0.37.2...v0.37.3) (2026-06-12)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update kubernetes monorepo to v0.36.0 ([#2006](https://github.com/grafana/tanka/issues/2006)) ([0ae7d1f](https://github.com/grafana/tanka/commit/0ae7d1f66eacabd6681feec9ef19e6c51f0dc0f0))
+* **deps:** update module github.com/vektah/gqlparser/v2 to v2.5.34 ([#2071](https://github.com/grafana/tanka/issues/2071)) ([1cdd17a](https://github.com/grafana/tanka/commit/1cdd17a11d590d6067f1695e6b67d4f371061591))
+* **security/unknown/acceptance-tests:** update go to v1.26.4 [security] ([#2058](https://github.com/grafana/tanka/issues/2058)) ([8b92306](https://github.com/grafana/tanka/commit/8b9230670e953cf5cf11a4082f1424a128d6819d))
+* **security/unknown/acceptance-tests:** update golang.org/x/net to v0.55.0 [security] ([#2062](https://github.com/grafana/tanka/issues/2062)) ([eb08807](https://github.com/grafana/tanka/commit/eb088076a4931b132fca229177b3db464cece530))
+* **security/unknown/acceptance-tests:** update security acceptance-tests go to v1.26.4 [security] ([8b92306](https://github.com/grafana/tanka/commit/8b9230670e953cf5cf11a4082f1424a128d6819d))
+* **security/unknown/acceptance-tests:** update security acceptance-tests golang.org/x/net to v0.55.0 [security] ([eb08807](https://github.com/grafana/tanka/commit/eb088076a4931b132fca229177b3db464cece530))
+* **security/unknown/dagger:** update security dagger go to v1.26.4 [security] ([#2059](https://github.com/grafana/tanka/issues/2059)) ([bfd68dc](https://github.com/grafana/tanka/commit/bfd68dc2328a51b5a607cb261ed2a53f27d47ac7))
+* **security/unknown/dagger:** update security dagger golang.org/x/net to v0.55.0 [security] ([#2063](https://github.com/grafana/tanka/issues/2063)) ([01aa3db](https://github.com/grafana/tanka/commit/01aa3db53d8040da56c83aa142c50d9e6de0e6a3))
+* **security/unknown/:** update security go to v1.26.4 [security] ([#2057](https://github.com/grafana/tanka/issues/2057)) ([197a71f](https://github.com/grafana/tanka/commit/197a71fbb3f9922aef7103cb856fcdfc1a58dc08))
+* **security/unknown/:** update security golang.org/x/crypto to v0.52.0 [security] ([#2060](https://github.com/grafana/tanka/issues/2060)) ([ba35ab0](https://github.com/grafana/tanka/commit/ba35ab0937458ef2b5ba324cbf5a780f965d8d9d))
+* **security/unknown/:** update security golang.org/x/net to v0.55.0 [security] ([#2061](https://github.com/grafana/tanka/issues/2061)) ([0b67718](https://github.com/grafana/tanka/commit/0b677187a6a6f85e4aa55eaa171c71b7a91c9d53))
+
+
+### 🔧 Miscellaneous Chores
+
+* **dagger:** regenerate go.mod/go.sum to fix drift ([#2044](https://github.com/grafana/tanka/issues/2044)) ([1a9f248](https://github.com/grafana/tanka/commit/1a9f248a481611303c7969c31928c18bace57438))
+* **deps:** update dependency pnpm to v11.1.1 ([#2041](https://github.com/grafana/tanka/issues/2041)) ([5834c4b](https://github.com/grafana/tanka/commit/5834c4b17c933e17e042c0c870f9be7106852309))
+* **deps:** update dependency pnpm to v11.5.2 ([#2068](https://github.com/grafana/tanka/issues/2068)) ([929c928](https://github.com/grafana/tanka/commit/929c9285ed44455d52bd0e3aac0a42bdcac707d2))
+* **deps:** update docs ([#2042](https://github.com/grafana/tanka/issues/2042)) ([d9805d8](https://github.com/grafana/tanka/commit/d9805d814bcd18523def986bc164fb13f3a85faf))
+
 ## [0.37.2](https://github.com/grafana/tanka/compare/v0.37.1...v0.37.2) (2026-05-14)
 
 
