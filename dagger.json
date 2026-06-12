@@ -1,6 +1,6 @@
 {
   "name": "tanka",
-  "engineVersion": "v0.20.8",
+  "engineVersion": "v0.21.6",
   "sdk": {
     "source": "go"
   },
