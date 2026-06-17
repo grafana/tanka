@@ -23,7 +23,7 @@ on:
         type: string
         required: true
 env:
-  REGISTRY_IMAGE: grafana/tanka
+  REGISTRY_IMAGE: us-docker.pkg.dev/grafanalabs-global/dockerhub-tanka-prod-mirror/tanka
   # Docker image tags. See https://github.com/docker/metadata-action for format
   TAGS_CONFIG: |
     type=sha,prefix={{branch}}-,format=short,enable=${{ github.ref == 'refs/heads/main' }}
@@ -61,9 +61,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
-      - name: Login to DockerHub
+      - name: Login to GAR
         if: github.event_name == 'push'
-        uses: grafana/shared-workflows/actions/dockerhub-login@081a366728379fd0426b9cfef190e9a21c2d5418 # dockerhub-login/v1.0.3
+        uses: grafana/shared-workflows/actions/login-to-gar@12c87e5aa323694c820c1ff3d8e47e8237e05136 # login-to-gar/v1.0.2
+        with:
+          registry: us-docker.pkg.dev
 
       - name: Build and push by digest
         id: build
@@ -128,8 +130,10 @@ jobs:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: ${{ env.TAGS_CONFIG }}
 
-      - name: Login to DockerHub
-        uses: grafana/shared-workflows/actions/dockerhub-login@081a366728379fd0426b9cfef190e9a21c2d5418 # dockerhub-login/v1.0.3
+      - name: Login to GAR
+        uses: grafana/shared-workflows/actions/login-to-gar@12c87e5aa323694c820c1ff3d8e47e8237e05136 # login-to-gar/v1.0.2
+        with:
+          registry: us-docker.pkg.dev
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
