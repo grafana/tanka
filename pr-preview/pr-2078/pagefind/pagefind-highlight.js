@@ -751,4 +751,320 @@ var require_mark = __commonJS({
             var matchIdx = ignoreGroups === 0 ? 0 : ignoreGroups + 1;
             this.getTextNodes(function(dict) {
               var match = void 0;
-              while ((match = regex.exec(dict.value)) !== null &&
+              while ((match = regex.exec(dict.value)) !== null && match[matchIdx] !== "") {
+                var start = match.index;
+                if (matchIdx !== 0) {
+                  for (var i = 1; i < matchIdx; i++) {
+                    start += match[i].length;
+                  }
+                }
+                var end = start + match[matchIdx].length;
+                _this7.wrapRangeInMappedTextNode(dict, start, end, function(node) {
+                  return filterCb(match[matchIdx], node);
+                }, function(node, lastIndex) {
+                  regex.lastIndex = lastIndex;
+                  eachCb(node);
+                });
+              }
+              endCb();
+            });
+          }
+        }, {
+          key: "wrapRangeFromIndex",
+          value: function wrapRangeFromIndex(ranges, filterCb, eachCb, endCb) {
+            var _this8 = this;
+            this.getTextNodes(function(dict) {
+              var originalLength = dict.value.length;
+              ranges.forEach(function(range, counter) {
+                var _checkWhitespaceRange = _this8.checkWhitespaceRanges(range, originalLength, dict.value), start = _checkWhitespaceRange.start, end = _checkWhitespaceRange.end, valid = _checkWhitespaceRange.valid;
+                if (valid) {
+                  _this8.wrapRangeInMappedTextNode(dict, start, end, function(node) {
+                    return filterCb(node, range, dict.value.substring(start, end), counter);
+                  }, function(node) {
+                    eachCb(node, range);
+                  });
+                }
+              });
+              endCb();
+            });
+          }
+        }, {
+          key: "unwrapMatches",
+          value: function unwrapMatches(node) {
+            var parent = node.parentNode;
+            var docFrag = document.createDocumentFragment();
+            while (node.firstChild) {
+              docFrag.appendChild(node.removeChild(node.firstChild));
+            }
+            parent.replaceChild(docFrag, node);
+            if (!this.ie) {
+              parent.normalize();
+            } else {
+              this.normalizeTextNode(parent);
+            }
+          }
+        }, {
+          key: "normalizeTextNode",
+          value: function normalizeTextNode(node) {
+            if (!node) {
+              return;
+            }
+            if (node.nodeType === 3) {
+              while (node.nextSibling && node.nextSibling.nodeType === 3) {
+                node.nodeValue += node.nextSibling.nodeValue;
+                node.parentNode.removeChild(node.nextSibling);
+              }
+            } else {
+              this.normalizeTextNode(node.firstChild);
+            }
+            this.normalizeTextNode(node.nextSibling);
+          }
+        }, {
+          key: "markRegExp",
+          value: function markRegExp(regexp, opt) {
+            var _this9 = this;
+            this.opt = opt;
+            this.log('Searching with expression "' + regexp + '"');
+            var totalMatches = 0, fn = "wrapMatches";
+            var eachCb = function eachCb2(element) {
+              totalMatches++;
+              _this9.opt.each(element);
+            };
+            if (this.opt.acrossElements) {
+              fn = "wrapMatchesAcrossElements";
+            }
+            this[fn](regexp, this.opt.ignoreGroups, function(match, node) {
+              return _this9.opt.filter(node, match, totalMatches);
+            }, eachCb, function() {
+              if (totalMatches === 0) {
+                _this9.opt.noMatch(regexp);
+              }
+              _this9.opt.done(totalMatches);
+            });
+          }
+        }, {
+          key: "mark",
+          value: function mark(sv, opt) {
+            var _this10 = this;
+            this.opt = opt;
+            var totalMatches = 0, fn = "wrapMatches";
+            var _getSeparatedKeywords = this.getSeparatedKeywords(typeof sv === "string" ? [sv] : sv), kwArr = _getSeparatedKeywords.keywords, kwArrLen = _getSeparatedKeywords.length, sens = this.opt.caseSensitive ? "" : "i", handler = function handler2(kw) {
+              var regex = new RegExp(_this10.createRegExp(kw), "gm" + sens), matches = 0;
+              _this10.log('Searching with expression "' + regex + '"');
+              _this10[fn](regex, 1, function(term, node) {
+                return _this10.opt.filter(node, kw, totalMatches, matches);
+              }, function(element) {
+                matches++;
+                totalMatches++;
+                _this10.opt.each(element);
+              }, function() {
+                if (matches === 0) {
+                  _this10.opt.noMatch(kw);
+                }
+                if (kwArr[kwArrLen - 1] === kw) {
+                  _this10.opt.done(totalMatches);
+                } else {
+                  handler2(kwArr[kwArr.indexOf(kw) + 1]);
+                }
+              });
+            };
+            if (this.opt.acrossElements) {
+              fn = "wrapMatchesAcrossElements";
+            }
+            if (kwArrLen === 0) {
+              this.opt.done(totalMatches);
+            } else {
+              handler(kwArr[0]);
+            }
+          }
+        }, {
+          key: "markRanges",
+          value: function markRanges(rawRanges, opt) {
+            var _this11 = this;
+            this.opt = opt;
+            var totalMatches = 0, ranges = this.checkRanges(rawRanges);
+            if (ranges && ranges.length) {
+              this.log("Starting to mark with the following ranges: " + JSON.stringify(ranges));
+              this.wrapRangeFromIndex(ranges, function(node, range, match, counter) {
+                return _this11.opt.filter(node, range, match, counter);
+              }, function(element, range) {
+                totalMatches++;
+                _this11.opt.each(element, range);
+              }, function() {
+                _this11.opt.done(totalMatches);
+              });
+            } else {
+              this.opt.done(totalMatches);
+            }
+          }
+        }, {
+          key: "unmark",
+          value: function unmark(opt) {
+            var _this12 = this;
+            this.opt = opt;
+            var sel = this.opt.element ? this.opt.element : "*";
+            sel += "[data-markjs]";
+            if (this.opt.className) {
+              sel += "." + this.opt.className;
+            }
+            this.log('Removal selector "' + sel + '"');
+            this.iterator.forEachNode(NodeFilter.SHOW_ELEMENT, function(node) {
+              _this12.unwrapMatches(node);
+            }, function(node) {
+              var matchesSel = DOMIterator.matches(node, sel), matchesExclude = _this12.matchesExclude(node);
+              if (!matchesSel || matchesExclude) {
+                return NodeFilter.FILTER_REJECT;
+              } else {
+                return NodeFilter.FILTER_ACCEPT;
+              }
+            }, this.opt.done);
+          }
+        }, {
+          key: "opt",
+          set: function set$$1(val) {
+            this._opt = _extends({}, {
+              "element": "",
+              "className": "",
+              "exclude": [],
+              "iframes": false,
+              "iframesTimeout": 5e3,
+              "separateWordSearch": true,
+              "diacritics": true,
+              "synonyms": {},
+              "accuracy": "partially",
+              "acrossElements": false,
+              "caseSensitive": false,
+              "ignoreJoiners": false,
+              "ignoreGroups": 0,
+              "ignorePunctuation": [],
+              "wildcards": "disabled",
+              "each": function each() {
+              },
+              "noMatch": function noMatch() {
+              },
+              "filter": function filter() {
+                return true;
+              },
+              "done": function done() {
+              },
+              "debug": false,
+              "log": window.console
+            }, val);
+          },
+          get: function get$$1() {
+            return this._opt;
+          }
+        }, {
+          key: "iterator",
+          get: function get$$1() {
+            return new DOMIterator(this.ctx, this.opt.iframes, this.opt.exclude, this.opt.iframesTimeout);
+          }
+        }]);
+        return Mark3;
+      })();
+      function Mark2(ctx) {
+        var _this = this;
+        var instance = new Mark$1(ctx);
+        this.mark = function(sv, opt) {
+          instance.mark(sv, opt);
+          return _this;
+        };
+        this.markRegExp = function(sv, opt) {
+          instance.markRegExp(sv, opt);
+          return _this;
+        };
+        this.markRanges = function(sv, opt) {
+          instance.markRanges(sv, opt);
+          return _this;
+        };
+        this.unmark = function(opt) {
+          instance.unmark(opt);
+          return _this;
+        };
+        return this;
+      }
+      return Mark2;
+    }));
+  }
+});
+
+// lib/highlight.ts
+var import_mark = __toESM(require_mark(), 1);
+var PagefindHighlight = class {
+  constructor(options = {
+    markContext: null,
+    highlightParam: "pagefind-highlight",
+    markOptions: {
+      className: "pagefind-highlight",
+      exclude: ["[data-pagefind-ignore]", "[data-pagefind-ignore] *"]
+    },
+    addStyles: true
+  }) {
+    __publicField(this, "highlightParam");
+    __publicField(this, "markContext");
+    __publicField(this, "markOptions");
+    __publicField(this, "addStyles");
+    var _a, _b;
+    const { highlightParam, markContext, markOptions, addStyles } = options;
+    this.highlightParam = highlightParam ?? "pagefind-highlight";
+    this.addStyles = addStyles ?? true;
+    this.markContext = markContext !== void 0 ? markContext : null;
+    this.markOptions = markOptions !== void 0 ? markOptions : {
+      className: "pagefind-highlight",
+      exclude: ["[data-pagefind-ignore]", "[data-pagefind-ignore] *"]
+    };
+    (_a = this.markOptions).className ?? (_a.className = "pagefind__highlight");
+    (_b = this.markOptions).exclude ?? (_b.exclude = [
+      "[data-pagefind-ignore]",
+      "[data-pagefind-ignore] *"
+    ]);
+    this.markOptions.separateWordSearch = false;
+    this.highlight();
+  }
+  getHighlightParams(paramName) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.getAll(paramName);
+  }
+  // Inline styles might be too hard to override
+  addHighlightStyles(className) {
+    if (!className) return;
+    const styleElement = document.createElement("style");
+    styleElement.innerText = `:where(.${className}) { background-color: yellow; color: black; }`;
+    document.head.appendChild(styleElement);
+  }
+  createMarkInstance() {
+    if (this.markContext) {
+      return new import_mark.default(this.markContext);
+    }
+    const pagefindBody = document.querySelectorAll("[data-pagefind-body]");
+    if (pagefindBody.length !== 0) {
+      return new import_mark.default(pagefindBody);
+    } else {
+      return new import_mark.default(document.body);
+    }
+  }
+  markText(instance, text) {
+    instance.mark(text, this.markOptions);
+  }
+  highlight() {
+    const params = this.getHighlightParams(this.highlightParam);
+    if (!params || params.length === 0) return;
+    this.addStyles && this.addHighlightStyles(this.markOptions.className);
+    const markInstance = this.createMarkInstance();
+    this.markText(markInstance, params);
+  }
+};
+window.PagefindHighlight = PagefindHighlight;
+export {
+  PagefindHighlight as default
+};
+/*! Bundled license information:
+
+mark.js/dist/mark.js:
+  (*!***************************************************
+  * mark.js v8.11.1
+  * https://markjs.io/
+  * Copyright (c) 2014–2018, Julian Kühnel
+  * Released under the MIT license https://git.io/vwTVl
+  *****************************************************)
+*/
