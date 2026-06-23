@@ -2,6 +2,38 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.37.4](https://github.com/grafana/tanka/compare/v0.37.3...v0.37.4) (2026-06-23)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update kubernetes monorepo to v0.36.2 ([#2053](https://github.com/grafana/tanka/issues/2053)) ([65d76b7](https://github.com/grafana/tanka/commit/65d76b7f0c0ed2113c92b09c21dbaa26199b70e3))
+* **deps:** update module github.com/99designs/gqlgen to v0.17.91 ([#2079](https://github.com/grafana/tanka/issues/2079)) ([fdd24dc](https://github.com/grafana/tanka/commit/fdd24dca520edd6b567f8d490a3715c7e4a22f23))
+* **deps:** update module golang.org/x/term to v0.44.0 ([#2085](https://github.com/grafana/tanka/issues/2085)) ([b62cca0](https://github.com/grafana/tanka/commit/b62cca0b875404792f3a01672a1f3e17c2992822))
+* **deps:** update module google.golang.org/grpc to v1.81.1 ([#2054](https://github.com/grafana/tanka/issues/2054)) ([da8457d](https://github.com/grafana/tanka/commit/da8457d6209c779f6dc1ebd8c0c84819fe230888))
+
+
+### 🤖 Continuous Integration
+
+* **docker:** add workflow_dispatch trigger for manual image republish ([#2075](https://github.com/grafana/tanka/issues/2075)) ([01a951e](https://github.com/grafana/tanka/commit/01a951e29a7d4fe25dc4c6ece3df0a2d3bffd597))
+* **docker:** publish via GAR + OIDC, mirror to Docker Hub ([#2043](https://github.com/grafana/tanka/issues/2043)) ([1e57d22](https://github.com/grafana/tanka/commit/1e57d2267f593daec5a2f848f1058d4948c613c2))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update actions/checkout action to v6.0.3 ([#2070](https://github.com/grafana/tanka/issues/2070)) ([32f6547](https://github.com/grafana/tanka/commit/32f6547fb26d4e30a3eca8d68c483fae9461b88b))
+* **deps:** update alpine docker tag to v3.24.0 ([#2080](https://github.com/grafana/tanka/issues/2080)) ([f883468](https://github.com/grafana/tanka/commit/f883468f6a6eef650fc0858e9dce59f337f6210b))
+* **deps:** update dependency helm to v3.21.1 ([#2081](https://github.com/grafana/tanka/issues/2081)) ([f455627](https://github.com/grafana/tanka/commit/f455627eb63544b211ee1aa744967742b9b107a4))
+* **deps:** update dependency kubectl to v1.34.9 ([#2050](https://github.com/grafana/tanka/issues/2050)) ([e1792a5](https://github.com/grafana/tanka/commit/e1792a5c8fbc5a779f7a7f001f4bcdd55286957e))
+* **deps:** update dependency pnpm to v11.6.0 ([#2073](https://github.com/grafana/tanka/issues/2073)) ([3363781](https://github.com/grafana/tanka/commit/336378199db1e5b9a7d0f2b185f39641614c0d7c))
+* **deps:** update docker/build-push-action action to v7.2.0 ([#2072](https://github.com/grafana/tanka/issues/2072)) ([f161cb5](https://github.com/grafana/tanka/commit/f161cb5a5b6e019999499feaf76aa43e9914cc56))
+* **deps:** update docker/metadata-action action to v6.1.0 ([#2082](https://github.com/grafana/tanka/issues/2082)) ([20c98d2](https://github.com/grafana/tanka/commit/20c98d2bf90c73d8b528f83974e2c117680c1ced))
+* **deps:** update docker/setup-buildx-action action to v4.1.0 ([#2083](https://github.com/grafana/tanka/issues/2083)) ([92c40e7](https://github.com/grafana/tanka/commit/92c40e7fece6bc1ea9919444b674abea3b59fb27))
+* **deps:** update grafana/shared-workflows/lint-pr-title action to v1.2.3 ([#2076](https://github.com/grafana/tanka/issues/2076)) ([a505ad0](https://github.com/grafana/tanka/commit/a505ad0f3720d20f54c1e82536af3971ce47a587))
+* **deps:** update grafana/shared-workflows/login-to-gar action to v1.0.3 ([#2077](https://github.com/grafana/tanka/issues/2077)) ([5a93247](https://github.com/grafana/tanka/commit/5a93247e11474b9a03863e863b0bab019b92b8ae))
+* **deps:** update pnpm/action-setup action to v6.0.8 ([#2052](https://github.com/grafana/tanka/issues/2052)) ([81934cd](https://github.com/grafana/tanka/commit/81934cdaabb2301ec279b35a981f03d47430db0f))
+* **deps:** update pnpm/action-setup action to v6.0.9 ([#2090](https://github.com/grafana/tanka/issues/2090)) ([ae1174a](https://github.com/grafana/tanka/commit/ae1174a8251a526e11633f061e5c61d150ae1d06))
+
 ## [0.37.3](https://github.com/grafana/tanka/compare/v0.37.2...v0.37.3) (2026-06-17)
 
 
