@@ -10,6 +10,10 @@ import (
 	"golang.org/x/text/language"
 )
 
+// regexMetaRe matches any regex metacharacter that would make a kind pattern
+// non-literal (i.e. not a plain alphanumeric kind name like "StatefulSet").
+var regexMetaRe = regexp.MustCompile(`[.+*?()\[\]{}|\\^$]`)
+
 // Filter returns all elements of the list that match at least one expression
 // and are not ignored
 func Filter(list manifest.List, exprs Matchers) manifest.List {
@@ -60,6 +64,74 @@ func (e Matchers) IgnoreString(s string) bool {
 		b = b || i.IgnoreString(s)
 	}
 	return b
+}
+
+// KindsFor returns the set of resource kinds that positive matchers in the
+// collection target. It is used to restrict cluster API queries to only the
+// resource types relevant to the filter set, avoiding the cost of listing
+// every resource type when only a few are needed.
+//
+// Returns (kinds, true) when all positive matchers specify a single literal
+// kind (e.g. "statefulset/.*" → "StatefulSet"). Returns (nil, false) when
+// kind restriction cannot be determined — either because no positive matchers
+// exist, a matcher uses regex metacharacters in the kind position, or the
+// matcher type is not a compiled regexp. Callers should query all resource
+// kinds when ok is false.
+func (e Matchers) KindsFor() ([]string, bool) {
+	if len(e) == 0 {
+		return nil, false
+	}
+	var kinds []string
+	hasPositive := false
+	for _, exp := range e {
+		// Negative matchers (NegMatcher) implement Ignorer; skip them here
+		// because they restrict results, not which kinds to query.
+		if _, isIgnorer := exp.(Ignorer); isIgnorer {
+			continue
+		}
+		hasPositive = true
+		r, ok := exp.(*regexp.Regexp)
+		if !ok {
+			// Unknown matcher type — be conservative and query all kinds.
+			return nil, false
+		}
+		kind, ok := kindFromFilterPattern(r.String())
+		if !ok {
+			return nil, false
+		}
+		kinds = append(kinds, kind)
+	}
+	if !hasPositive {
+		// Only negative matchers present — no kind restriction.
+		return nil, false
+	}
+	return kinds, true
+}
+
+// kindFromFilterPattern extracts the literal kind name from a regex pattern
+// produced by StrExps (format: "(?i)^<user-input>$"). Returns ("", false)
+// when the kind portion contains regex metacharacters or cannot be determined.
+func kindFromFilterPattern(pattern string) (string, bool) {
+	// Strip the anchors added by StrExps.
+	s := strings.TrimPrefix(pattern, `(?i)^`)
+	s = strings.TrimSuffix(s, `$`)
+
+	kindPart, _, hasSlash := strings.Cut(s, "/")
+	if !hasSlash {
+		// No kind/name separator: pattern like "(?i)^statefulset$".
+		// KindName() always contains a slash, so this would never match a
+		// resource anyway. Return the pattern as-is so callers can include
+		// the kind if it happens to be a literal, but it won't do harm.
+		if regexMetaRe.MatchString(s) {
+			return "", false
+		}
+		return s, true
+	}
+
+	if regexMetaRe.MatchString(kindPart) {
+		return "", false
+	}
+	return kindPart, true
 }
 
 // RegExps is a helper to construct Matchers from regular expressions
