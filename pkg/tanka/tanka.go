@@ -26,6 +26,11 @@ type Opts struct {
 
 	// Name is used to extract a single environment from multiple environments
 	Name string
+
+	// InjectLabels are labels to set on every rendered resource (e.g. via
+	// --inject-label). They override any pre-existing values. This is distinct
+	// from Spec.InjectLabels (a bool toggling the tanka.dev/environment label).
+	InjectLabels map[string]string
 }
 
 // defaultDevVersion is the placeholder version used when no actual semver is
