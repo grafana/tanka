@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -191,11 +192,43 @@ func tryMSISlice(v *objx.Value, what string) ([]map[string]interface{}, error) {
 		return s, nil
 	}
 
+	if v.Data() == nil {
+		return nil, makeKubeconfigError(what)
+	}
+
 	data, ok := v.Data().([]map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("expected %s to be of type `[]map[string]interface{}`, but got `%T` instead", what, v.Data())
 	}
 	return data, nil
+}
+
+func makeKubeconfigError(what string) error {
+	kubeconfigEnv := os.Getenv("KUBECONFIG")
+	if kubeconfigEnv != "" {
+		paths := filepath.SplitList(kubeconfigEnv)
+		var missing []string
+		for _, p := range paths {
+			if _, err := os.Stat(p); os.IsNotExist(err) {
+				missing = append(missing, p)
+			}
+		}
+		if len(missing) > 0 {
+			return fmt.Errorf("expected %s to be of type `[]map[string]interface{}`, but got `<nil>` instead. The following files in your KUBECONFIG environment variable do not exist: %s", what, strings.Join(missing, ", "))
+		}
+		return fmt.Errorf("expected %s to be of type `[]map[string]interface{}`, but got `<nil>` instead. Your KUBECONFIG is set to '%s', but contains no %s", what, kubeconfigEnv, what)
+	}
+
+	// KUBECONFIG is unset, check default ~/.kube/config
+	home, err := os.UserHomeDir()
+	if err == nil {
+		defaultPath := filepath.Join(home, ".kube", "config")
+		if _, err := os.Stat(defaultPath); os.IsNotExist(err) {
+			return fmt.Errorf("expected %s to be of type `[]map[string]interface{}`, but got `<nil>` instead. KUBECONFIG is unset and the default kubeconfig file at %s does not exist", what, defaultPath)
+		}
+	}
+
+	return fmt.Errorf("expected %s to be of type `[]map[string]interface{}`, but got `<nil>` instead. KUBECONFIG is unset and default ~/.kube/config contains no %s", what, what)
 }
 
 // ErrorNoMatch occurs when no item matched had the expected value
