@@ -35,6 +35,14 @@ func (e ErrorNoCluster) Error() string {
 	return fmt.Sprintf("no cluster that matches the apiServer `%s` was found. Please check your $KUBECONFIG", string(e))
 }
 
+// ErrorMissingKubeconfigSection means that kubectl returned an empty or
+// incomplete kubeconfig, usually because no kubeconfig file could be found.
+type ErrorMissingKubeconfigSection string
+
+func (e ErrorMissingKubeconfigSection) Error() string {
+	return fmt.Sprintf("no %s found in Kubernetes config. Please set $KUBECONFIG or create a kubeconfig at $HOME/.kube/config", string(e))
+}
+
 // ErrorNothingReturned means that there was no output returned
 type ErrorNothingReturned struct{}
 

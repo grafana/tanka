@@ -191,6 +191,10 @@ func tryMSISlice(v *objx.Value, what string) ([]map[string]interface{}, error) {
 		return s, nil
 	}
 
+	if v.Data() == nil {
+		return nil, ErrorMissingKubeconfigSection(what)
+	}
+
 	data, ok := v.Data().([]map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("expected %s to be of type `[]map[string]interface{}`, but got `%T` instead", what, v.Data())
