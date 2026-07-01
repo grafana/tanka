@@ -2,6 +2,37 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.37.5](https://github.com/grafana/tanka/compare/v0.37.4...v0.37.5) (2026-07-01)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump alpine Go stages to 1.26.4 ([#2104](https://github.com/grafana/tanka/issues/2104)) ([cf47ed8](https://github.com/grafana/tanka/commit/cf47ed83f0d9210f8dc101e4933c27b609ad7e19))
+* **deps:** bump Go build image to 1.26.4 ([#2103](https://github.com/grafana/tanka/issues/2103)) ([172a119](https://github.com/grafana/tanka/commit/172a1193507263da91fdc3e93d791654fb1bcfc8))
+* **deps:** update module golang.org/x/sync to v0.21.0 ([#2084](https://github.com/grafana/tanka/issues/2084)) ([dd2908b](https://github.com/grafana/tanka/commit/dd2908ba7ac4710948577c1ad60a7c391250e0f6))
+* **deps:** update module golang.org/x/text to v0.38.0 ([#2087](https://github.com/grafana/tanka/issues/2087)) ([d2ba41f](https://github.com/grafana/tanka/commit/d2ba41f5f8be8cf7c9383f80b1e84ae10501027f))
+* **kubernetes:** clarify missing kubeconfig errors ([#2094](https://github.com/grafana/tanka/issues/2094)) ([4f74d85](https://github.com/grafana/tanka/commit/4f74d85e18f13c3e8ddf2d6f241089bb473f3342))
+* **security/high/.github/workflows:** update dependency pnpm to v11.8.0 [security] ([#2096](https://github.com/grafana/tanka/issues/2096)) ([511a078](https://github.com/grafana/tanka/commit/511a078dc246ab4ca5878c62ee1a36b883fae61b))
+* **security/high/.github/workflows:** update security .github/workflows pnpm to v11.8.0 [security] ([511a078](https://github.com/grafana/tanka/commit/511a078dc246ab4ca5878c62ee1a36b883fae61b))
+
+
+### 🤖 Continuous Integration
+
+* do not cancel website builds ([#2110](https://github.com/grafana/tanka/issues/2110)) ([b4d200a](https://github.com/grafana/tanka/commit/b4d200aa47cd08edbe0898ebc8ff3868d327f43b))
+* update publish-page workflow to publish as artifact ([#2108](https://github.com/grafana/tanka/issues/2108)) ([3a881ff](https://github.com/grafana/tanka/commit/3a881ff8ac7627eae39a9b0f7a0e82224fd03dc1))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update alpine docker tag to v3.24.1 ([#2091](https://github.com/grafana/tanka/issues/2091)) ([a1fa58b](https://github.com/grafana/tanka/commit/a1fa58b85c56af43ab3c0ba665b67ac57486c956))
+* **deps:** update azure/setup-helm action to v5.0.1 ([#2102](https://github.com/grafana/tanka/issues/2102)) ([41fa485](https://github.com/grafana/tanka/commit/41fa4856db916a84b7448b1028887202330adca3))
+* **deps:** update google.golang.org/genproto/googleapis/api digest to b703f56 ([#2099](https://github.com/grafana/tanka/issues/2099)) ([924b6b3](https://github.com/grafana/tanka/commit/924b6b3a33fd04225adb21a061c0d1b45a7415bb))
+* **deps:** update google.golang.org/genproto/googleapis/rpc digest to b703f56 ([#2100](https://github.com/grafana/tanka/issues/2100)) ([2e5bd2e](https://github.com/grafana/tanka/commit/2e5bd2e71e5bd5ee6f9585e75440857fa02bf53f))
+* **deps:** update k8s.io/kube-openapi digest to 8f3fa49 ([#2101](https://github.com/grafana/tanka/issues/2101)) ([1427450](https://github.com/grafana/tanka/commit/14274501003f5b95c87366caa269e0542a1a6c40))
+* **deps:** update k8s.io/utils digest to be93311 ([#2092](https://github.com/grafana/tanka/issues/2092)) ([47f51e2](https://github.com/grafana/tanka/commit/47f51e2f405a28e5471d5606a1305c85e07c7e58))
+* **deps:** update module dario.cat/mergo to v1.0.2 ([#2106](https://github.com/grafana/tanka/issues/2106)) ([ab36ad5](https://github.com/grafana/tanka/commit/ab36ad55afb729a1cf37043fe2ef9e4fb9eaedde))
+* **deps:** update module github.com/fxamacker/cbor/v2 to v2.9.2 ([#2107](https://github.com/grafana/tanka/issues/2107)) ([a0924e9](https://github.com/grafana/tanka/commit/a0924e995856eb53aa392513d49e9098e535dd00))
+
 ## [0.37.4](https://github.com/grafana/tanka/compare/v0.37.3...v0.37.4) (2026-06-23)
 
 
