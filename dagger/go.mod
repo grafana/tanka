@@ -8,7 +8,7 @@ require (
 	github.com/99designs/gqlgen v0.17.91
 	github.com/Khan/genqlient v0.8.1
 	github.com/dagger/otel-go v1.41.0
-	github.com/vektah/gqlparser/v2 v2.5.34
+	github.com/vektah/gqlparser/v2 v2.5.35
 	go.opentelemetry.io/otel v1.43.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.41.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.43.0
