@@ -2,6 +2,8 @@ name: Signed commits
 
 on:
   pull_request:
+
+  # zizmor: ignore[dangerous-triggers] The underlying action does not interact in any way with the source code of the fork. It requires the scope of the original repository in order to post a comment to the pull request itself.
   pull_request_target:
 
 jobs:
