@@ -136,6 +136,7 @@ func pruneCmd(ctx context.Context) *cli.Command {
 
 	var opts tanka.PruneOpts
 	cmd.Flags().StringVar(&opts.Name, "name", "", "string that only a single inline environment contains in its name")
+	cmd.Flags().StringVar(&opts.Namespace, "namespace", "", "limit pruning to a single namespace")
 	var (
 		autoApproveDeprecated bool
 		autoApproveString     string

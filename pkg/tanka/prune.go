@@ -14,6 +14,9 @@ import (
 // PruneOpts specify additional properties for the Prune action
 type PruneOpts struct {
 	ApplyBaseOpts
+
+	// Namespace limits pruning to a single namespace. Empty string prunes all namespaces.
+	Namespace string
 }
 
 // Prune deletes all resources from the cluster, that are no longer present in
@@ -31,7 +34,9 @@ func Prune(ctx context.Context, baseDir string, opts PruneOpts) error {
 	defer kube.Close()
 
 	// find orphaned resources
-	orphaned, err := kube.Orphaned(p.Resources)
+	orphaned, err := kube.Orphaned(p.Resources, kubernetes.OrphanedOpts{
+		Namespace: opts.Namespace,
+	})
 	if err != nil {
 		return err
 	}
@@ -68,7 +73,11 @@ func Prune(ctx context.Context, baseDir string, opts PruneOpts) error {
 
 	// prompt for confirm
 	if opts.AutoApprove != AutoApproveAlways {
-		if err := confirmPrompt("Pruning from", p.Env.Spec.Namespace, kube.Info()); err != nil {
+		namespace := p.Env.Spec.Namespace
+		if opts.Namespace != "" {
+			namespace = opts.Namespace
+		}
+		if err := confirmPrompt("Pruning from", namespace, kube.Info()); err != nil {
 			return err
 		}
 	}
