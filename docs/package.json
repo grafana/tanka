@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
-    "@astrojs/starlight": "^0.40.0",
+    "@astrojs/starlight": "^0.41.0",
     "@astrojs/starlight-tailwind": "^5.0.0",
     "@fontsource-variable/inter": "^5.2.6",
     "@tailwindcss/vite": "^4.1.13",
@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "24.13.2",
-    "prettier": "3.8.4"
+    "prettier": "3.9.4"
   },
-  "packageManager": "pnpm@11.5.3+sha512.7ac1c919341c213a34dc0d02afb7143c5c26ac26ee8c4782deea821b8ac64d2134a081fd8941dae6e29bbb48f58dfc2b7fbceeccc07cb2f09d219d342a4969ed"
+  "packageManager": "pnpm@11.8.0+sha512.c1f5e7c4cb241c8f174b743851d82f42b802324afc8b0f116b96adb15aa06664948dde36960a3ba1079ba5b4b29dd0140135b94b5b5f5263592249d68e555f26"
 }
