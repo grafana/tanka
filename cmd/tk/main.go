@@ -29,8 +29,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	res := resource.NewWithAttributes(
-		semconv.SchemaURL,
+	res := resource.NewSchemaless(
 		semconv.ServiceName("tanka"),
 	)
 	shutdownOtel, err := telemetry.Setup(ctx, res)
