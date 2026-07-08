@@ -54,11 +54,15 @@ See https://tanka.dev/garbage-collection for more details`)
 
 	var orphaned manifest.List
 
-	// join all kinds that support LIST into a comma separated string for
-	// kubectl
+	// Find all kinds into a comma separated string that should be checked for pruning:
+	// * support LIST operation
+	// * when namespace is set, only consider namespaced resources
 	kinds := ""
 	for _, r := range apiResources {
 		if !strings.Contains(r.Verbs, "list") {
+			continue
+		}
+		if opts.Namespace != "" && !r.Namespaced {
 			continue
 		}
 

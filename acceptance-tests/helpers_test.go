@@ -19,6 +19,16 @@ func runCmd(t *testing.T, dir string, cmd string, args ...string) {
 	require.NoError(t, err)
 }
 
+func runCmdExpectError(t *testing.T, dir string, cmd string, args ...string) {
+	t.Helper()
+	c := exec.Command(cmd, args...)
+	c.Dir = dir
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	err := c.Run()
+	require.Error(t, err)
+}
+
 func getCmdOutput(t *testing.T, dir string, cmd string, args ...string) string {
 	t.Helper()
 	c := exec.Command(cmd, args...)
