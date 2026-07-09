@@ -105,6 +105,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    outputs:
+      image: ${{ steps.digest.outputs.image }}
     needs:
       - build
     steps:
@@ -151,4 +153,29 @@ jobs:
           RELEASE_VERSION: "${{ steps.meta.outputs.version }}"
         run: |
           docker buildx imagetools inspect "${{ env.REGISTRY_IMAGE }}:${RELEASE_VERSION}"
+
+      - name: Resolve digest
+        id: digest
+        env:
+          RELEASE_VERSION: "${{ steps.meta.outputs.version }}"
+        run: |
+          DIGEST="$(docker buildx imagetools inspect "${REGISTRY_IMAGE}:${RELEASE_VERSION}" --format '{{.Manifest.Digest}}')"
+          if [[ "$DIGEST" != sha256:* ]]; then
+            echo "::error::failed to resolve digest for ${REGISTRY_IMAGE}:${RELEASE_VERSION}, got: $DIGEST"
+            exit 1
+          fi
+          echo "image=${REGISTRY_IMAGE}@${DIGEST}" >> "$GITHUB_OUTPUT"
+
+  sign:
+    needs: merge
+    # Mirrors merge's gate: only images that were actually pushed get signed.
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    # No `secrets: inherit` needed: auth is pure OIDC/WIF.
+    uses: grafana/shared-workflows/.github/workflows/sign-and-attest.yml@78d2e75bb333ed062cbe2a40fcf79c920cce440f # main
+    with:
+      image: ${{ needs.merge.outputs.image }}
 
