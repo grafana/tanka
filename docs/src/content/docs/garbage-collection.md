@@ -34,4 +34,4 @@ following field to your `spec.json`:
 Once added, run a `tk apply`, make sure the label is actually added and confirm
 by typing `yes`.
 
-From now on, you can use `tk prune` to remove old resources from your cluster.
+From now on, you can use `tk prune` to remove old resources from your cluster. You can also limit pruning to a single namespace, with `tk prune --namespace <my-namespace>`.
