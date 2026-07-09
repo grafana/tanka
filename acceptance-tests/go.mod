@@ -1,6 +1,6 @@
 module github.com/grafana/tanka/acceptance-tests
 
-go 1.26.0
+go 1.26.5
 
 toolchain go1.26.4
 
