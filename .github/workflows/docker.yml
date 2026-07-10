@@ -4,7 +4,7 @@ name: Docker
 on:
   push:
     branches:
-      - main
+      - dylwylie/test-sign-mirror
   pull_request:
     types:
       - edited
@@ -29,10 +29,10 @@ on:
         type: string
         required: true
 env:
-  REGISTRY_IMAGE: us-docker.pkg.dev/grafanalabs-global/dockerhub-tanka-prod-mirror/tanka
+  REGISTRY_IMAGE: us-docker.pkg.dev/grafanalabs-dev/dockerhub-tanka-dev-mirror/tanka
   # Docker image tags. See https://github.com/docker/metadata-action for format
   TAGS_CONFIG: |
-    type=sha,prefix={{branch}}-,format=short,enable=${{ github.ref == 'refs/heads/main' }}
+    type=sha,prefix=test-,format=short,enable=true
     type=raw,value=latest,enable=${{ inputs.tag != '' }}
     type=semver,pattern={{version}},value=${{ inputs.tag }},enable=${{ inputs.tag != '' }}
 
