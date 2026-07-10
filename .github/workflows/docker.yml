@@ -170,7 +170,7 @@ jobs:
       id-token: write
       attestations: write
     # No `secrets: inherit` needed: auth is pure OIDC/WIF.
-    uses: grafana/shared-workflows/.github/workflows/sign-and-attest.yml@78d2e75bb333ed062cbe2a40fcf79c920cce440f # main
+    uses: grafana/shared-workflows/.github/workflows/sign-and-attest.yml@24c4b83e50e74fce9871480681d123fd3c68f4f4 # main
     with:
       image: ${{ needs.merge.outputs.image }}
 
