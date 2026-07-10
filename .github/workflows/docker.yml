@@ -106,7 +106,7 @@ jobs:
       contents: read
       id-token: write
     outputs:
-      image: ${{ steps.digest.outputs.image }}
+      image: ${{ steps.index.outputs.image }}
     needs:
       - build
     steps:
@@ -128,9 +128,6 @@ jobs:
           cp /tmp/digests-linux-amd64/* /tmp/digests/
           cp /tmp/digests-linux-arm64/* /tmp/digests/
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
-
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
@@ -143,28 +140,26 @@ jobs:
         with:
           registry: us-docker.pkg.dev
 
+      - name: Install crane
+        uses: imjasonh/setup-crane@feee3b6bb0d4c68370f256a4502498c9227e5c6b # v0.7
+        with:
+          version: v0.21.7
+
       - name: Create manifest list and push
+        id: index
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
-      - name: Inspect image
-        env:
-          RELEASE_VERSION: "${{ steps.meta.outputs.version }}"
-        run: |
-          docker buildx imagetools inspect "${{ env.REGISTRY_IMAGE }}:${RELEASE_VERSION}"
-
-      - name: Resolve digest
-        id: digest
-        env:
-          RELEASE_VERSION: "${{ steps.meta.outputs.version }}"
-        run: |
-          DIGEST="$(docker buildx imagetools inspect "${REGISTRY_IMAGE}:${RELEASE_VERSION}" --format '{{.Manifest.Digest}}')"
-          if [[ "$DIGEST" != sha256:* ]]; then
-            echo "::error::failed to resolve digest for ${REGISTRY_IMAGE}:${RELEASE_VERSION}, got: $DIGEST"
-            exit 1
-          fi
-          echo "image=${REGISTRY_IMAGE}@${DIGEST}" >> "$GITHUB_OUTPUT"
+          mapfile -t TAGS < <(jq -r '.tags[]' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          MANIFESTS=()
+          for d in *; do MANIFESTS+=(-m "${REGISTRY_IMAGE}@sha256:${d}"); done
+          # crane prints the pushed digest-pinned ref; extra tags then point at
+          # that exact digest, so nothing resolves back through a mutable tag.
+          IMAGE="$(crane index append -t "${TAGS[0]}" "${MANIFESTS[@]}")"
+          for t in "${TAGS[@]:1}"; do
+            crane tag "${IMAGE}" "${t##*:}"
+          done
+          crane manifest "${IMAGE}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
 
   sign:
     needs: merge
