@@ -141,9 +141,9 @@ jobs:
           registry: us-docker.pkg.dev
 
       - name: Install crane
-        uses: imjasonh/setup-crane@feee3b6bb0d4c68370f256a4502498c9227e5c6b # v0.7
-        with:
-          version: v0.21.7
+        run: |
+          go install github.com/google/go-containerregistry/cmd/crane@v0.21.7
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Create manifest list and push
         id: index
