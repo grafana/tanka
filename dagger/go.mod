@@ -5,7 +5,7 @@ go 1.26.1
 toolchain go1.26.5
 
 require (
-	github.com/99designs/gqlgen v0.17.93
+	github.com/99designs/gqlgen v0.17.94
 	github.com/Khan/genqlient v0.8.1
 	github.com/dagger/otel-go v1.41.0
 	github.com/vektah/gqlparser/v2 v2.5.36
@@ -41,9 +41,9 @@ require (
 	go.opentelemetry.io/otel/sdk/log v0.17.0
 	go.opentelemetry.io/otel/sdk/metric v1.43.0
 	go.opentelemetry.io/proto/otlp v1.10.0
-	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.39.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260706201446-f0a921348800 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
