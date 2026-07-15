@@ -30,6 +30,8 @@ on:
         required: true
 env:
   REGISTRY_IMAGE: us-docker.pkg.dev/grafanalabs-global/dockerhub-tanka-prod-mirror/tanka
+  # renovate: datasource=go depName=github.com/google/go-containerregistry
+  CRANE_VERSION: v0.21.7
   # Docker image tags. See https://github.com/docker/metadata-action for format
   TAGS_CONFIG: |
     type=sha,prefix={{branch}}-,format=short,enable=${{ github.ref == 'refs/heads/main' }}
@@ -142,7 +144,7 @@ jobs:
 
       - name: Install crane
         run: |
-          go install github.com/google/go-containerregistry/cmd/crane@v0.21.7
+          go install "github.com/google/go-containerregistry/cmd/crane@${CRANE_VERSION}"
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
 
       - name: Create manifest list and push
