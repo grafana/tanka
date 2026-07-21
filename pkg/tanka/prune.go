@@ -33,9 +33,10 @@ func Prune(ctx context.Context, baseDir string, opts PruneOpts) error {
 	}
 	defer kube.Close()
 
-	// find orphaned resources
+	// find orphaned resources, restricting to filtered kinds when --target is set
 	orphaned, err := kube.Orphaned(p.Resources, kubernetes.OrphanedOpts{
 		Namespace: opts.Namespace,
+		Filters:   opts.Filters,
 	})
 	if err != nil {
 		return err

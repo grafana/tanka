@@ -135,7 +135,6 @@ func pruneCmd(ctx context.Context) *cli.Command {
 	}
 
 	var opts tanka.PruneOpts
-	cmd.Flags().StringVar(&opts.Name, "name", "", "string that only a single inline environment contains in its name")
 	cmd.Flags().StringVar(&opts.Namespace, "namespace", "", "limit pruning to a single namespace")
 	var (
 		autoApproveDeprecated bool
@@ -143,6 +142,7 @@ func pruneCmd(ctx context.Context) *cli.Command {
 	)
 	addApplyFlags(cmd.Flags(), &opts.ApplyBaseOpts, &autoApproveDeprecated, &autoApproveString)
 	addDiffFlags(cmd.Flags(), &opts.DiffBaseOpts)
+	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
@@ -159,7 +159,14 @@ func pruneCmd(ctx context.Context) *cli.Command {
 			return err
 		}
 
+		filters, err := process.StrExps(vars.targets...)
+		if err != nil {
+			return err
+		}
+		opts.Filters = filters
 		opts.JsonnetOpts = getJsonnetOpts()
+		opts.Name = vars.name
+		opts.JsonnetImplementation = vars.jsonnetImplementation
 
 		return tanka.Prune(ctx, args[0], opts)
 	}

@@ -22,14 +22,24 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 // AnnoationLastApplied is the last-applied-configuration annotation used by kubectl
 const AnnotationLastApplied = "kubectl.kubernetes.io/last-applied-configuration"
 
-// OrphanedOpts allow to specify additional parameters for finding orphaned resources
+// OrphanedOpts configures the behaviour of Orphaned.
 type OrphanedOpts struct {
 	// Namespace limits the search to a single namespace. Empty string searches all namespaces.
 	Namespace string
+
+	// Filters restricts both the resource kinds queried from the cluster and
+	// the resources returned. Uses the same kind/name regex syntax as the
+	// --target flag on tk apply. When empty, all resource kinds labeled with
+	// the environment are considered.
+	Filters process.Matchers
 }
 
 // Orphaned returns previously created resources that are missing from the
 // local state. It uses UIDs to safely identify objects.
+//
+// When opts.Filters is non-empty, only resource kinds targeted by the filters
+// are queried from the cluster. This makes large-environment prune operations
+// cheaper when only a subset of kinds needs to be inspected.
 func (k *Kubernetes) Orphaned(state manifest.List, opts OrphanedOpts) (manifest.List, error) {
 	log.Info().Msg("Finding orphaned resources to prune")
 
@@ -54,9 +64,21 @@ See https://tanka.dev/garbage-collection for more details`)
 
 	var orphaned manifest.List
 
-	// Find all kinds into a comma separated string that should be checked for pruning:
+	// Determine which kinds to query. When filters are set and we can extract
+	// literal kind names from them, restrict the cluster query to only those
+	// kinds. This avoids listing every resource type in environments where only
+	// a specific kind (e.g. StatefulSet) needs pruning.
+	kindHints, hasKindHints := opts.Filters.KindsFor()
+	kindHintSet := make(map[string]bool, len(kindHints))
+	for _, hint := range kindHints {
+		kindHintSet[strings.ToLower(hint)] = true
+	}
+
+	// Find all kinds into a comma-separated string that should be checked for
+	// pruning:
 	// * support LIST operation
 	// * when namespace is set, only consider namespaced resources
+	// * when filters are set, only consider hinted kinds
 	kinds := ""
 	for _, r := range apiResources {
 		if !strings.Contains(r.Verbs, "list") {
@@ -65,7 +87,9 @@ See https://tanka.dev/garbage-collection for more details`)
 		if opts.Namespace != "" && !r.Namespaced {
 			continue
 		}
-
+		if hasKindHints && !kindHintSet[strings.ToLower(r.Kind)] {
+			continue
+		}
 		kinds += "," + r.FQN()
 	}
 	kinds = strings.TrimPrefix(kinds, ",")
@@ -106,6 +130,13 @@ See https://tanka.dev/garbage-collection for more details`)
 		resourceLog.Msg("orphaned resource")
 		orphaned = append(orphaned, m)
 		uids[m.Metadata().UID()] = true
+	}
+
+	// Apply filters to the final result so that negative filters and any
+	// name-level restrictions are enforced even when kind pre-filtering was
+	// not possible.
+	if len(opts.Filters) > 0 {
+		orphaned = process.Filter(orphaned, opts.Filters)
 	}
 
 	return orphaned, nil
