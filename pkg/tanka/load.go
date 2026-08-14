@@ -34,7 +34,7 @@ func Load(ctx context.Context, path string, opts Opts) (*LoadResult, error) {
 		return nil, err
 	}
 
-	result, err := LoadManifests(ctx, env, opts.Filters)
+	result, err := LoadManifests(ctx, env, opts.Filters, opts.InjectLabels)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func LoadEnvironment(ctx context.Context, path string, opts Opts) (*v1alpha1.Env
 	return env, nil
 }
 
-func LoadManifests(_ context.Context, env *v1alpha1.Environment, filters process.Matchers) (*LoadResult, error) {
+func LoadManifests(_ context.Context, env *v1alpha1.Environment, filters process.Matchers, injectLabels map[string]string) (*LoadResult, error) {
 	if err := checkVersion(env.Spec.ExpectVersions.Tanka); err != nil {
 		return nil, err
 	}
@@ -84,6 +84,10 @@ func LoadManifests(_ context.Context, env *v1alpha1.Environment, filters process
 	processed, err := process.Process(*env, filters)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(injectLabels) > 0 {
+		processed = process.InjectLabels(processed, injectLabels)
 	}
 
 	return &LoadResult{Env: env, Resources: processed}, nil
