@@ -143,7 +143,19 @@ func (e ExecHelm) Pull(chart, version string, opts PullOpts) error {
 
 // RepoUpdate implements Helm.RepoUpdate
 func (e ExecHelm) RepoUpdate(opts Opts) error {
-	repoFile, err := writeRepoTmpFile(opts.Repositories)
+	// OCI registries do not use the traditional `helm repo update` mechanism;
+	// they are pulled directly by URL, so skip them here.
+	var repos []Repo
+	for _, r := range opts.Repositories {
+		if !strings.HasPrefix(r.URL, "oci://") {
+			repos = append(repos, r)
+		}
+	}
+	if len(repos) == 0 {
+		return nil
+	}
+
+	repoFile, err := writeRepoTmpFile(repos)
 	if err != nil {
 		return err
 	}
