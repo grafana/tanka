@@ -31,7 +31,7 @@ on:
 env:
   REGISTRY_IMAGE: us-docker.pkg.dev/grafanalabs-global/dockerhub-tanka-prod-mirror/tanka
   # renovate: datasource=go depName=github.com/google/go-containerregistry
-  CRANE_VERSION: v0.21.7
+  CRANE_VERSION: v0.21.9
   # Docker image tags. See https://github.com/docker/metadata-action for format
   TAGS_CONFIG: |
     type=sha,prefix={{branch}}-,format=short,enable=${{ github.ref == 'refs/heads/main' }}
