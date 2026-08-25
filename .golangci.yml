@@ -37,6 +37,12 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      # To keep tests readable it is fine to use the same string multiple
+      # times:
+      - path: _test\.go
+        linters:
+          - goconst
 formatters:
   enable:
     - gofmt

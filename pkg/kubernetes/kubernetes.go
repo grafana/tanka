@@ -26,6 +26,11 @@ type Kubernetes struct {
 // returning differences (if any) in `diff(1)` format.
 type Differ func(manifest.List) (*string, error)
 
+const strategyServer = "server"
+const strategyNative = "native"
+const strategyValidate = "validate"
+const strategySubset = "subset"
+
 // New creates a new Kubernetes with an initialized client
 func New(env v1alpha1.Environment) (*Kubernetes, error) {
 	// setup client
@@ -42,14 +47,14 @@ func New(env v1alpha1.Environment) (*Kubernetes, error) {
 
 	// setup diffing
 	if env.Spec.DiffStrategy == "" {
-		if env.Spec.ApplyStrategy == "server" {
-			env.Spec.DiffStrategy = "server"
+		if env.Spec.ApplyStrategy == strategyServer {
+			env.Spec.DiffStrategy = strategyServer
 		} else {
-			env.Spec.DiffStrategy = "native"
+			env.Spec.DiffStrategy = strategyNative
 		}
 
 		if ctl.Info().ServerVersion.LessThan(semver.MustParse("1.13.0")) {
-			env.Spec.DiffStrategy = "subset"
+			env.Spec.DiffStrategy = strategySubset
 		}
 	}
 
@@ -57,10 +62,10 @@ func New(env v1alpha1.Environment) (*Kubernetes, error) {
 		Env: env,
 		ctl: ctl,
 		differs: map[string]Differ{
-			"native":   ctl.DiffClientSide,
-			"validate": ctl.ValidateServerSide,
-			"server":   ctl.DiffServerSide,
-			"subset":   SubsetDiffer(ctl),
+			strategyNative:   ctl.DiffClientSide,
+			strategyValidate: ctl.ValidateServerSide,
+			strategyServer:   ctl.DiffServerSide,
+			strategySubset:   SubsetDiffer(ctl),
 		},
 	}
 

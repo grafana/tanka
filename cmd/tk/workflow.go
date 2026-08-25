@@ -20,6 +20,8 @@ const (
 	ExitStatusClean = 0
 	// differences between the local config and the cluster
 	ExitStatusDiff = 16
+
+	flagColor = "color"
 )
 
 var (
@@ -76,7 +78,7 @@ func applyCmd(ctx context.Context) *cli.Command {
 		Short: "apply the configuration to the cluster",
 		Args:  generateWorkflowArgs(ctx),
 		Predictors: complete.Flags{
-			"color":          colorValues,
+			flagColor:        colorValues,
 			"diff-strategy":  cli.PredictSet("native", "subset", "validate", "server", "none"),
 			"apply-strategy": cli.PredictSet("client", "server"),
 		},
@@ -130,7 +132,7 @@ func pruneCmd(ctx context.Context) *cli.Command {
 		Short: "delete resources removed from Jsonnet",
 		Args:  generateWorkflowArgs(ctx),
 		Predictors: complete.Flags{
-			"color": colorValues,
+			flagColor: colorValues,
 		},
 	}
 
@@ -180,7 +182,7 @@ func deleteCmd(ctx context.Context) *cli.Command {
 		Short: "delete the environment from cluster",
 		Args:  generateWorkflowArgs(ctx),
 		Predictors: complete.Flags{
-			"color": colorValues,
+			flagColor: colorValues,
 		},
 	}
 
@@ -229,7 +231,7 @@ func diffCmd(ctx context.Context) *cli.Command {
 		Short: "differences between the configuration and the cluster",
 		Args:  generateWorkflowArgs(ctx),
 		Predictors: complete.Flags{
-			"color":         colorValues,
+			flagColor:       colorValues,
 			"diff-strategy": cli.PredictSet("native", "subset", "validate", "server"),
 		},
 	}

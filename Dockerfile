@@ -1,5 +1,5 @@
 # download kubectl
-FROM golang:1.26.6-alpine@sha256:3889b425f035be855a72fb4755265311293b6d414521f0a519d819df32222d83 AS kubectl
+FROM golang:1.27.0-alpine@sha256:4c9fe60190a2a3350ddc51de80d0224b8a6698d12bdfc999fee45ea9d6c46dbc AS kubectl
 ARG KUBECTL_VERSION=1.34.11
 RUN apk add --no-cache curl
 RUN export OS=$(go env GOOS) && \
@@ -8,7 +8,7 @@ RUN export OS=$(go env GOOS) && \
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
-FROM golang:1.26.6-alpine@sha256:3889b425f035be855a72fb4755265311293b6d414521f0a519d819df32222d83 AS jb
+FROM golang:1.27.0-alpine@sha256:4c9fe60190a2a3350ddc51de80d0224b8a6698d12bdfc999fee45ea9d6c46dbc AS jb
 WORKDIR /tmp
 RUN apk add --no-cache git make bash &&\
     git clone https://github.com/jsonnet-bundler/jsonnet-bundler &&\
@@ -17,7 +17,7 @@ RUN apk add --no-cache git make bash &&\
     make static &&\
     mv _output/jb /usr/local/bin/jb
 
-FROM golang:1.26.6-alpine@sha256:3889b425f035be855a72fb4755265311293b6d414521f0a519d819df32222d83 AS helm
+FROM golang:1.27.0-alpine@sha256:4c9fe60190a2a3350ddc51de80d0224b8a6698d12bdfc999fee45ea9d6c46dbc AS helm
 WORKDIR /tmp/helm
 ARG HELM_VERSION=3.21.1
 RUN apk add --no-cache jq curl
@@ -26,7 +26,7 @@ RUN export OS=$(go env GOOS) && \
     curl -SL "https://get.helm.sh/helm-v${HELM_VERSION}-${OS}-${ARCH}.tar.gz" > helm.tgz && \
     tar -xvf helm.tgz --strip-components=1
 
-FROM golang:1.26.6-alpine@sha256:3889b425f035be855a72fb4755265311293b6d414521f0a519d819df32222d83 AS kustomize
+FROM golang:1.27.0-alpine@sha256:4c9fe60190a2a3350ddc51de80d0224b8a6698d12bdfc999fee45ea9d6c46dbc AS kustomize
 WORKDIR /tmp/kustomize
 ARG KUSTOMIZE_VERSION=5.8.1
 RUN apk add --no-cache jq curl
@@ -36,7 +36,7 @@ RUN export OS=$(go env GOOS) &&\
     curl -SL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_${OS}_${ARCH}.tar.gz" > kustomize.tgz && \
     tar -xvf kustomize.tgz
 
-FROM golang:1.26.6@sha256:0d1d3a794be25f809dd2cb3160d8c73276c4056a9f8242a138e908ddeee7b6b6 AS build
+FROM golang:1.27.0@sha256:65b6f280bf050ec5af12716857e8ea8439d694dbba8f31ceeb7630670071f2bb AS build
 WORKDIR /app
 COPY . .
 RUN make static

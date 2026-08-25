@@ -189,7 +189,7 @@ func CountImporters(ctx context.Context, root string, dir string, recursive bool
 
 	var sb strings.Builder
 	for _, importer := range importersList {
-		sb.WriteString(fmt.Sprintf("%s: %d\n", importer.File, importer.Count))
+		fmt.Fprintf(&sb, "%s: %d\n", importer.File, importer.Count)
 	}
 
 	return sb.String(), nil
