@@ -17,6 +17,10 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
+const (
+	identifierJSON = "json"
+)
+
 // Funcs returns a slice of native Go functions that shall be available
 // from Jsonnet using `std.nativeFunc`
 func Funcs() []*jsonnet.NativeFunction {
@@ -46,7 +50,7 @@ func Funcs() []*jsonnet.NativeFunction {
 func parseJSON() *jsonnet.NativeFunction {
 	return &jsonnet.NativeFunction{
 		Name:   "parseJson",
-		Params: ast.Identifiers{"json"},
+		Params: ast.Identifiers{identifierJSON},
 		Func: func(dataString []interface{}) (res interface{}, err error) {
 			data := []byte(dataString[0].(string))
 			err = json.Unmarshal(data, &res)
@@ -107,7 +111,7 @@ func parseYAML() *jsonnet.NativeFunction {
 func manifestJSONFromJSON() *jsonnet.NativeFunction {
 	return &jsonnet.NativeFunction{
 		Name:   "manifestJsonFromJson",
-		Params: ast.Identifiers{"json", "indent"},
+		Params: ast.Identifiers{identifierJSON, "indent"},
 		Func: func(data []interface{}) (interface{}, error) {
 			indent := int(data[1].(float64))
 			dataBytes := []byte(data[0].(string))
@@ -126,7 +130,7 @@ func manifestJSONFromJSON() *jsonnet.NativeFunction {
 func manifestYAMLFromJSON() *jsonnet.NativeFunction {
 	return &jsonnet.NativeFunction{
 		Name:   "manifestYamlFromJson",
-		Params: ast.Identifiers{"json"},
+		Params: ast.Identifiers{identifierJSON},
 		Func: func(data []interface{}) (interface{}, error) {
 			var input interface{}
 			dataBytes := []byte(data[0].(string))

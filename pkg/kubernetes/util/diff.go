@@ -110,9 +110,9 @@ func DiffStat(d string) (string, error) {
 	builder := strings.Builder{}
 	for _, fileName := range fileNames {
 		f := diffMap[fileName]
-		builder.WriteString(fmt.Sprintf("%-*s | %4d %s\n", maxFilenameLength, fileName, f.added+f.removed, printPlusAndMinuses(f.added, f.removed, maxChanges)))
+		fmt.Fprintf(&builder, "%-*s | %4d %s\n", maxFilenameLength, fileName, f.added+f.removed, printPlusAndMinuses(f.added, f.removed, maxChanges))
 	}
-	builder.WriteString(fmt.Sprintf("%d files changed, %d insertions(+), %d deletions(-)", len(fileNames), totalAdded, totalRemoved))
+	fmt.Fprintf(&builder, "%d files changed, %d insertions(+), %d deletions(-)", len(fileNames), totalAdded, totalRemoved)
 
 	return builder.String(), nil
 }
