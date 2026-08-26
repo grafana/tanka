@@ -244,28 +244,12 @@ func (m Metadata) Annotations() map[string]interface{} {
 
 // Managed fields of the manifest
 func (m Metadata) ManagedFields() []interface{} {
-	items, ok := m["managedFields"]
-	if !ok {
-		return make([]interface{}, 0)
-	}
-	list, ok := items.([]interface{})
-	if !ok {
-		return make([]interface{}, 0)
-	}
-	return list
+	return safeList(m, "managedFields")
 }
 
 // OwnerReferences of the manifest
 func (m Metadata) OwnerReferences() []interface{} {
-	items, ok := m["ownerReferences"]
-	if !ok {
-		return make([]interface{}, 0)
-	}
-	list, ok := items.([]interface{})
-	if !ok {
-		return make([]interface{}, 0)
-	}
-	return list
+	return safeList(m, "ownerReferences")
 }
 
 // HasControllerOwner reports whether the manifest has an ownerReference with
@@ -293,6 +277,14 @@ func safeMSI(m map[string]interface{}, key string) map[string]interface{} {
 		m[key] = make(map[string]interface{})
 		return m[key].(map[string]interface{})
 	}
+}
+
+// safeList returns m[key] as a []interface{}, or nil if it's absent or not a
+// list. The result is only ever ranged over, so nil-vs-empty makes no
+// behavioral difference to callers.
+func safeList(m map[string]interface{}, key string) []interface{} {
+	list, _ := m[key].([]interface{})
+	return list
 }
 
 // List of individual Manifests

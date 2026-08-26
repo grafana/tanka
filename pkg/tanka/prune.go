@@ -26,6 +26,10 @@ type PruneOpts struct {
 // Prune deletes all resources from the cluster, that are no longer present in
 // Jsonnet. It uses the `tanka.dev/environment` label to identify those.
 func Prune(ctx context.Context, baseDir string, opts PruneOpts) error {
+	if opts.ListIgnored {
+		return listIgnored(ctx, baseDir, opts)
+	}
+
 	// parse jsonnet, init k8s client
 	p, err := Load(ctx, baseDir, opts.Opts)
 	if err != nil {
@@ -36,26 +40,6 @@ func Prune(ctx context.Context, baseDir string, opts PruneOpts) error {
 		return err
 	}
 	defer kube.Close()
-
-	if opts.ListIgnored {
-		ignored, err := kube.Ignored(kubernetes.OrphanedOpts{
-			Namespace: opts.Namespace,
-			Filters:   opts.Filters,
-		})
-		if err != nil {
-			return err
-		}
-
-		if len(ignored) == 0 {
-			fmt.Fprintln(os.Stderr, "No resources found with the tanka.dev/prune-ignore annotation.")
-			return nil
-		}
-
-		for _, m := range ignored {
-			fmt.Printf("%s/%s (namespace: %s)\n", m.Kind(), m.Metadata().Name(), m.Metadata().Namespace())
-		}
-		return nil
-	}
 
 	// find orphaned resources, restricting to filtered kinds when --target is set
 	orphaned, err := kube.Orphaned(p.Resources, kubernetes.OrphanedOpts{
@@ -112,4 +96,38 @@ func Prune(ctx context.Context, baseDir string, opts PruneOpts) error {
 		Force:  opts.Force,
 		DryRun: opts.DryRun,
 	})
+}
+
+// listIgnored prints the resources excluded from pruning via the
+// tanka.dev/prune-ignore annotation. It only needs the environment's
+// metadata, not its resources, so it uses Peek instead of Load to skip
+// evaluating Jsonnet.
+func listIgnored(ctx context.Context, baseDir string, opts PruneOpts) error {
+	env, err := Peek(ctx, baseDir, opts.Opts)
+	if err != nil {
+		return err
+	}
+	kube, err := LoadResult{Env: env}.Connect()
+	if err != nil {
+		return err
+	}
+	defer kube.Close()
+
+	ignored, err := kube.Ignored(kubernetes.OrphanedOpts{
+		Namespace: opts.Namespace,
+		Filters:   opts.Filters,
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(ignored) == 0 {
+		fmt.Fprintln(os.Stderr, "No resources found with the tanka.dev/prune-ignore annotation.")
+		return nil
+	}
+
+	for _, m := range ignored {
+		fmt.Printf("%s (namespace: %s)\n", m.KindName(), m.Metadata().Namespace())
+	}
+	return nil
 }
