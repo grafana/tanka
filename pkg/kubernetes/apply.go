@@ -22,14 +22,6 @@ func (k *Kubernetes) Apply(state manifest.List, opts ApplyOpts) error {
 // AnnoationLastApplied is the last-applied-configuration annotation used by kubectl
 const AnnotationLastApplied = "kubectl.kubernetes.io/last-applied-configuration"
 
-// AnnotationPruneIgnore excludes a resource from `tk prune`, even if it
-// carries the tanka.dev/environment label and looks orphaned. This is for
-// resources that a third-party operator generates from a Tanka-managed
-// object (e.g. a Secret created by external-secrets from an ExternalSecret),
-// which can inherit the environment label and last-applied-configuration
-// annotation from their parent without ever being applied by Tanka itself.
-const AnnotationPruneIgnore = "tanka.dev/prune-ignore"
-
 // OrphanedOpts configures the behaviour of Orphaned.
 type OrphanedOpts struct {
 	// Namespace limits the search to a single namespace. Empty string searches all namespaces.
@@ -108,18 +100,14 @@ See https://tanka.dev/garbage-collection for more details`)
 	// Apply filters to the final result so that negative filters and any
 	// name-level restrictions are enforced even when kind pre-filtering was
 	// not possible.
-	if len(opts.Filters) > 0 {
-		orphaned = process.Filter(orphaned, opts.Filters)
-	}
-
-	return orphaned, nil
+	return filterIfSet(orphaned, opts.Filters), nil
 }
 
 // Ignored returns live resources belonging to this environment (matched via
-// the tanka.dev/environment label) that carry the AnnotationPruneIgnore
-// annotation. These are resources `tk prune` will never delete, regardless
-// of desired state, which makes them useful to audit independently of a
-// prune run.
+// the tanka.dev/environment label) that carry the
+// process.AnnotationPruneIgnore annotation. These are resources `tk prune`
+// will never delete, regardless of desired state, which makes them useful to
+// audit independently of a prune run.
 func (k *Kubernetes) Ignored(opts OrphanedOpts) (manifest.List, error) {
 	matched, err := k.matchingEnv(opts)
 	if err != nil {
@@ -133,11 +121,16 @@ func (k *Kubernetes) Ignored(opts OrphanedOpts) (manifest.List, error) {
 		}
 	}
 
-	if len(opts.Filters) > 0 {
-		ignored = process.Filter(ignored, opts.Filters)
-	}
+	return filterIfSet(ignored, opts.Filters), nil
+}
 
-	return ignored, nil
+// filterIfSet applies process.Filter only when filters are non-empty,
+// leaving list untouched otherwise.
+func filterIfSet(list manifest.List, filters process.Matchers) manifest.List {
+	if len(filters) == 0 {
+		return list
+	}
+	return process.Filter(list, filters)
 }
 
 // matchingEnv queries the cluster for all live resources labeled with this
@@ -188,10 +181,10 @@ func (k *Kubernetes) matchingEnv(opts OrphanedOpts) (manifest.List, error) {
 	})
 }
 
-// isPruneIgnored reports whether m carries the AnnotationPruneIgnore
+// isPruneIgnored reports whether m carries the process.AnnotationPruneIgnore
 // annotation set to "true".
 func isPruneIgnored(m manifest.Manifest) bool {
-	v, ok := m.Metadata().Annotations()[AnnotationPruneIgnore].(string)
+	v, ok := m.Metadata().Annotations()[process.AnnotationPruneIgnore].(string)
 	return ok && v == "true"
 }
 
