@@ -62,3 +62,55 @@ position), Tanka restricts the Kubernetes API query to only that resource type,
 avoiding the cost of listing every other kind.
 
 See [Output filtering](/output-filtering) for the full filter syntax.
+
+## Excluding specific resources from prune
+
+Some resources aren't created by Tanka directly, but by a third-party
+operator acting on a Tanka-managed object. For example,
+[external-secrets](https://external-secrets.io/) generates a `Secret` from an
+`ExternalSecret`, and by default copies the `ExternalSecret`'s own metadata
+onto it — including the `tanka.dev/environment` label. That makes the
+generated `Secret` look like an orphaned Tanka resource, even though Tanka
+never applied it and has no desired state for it.
+
+**Owned resources are excluded automatically.** If the generated resource
+carries a Kubernetes [ownerReference](https://kubernetes.io/docs/concepts/overview/working-with-objects/owners-dependents/)
+with `controller: true` back to its parent — which external-secrets sets by
+default (`creationPolicy: Owner`) — Tanka never considers it for pruning, no
+configuration needed. Its lifecycle belongs to the owning controller, and
+Kubernetes' own garbage collector already deletes it when the parent is
+deleted.
+
+This doesn't cover every case: `creationPolicy: Orphan` (or a similar setting
+on another operator), for instance, intentionally omits the ownerReference so
+the generated resource survives deletion of its parent. For those, set the
+`tanka.dev/prune-ignore: "true"` annotation on the resource instead. Since you
+usually don't control the generated resource's manifest directly, set the
+annotation on the template the operator uses to build it, so it gets
+propagated. For external-secrets, that's
+`spec.target.template.metadata.annotations`:
+
+```jsonnet
+{
+  apiVersion: 'external-secrets.io/v1',
+  kind: 'ExternalSecret',
+  spec: {
+    target: {
+      template: {
+        metadata: {
+          annotations: {
+            'tanka.dev/prune-ignore': 'true',
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+To see which live resources in an environment are currently protected this
+way, without running a prune, use `--list-ignored`:
+
+```bash
+tk prune --list-ignored .
+```

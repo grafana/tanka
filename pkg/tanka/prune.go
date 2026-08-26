@@ -17,6 +17,10 @@ type PruneOpts struct {
 
 	// Namespace limits pruning to a single namespace. Empty string prunes all namespaces.
 	Namespace string
+
+	// ListIgnored, when true, prints the resources excluded from pruning via
+	// the tanka.dev/prune-ignore annotation and exits without pruning.
+	ListIgnored bool
 }
 
 // Prune deletes all resources from the cluster, that are no longer present in
@@ -32,6 +36,26 @@ func Prune(ctx context.Context, baseDir string, opts PruneOpts) error {
 		return err
 	}
 	defer kube.Close()
+
+	if opts.ListIgnored {
+		ignored, err := kube.Ignored(kubernetes.OrphanedOpts{
+			Namespace: opts.Namespace,
+			Filters:   opts.Filters,
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(ignored) == 0 {
+			fmt.Fprintln(os.Stderr, "No resources found with the tanka.dev/prune-ignore annotation.")
+			return nil
+		}
+
+		for _, m := range ignored {
+			fmt.Printf("%s/%s (namespace: %s)\n", m.Kind(), m.Metadata().Name(), m.Metadata().Namespace())
+		}
+		return nil
+	}
 
 	// find orphaned resources, restricting to filtered kinds when --target is set
 	orphaned, err := kube.Orphaned(p.Resources, kubernetes.OrphanedOpts{
