@@ -10,7 +10,7 @@ require (
 	github.com/fatih/color v1.19.0
 	github.com/fatih/structs v1.1.0
 	github.com/go-clix/cli v0.2.0
-	github.com/gobwas/glob v0.2.3
+	github.com/gobwas/glob v1.0.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-jsonnet v0.22.0
 	github.com/pkg/errors v0.9.1
