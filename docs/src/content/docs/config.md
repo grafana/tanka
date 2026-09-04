@@ -47,7 +47,13 @@ Tanka's behavior can be customized per Environment using a file called `spec.jso
 
     // Whether to add a "tanka.dev/environment" label to each created resource.
     // Required for garbage collection ("tk prune").
-    "injectLabels": <boolean> | default = false
+    "injectLabels": <boolean> | default = false,
+
+    // Jsonnet implementation to use.
+    // Defaults to go native implementation https://github.com/google/go-jsonnet
+    // NOTE: If using an external binary, Tanka's custom `std.native` functions 
+    // will not be available.
+    "exportJsonnetImplementation": <string> | default = ""
   }
 }
 ```
