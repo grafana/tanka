@@ -2,6 +2,15 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.39.1](https://github.com/grafana/tanka/compare/v0.39.0...v0.39.1) (2026-09-04)
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency pnpm to v11.23.0 ([#2224](https://github.com/grafana/tanka/issues/2224)) ([b566241](https://github.com/grafana/tanka/commit/b5662410d958eccb5c37b2bcae0ae955af87c7d8))
+* **deps:** update go toolchain directive to v1.27.1 ([#2205](https://github.com/grafana/tanka/issues/2205)) ([656b164](https://github.com/grafana/tanka/commit/656b16426961e1400c11443112d8deb4a3c2f31d))
+* **deps:** update k8s.io/kube-openapi digest to be32def ([#2216](https://github.com/grafana/tanka/issues/2216)) ([cbcad63](https://github.com/grafana/tanka/commit/cbcad63c3152e471a07c4a06280b00cb876feedd))
+
 ## [0.39.0](https://github.com/grafana/tanka/compare/v0.38.0...v0.39.0) (2026-08-27)
 
 
