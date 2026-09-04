@@ -96,3 +96,29 @@ func buildLargeEnvironmentDirForFindTest(t testing.TB) (string, []string) {
 
 	return tempDir, envPaths
 }
+
+func TestFindInlineEnvWithNonStandardEntrypoint(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Create an inline environment with an entrypoint named something other than main.jsonnet
+	entrypoint := filepath.Join(tempDir, "entrypoint.libsonnet")
+	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "jsonnetfile.json"), []byte(`{}`), 0644))
+	require.NoError(t, os.WriteFile(entrypoint, []byte(`{
+		"apiVersion": "tanka.dev/v1alpha1",
+		"kind": "Environment",
+		"metadata": {
+			"name": "test-name",
+			"labels": {}
+		},
+		"spec": {
+			"apiServer": "https://192.168.0.1",
+			"namespace": "test-namespace",
+			"cluster": "test-cluster"
+		}
+	}`), 0644))
+
+	// Verify the environment is found if the entrypoint's file name is explicitly specified
+	envs, err := findJsonnetFilesFromPaths([]string{entrypoint}, FindOpts{Parallelism: 1})
+	require.NoError(t, err)
+	require.Len(t, envs, 1)
+}
