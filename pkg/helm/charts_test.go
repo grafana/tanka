@@ -162,12 +162,12 @@ func TestAddOCI(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = c.Add([]string{"karpenter/karpenter@v0.27.1"}, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Check file contents
 	listResult, err := os.ReadDir(filepath.Join(tempDir, "charts"))
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(listResult))
+	require.NoError(t, err)
+	require.Len(t, listResult, 1)
 	assert.Equal(t, "karpenter", listResult[0].Name())
 }
 
