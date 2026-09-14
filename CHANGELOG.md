@@ -2,6 +2,14 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.39.2](https://github.com/grafana/tanka/compare/v0.39.1...v0.39.2) (2026-09-14)
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update actions/deploy-pages action to v5.0.1 ([#2236](https://github.com/grafana/tanka/issues/2236)) ([b962b0e](https://github.com/grafana/tanka/commit/b962b0e5cac941bcb1e52e0bf16f0d493dfda300))
+* **deps:** update dependency pnpm to v11.26.0 ([#2228](https://github.com/grafana/tanka/issues/2228)) ([dae7eeb](https://github.com/grafana/tanka/commit/dae7eeba86726d33e79ba66888102912de7b3427))
+
 ## [0.39.1](https://github.com/grafana/tanka/compare/v0.39.0...v0.39.1) (2026-09-14)
 
 
