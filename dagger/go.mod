@@ -5,7 +5,7 @@ go 1.26.1
 toolchain go1.27.1
 
 require (
-	github.com/99designs/gqlgen v0.17.94
+	github.com/99designs/gqlgen v0.17.95
 	github.com/Khan/genqlient v0.8.1
 	github.com/dagger/otel-go v1.41.0
 	github.com/vektah/gqlparser/v2 v2.5.37
