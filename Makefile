@@ -43,7 +43,12 @@ cross: $(GOX)
 container: static
 	docker build -t grafana/tanka .
 
+# `dagger develop` overwrites dagger/.gitignore with its own generated
+# content, so stash the tracked copy and restore it afterwards. The trap
+# guarantees the restore happens even when `dagger develop` fails, so a
+# failed run does not leave a stray dagger/.gitignore.bak behind.
 dagger-develop:
-	@cp dagger/.gitignore dagger/.gitignore.bak
-	@dagger develop --silent
-	@mv dagger/.gitignore.bak dagger/.gitignore
+	@set -e; \
+	cp dagger/.gitignore dagger/.gitignore.bak; \
+	trap 'mv dagger/.gitignore.bak dagger/.gitignore' EXIT; \
+	dagger develop --silent
