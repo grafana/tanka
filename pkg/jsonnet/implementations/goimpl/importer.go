@@ -2,6 +2,7 @@ package goimpl
 
 import (
 	"path/filepath"
+	"strings"
 
 	jsonnet "github.com/google/go-jsonnet"
 )
@@ -84,4 +85,10 @@ func newFileLoader(fi *jsonnet.FileImporter) importLoader {
 		c, foundAt, err = fi.Import(importedFrom, importedPath)
 		return &c, foundAt, err
 	}
+}
+
+// IsInternalImport reports whether foundAt belongs to an import that is served
+// from memory (such as `import "tk"`) rather than read from disk.
+func IsInternalImport(foundAt string) bool {
+	return strings.HasPrefix(foundAt, locationInternal)
 }

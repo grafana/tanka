@@ -194,6 +194,9 @@ func findImportRecursiveRegexp(list map[string]bool, vm *jsonnet.VM, filename, c
 		if err != nil {
 			continue
 		}
+		if goimpl.IsInternalImport(foundAt) {
+			continue
+		}
 		abs, err := filepath.Abs(foundAt)
 		if err != nil {
 			return err
