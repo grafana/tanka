@@ -103,6 +103,20 @@ func ResourceDefaults(list manifest.List, cfg v1alpha1.Environment) manifest.Lis
 	return list
 }
 
+// InjectLabels sets the given labels on every manifest in the list, overriding
+// any pre-existing values. Unlike ResourceDefaults (which only fills in missing
+// keys from the spec), these labels are explicitly requested (e.g. via
+// --inject-label) and therefore always win.
+func InjectLabels(list manifest.List, labels map[string]string) manifest.List {
+	for i, m := range list {
+		for k, v := range labels {
+			m.Metadata().Labels()[k] = v
+		}
+		list[i] = m
+	}
+	return list
+}
+
 // Unwrap returns all Kubernetes objects in the manifest. If m is not a List
 // type, a one item List is returned
 func Unwrap(manifests map[string]manifest.Manifest) error {

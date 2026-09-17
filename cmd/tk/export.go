@@ -47,6 +47,7 @@ func exportCmd(ctx context.Context) *cli.Command {
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 	getLabelSelector := labelSelectorFlag(cmd.Flags())
+	getInjectLabels := injectLabelFlag(cmd.Flags())
 
 	recursive := cmd.Flags().BoolP("recursive", "r", false, "Look recursively for Tanka environments")
 
@@ -71,6 +72,7 @@ func exportCmd(ctx context.Context) *cli.Command {
 				JsonnetOpts:           getJsonnetOpts(),
 				Filters:               filters,
 				Name:                  vars.name,
+				InjectLabels:          getInjectLabels(),
 			},
 			Selector:         getLabelSelector(),
 			Parallelism:      *parallel,

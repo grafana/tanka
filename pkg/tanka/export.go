@@ -200,7 +200,7 @@ func manifestSingleEnv(ctx context.Context, work *v1alpha1.Environment, to strin
 
 	fileToEnv := make(map[string]string)
 
-	loaded, err := LoadManifests(ctx, work, opts.Opts.Filters)
+	loaded, err := LoadManifests(ctx, work, opts.Opts.Filters, opts.Opts.InjectLabels)
 	if err != nil {
 		return nil, err
 	}

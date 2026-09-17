@@ -75,6 +75,24 @@ func jsonnetFlags(fs *pflag.FlagSet) func() tanka.JsonnetOpts {
 	}
 }
 
+func injectLabelFlag(fs *pflag.FlagSet) func() map[string]string {
+	// need to use StringArray instead of StringSlice, because pflag attempts to
+	// parse StringSlice using the csv parser, which breaks when values contain commas
+	injectLabels := fs.StringArray("inject-label", nil, "Inject a label into all rendered resources (Format: key=value). Can be repeated. Overrides existing values.")
+
+	return func() map[string]string {
+		m := make(map[string]string)
+		for _, s := range *injectLabels {
+			split := strings.SplitN(s, "=", 2)
+			if len(split) != 2 {
+				log.Fatal().Msgf("--inject-label argument has wrong format: `%s`. Expected `key=value`", s)
+			}
+			m[split[0]] = split[1]
+		}
+		return m
+	}
+}
+
 func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[string]string) {
 	// need to use StringArray instead of StringSlice, because pflag attempts to
 	// parse StringSlice using the csv parser, which breaks when passing objects
