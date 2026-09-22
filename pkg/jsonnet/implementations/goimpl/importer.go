@@ -6,7 +6,7 @@ import (
 	jsonnet "github.com/google/go-jsonnet"
 )
 
-const locationInternal = "<internal>"
+const LocationInternal = "<internal>"
 
 // extendedImporter wraps jsonnet.FileImporter to add additional functionality:
 // - `import "file.yaml"`
@@ -73,7 +73,7 @@ func tkLoader(_, importedPath string) (contents *jsonnet.Contents, foundAt strin
 		return nil, "", nil
 	}
 
-	return &tkLibsonnet, filepath.Join(locationInternal, "tk.libsonnet"), nil
+	return &tkLibsonnet, filepath.Join(LocationInternal, "tk.libsonnet"), nil
 }
 
 // newFileLoader returns an importLoader that uses jsonnet.FileImporter to source
