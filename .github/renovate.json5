@@ -135,6 +135,25 @@
       ],
     },
     {
+      // The otel log modules in dagger/go.mod are pinned by `replace`
+      // directives that `dagger develop` regenerates from the Dagger Go
+      // SDK's own go.mod (see the `engineVersion` in dagger.json). Any bump
+      // Renovate makes here is reverted by the next `make dagger-develop`,
+      // which then fails the "Check for drift in Dagger files" workflow.
+      // These versions only move when the Dagger engine is upgraded.
+      matchFileNames: [
+        'dagger/go.mod',
+        'dagger/go.sum',
+      ],
+      matchPackageNames: [
+        'go.opentelemetry.io/otel/log',
+        'go.opentelemetry.io/otel/sdk/log',
+        'go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc',
+        'go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp',
+      ],
+      enabled: false,
+    },
+    {
       matchFileNames: [
         'docs/package.json',
         'docs/pnpm-lock.yaml',
