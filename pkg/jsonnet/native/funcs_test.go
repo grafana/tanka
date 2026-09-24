@@ -3,8 +3,13 @@ package native
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
+	"os"
+	"path/filepath"
+	"slices"
 	"testing"
 
+	jsonnet "github.com/google/go-jsonnet"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,6 +24,20 @@ func callNative(name string, data []interface{}) (res interface{}, err error, ca
 	}
 
 	return nil, nil, fmt.Errorf("could not find native function %s", name)
+}
+
+// callVMNative calls a native function used by jsonnet VM that requires access to the VM resource
+func callVMNative(name string, data []interface{}) (res interface{}, err error, callerr error) {
+	vm := jsonnet.MakeVM()
+	for _, fun := range VMFuncs(vm) {
+		if fun.Name == name {
+			// Call the function
+			ret, err := fun.Func(data)
+			return ret, err, nil
+		}
+	}
+
+	return nil, nil, fmt.Errorf("could not find VM native function %s", name)
 }
 
 func TestSha256(t *testing.T) {
@@ -207,4 +226,47 @@ func TestRegexSubstInvalid(t *testing.T) {
 	assert.Empty(t, callerr)
 	assert.Empty(t, ret)
 	assert.NotEmpty(t, err)
+}
+
+func TestImportFiles(t *testing.T) {
+	cwd, err := os.Getwd()
+	assert.NoError(t, err)
+	tempDir := t.TempDir()
+	defer func() {
+		if err := os.Chdir(cwd); err != nil {
+			panic(err)
+		}
+	}()
+	err = os.Chdir(tempDir)
+	assert.NoError(t, err)
+	importDirName := "imports"
+	importDir := filepath.Join(tempDir, importDirName)
+	err = os.Mkdir(importDir, 0750)
+	assert.NoError(t, err)
+	importMap := map[string]string{
+		"test1.libsonnet": "{ test: 1 }",
+		"test2.libsonnet": "{ test: 2 }",
+	}
+	excludeMap := map[string]string{
+		"skip1.libsonnet": `{ test: error "should not be included" }`,
+		"skip2.libsonnet": `{ test: error "should not be included" }`,
+	}
+	expectedJson := `{"test1.libsonnet":{"test":1},"test2.libsonnet":{"test":2}}`
+	allMap := make(map[string]string)
+	maps.Copy(allMap, importMap)
+	maps.Copy(allMap, excludeMap)
+	for fName, content := range allMap {
+		fPath := filepath.Join(importDir, fName)
+		err = os.WriteFile(fPath, []byte(content), 0644)
+		assert.NoError(t, err)
+	}
+	opts := make(map[string]interface{})
+	opts["calledFrom"] = filepath.Join(tempDir, "main.jsonnet")
+	opts["exclude"] = slices.Collect(maps.Keys(excludeMap))
+	ret, err, callerr := callVMNative("importFiles", []interface{}{importDirName, opts})
+	assert.NoError(t, err)
+	assert.Nil(t, callerr)
+	retJson, err := json.Marshal(ret)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedJson, string(retJson))
 }
