@@ -2,6 +2,27 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.39.3](https://github.com/grafana/tanka/compare/v0.39.2...v0.39.3) (2026-09-26)
+
+
+### 🐛 Bug Fixes
+
+* **renovate:** stop Renovate bumping engine-pinned otel deps in dagger/go.mod ([#2277](https://github.com/grafana/tanka/issues/2277)) ([25e23f4](https://github.com/grafana/tanka/commit/25e23f4d1785b88030f0cfa69e109c486112d676))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update alpine docker tag to v3.24.2 ([#2273](https://github.com/grafana/tanka/issues/2273)) ([e85f3ba](https://github.com/grafana/tanka/commit/e85f3bac437030caa845a8f1ad2427b5b58b7360))
+* **deps:** update dependency @astrojs/starlight to v0.42.3 ([#2287](https://github.com/grafana/tanka/issues/2287)) ([9ccde40](https://github.com/grafana/tanka/commit/9ccde40f8ba33503ab240219ec55e8c2f2ab5c6c))
+* **deps:** update dependency @types/node to v24.13.6 ([#2275](https://github.com/grafana/tanka/issues/2275)) ([91f596c](https://github.com/grafana/tanka/commit/91f596c58c528fde20add3ad099f757d488395b5))
+* **deps:** update dependency astro to v7.3.4 ([#2288](https://github.com/grafana/tanka/issues/2288)) ([9834473](https://github.com/grafana/tanka/commit/9834473f71362e19946ccdfce20e4e48d0c9a023))
+* **deps:** update dependency kubectl to v1.34.12 ([#2291](https://github.com/grafana/tanka/issues/2291)) ([20f706d](https://github.com/grafana/tanka/commit/20f706df4960bce013ede4d527d337437e174b32))
+* **deps:** update dependency pnpm to v12.5.1 ([#2272](https://github.com/grafana/tanka/issues/2272)) ([e531cc1](https://github.com/grafana/tanka/commit/e531cc1bd9a294f5abf8396f41f4d5e0c4723e65))
+* **deps:** update dependency prettier to v3.9.9 ([#2290](https://github.com/grafana/tanka/issues/2290)) ([bf2d1c3](https://github.com/grafana/tanka/commit/bf2d1c3539769c6cf3fd71869c55186ac583a2ac))
+* **deps:** update golang:1.27.1 docker digest to 3680233 ([#2280](https://github.com/grafana/tanka/issues/2280)) ([5520a18](https://github.com/grafana/tanka/commit/5520a183a5de534944332aff703dd528c8c89dea))
+* **deps:** update module github.com/huandu/xstrings to v1.6.1 ([#2282](https://github.com/grafana/tanka/issues/2282)) ([bde9226](https://github.com/grafana/tanka/commit/bde92269a387892a8915df8371d669cb85cc1541))
+* **deps:** update pnpm to v11.27.1 ([#2283](https://github.com/grafana/tanka/issues/2283)) ([c868495](https://github.com/grafana/tanka/commit/c868495659df5648def1afc71e35e686c7b88081))
+
 ## [0.39.2](https://github.com/grafana/tanka/compare/v0.39.1...v0.39.2) (2026-09-21)
 
 
