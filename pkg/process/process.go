@@ -11,6 +11,15 @@ import (
 const (
 	MetadataPrefix   = "tanka.dev"
 	LabelEnvironment = MetadataPrefix + "/environment"
+
+	// AnnotationPruneIgnore excludes a resource from `tk prune`, even if it
+	// carries the tanka.dev/environment label and looks orphaned. This is for
+	// resources that a third-party operator generates from a Tanka-managed
+	// object (e.g. a Secret created by external-secrets from an
+	// ExternalSecret), which can inherit the environment label and
+	// last-applied-configuration annotation from their parent without ever
+	// being applied by Tanka itself.
+	AnnotationPruneIgnore = MetadataPrefix + "/prune-ignore"
 )
 
 // Process converts the raw Jsonnet evaluation result (JSON tree) into a flat
