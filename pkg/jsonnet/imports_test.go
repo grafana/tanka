@@ -140,3 +140,18 @@ func generateTestProject(t testing.TB, dir string, depth int, importAllFromMain 
 
 	return allFiles
 }
+
+// TestGetSnippetHashTk checks that the builtin `tk` library, which is served
+// from memory, is not read from disk when hashing a snippet for the cache
+func TestGetSnippetHashTk(t *testing.T) {
+	dir, err := filepath.Abs("testdata/tkImport")
+	require.NoError(t, err)
+	mainPath := filepath.Join(dir, "main.jsonnet")
+	content, err := os.ReadFile(mainPath)
+	require.NoError(t, err)
+
+	vm := goimpl.MakeRawVM([]string{dir}, nil, nil, 0)
+	hash, err := getSnippetHash(vm, mainPath, string(content))
+	require.NoError(t, err)
+	assert.NotEmpty(t, hash)
+}

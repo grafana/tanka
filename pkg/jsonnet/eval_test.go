@@ -122,3 +122,19 @@ func TestEvaluateFileWithCaching(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "R_3hy-dRfOwXN-fezQ50ZF4dnrFcBcbQ9LztR_XWzJA=.json", result)
 }
+
+// The builtin `tk` library is served from memory, so hashing an environment
+// that imports it must not try to read it from disk
+func TestEvaluateFileWithCachingAndTkImport(t *testing.T) {
+	cachePath := filepath.Join(t.TempDir(), "cache")
+
+	for range 2 {
+		result, err := EvaluateFile(t.Context(), jsonnetImpl, "testdata/tkImport/main.jsonnet", Opts{CachePath: cachePath})
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"fruit": {"kind": "apple"}}`, result)
+	}
+
+	readCache, err := os.ReadDir(cachePath)
+	require.NoError(t, err)
+	assert.Len(t, readCache, 1)
+}
