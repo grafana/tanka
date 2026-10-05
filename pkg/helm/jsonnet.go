@@ -5,12 +5,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/google/go-jsonnet"
 	"github.com/google/go-jsonnet/ast"
 	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/rs/zerolog/log"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 // DefaultNameFormat to use when no nameFormat is supplied
@@ -31,6 +33,16 @@ type JsonnetOpts struct {
 	NameFormat string `json:"nameFormat"`
 }
 
+func validateReleaseName(name string) error {
+	if len(name) > 53 {
+		return fmt.Errorf("first argument 'name' is too long (max: 53 characters)")
+	}
+	if errs := validation.IsDNS1123Subdomain(name); len(errs) > 0 {
+		return fmt.Errorf("first argument 'name' is invalid: %s", strings.Join(errs, ", "))
+	}
+	return nil
+}
+
 // NativeFunc returns a jsonnet native function that provides the same
 // functionality as `Helm.Template` of this package. Charts are required to be
 // present on the local filesystem, at a relative location to the file that
@@ -46,6 +58,9 @@ func NativeFunc(h Helm) *jsonnet.NativeFunction {
 			name, ok := data[0].(string)
 			if !ok {
 				return nil, fmt.Errorf("first argument 'name' must be of 'string' type, got '%T' instead", data[0])
+			}
+			if err := validateReleaseName(name); err != nil {
+				return nil, err
 			}
 
 			chartpath, ok := data[1].(string)

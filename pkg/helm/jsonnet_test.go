@@ -64,7 +64,7 @@ func callNativeFunction(t *testing.T, expectedHelmTemplateOptions TemplateOpts, 
 
 	// this verifies that the helmMock.Template() method is called with the
 	// correct arguments, i.e. includeCrds: true is set by default
-	helmMock.On("Template", "exampleChartName", "/full/chart/path", expectedHelmTemplateOptions).
+	helmMock.On("Template", "example-chart-name", "/full/chart/path", expectedHelmTemplateOptions).
 		Return(manifest.List{}, nil).
 		Once()
 
@@ -73,7 +73,7 @@ func callNativeFunction(t *testing.T, expectedHelmTemplateOptions TemplateOpts, 
 
 	// the mandatory parameters to helm.template() in Jsonnet
 	params := []string{
-		"exampleChartName",
+		"example-chart-name",
 		"exampleChartPath",
 	}
 
@@ -168,7 +168,7 @@ func TestTemplateCachingWorks(t *testing.T) {
 		Twice()
 	// this verifies that the helmMock.Template() method is called with the
 	// correct arguments and only a single time.
-	helmMock.On("Template", "exampleChartName", "/full/chart/path", expectedHelmTemplateOptions).
+	helmMock.On("Template", "example-chart-name", "/full/chart/path", expectedHelmTemplateOptions).
 		Return(manifest.List{}, nil).
 		Once()
 
@@ -177,7 +177,7 @@ func TestTemplateCachingWorks(t *testing.T) {
 
 	// the mandatory parameters to helm.template() in Jsonnet
 	params := []string{
-		"exampleChartName",
+		"example-chart-name",
 		"exampleChartPath",
 	}
 
