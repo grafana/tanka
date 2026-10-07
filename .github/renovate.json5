@@ -158,7 +158,6 @@
     },
     {
       matchPackageNames: [
-        'helm',
         'helm/helm',
       ],
       allowedVersions: '<4.0.0',
