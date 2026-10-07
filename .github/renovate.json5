@@ -12,13 +12,6 @@
         '{"releases": [$$ [$not(draft) and $not(prerelease) ] . {"version": $substringAfter(tag_name, "v"), "releaseTimestamp": created_at}]}',
       ],
     },
-    helm: {
-      defaultRegistryUrlTemplate: 'https://api.github.com/repos/helm/helm/releases',
-      format: 'json',
-      transformTemplates: [
-        '{"releases": [$.tag_name . {"version": $substring($, 1), "releaseTimestamp": created_at}]}',
-      ],
-    },
     kustomize: {
       defaultRegistryUrlTemplate: 'https://api.github.com/repos/kubernetes-sigs/kustomize/releases',
       format: 'json',
@@ -47,8 +40,10 @@
       matchStrings: [
         'ARG HELM_VERSION=(?<currentValue>\\S+)',
       ],
-      datasourceTemplate: 'custom.helm',
+      datasourceTemplate: 'github-releases',
       depNameTemplate: 'helm',
+      packageNameTemplate: 'helm/helm',
+      extractVersionTemplate: '^v(?<version>.+)$',
       versioningTemplate: 'semver',
     },
     {
@@ -163,7 +158,7 @@
     },
     {
       matchPackageNames: [
-        'helm',
+        'helm/helm',
       ],
       allowedVersions: '<4.0.0',
     },
