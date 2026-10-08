@@ -2,6 +2,23 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.39.4](https://github.com/grafana/tanka/compare/v0.39.3...v0.39.4) (2026-10-08)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump undici to 8.11.2 in docs ([#2307](https://github.com/grafana/tanka/issues/2307)) ([bb73008](https://github.com/grafana/tanka/commit/bb7300895a654f8fd732b2f544852c0cc5725991))
+* **deps:** update docs ([#2295](https://github.com/grafana/tanka/issues/2295)) ([df781d3](https://github.com/grafana/tanka/commit/df781d3fc322089ee3a81d66364290328a823af2))
+* **deps:** update module github.com/vektah/gqlparser/v2 to v2.5.59 ([#2302](https://github.com/grafana/tanka/issues/2302)) ([3a7d6cd](https://github.com/grafana/tanka/commit/3a7d6cd89d4bfa7193b678813fa57a7b357fce63))
+* **renovate:** use github-releases datasource for helm ([#2304](https://github.com/grafana/tanka/issues/2304)) ([1c06859](https://github.com/grafana/tanka/commit/1c06859f30216e62875f04ca3d7cf02b9672a1b1))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update dependency helm to v3.22.0 ([#2305](https://github.com/grafana/tanka/issues/2305)) ([780889d](https://github.com/grafana/tanka/commit/780889da03cfff70a155e3ec3e3a700af193940a))
+* **deps:** update module github.com/grpc-ecosystem/grpc-gateway/v2 to v2.31.0 ([#2303](https://github.com/grafana/tanka/issues/2303)) ([69af885](https://github.com/grafana/tanka/commit/69af8856ed8b7ee69d022917d8e45b8451812f16))
+* **deps:** update module github.com/huandu/xstrings to v1.6.2 ([#2300](https://github.com/grafana/tanka/issues/2300)) ([8030417](https://github.com/grafana/tanka/commit/8030417ffc6e49a36eaa175e5185835e05bef574))
+
 ## [0.39.3](https://github.com/grafana/tanka/compare/v0.39.2...v0.39.3) (2026-10-05)
 
 
