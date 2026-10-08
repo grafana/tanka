@@ -149,6 +149,24 @@
       enabled: false,
     },
     {
+      // Starting with otel v1.47.0, go.opentelemetry.io/otel/internal/global
+      // imports go.opentelemetry.io/otel/log. The Dagger Go SDK replaces
+      // otel/log with v0.16.0, which imports otel/internal/global in turn,
+      // so the build fails with an import cycle. Those replace directives
+      // reach every module in go.work, so the root module is capped too.
+      // Remove this once the Dagger Go SDK's replace directives are updated.
+      matchFileNames: [
+        'go.mod',
+        'go.sum',
+        'dagger/go.mod',
+        'dagger/go.sum',
+      ],
+      matchPackageNames: [
+        'go.opentelemetry.io/**',
+      ],
+      allowedVersions: '<1.47.0',
+    },
+    {
       matchFileNames: [
         'docs/package.json',
         'docs/pnpm-lock.yaml',
