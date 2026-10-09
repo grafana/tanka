@@ -138,6 +138,7 @@ func pruneCmd(ctx context.Context) *cli.Command {
 
 	var opts tanka.PruneOpts
 	cmd.Flags().StringVar(&opts.Namespace, "namespace", "", "limit pruning to a single namespace")
+	cmd.Flags().BoolVar(&opts.ListIgnored, "list-ignored", false, "list resources excluded from pruning via the tanka.dev/prune-ignore annotation, then exit")
 	var (
 		autoApproveDeprecated bool
 		autoApproveString     string
