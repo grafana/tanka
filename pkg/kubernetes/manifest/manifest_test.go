@@ -167,6 +167,44 @@ func deployment(name string) map[string]interface{} {
 	}
 }
 
+func TestHasControllerOwner(t *testing.T) {
+	cases := []struct {
+		name  string
+		meta  Metadata
+		owned bool
+	}{
+		{
+			name:  "no owner references",
+			meta:  Metadata{},
+			owned: false,
+		},
+		{
+			name: "controller owner",
+			meta: Metadata{
+				"ownerReferences": []interface{}{
+					map[string]interface{}{"kind": "ExternalSecret", "controller": true},
+				},
+			},
+			owned: true,
+		},
+		{
+			name: "non-controller owner",
+			meta: Metadata{
+				"ownerReferences": []interface{}{
+					map[string]interface{}{"kind": "ExternalSecret", "controller": false},
+				},
+			},
+			owned: false,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			require.Equal(t, c.owned, c.meta.HasControllerOwner())
+		})
+	}
+}
+
 func secret(name string, data map[string]interface{}) map[string]interface{} {
 	if data == nil {
 		data = map[string]interface{}{}
