@@ -17,11 +17,11 @@
     "astro": "^7.2.10",
     "sharp": "^0.35.0",
     "tailwindcss": "^4.1.13",
-    "typescript": "^6.0.0"
+    "typescript": "^7.0.0"
   },
   "devDependencies": {
     "@types/node": "24.19.1",
     "prettier": "3.9.9"
   },
-  "packageManager": "pnpm@11.28.4+sha512.f905a61563f89b49a292634d3d87d024cfdea9dccf5c66b2ccc261675fa7b2774320a959db472e6caa7f9ff7314709cd50d06c8fd64addb60647377a78d250ff"
+  "packageManager": "pnpm@12.13.0+sha512.1e55719bf26e809dce5c5084fdebaa64efb3da9038ae5d68a9f8a68311f1a45841c8c3b76a37298c3b66f6bcc80409a9b7f33c78a7168a3e90fb65a5d8235ae4"
 }
