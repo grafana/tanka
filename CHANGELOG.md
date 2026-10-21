@@ -2,6 +2,37 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.39.5](https://github.com/grafana/tanka/compare/v0.39.4...v0.39.5) (2026-10-21)
+
+
+### 🐛 Bug Fixes
+
+* **docker:** update Go and CA certs ([#2326](https://github.com/grafana/tanka/issues/2326)) ([dbe2ebe](https://github.com/grafana/tanka/commit/dbe2ebe60afc34d7b48f59ce857af549baad7136))
+* **jsonnet:** don't read builtin tk import from disk when hashing for cache ([#2257](https://github.com/grafana/tanka/issues/2257)) ([a7d1329](https://github.com/grafana/tanka/commit/a7d13293d127f5e485bf92101216a45871dd798b)), closes [#2243](https://github.com/grafana/tanka/issues/2243)
+* **security/unknown/acceptance-tests:** update go toolchain directive to v1.27.2 [security] ([#2313](https://github.com/grafana/tanka/issues/2313)) ([ba4603e](https://github.com/grafana/tanka/commit/ba4603e1fa19b93daaef682d9242a3b6b0ac2425))
+* **security/unknown/acceptance-tests:** update go toolchain directive to v1.27.3 [security] ([#2324](https://github.com/grafana/tanka/issues/2324)) ([a15d1b5](https://github.com/grafana/tanka/commit/a15d1b5fb9a942d3c2a5566b3eeb8ca666698ae7))
+* **security/unknown/acceptance-tests:** update module golang.org/x/net to v0.60.0 [security] ([#2316](https://github.com/grafana/tanka/issues/2316)) ([6a57486](https://github.com/grafana/tanka/commit/6a574867d08b5d78913d7d64b396d2ae7222c9bf))
+* **security/unknown/dagger:** update module golang.org/x/net to v0.60.0 [security] ([#2317](https://github.com/grafana/tanka/issues/2317)) ([c8b950a](https://github.com/grafana/tanka/commit/c8b950a7b5a83ceefa4e27004964249f4ec86ecb))
+* **security/unknown/:** update go toolchain directive to v1.27.2 [security] ([#2312](https://github.com/grafana/tanka/issues/2312)) ([9f8e458](https://github.com/grafana/tanka/commit/9f8e458697682344ede6f0e13dfe872e02c59aab))
+* **security/unknown/:** update go toolchain directive to v1.27.3 [security] ([#2323](https://github.com/grafana/tanka/issues/2323)) ([256e557](https://github.com/grafana/tanka/commit/256e557ca46eb7d81b5eaf953be8019092d25f20))
+* **security/unknown/:** update module golang.org/x/net to v0.60.0 [security] ([#2315](https://github.com/grafana/tanka/issues/2315)) ([e7eb175](https://github.com/grafana/tanka/commit/e7eb175fe44c5d2829aef4296f3e5fdf81bdf545))
+
+
+### 🤖 Continuous Integration
+
+* run tests on self-hosted runners ([#2325](https://github.com/grafana/tanka/issues/2325)) ([cc5cb96](https://github.com/grafana/tanka/commit/cc5cb96cdcfc4712e718b6f56413c5fd473ff336))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** lock file maintenance ([#2199](https://github.com/grafana/tanka/issues/2199)) ([20dc855](https://github.com/grafana/tanka/commit/20dc855d831d10285cc62b56866684f1eb2786d8))
+* **deps:** update dependency kubectl to v1.35.9 ([#2322](https://github.com/grafana/tanka/issues/2322)) ([27be0eb](https://github.com/grafana/tanka/commit/27be0eb4b7029a7a522d86624d89c95a4f7f2541))
+* **deps:** update dependency kustomize to v5.8.3 ([#2320](https://github.com/grafana/tanka/issues/2320)) ([424d41a](https://github.com/grafana/tanka/commit/424d41a97bf85d47fb1d4db0418eafc65972e744))
+* **deps:** update dependency pnpm to v12.11.2 ([#2308](https://github.com/grafana/tanka/issues/2308)) ([750a1b8](https://github.com/grafana/tanka/commit/750a1b86c38341c56b1dfe2e52978b348341d058))
+* **deps:** update golang docker tag to v1.27.2 ([#2321](https://github.com/grafana/tanka/issues/2321)) ([13f3986](https://github.com/grafana/tanka/commit/13f3986c242672494fa23a55b80283c086b736bb))
+* **deps:** update golang:1.27.1 docker digest to 162be52 ([#2319](https://github.com/grafana/tanka/issues/2319)) ([16d3d88](https://github.com/grafana/tanka/commit/16d3d88540f4c02164595f3e5536c4a0d2573744))
+* **renovate:** allow kubectl 1.35 ([#2310](https://github.com/grafana/tanka/issues/2310)) ([5b614d3](https://github.com/grafana/tanka/commit/5b614d3d8c66b052d8d48c7d90caffb323310d89))
+
 ## [0.39.4](https://github.com/grafana/tanka/compare/v0.39.3...v0.39.4) (2026-10-08)
 
 
