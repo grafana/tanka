@@ -1,8 +1,6 @@
 module github.com/grafana/tanka
 
-go 1.26.1
-
-toolchain go1.27.3
+go 1.27.3
 
 require (
 	github.com/Masterminds/semver v1.5.0
