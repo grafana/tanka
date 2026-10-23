@@ -2,6 +2,27 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.40.0](https://github.com/grafana/tanka/compare/v0.39.5...v0.40.0) (2026-10-23)
+
+
+### 🎉 Features
+
+* **prune:** skip owner-controlled and explicitly ignored resources ([#2225](https://github.com/grafana/tanka/issues/2225)) ([cf89310](https://github.com/grafana/tanka/commit/cf89310b4a4f924fd9dadbd12f0967f7679e01d8))
+
+
+### 🐛 Bug Fixes
+
+* **deps:** update module github.com/vektah/gqlparser/v2 to v2.5.63 ([#2306](https://github.com/grafana/tanka/issues/2306)) ([e53c44f](https://github.com/grafana/tanka/commit/e53c44f3f75d1f86e4464da777238256a4953702))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update actions/download-artifact action to v8.0.2 ([#2327](https://github.com/grafana/tanka/issues/2327)) ([f2a4232](https://github.com/grafana/tanka/commit/f2a4232d04d769764de54e9d4659151dffc43c6f))
+* **deps:** update actions/upload-artifact action to v7.0.2 ([#2328](https://github.com/grafana/tanka/issues/2328)) ([481940a](https://github.com/grafana/tanka/commit/481940a1c4df18cfdb67098747cab51724c0f9b6))
+* **deps:** update google.golang.org/genproto/googleapis/api digest to ce908d2 ([#2284](https://github.com/grafana/tanka/issues/2284)) ([c1ce3ff](https://github.com/grafana/tanka/commit/c1ce3ff1762c697eb2eaa23124af5a911a47ca5b))
+* **deps:** update k8s.io/kube-openapi digest to ca3452a ([#2237](https://github.com/grafana/tanka/issues/2237)) ([0827063](https://github.com/grafana/tanka/commit/0827063125dc1d3835f760dd1406308442fa22c5))
+* **deps:** update module github.com/shopspring/decimal to v1.6.0 ([#2311](https://github.com/grafana/tanka/issues/2311)) ([682b045](https://github.com/grafana/tanka/commit/682b045efedd2f56b07c0cdd575d27d4f84b4b94))
+
 ## [0.39.5](https://github.com/grafana/tanka/compare/v0.39.4...v0.39.5) (2026-10-21)
 
 
