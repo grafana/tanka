@@ -204,6 +204,25 @@ func TestLoadEnvironmentFallbackToName(t *testing.T) {
 	assert.Equal(t, "project1-env1", result.Env.Metadata.Name)
 }
 
+// Tests that Peek applies the same environment name fallback as Load
+func TestPeekFallbackToName(t *testing.T) {
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+	err = os.Chdir("./testdata/cases/multiple-inline-envs")
+	require.NoError(t, err)
+	defer func() { require.NoError(t, os.Chdir(cwd)) }()
+
+	// Partial match
+	env, err := Peek(t.Context(), "project2", Opts{})
+	require.NoError(t, err)
+	assert.Equal(t, "project2-env1", env.Metadata.Name)
+
+	// Full match
+	env, err = Peek(t.Context(), "project1-env1", Opts{})
+	require.NoError(t, err)
+	assert.Equal(t, "project1-env1", env.Metadata.Name)
+}
+
 func TestLoadSelectEnvironmentFullMatchHasPriority(t *testing.T) {
 	// `base` matches both `base` and `base-and-more`
 	// However, the full match should win
