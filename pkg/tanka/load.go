@@ -53,12 +53,8 @@ func LoadEnvironment(ctx context.Context, path string, opts Opts) (*v1alpha1.Env
 	defer span.End()
 	span.SetAttributes(telemetry.AttrPath(path), attribute.String("tanka.nameFilter", opts.Name))
 
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		log.Info().Msgf("Path %q does not exist, trying to use it as an environment name", path)
-		opts.Name = path
-		path = "."
-	} else if err != nil {
+	path, opts, err := resolveEnvPath(path, opts)
+	if err != nil {
 		return nil, err
 	}
 
@@ -89,12 +85,29 @@ func LoadManifests(_ context.Context, env *v1alpha1.Environment, filters process
 	return &LoadResult{Env: env, Resources: processed}, nil
 }
 
+// resolveEnvPath falls back to treating path as an environment name, searched
+// for in the current directory, when it does not exist on disk.
+func resolveEnvPath(path string, opts Opts) (string, Opts, error) {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		log.Info().Msgf("Path %q does not exist, trying to use it as an environment name", path)
+		opts.Name = path
+		return ".", opts, nil
+	}
+	return path, opts, err
+}
+
 // Peek loads the metadata of the environment at path. To get resources as well,
 // use Load
 func Peek(ctx context.Context, path string, opts Opts) (*v1alpha1.Environment, error) {
 	ctx, span := tracer.Start(ctx, "tanka.Peek")
 	defer span.End()
 	span.SetAttributes(telemetry.AttrPath(path))
+
+	path, opts, err := resolveEnvPath(path, opts)
+	if err != nil {
+		return nil, err
+	}
 
 	loader, err := DetectLoader(path, opts)
 	if err != nil {
