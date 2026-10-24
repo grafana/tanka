@@ -1,5 +1,5 @@
 # download kubectl
-FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS kubectl
+FROM golang:1.27.3-alpine@sha256:b8c9b82affbbb82a020bbcf998dad2ba9516944ac7e883524642a481a9505e9c AS kubectl
 ARG KUBECTL_VERSION=1.35.9
 RUN apk add --no-cache 'ca-certificates>=20261020-r0' curl && \
     update-ca-certificates
@@ -9,7 +9,7 @@ RUN export OS=$(go env GOOS) && \
     chmod +x /usr/local/bin/kubectl
 
 # build jsonnet-bundler
-FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS jb
+FROM golang:1.27.3-alpine@sha256:b8c9b82affbbb82a020bbcf998dad2ba9516944ac7e883524642a481a9505e9c AS jb
 WORKDIR /tmp
 RUN apk add --no-cache 'ca-certificates>=20261020-r0' git make bash &&\
     update-ca-certificates &&\
@@ -19,7 +19,7 @@ RUN apk add --no-cache 'ca-certificates>=20261020-r0' git make bash &&\
     make static &&\
     mv _output/jb /usr/local/bin/jb
 
-FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS helm
+FROM golang:1.27.3-alpine@sha256:b8c9b82affbbb82a020bbcf998dad2ba9516944ac7e883524642a481a9505e9c AS helm
 WORKDIR /tmp/helm
 ARG HELM_VERSION=3.22.0
 RUN apk add --no-cache 'ca-certificates>=20261020-r0' jq curl && \
@@ -29,7 +29,7 @@ RUN export OS=$(go env GOOS) && \
     curl -SL "https://get.helm.sh/helm-v${HELM_VERSION}-${OS}-${ARCH}.tar.gz" > helm.tgz && \
     tar -xvf helm.tgz --strip-components=1
 
-FROM golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS kustomize
+FROM golang:1.27.3-alpine@sha256:b8c9b82affbbb82a020bbcf998dad2ba9516944ac7e883524642a481a9505e9c AS kustomize
 WORKDIR /tmp/kustomize
 ARG KUSTOMIZE_VERSION=5.8.3
 RUN apk add --no-cache 'ca-certificates>=20261020-r0' jq curl && \
@@ -46,7 +46,7 @@ COPY . .
 RUN make static
 
 # assemble final container
-FROM alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
+FROM alpine:3.24.3@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
 RUN apk add --no-cache 'ca-certificates>=20261020-r0' coreutils diffutils less git openssh-client && \
     update-ca-certificates && \
     apk upgrade --quiet
