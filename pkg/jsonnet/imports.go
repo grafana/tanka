@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sort"
 	"sync"
 
@@ -62,6 +63,9 @@ func TransitiveImports(_ context.Context, dir string) ([]string, error) {
 
 	paths := make([]string, 0, len(imports)+1)
 	for k := range imports {
+		if strings.Contains(k, goimpl.LocationInternal) {
+			continue
+		}
 		// Try to resolve any symlinks; use the original path as a last resort
 		p, err := filepath.EvalSymlinks(k)
 		if err != nil {

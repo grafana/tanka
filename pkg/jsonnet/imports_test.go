@@ -29,6 +29,17 @@ func TestTransitiveImports(t *testing.T) {
 	}, imports)
 }
 
+// TestTransitiveImportsWithTk verifies that `import "tk"` (which resolves to
+// the virtual <internal>/tk.libsonnet path) does not cause an lstat error.
+func TestTransitiveImportsWithTk(t *testing.T) {
+	imports, err := TransitiveImports(t.Context(), "testdata/importTreeWithTk")
+	require.NoError(t, err)
+	assert.Equal(t, []string{
+		"helper.libsonnet",
+		"main.jsonnet",
+	}, imports)
+}
+
 func BenchmarkGetSnippetHash(b *testing.B) {
 	for _, tc := range []struct {
 		name           string
