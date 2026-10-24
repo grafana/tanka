@@ -20,8 +20,8 @@
     "typescript": "^6.0.0"
   },
   "devDependencies": {
-    "@types/node": "24.19.1",
-    "prettier": "3.9.9"
+    "@types/node": "24.19.2",
+    "prettier": "3.9.10"
   },
-  "packageManager": "pnpm@11.28.4+sha512.f905a61563f89b49a292634d3d87d024cfdea9dccf5c66b2ccc261675fa7b2774320a959db472e6caa7f9ff7314709cd50d06c8fd64addb60647377a78d250ff"
+  "packageManager": "pnpm@11.28.7+sha512.2161a30a2dc64b0c0f09786496fbce5f061be96b8ff11f0bc98e6bc675e0074ceb225b9197a278f2f171e6c9fb971bd1df8932e5bc31053baccdd52b15a1ae26"
 }
