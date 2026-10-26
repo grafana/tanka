@@ -21,7 +21,7 @@ RUN apk add --no-cache 'ca-certificates>=20261020-r0' git make bash &&\
 
 FROM golang:1.27.3-alpine@sha256:b8c9b82affbbb82a020bbcf998dad2ba9516944ac7e883524642a481a9505e9c AS helm
 WORKDIR /tmp/helm
-ARG HELM_VERSION=3.22.0
+ARG HELM_VERSION=3.22.1
 RUN apk add --no-cache 'ca-certificates>=20261020-r0' jq curl && \
     update-ca-certificates
 RUN export OS=$(go env GOOS) && \
