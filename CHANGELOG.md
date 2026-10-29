@@ -2,6 +2,13 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.40.2](https://github.com/grafana/tanka/compare/v0.40.1...v0.40.2) (2026-10-29)
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update golang:1.27.3 docker digest to 2920bb1 [security] ([#2347](https://github.com/grafana/tanka/issues/2347)) ([18d2a59](https://github.com/grafana/tanka/commit/18d2a59ca6abcbef2d1102621d3ca0a57e95908b))
+
 ## [0.40.1](https://github.com/grafana/tanka/compare/v0.40.0...v0.40.1) (2026-10-29)
 
 
