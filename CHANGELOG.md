@@ -2,6 +2,22 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.40.1](https://github.com/grafana/tanka/compare/v0.40.0...v0.40.1) (2026-10-29)
+
+
+### 🐛 Bug Fixes
+
+* **deps:** bump undici and zod in docs lockfile ([#2346](https://github.com/grafana/tanka/issues/2346)) ([b773056](https://github.com/grafana/tanka/commit/b773056c4eb674cfee9c8fc76ce0633e72eccb34))
+* **security/unknown/acceptance-tests:** update module golang.org/x/net to v0.62.0 [security] ([#2342](https://github.com/grafana/tanka/issues/2342)) ([10cee06](https://github.com/grafana/tanka/commit/10cee06002ec6cb30c02952488537465a4500a58))
+* **security/unknown/dagger:** update module golang.org/x/net to v0.62.0 [security] ([#2343](https://github.com/grafana/tanka/issues/2343)) ([6732c99](https://github.com/grafana/tanka/commit/6732c99a38cc1ee200bf41311e4276dc7a4effd8))
+* **security/unknown/:** update module golang.org/x/net to v0.62.0 [security] ([#2341](https://github.com/grafana/tanka/issues/2341)) ([6d3dfa2](https://github.com/grafana/tanka/commit/6d3dfa2bddf791a77e899c5f4fc7c735de94fc1d))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update ca trust base images [security] ([#2336](https://github.com/grafana/tanka/issues/2336)) ([52647b6](https://github.com/grafana/tanka/commit/52647b6cea10390eaa0b98b4dd722c7faeda4fd8))
+* **deps:** update docs ([#2332](https://github.com/grafana/tanka/issues/2332)) ([63e2729](https://github.com/grafana/tanka/commit/63e2729fe73d1f24d2dae32ace0c6590bf00c183))
+
 ## [0.40.0](https://github.com/grafana/tanka/compare/v0.39.5...v0.40.0) (2026-10-26)
 
 
