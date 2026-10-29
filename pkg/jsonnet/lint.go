@@ -107,7 +107,9 @@ func lintWithRecover(file string) (buf bytes.Buffer, success bool) {
 		return
 	}
 
-	jpaths, _, _, err := jpath.Resolve(file, true)
+	// Resolve from the file's directory, so the base is the environment
+	// containing it (the nearest parent with a main.jsonnet), as in `tk eval`.
+	jpaths, _, _, err := jpath.Resolve(filepath.Dir(file), true)
 	if err != nil {
 		fmt.Fprintf(&buf, "got an error getting jpath for %s: %v\n\n", file, err)
 		return
