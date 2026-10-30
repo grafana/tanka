@@ -97,6 +97,7 @@ func applyCmd(ctx context.Context) *cli.Command {
 	addDiffFlags(cmd.Flags(), &opts.DiffBaseOpts)
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getInjectLabels := injectLabelFlag(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
 		ctx, span := tracer.Start(ctx, "applyCmd")
@@ -120,6 +121,7 @@ func applyCmd(ctx context.Context) *cli.Command {
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
 		opts.JsonnetImplementation = vars.jsonnetImplementation
+		opts.InjectLabels = getInjectLabels()
 
 		return tanka.Apply(ctx, args[0], opts)
 	}
@@ -247,6 +249,7 @@ func diffCmd(ctx context.Context) *cli.Command {
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getInjectLabels := injectLabelFlag(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
 		ctx, span := tracer.Start(ctx, "diffCmd")
@@ -262,6 +265,7 @@ func diffCmd(ctx context.Context) *cli.Command {
 		opts.JsonnetOpts = getJsonnetOpts()
 		opts.Name = vars.name
 		opts.JsonnetImplementation = vars.jsonnetImplementation
+		opts.InjectLabels = getInjectLabels()
 
 		changes, err := tanka.Diff(ctx, args[0], opts)
 		if err != nil {
@@ -315,6 +319,7 @@ func showCmd(ctx context.Context) *cli.Command {
 
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
+	getInjectLabels := injectLabelFlag(cmd.Flags())
 
 	cmd.Run = func(_ *cli.Command, args []string) error {
 		ctx, span := tracer.Start(ctx, "showCmd")
@@ -343,6 +348,7 @@ to bypass this check.`)
 			Filters:               filters,
 			Name:                  vars.name,
 			JsonnetImplementation: vars.jsonnetImplementation,
+			InjectLabels:          getInjectLabels(),
 		})
 
 		if err != nil {
