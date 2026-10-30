@@ -107,12 +107,22 @@ func lintWithRecover(file string) (buf bytes.Buffer, success bool) {
 		return
 	}
 
-	// Resolve from the file's directory, so the base is the environment
-	// containing it (the nearest parent with a main.jsonnet), as in `tk eval`.
-	jpaths, _, _, err := jpath.Resolve(filepath.Dir(file), true)
+	jpaths, fileBase, _, err := jpath.Resolve(file, true)
 	if err != nil {
 		fmt.Fprintf(&buf, "got an error getting jpath for %s: %v\n\n", file, err)
 		return
+	}
+
+	// Resolving from the file itself finds the base of a custom entrypoint
+	// (e.g. environments/custom/custom.jsonnet), but for a nested file it
+	// stops at the file's own directory. Also resolve from the file's
+	// directory, which finds the environment containing it (the nearest
+	// parent with a main.jsonnet), as `tk eval` does, and add that base as a
+	// lower-priority fallback so environment-relative imports work too.
+	// The importer iterates the jpath in reverse, so prepending keeps the
+	// paths found above first.
+	if _, envBase, _, envErr := jpath.Resolve(filepath.Dir(file), true); envErr == nil && envBase != fileBase {
+		jpaths = append([]string{filepath.Join(envBase, "vendor"), envBase}, jpaths...)
 	}
 	vm := goimpl.MakeRawVM(jpaths, nil, nil, 0)
 

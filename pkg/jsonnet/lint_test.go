@@ -22,6 +22,14 @@ func TestLint(t *testing.T) {
 		assert.Empty(t, buf.String())
 	})
 
+	t.Run("custom entrypoint with an environment vendor dir", func(t *testing.T) {
+		buf := &bytes.Buffer{}
+		opts := &LintOpts{Out: buf, Parallelism: 4}
+		err := Lint([]string{"testdata/lintCustomEntrypoint/environments/custom/custom.jsonnet"}, opts)
+		assert.NoError(t, err)
+		assert.Empty(t, buf.String())
+	})
+
 	t.Run("error", func(t *testing.T) {
 		buf := &bytes.Buffer{}
 		opts := &LintOpts{Out: buf, Parallelism: 4}
