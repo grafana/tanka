@@ -7,6 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/pflag"
+	"k8s.io/apimachinery/pkg/api/validate/content"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/grafana/tanka/pkg/spec/v1alpha1"
@@ -83,14 +84,28 @@ func injectLabelFlag(fs *pflag.FlagSet) func() map[string]string {
 	return func() map[string]string {
 		m := make(map[string]string)
 		for _, s := range *injectLabels {
-			split := strings.SplitN(s, "=", 2)
-			if len(split) != 2 {
-				log.Fatal().Msgf("--inject-label argument has wrong format: `%s`. Expected `key=value`", s)
+			k, v, err := parseInjectLabel(s)
+			if err != nil {
+				log.Fatal().Msgf("--inject-label: %s", err)
 			}
-			m[split[0]] = split[1]
+			m[k] = v
 		}
 		return m
 	}
+}
+
+func parseInjectLabel(s string) (string, string, error) {
+	k, v, ok := strings.Cut(s, "=")
+	if !ok {
+		return "", "", fmt.Errorf("argument has wrong format: `%s`. Expected `key=value`", s)
+	}
+	if errs := content.IsLabelKey(k); len(errs) > 0 {
+		return "", "", fmt.Errorf("invalid label key in `%s`: %s", s, strings.Join(errs, "; "))
+	}
+	if errs := content.IsLabelValue(v); len(errs) > 0 {
+		return "", "", fmt.Errorf("invalid label value in `%s`: %s", s, strings.Join(errs, "; "))
+	}
+	return k, v, nil
 }
 
 func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[string]string) {
