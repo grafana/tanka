@@ -23,5 +23,5 @@
     "@types/node": "24.19.2",
     "prettier": "3.9.10"
   },
-  "packageManager": "pnpm@11.28.8+sha512.f6988a32046b9a3f78d7d7ee0747926bbe905ff9dff73bf19abb87bd7d1906a2ac90d93f73be32b5f9e14c2899569bcb0c9c5ec8a19e083f5d71bbab6dd9e0b8"
+  "packageManager": "pnpm@11.28.10+sha512.672216f06e15c109b85471d49d3fbed17e6f03ead258df08c2bf5b4a5c33321ebfbf59476bce81325efada16ace0ac78548fd0bfcd7a51369e939182a3dd50e4"
 }
