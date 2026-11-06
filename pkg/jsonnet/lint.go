@@ -28,6 +28,11 @@ type LintOpts struct {
 	Out io.Writer
 }
 
+type lintWork struct {
+	file   string
+	jpaths []string
+}
+
 // Lint takes a list of files and directories, processes them and prints
 // out to stderr if there are linting warnings
 func Lint(fds []string, opts *LintOpts) error {
@@ -39,39 +44,56 @@ func Lint(fds []string, opts *LintOpts) error {
 		opts.Out = os.Stdout
 	}
 
-	var paths []string
+	// Resolve the jpath from each path the user passed (file or directory),
+	// matching tk eval's entrypoint context, and reuse that jpath for every
+	// file discovered under it. That preserves per-environment vendor
+	// override priority and does not invent extra search paths that would
+	// hide incorrect imports when a nested file is linted on its own.
+	var work []lintWork
 	for _, f := range fds {
 		fs, err := FindFiles(f, opts.Excludes)
 		if err != nil {
 			return errors.Wrap(err, "finding Jsonnet files")
 		}
-		paths = append(paths, fs...)
+
+		resolvePath, err := filepath.Abs(f)
+		if err != nil {
+			return errors.Wrapf(err, "getting absolute path for %s", f)
+		}
+		jpaths, _, _, err := jpath.Resolve(resolvePath, true)
+		if err != nil {
+			return errors.Wrapf(err, "getting jpath for %s", f)
+		}
+
+		for _, file := range fs {
+			work = append(work, lintWork{file: file, jpaths: jpaths})
+		}
 	}
 
 	type result struct {
 		success bool
 		output  string
 	}
-	fileCh := make(chan string, len(paths))
-	resultCh := make(chan result, len(paths))
-	lintWorker := func(fileCh <-chan string, resultCh chan result) {
-		for file := range fileCh {
-			buf, success := lintWithRecover(file)
+	workCh := make(chan lintWork, len(work))
+	resultCh := make(chan result, len(work))
+	lintWorker := func(workCh <-chan lintWork, resultCh chan result) {
+		for item := range workCh {
+			buf, success := lintWithRecover(item.file, item.jpaths)
 			resultCh <- result{success: success, output: buf.String()}
 		}
 	}
 
 	for i := 0; i < opts.Parallelism; i++ {
-		go lintWorker(fileCh, resultCh)
+		go lintWorker(workCh, resultCh)
 	}
 
-	for _, file := range paths {
-		fileCh <- file
+	for _, item := range work {
+		workCh <- item
 	}
-	close(fileCh)
+	close(workCh)
 
 	lintingFailed := false
-	for i := 0; i < len(paths); i++ {
+	for i := 0; i < len(work); i++ {
 		result := <-resultCh
 		lintingFailed = lintingFailed || !result.success
 		if result.output != "" {
@@ -85,7 +107,7 @@ func Lint(fds []string, opts *LintOpts) error {
 	return nil
 }
 
-func lintWithRecover(file string) (buf bytes.Buffer, success bool) {
+func lintWithRecover(file string, jpaths []string) (buf bytes.Buffer, success bool) {
 	file, err := filepath.Abs(file)
 	if err != nil {
 		fmt.Fprintf(&buf, "got an error getting the absolute path for %s: %v\n\n", file, err)
@@ -107,23 +129,6 @@ func lintWithRecover(file string) (buf bytes.Buffer, success bool) {
 		return
 	}
 
-	jpaths, fileBase, _, err := jpath.Resolve(file, true)
-	if err != nil {
-		fmt.Fprintf(&buf, "got an error getting jpath for %s: %v\n\n", file, err)
-		return
-	}
-
-	// Resolving from the file itself finds the base of a custom entrypoint
-	// (e.g. environments/custom/custom.jsonnet), but for a nested file it
-	// stops at the file's own directory. Also resolve from the file's
-	// directory, which finds the environment containing it (the nearest
-	// parent with a main.jsonnet), as `tk eval` does, and add that base as a
-	// lower-priority fallback so environment-relative imports work too.
-	// The importer iterates the jpath in reverse, so prepending keeps the
-	// paths found above first.
-	if _, envBase, _, envErr := jpath.Resolve(filepath.Dir(file), true); envErr == nil && envBase != fileBase {
-		jpaths = append([]string{filepath.Join(envBase, "vendor"), envBase}, jpaths...)
-	}
 	vm := goimpl.MakeRawVM(jpaths, nil, nil, 0)
 
 	failed := linter.LintSnippet(vm, &buf, []linter.Snippet{{FileName: file, Code: string(content)}})

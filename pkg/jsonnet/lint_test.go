@@ -2,9 +2,11 @@ package jsonnet
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLint(t *testing.T) {
@@ -28,6 +30,23 @@ func TestLint(t *testing.T) {
 		err := Lint([]string{"testdata/lintCustomEntrypoint/environments/custom/custom.jsonnet"}, opts)
 		assert.NoError(t, err)
 		assert.Empty(t, buf.String())
+	})
+
+	t.Run("environment vendor overrides root vendor", func(t *testing.T) {
+		buf := &bytes.Buffer{}
+		opts := &LintOpts{Out: buf, Parallelism: 4}
+		err := Lint([]string{"testdata/lintVendorOverride/environments/default"}, opts)
+		assert.NoError(t, err)
+		assert.Empty(t, buf.String())
+	})
+
+	t.Run("incorrect import is reported when linting a nested file directly", func(t *testing.T) {
+		buf := &bytes.Buffer{}
+		opts := &LintOpts{Out: buf, Parallelism: 4}
+		err := Lint([]string{"testdata/lintBadImport/environments/default/nested/custom.jsonnet"}, opts)
+		require.EqualError(t, err, "Linting has failed for at least one file")
+		assert.True(t, strings.Contains(buf.String(), `couldn't open import "environment-only.libsonnet"`),
+			"expected import error, got: %s", buf.String())
 	})
 
 	t.Run("error", func(t *testing.T) {
