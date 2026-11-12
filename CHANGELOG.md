@@ -2,6 +2,19 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.40.2](https://github.com/grafana/tanka/compare/v0.40.1...v0.40.2) (2026-11-11)
+
+
+### 🐛 Bug Fixes
+
+* **security/unknown/acceptance-tests:** update go toolchain directive to v1.27.4 [security] ([#2358](https://github.com/grafana/tanka/issues/2358)) ([b6c9ea8](https://github.com/grafana/tanka/commit/b6c9ea880c2662f937883158b56223668a82ae83))
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update golang:1.27.3 docker digest to 2920bb1 [security] ([#2347](https://github.com/grafana/tanka/issues/2347)) ([18d2a59](https://github.com/grafana/tanka/commit/18d2a59ca6abcbef2d1102621d3ca0a57e95908b))
+* **deps:** update golang:1.27.3 docker digest to c292963 [security] ([#2355](https://github.com/grafana/tanka/issues/2355)) ([c3931d8](https://github.com/grafana/tanka/commit/c3931d88ed5f4c62d8c583836afc9a041f2ab21e))
+
 ## [0.40.1](https://github.com/grafana/tanka/compare/v0.40.0...v0.40.1) (2026-10-29)
 
 
