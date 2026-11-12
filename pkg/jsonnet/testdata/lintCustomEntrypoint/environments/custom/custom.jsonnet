@@ -1,0 +1,1 @@
+{ value: import 'dependency.libsonnet' }
