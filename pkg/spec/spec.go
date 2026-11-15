@@ -48,6 +48,7 @@ func ParseDir(path string) (*v1alpha1.Environment, error) {
 			c := v1alpha1.New()
 			c.Metadata.Name = name // legacy behavior
 			c.Metadata.Namespace = namespace
+			c.Root = root
 			return c, ErrNoSpec{path}
 		}
 		return nil, err
@@ -57,6 +58,7 @@ func ParseDir(path string) (*v1alpha1.Environment, error) {
 	if c != nil {
 		// set the name field
 		c.Metadata.Name = name // legacy behavior
+		c.Root = root
 	}
 
 	return c, err
