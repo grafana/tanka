@@ -31,6 +31,10 @@ type Environment struct {
 	Metadata   Metadata `json:"metadata"`
 	Spec       Spec     `json:"spec"`
 	Data       any      `json:"data,omitempty"`
+
+	// Root is the absolute path of the project root the environment was found
+	// in. Metadata.Namespace is relative to it. It is not part of the manifest.
+	Root string `json:"-"`
 }
 
 func (e Environment) NameLabel() (string, error) {
