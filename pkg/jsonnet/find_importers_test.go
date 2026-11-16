@@ -248,6 +248,24 @@ func findImportersTestCases(t testing.TB) []findImportersTestCase {
 				absPath(t, "testdata/findImporters/environments/chain-env3/main.jsonnet"), // via lib1->env2->lib3
 			},
 		},
+		{
+			name: "relative import inside a lib dir",
+			files: []string{
+				"testdata/findImporters/lib/prefix-dir/b.libsonnet",
+			},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/imports-prefix-dir/main.jsonnet"),
+			},
+		},
+		{
+			// lib/prefix-dir.suffix starts with the same characters as lib/prefix-dir,
+			// but prefix-dir/a.libsonnet's `import 'b.libsonnet'` can't resolve to it
+			name: "relative import does not match a sibling dir sharing a name prefix",
+			files: []string{
+				"testdata/findImporters/lib/prefix-dir.suffix/b.libsonnet",
+			},
+			expectedImporters: nil,
+		},
 	}
 }
 
