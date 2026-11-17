@@ -98,6 +98,14 @@ tk export exportDir environments/ --recursive
 tk export exportDir environments/ -r -l team=infra
 ```
 
+## YAML document start
+
+Pass `--document-start` to prefix every exported file with a YAML document start marker (`---`). This makes it safe to concatenate the exported files into a single multi-document stream. The default output is unchanged.
+
+```bash
+tk export exportDir environments/default --document-start
+```
+
 ## Performance features
 
 When exporting a large amount of environments, jsonnet evaluation can become a bottleneck. To speed up the process, Tanka provides a few optional features.

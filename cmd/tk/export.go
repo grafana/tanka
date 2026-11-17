@@ -44,6 +44,8 @@ func exportCmd(ctx context.Context) *cli.Command {
 	mergeDeletedEnvs := cmd.Flags().StringArray("merge-deleted-envs", nil, "Tanka main files that have been deleted. This is used when using a merge strategy to also delete the files of these deleted environments.")
 	skipManifest := cmd.Flags().Bool("skip-manifest", false, "Skip generating manifest.json file that tracks exported files")
 
+	documentStart := cmd.Flags().Bool("document-start", false, "Prefix each exported file with a YAML document start marker (---)")
+
 	vars := workflowFlags(cmd.Flags())
 	getJsonnetOpts := jsonnetFlags(cmd.Flags())
 	getLabelSelector := labelSelectorFlag(cmd.Flags())
@@ -76,6 +78,7 @@ func exportCmd(ctx context.Context) *cli.Command {
 			Parallelism:      *parallel,
 			MergeDeletedEnvs: *mergeDeletedEnvs,
 			SkipManifest:     *skipManifest,
+			DocumentStart:    *documentStart,
 		}
 
 		if opts.MergeStrategy, err = determineMergeStrategy(*merge, *mergeStrategy); err != nil {
