@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/spf13/pflag"
@@ -39,4 +40,32 @@ func TestCliCodeParser(t *testing.T) {
 		"tsf": `importstr @"t""s""f.txt"`,
 		"tcf": `import @"t""c""f.json"`,
 	}, tla)
+}
+
+func TestParseInjectLabel(t *testing.T) {
+	for _, tc := range []struct {
+		in      string
+		k, v    string
+		wantErr bool
+	}{
+		{in: "a=b", k: "a", v: "b"},
+		{in: "example.com/x=", k: "example.com/x", v: ""},
+		{in: "a=b=c", wantErr: true},
+		{in: "noequals", wantErr: true},
+		{in: "=value", wantErr: true},
+		{in: "bad key=v", wantErr: true},
+		{in: "k=bad value!", wantErr: true},
+		{in: "k=" + strings.Repeat("a", 64), wantErr: true},
+	} {
+		t.Run(tc.in, func(t *testing.T) {
+			k, v, err := parseInjectLabel(tc.in)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.k, k)
+			assert.Equal(t, tc.v, v)
+		})
+	}
 }
