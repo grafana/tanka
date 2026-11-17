@@ -1,6 +1,6 @@
 # download kubectl
 FROM golang:1.27.3-alpine@sha256:d200d2dd76b03a99b52651fd1325aff7dcd35422c35c01bac56571b0507f3deb AS kubectl
-ARG KUBECTL_VERSION=1.35.9
+ARG KUBECTL_VERSION=1.35.10
 RUN apk add --no-cache 'ca-certificates>=20261020-r0' curl && \
     update-ca-certificates
 RUN export OS=$(go env GOOS) && \
