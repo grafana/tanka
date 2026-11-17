@@ -13,6 +13,7 @@ import (
 	"github.com/go-clix/cli"
 	"github.com/pkg/errors"
 	"github.com/posener/complete"
+	"github.com/spf13/pflag"
 
 	"github.com/grafana/tanka/internal/telemetry"
 	"github.com/grafana/tanka/pkg/jsonnet/jpath"
@@ -90,26 +91,7 @@ func envSetCmd(ctx context.Context) *cli.Command {
 			return err
 		}
 
-		if tmp.Spec.APIServer != "" && tmp.Spec.APIServer != cfg.Spec.APIServer {
-			fmt.Printf("updated spec.apiServer (`%s` -> `%s`)\n", cfg.Spec.APIServer, tmp.Spec.APIServer)
-			cfg.Spec.APIServer = tmp.Spec.APIServer
-		}
-		if tmp.Spec.ContextNames != nil && !slices.Equal(tmp.Spec.ContextNames, cfg.Spec.ContextNames) {
-			fmt.Printf("updated spec.contextNames (`%v` -> `%v`)\n", cfg.Spec.ContextNames, tmp.Spec.ContextNames)
-			cfg.Spec.ContextNames = tmp.Spec.ContextNames
-		}
-		if tmp.Spec.Namespace != "" && tmp.Spec.Namespace != cfg.Spec.Namespace {
-			fmt.Printf("updated spec.namespace (`%s` -> `%s`)\n", cfg.Spec.Namespace, tmp.Spec.Namespace)
-			cfg.Spec.Namespace = tmp.Spec.Namespace
-		}
-		if tmp.Spec.DiffStrategy != "" && tmp.Spec.DiffStrategy != cfg.Spec.DiffStrategy {
-			fmt.Printf("updated spec.diffStrategy (`%s` -> `%s`)\n", cfg.Spec.DiffStrategy, tmp.Spec.DiffStrategy)
-			cfg.Spec.DiffStrategy = tmp.Spec.DiffStrategy
-		}
-		if tmp.Spec.InjectLabels != cfg.Spec.InjectLabels {
-			fmt.Printf("updated spec.injectLabels (`%t` -> `%t`)\n", cfg.Spec.InjectLabels, tmp.Spec.InjectLabels)
-			cfg.Spec.InjectLabels = tmp.Spec.InjectLabels
-		}
+		applyEnvSettings(cfg, &tmp, cmd.Flags())
 
 		// This ensures the environment is valid before setting it
 		l := tanka.LoadResult{Env: cfg}
@@ -120,6 +102,30 @@ func envSetCmd(ctx context.Context) *cli.Command {
 		return writeJSON(cfg, filepath.Join(path, "spec.json"))
 	}
 	return cmd
+}
+
+// applyEnvSettings copies the settings given on the command line from src onto dst.
+func applyEnvSettings(dst, src *v1alpha1.Environment, fs *pflag.FlagSet) {
+	if src.Spec.APIServer != "" && src.Spec.APIServer != dst.Spec.APIServer {
+		fmt.Printf("updated spec.apiServer (`%s` -> `%s`)\n", dst.Spec.APIServer, src.Spec.APIServer)
+		dst.Spec.APIServer = src.Spec.APIServer
+	}
+	if src.Spec.ContextNames != nil && !slices.Equal(src.Spec.ContextNames, dst.Spec.ContextNames) {
+		fmt.Printf("updated spec.contextNames (`%v` -> `%v`)\n", dst.Spec.ContextNames, src.Spec.ContextNames)
+		dst.Spec.ContextNames = src.Spec.ContextNames
+	}
+	if src.Spec.Namespace != "" && src.Spec.Namespace != dst.Spec.Namespace {
+		fmt.Printf("updated spec.namespace (`%s` -> `%s`)\n", dst.Spec.Namespace, src.Spec.Namespace)
+		dst.Spec.Namespace = src.Spec.Namespace
+	}
+	if src.Spec.DiffStrategy != "" && src.Spec.DiffStrategy != dst.Spec.DiffStrategy {
+		fmt.Printf("updated spec.diffStrategy (`%s` -> `%s`)\n", dst.Spec.DiffStrategy, src.Spec.DiffStrategy)
+		dst.Spec.DiffStrategy = src.Spec.DiffStrategy
+	}
+	if fs.Changed("inject-labels") && src.Spec.InjectLabels != dst.Spec.InjectLabels {
+		fmt.Printf("updated spec.injectLabels (`%t` -> `%t`)\n", dst.Spec.InjectLabels, src.Spec.InjectLabels)
+		dst.Spec.InjectLabels = src.Spec.InjectLabels
+	}
 }
 
 func envAddCmd(ctx context.Context) *cli.Command {
