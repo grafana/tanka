@@ -66,6 +66,8 @@ type ExportEnvOpts struct {
 	MergeDeletedEnvs []string
 	// Skip generating manifest.json file that tracks exported files
 	SkipManifest bool
+	// Prefix each exported file with a YAML document start marker (`---`)
+	DocumentStart bool
 }
 
 func ExportEnvironments(ctx context.Context, envs []*v1alpha1.Environment, to string, opts *ExportEnvOpts) error {
@@ -255,6 +257,9 @@ func manifestSingleEnv(ctx context.Context, work *v1alpha1.Environment, to strin
 
 		// Write manifest
 		data := m.String()
+		if opts.DocumentStart {
+			data = "---\n" + data
+		}
 		if err := writeExportFile(path, []byte(data)); err != nil {
 			return nil, err
 		}
