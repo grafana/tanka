@@ -364,7 +364,9 @@ func findImporters(root string, searchForFile string, chain map[string]struct{})
 					}
 					jsonnetFileContent.Base = base
 				}
-				isImporter = strings.HasPrefix(searchForFile, jsonnetFileContent.Base) && strings.HasSuffix(searchForFile, importPath)
+				// Compare whole path segments: a base of lib/foo must not match lib/foo.bar/x.libsonnet
+				isImporter = strings.HasPrefix(searchForFile, jsonnetFileContent.Base+string(filepath.Separator)) &&
+					strings.HasSuffix(searchForFile, string(filepath.Separator)+importPath)
 			}
 
 			// If the file we're looking in imports one of the files we're looking for, add it to the list
