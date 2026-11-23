@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -90,7 +91,8 @@ func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[stri
 
 	newParser := func(kind string, code, str, codeFile, strFile *[]string) func() map[string]string {
 		return func() map[string]string {
-			m := make(map[string]string)
+			// Values from TANKA_* environment variables come first, so flags override them
+			m := envCLICode(kind, os.Environ())
 			for _, s := range *code {
 				split := strings.SplitN(s, "=", 2)
 				if len(split) != 2 {
@@ -134,6 +136,31 @@ func cliCodeParser(fs *pflag.FlagSet) (func() map[string]string, func() map[stri
 
 	return newParser("ext", extCode, extStr, extCodeFile, extStrFile),
 		newParser("tla", tlaCode, tlaStr, tlaCodeFile, tlaStrFile)
+}
+
+// envCLICode reads ext vars or top level arguments (kind "ext" or "tla") from
+// environment variables: TANKA_EXTSTR_<name> and TANKA_TLASTR_<name> set string
+// values, TANKA_EXTCODE_<name> and TANKA_TLACODE_<name> set Jsonnet code. This also
+// works for commands that are run without the --ext-*/--tla-* flags.
+func envCLICode(kind string, environ []string) map[string]string {
+	prefix := "TANKA_" + strings.ToUpper(kind)
+	m := make(map[string]string)
+	for _, kv := range environ {
+		key, value, ok := strings.Cut(kv, "=")
+		if !ok {
+			continue
+		}
+		if name, found := strings.CutPrefix(key, prefix+"CODE_"); found && name != "" {
+			m[name] = value
+		} else if name, found := strings.CutPrefix(key, prefix+"STR_"); found && name != "" {
+			js, err := json.Marshal(value)
+			if err != nil {
+				log.Fatal().Msgf("impossible: failed to convert string to JSON: %s", err)
+			}
+			m[name] = string(js)
+		}
+	}
+	return m
 }
 
 func envSettingsFlags(env *v1alpha1.Environment, fs *pflag.FlagSet) {

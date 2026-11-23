@@ -7,6 +7,37 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestEnvCLICode(t *testing.T) {
+	environ := []string{
+		"TANKA_EXTSTR_cluster=prod \"eu\"",
+		"TANKA_EXTCODE_replicas=1+2",
+		"TANKA_TLASTR_team=infra",
+		"TANKA_TLACODE_debug=true",
+		"TANKA_EXTSTR_=ignored",
+		"HOME=/home/tanka",
+		"NOEQUALS",
+	}
+	assert.Equal(t, map[string]string{
+		"cluster":  `"prod \"eu\""`,
+		"replicas": "1+2",
+	}, envCLICode("ext", environ))
+	assert.Equal(t, map[string]string{
+		"team":  `"infra"`,
+		"debug": "true",
+	}, envCLICode("tla", environ))
+}
+
+func TestCliCodeParserFlagsOverrideEnv(t *testing.T) {
+	t.Setenv("TANKA_EXTSTR_cluster", "from-env")
+	t.Setenv("TANKA_EXTSTR_region", "eu")
+	fs := pflag.NewFlagSet("test-cli-code-parser-env", pflag.ContinueOnError)
+	parseExt, _ := cliCodeParser(fs)
+	assert.NoError(t, fs.Parse([]string{"-V", "cluster=from-flag"}))
+	ext := parseExt()
+	assert.Equal(t, `"from-flag"`, ext["cluster"])
+	assert.Equal(t, `"eu"`, ext["region"])
+}
+
 func TestCliCodeParser(t *testing.T) {
 	fs := pflag.NewFlagSet("test-cli-code-parser", pflag.ContinueOnError)
 	parseExt, parseTLA := cliCodeParser(fs)

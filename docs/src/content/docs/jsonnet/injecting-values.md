@@ -66,6 +66,26 @@ what effect they have on the final result.
 Try to use [Top Level Arguments](./jsonnet/injecting-values/#top-level-arguments) instead.
 :::
 
+### From environment variables
+
+External variables and Top Level Arguments can also be set with environment
+variables. This is handy in scripts and CI, and for commands that you run
+without the `--ext-*` or `--tla-*` flags:
+
+| Environment variable    | Same as                 |
+| ----------------------- | ----------------------- |
+| `TANKA_EXTSTR_<name>`   | `--ext-str <name>=...`  |
+| `TANKA_EXTCODE_<name>`  | `--ext-code <name>=...` |
+| `TANKA_TLASTR_<name>`   | `--tla-str <name>=...`  |
+| `TANKA_TLACODE_<name>`  | `--tla-code <name>=...` |
+
+```bash
+TANKA_EXTSTR_hello=world TANKA_EXTCODE_foo=4 tk show .
+```
+
+A flag given on the command line takes precedence over an environment variable
+with the same name.
+
 ## Top Level Arguments
 
 Usually with Tanka, your `main.jsonnet` holds an object at the top level (most
