@@ -98,6 +98,8 @@ tk export exportDir environments/ --recursive
 tk export exportDir environments/ -r -l team=infra
 ```
 
+The label selector (`-l`/`--selector`) picks **environments** by the labels in their `metadata.labels`. It does not filter the Kubernetes resources an environment generates. To export only some kinds of resources, use `--target`/`-t`; to filter on resource labels, filter the exported files afterwards.
+
 ## Performance features
 
 When exporting a large amount of environments, jsonnet evaluation can become a bottleneck. To speed up the process, Tanka provides a few optional features.

@@ -48,7 +48,7 @@ func addApplyFlags(fs *pflag.FlagSet, opts *tanka.ApplyBaseOpts, autoApproveDepr
 }
 
 func labelSelectorFlag(fs *pflag.FlagSet) func() labels.Selector {
-	labelSelector := fs.StringP("selector", "l", "", "Label selector. Uses the same syntax as kubectl does")
+	labelSelector := fs.StringP("selector", "l", "", "Select environments by their metadata.labels (not the generated resources). Uses the same syntax as kubectl does")
 
 	return func() labels.Selector {
 		if *labelSelector != "" {
