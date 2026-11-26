@@ -256,3 +256,39 @@ func checkFiles(t testing.TB, dir string, files []string) {
 
 	assert.ElementsMatch(t, files, existingFiles)
 }
+
+func TestExportEnvironmentsOutsideProjectRoot(t *testing.T) {
+	envsDir, err := filepath.Abs(filepath.Join("testdata", "test-export-envs"))
+	require.NoError(t, err)
+
+	// Run from a directory that is not part of the Tanka project
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.Chdir(t.TempDir()))
+	defer func() { require.NoError(t, os.Chdir(cwd)) }()
+
+	envs, err := FindEnvs(t.Context(), envsDir, FindOpts{Selector: labels.Everything()})
+	require.NoError(t, err)
+	require.NotEmpty(t, envs)
+
+	tempDir := t.TempDir()
+	opts := &ExportEnvOpts{
+		Format:    "{{.metadata.namespace}}/{{.metadata.name}}",
+		Extension: "yaml",
+	}
+	opts.Opts.ExtCode = jsonnet.InjectedCode{
+		"deploymentName": "'initial-deployment'",
+		"serviceName":    "'initial-service'",
+	}
+	require.NoError(t, ExportEnvironments(t.Context(), envs, tempDir, opts))
+	checkFiles(t, tempDir, []string{
+		filepath.Join(tempDir, "inline-namespace1", "my-configmap.yaml"),
+		filepath.Join(tempDir, "inline-namespace1", "my-deployment.yaml"),
+		filepath.Join(tempDir, "inline-namespace1", "my-service.yaml"),
+		filepath.Join(tempDir, "inline-namespace2", "my-deployment.yaml"),
+		filepath.Join(tempDir, "inline-namespace2", "my-service.yaml"),
+		filepath.Join(tempDir, "static", "initial-deployment.yaml"),
+		filepath.Join(tempDir, "static", "initial-service.yaml"),
+		filepath.Join(tempDir, "manifest.json"),
+	})
+}

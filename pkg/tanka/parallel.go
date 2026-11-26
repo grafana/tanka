@@ -63,9 +63,13 @@ func parallelLoadEnvironments(ctx context.Context, envs []*v1alpha1.Environment,
 
 		o.Name = env.Metadata.Name
 		path := env.Metadata.Namespace
-		rootDir, err := jpath.FindRoot(path)
-		if err != nil {
-			return nil, errors.Wrap(err, "finding root")
+		rootDir := env.Root
+		if rootDir == "" {
+			var err error
+			rootDir, err = jpath.FindRoot(path)
+			if err != nil {
+				return nil, errors.Wrap(err, "finding root")
+			}
 		}
 		jobsCh <- parallelJob{
 			path: filepath.Join(rootDir, path),

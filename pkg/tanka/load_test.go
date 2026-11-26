@@ -145,11 +145,15 @@ func TestLoad(t *testing.T) {
 		},
 	}
 
+	root, err := filepath.Abs("testdata")
+	require.NoError(t, err)
+
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			l, err := Load(t.Context(), test.baseDir, Opts{})
 			require.NoError(t, err)
 
+			test.env.Root = root
 			assert.Equal(t, test.expected, l.Resources)
 			assert.Equal(t, test.env, l.Env)
 		})

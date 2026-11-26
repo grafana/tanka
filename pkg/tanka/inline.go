@@ -156,6 +156,7 @@ func inlineParse(path string, data []byte) (*v1alpha1.Environment, error) {
 	if err != nil {
 		return nil, err
 	}
+	env.Root = root
 
 	return env, nil
 }
