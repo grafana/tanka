@@ -2,6 +2,15 @@
 
 For releases from v0.24.0 to v0.28.3, you can find the changelog in the GitHub releases: https://github.com/grafana/tanka/releases
 
+## [0.40.3](https://github.com/grafana/tanka/compare/v0.40.2...v0.40.3) (2026-11-26)
+
+
+### 🔧 Miscellaneous Chores
+
+* **deps:** update actions/setup-go action to v7.1.0 ([#2374](https://github.com/grafana/tanka/issues/2374)) ([ff09a27](https://github.com/grafana/tanka/commit/ff09a27ba376d521c7ad6f3eeba93695b2183292))
+* **deps:** update actions/setup-node action to v7.1.0 ([#2357](https://github.com/grafana/tanka/issues/2357)) ([d7b4f0e](https://github.com/grafana/tanka/commit/d7b4f0e9ae53bb27a2e5e29c1f521a944b5fea41))
+* **deps:** update ca trust base images [security] (patch) ([#2371](https://github.com/grafana/tanka/issues/2371)) ([aef295d](https://github.com/grafana/tanka/commit/aef295d27c5bca349a605514ecaeaa541d947f52))
+
 ## [0.40.2](https://github.com/grafana/tanka/compare/v0.40.1...v0.40.2) (2026-11-11)
 
 
