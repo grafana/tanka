@@ -145,3 +145,35 @@ func m(apiVersion, kind, name, namespace string) manifest.Manifest {
 		},
 	}
 }
+
+func TestStaticDifferRedactsSecretValues(t *testing.T) {
+	secret := manifest.Manifest{
+		"apiVersion": "v1",
+		"kind":       "Secret",
+		"metadata":   map[string]interface{}{"name": "db", "namespace": "default"},
+		"type":       "Opaque",
+		"data":       map[string]interface{}{"DB_PASSWORD": "dmVyeV9zZWNyZXRfcGFzc3dvcmQ="},
+		"stringData": map[string]interface{}{"DB_USERNAME": "user", "DB_TOKEN": "very_secret_token"},
+	}
+	configMap := manifest.Manifest{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata":   map[string]interface{}{"name": "cfg", "namespace": "default"},
+		"data":       map[string]interface{}{"LOG_LEVEL": "debug"},
+	}
+
+	for _, create := range []bool{false, true} {
+		diff, err := StaticDiffer(create)(manifest.List{secret, configMap})
+		assert.NoError(t, err)
+		if assert.NotNil(t, diff) {
+			assert.NotContains(t, *diff, "very_secret_token")
+			assert.NotContains(t, *diff, "dmVyeV9zZWNyZXRfcGFzc3dvcmQ=")
+			assert.Contains(t, *diff, "DB_PASSWORD: '***'")
+			assert.Contains(t, *diff, "DB_TOKEN: '***'")
+			assert.Contains(t, *diff, "LOG_LEVEL: debug")
+		}
+	}
+
+	// the manifest that is passed on to kubectl must keep its real values
+	assert.Equal(t, "very_secret_token", secret["stringData"].(map[string]interface{})["DB_TOKEN"])
+}

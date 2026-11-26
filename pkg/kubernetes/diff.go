@@ -184,7 +184,7 @@ func StaticDiffer(create bool) Differ {
 	return func(state manifest.List) (*string, error) {
 		s := ""
 		for _, m := range state {
-			is, should := m.String(), ""
+			is, should := redactSecretValues(m).String(), ""
 			if create {
 				is, should = should, is
 			}
@@ -202,6 +202,32 @@ func StaticDiffer(create bool) Differ {
 
 		return &s, nil
 	}
+}
+
+// redactSecretValues returns a copy of a Secret with every value under data and
+// stringData replaced by "***", the same mask kubectl diff uses. Static diffs are
+// rendered locally, so without this `tk delete` printed secret values in plain text.
+// Other manifests are returned unchanged.
+func redactSecretValues(m manifest.Manifest) manifest.Manifest {
+	if m.Kind() != "Secret" {
+		return m
+	}
+	redacted := make(manifest.Manifest, len(m))
+	for k, v := range m {
+		redacted[k] = v
+	}
+	for _, field := range []string{"data", "stringData"} {
+		values, ok := m[field].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		masked := make(map[string]interface{}, len(values))
+		for key := range values {
+			masked[key] = "***"
+		}
+		redacted[field] = masked
+	}
+	return redacted
 }
 
 // multiDiff runs multiple differs (in series). In the future it might be worth
