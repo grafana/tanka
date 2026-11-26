@@ -238,6 +238,54 @@ func TestExportEnvironmentsSkipManifest(t *testing.T) {
 	assert.True(t, os.IsNotExist(err), "manifest.json should not exist when SkipManifest is true")
 }
 
+func TestExportEnvironmentsDocumentStart(t *testing.T) {
+	for _, tc := range []struct {
+		name          string
+		documentStart bool
+	}{
+		{"default", false},
+		{"document start", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tempDir := t.TempDir()
+			require.NoError(t, os.Chdir("testdata"))
+			defer func() { require.NoError(t, os.Chdir("..")) }()
+
+			envs, err := FindEnvs(t.Context(), "test-export-envs", FindOpts{Selector: labels.Everything()})
+			require.NoError(t, err)
+
+			opts := &ExportEnvOpts{
+				Format:        "{{.metadata.namespace}}/{{.metadata.name}}",
+				Extension:     "yaml",
+				DocumentStart: tc.documentStart,
+			}
+			opts.Opts.ExtCode = jsonnet.InjectedCode{
+				"deploymentName": "'test-deployment'",
+				"serviceName":    "'test-service'",
+			}
+			require.NoError(t, ExportEnvironments(t.Context(), envs, tempDir, opts))
+
+			files := 0
+			require.NoError(t, filepath.Walk(tempDir, func(path string, info os.FileInfo, err error) error {
+				if err != nil || info.IsDir() || filepath.Ext(path) != ".yaml" {
+					return err
+				}
+				files++
+				data, err := os.ReadFile(path)
+				require.NoError(t, err)
+				if tc.documentStart {
+					assert.True(t, strings.HasPrefix(string(data), "---\n"), "%s should start with ---", path)
+					assert.Equal(t, 1, strings.Count(string(data), "---\n"), "%s should have a single marker", path)
+				} else {
+					assert.False(t, strings.HasPrefix(string(data), "---"), "%s should not start with ---", path)
+				}
+				return nil
+			}))
+			assert.Equal(t, 7, files)
+		})
+	}
+}
+
 func checkFiles(t testing.TB, dir string, files []string) {
 	t.Helper()
 
