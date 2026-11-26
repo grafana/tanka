@@ -165,6 +165,18 @@ func findImportersTestCases(t testing.TB) []findImportersTestCase {
 			},
 		},
 		{
+			name:  "relative import in a lib dir whose name prefixes another lib dir",
+			files: []string{"testdata/findImporters/lib/prefix-lib/b.libsonnet"},
+			expectedImporters: []string{
+				absPath(t, "testdata/findImporters/environments/imports-prefix-lib/main.jsonnet"),
+			},
+		},
+		{
+			name:              "same-named file in a lib dir that only shares a name prefix is not imported",
+			files:             []string{"testdata/findImporters/lib/prefix-lib.other/b.libsonnet"},
+			expectedImporters: nil,
+		},
+		{
 			name: "unused deleted file",
 			files: []string{
 				"deleted:testdata/findImporters/vendor/deleted-vendor/main.libsonnet",
