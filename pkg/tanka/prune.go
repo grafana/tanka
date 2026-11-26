@@ -8,6 +8,7 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/grafana/tanka/pkg/kubernetes"
+	"github.com/grafana/tanka/pkg/kubernetes/manifest"
 	"github.com/grafana/tanka/pkg/term"
 )
 
@@ -80,6 +81,19 @@ func Prune(ctx context.Context, baseDir string, opts PruneOpts) error {
 		fmt.Fprintln(os.Stderr, "")
 	}
 
+	// pruning selects by the environment label, not by spec.namespace
+	if opts.Namespace == "" {
+		warning := color.New(color.FgHiYellow, color.Bold).FprintfFunc()
+		warning(color.Error, "WARNING: Pruning is not limited to the environment's namespace %q. It deletes resources labeled with this environment in any namespace. Use --namespace to limit it.\n", p.Env.Spec.Namespace)
+		if outside := resourcesOutsideNamespace(orphaned, p.Env.Spec.Namespace); len(outside) > 0 {
+			fmt.Fprintf(os.Stderr, "These resources are outside %q:\n", p.Env.Spec.Namespace)
+			for _, r := range outside {
+				fmt.Fprintf(os.Stderr, " - %s\n", r)
+			}
+		}
+		fmt.Fprintln(os.Stderr, "")
+	}
+
 	// prompt for confirm
 	if opts.AutoApprove != AutoApproveAlways {
 		namespace := p.Env.Spec.Namespace
@@ -96,6 +110,21 @@ func Prune(ctx context.Context, baseDir string, opts PruneOpts) error {
 		Force:  opts.Force,
 		DryRun: opts.DryRun,
 	})
+}
+
+// resourcesOutsideNamespace lists the namespaced resources that are not in the
+// given namespace, as "<namespace>/<kind>/<name>". Cluster-scoped resources have
+// no namespace and are not listed.
+func resourcesOutsideNamespace(resources manifest.List, namespace string) []string {
+	var outside []string
+	for _, r := range resources {
+		ns := r.Metadata().Namespace()
+		if ns == "" || ns == namespace {
+			continue
+		}
+		outside = append(outside, fmt.Sprintf("%s/%s/%s", ns, r.Kind(), r.Metadata().Name()))
+	}
+	return outside
 }
 
 // listIgnored prints the resources excluded from pruning via the
